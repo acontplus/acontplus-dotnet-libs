@@ -1,3 +1,6 @@
+using Acontplus.Persistence.Common.Configuration;
+using Microsoft.Extensions.Configuration;
+
 namespace Acontplus.Persistence.PostgreSQL.DependencyInjection;
 
 public static class PostgresServiceCollectionExtensions
@@ -29,6 +32,12 @@ public static class PostgresServiceCollectionExtensions
             services.TryAddScoped<IUnitOfWork, UnitOfWork<TContext>>();
             services.TryAddScoped<DbContext>(sp => sp.GetRequiredService<TContext>());
         }
+
+        // Register PersistenceResilienceOptions with default values
+        // To configure from appsettings.json, add this in your Startup/Program.cs:
+        // services.Configure<PersistenceResilienceOptions>(configuration.GetSection("Persistence:Resilience"));
+        services.TryAddSingleton<Microsoft.Extensions.Options.IOptions<PersistenceResilienceOptions>>(
+            sp => Microsoft.Extensions.Options.Options.Create(new PersistenceResilienceOptions()));
 
         return services;
     }

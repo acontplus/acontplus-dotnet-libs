@@ -60,6 +60,10 @@ services.AddDbContext<BaseContext>(options =>
 // Register repositories
 services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 services.AddScoped<IAdoRepository, AdoRepository>();
+
+// Configure ADO.NET resilience (optional - has sensible defaults)
+services.Configure<PersistenceResilienceOptions>(
+    configuration.GetSection(PersistenceResilienceOptions.SectionName));
 ```
 
 ### 2. Entity Framework Repository Pattern
