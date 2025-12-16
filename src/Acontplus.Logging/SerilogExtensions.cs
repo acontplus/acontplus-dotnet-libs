@@ -1,11 +1,15 @@
 using Elastic.Ingest.Elasticsearch;
 using Elastic.Serilog.Sinks;
+using Serilog.Formatting;
+using Serilog.Formatting.Compact;
 using Serilog.Formatting.Display;
 
 namespace Acontplus.Logging;
 
 public static class SerilogExtensions
 {
+    private const string DefaultPlainTemplate = "{CustomTimestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
+
     // This method will be called to CONFIGURE THE LOGGER ITSELF
     // It takes a LoggerConfiguration (which UseSerilog provides)
     public static LoggerConfiguration ConfigureAdvancedLogger(
@@ -20,26 +24,18 @@ public static class SerilogExtensions
         var loggingOptions = new LoggingOptions();
         configuration.GetSection("AdvancedLogging").Bind(loggingOptions);
 
+        var formatter = ResolveFormatter(loggingOptions);
+
         loggerConfiguration
             .Enrich.With(new CustomTimeZoneEnricher(loggingOptions.TimeZoneId)); // Assuming CustomTimeZoneEnricher exists
 
-        // Add console logging for development
-        if (environment == Environments.Development)
-        {
-            loggerConfiguration.WriteTo.Console(
-                outputTemplate: "{CustomTimestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-            );
-        }
-        else
-        {
-            // For production, often structured JSON for console, or no console logging if all goes to sinks
-            loggerConfiguration.WriteTo.Console(formatter: new CompactJsonFormatter());
-        }
+        // Add console logging with configurable formatter (plain by default)
+        loggerConfiguration.WriteTo.Console(formatter: formatter);
 
         // Configure local file logging
         if (loggingOptions.EnableLocalFile && !string.IsNullOrEmpty(loggingOptions.LocalFilePath))
         {
-            ConfigureLocalLogging(loggerConfiguration, loggingOptions, environment);
+            ConfigureLocalLogging(loggerConfiguration, loggingOptions, formatter);
         }
 
         // Configure SQL Server logging
@@ -77,7 +73,7 @@ public static class SerilogExtensions
                Environments.Production;
     }
 
-    private static void ConfigureLocalLogging(LoggerConfiguration loggerConfiguration, LoggingOptions options, string environment)
+    private static void ConfigureLocalLogging(LoggerConfiguration loggerConfiguration, LoggingOptions options, ITextFormatter formatter)
     {
         var rollingInterval = Enum.Parse<RollingInterval>(options.RollingInterval, true);
         var retainedFileCountLimit = options.RetainedFileCountLimit ?? 7;
@@ -91,8 +87,19 @@ public static class SerilogExtensions
             encoding: System.Text.Encoding.UTF8,
             buffered: true,
             shared: false,
-            formatter: environment == Environments.Development ? new MessageTemplateTextFormatter("{CustomTimestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}") : new CompactJsonFormatter()
+            formatter: formatter
         ));
+    }
+
+    private static ITextFormatter ResolveFormatter(LoggingOptions options)
+    {
+        var template = string.IsNullOrWhiteSpace(options.OutputTemplate)
+            ? DefaultPlainTemplate
+            : options.OutputTemplate;
+
+        return string.Equals(options.Formatter, "Json", StringComparison.OrdinalIgnoreCase)
+            ? new CompactJsonFormatter()
+            : new MessageTemplateTextFormatter(template);
     }
 
     private static void ConfigureDatabaseLogging(LoggerConfiguration loggerConfiguration, IConfiguration configuration, LoggingOptions options)

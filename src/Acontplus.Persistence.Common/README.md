@@ -25,6 +25,7 @@ abstractions.
 - **Dependency Injection** - Seamless integration with Microsoft DI container
 - **Configuration Driven** - Flexible configuration through appsettings.json
 - **Error Handling** - Comprehensive error handling with domain mapping
+- **Resilience Patterns** - Configurable retry policies, circuit breakers, and timeouts
 
 ## 📦 Installation
 
@@ -66,6 +67,28 @@ builder.Services.AddSingleton<IDbContextFactory<MyDbContext>, DbContextFactory<M
     "DefaultConnection": "Server=localhost;Database=MyApp;Trusted_Connection=true;",
     "TenantA": "Server=localhost;Database=TenantA;Trusted_Connection=true;",
     "TenantB": "Server=localhost;Database=TenantB;Trusted_Connection=true;"
+  },
+  "Persistence": {
+    "Resilience": {
+      "RetryPolicy": {
+        "Enabled": true,
+        "MaxRetries": 3,
+        "BaseDelaySeconds": 2,
+        "ExponentialBackoff": true,
+        "MaxDelaySeconds": 30
+      },
+      "CircuitBreaker": {
+        "Enabled": true,
+        "ExceptionsAllowedBeforeBreaking": 5,
+        "DurationOfBreakSeconds": 30
+      },
+      "Timeout": {
+        "Enabled": true,
+        "DefaultCommandTimeoutSeconds": 30,
+        "ComplexQueryTimeoutSeconds": 60,
+        "BulkOperationTimeoutSeconds": 300
+      }
+    }
   }
 }
 ```

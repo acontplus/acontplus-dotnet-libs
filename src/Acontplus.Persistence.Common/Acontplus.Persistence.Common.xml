@@ -10,6 +10,134 @@
                 Supports hierarchical, environment-based, and secure connection string resolution.
             </summary>
         </member>
+        <member name="T:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions">
+            <summary>
+            Resilience configuration options for persistence layer (ADO.NET repositories).
+            Provides retry policy, circuit breaker, and timeout settings for database operations.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.SectionName">
+            <summary>
+            Configuration section name in appsettings.json
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicy">
+            <summary>
+            Retry policy configuration for database operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreaker">
+            <summary>
+            Circuit breaker configuration for database operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.Timeout">
+            <summary>
+            Timeout configuration for database operations.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions">
+            <summary>
+            Retry policy configuration options for ADO.NET operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions.Enabled">
+            <summary>
+            Enable retry policy. Default: true.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions.MaxRetries">
+            <summary>
+            Maximum number of retries. Default: 3.
+            Aligns with connection string ConnectRetryCount.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions.BaseDelaySeconds">
+            <summary>
+            Base delay between retries in seconds. Default: 2.
+            Used as the base for exponential backoff calculation.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions.ExponentialBackoff">
+            <summary>
+            Enable exponential backoff. Default: true.
+            When enabled, delay increases exponentially: 2s, 4s, 8s, etc.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.RetryPolicyOptions.MaxDelaySeconds">
+            <summary>
+            Maximum delay between retries in seconds. Default: 30.
+            Caps the exponential backoff to prevent excessive wait times.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions">
+            <summary>
+            Circuit breaker configuration options for database resilience.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions.Enabled">
+            <summary>
+            Enable circuit breaker. Default: true.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions.ExceptionsAllowedBeforeBreaking">
+            <summary>
+            Number of exceptions before opening circuit. Default: 5.
+            After this many consecutive failures, circuit opens.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions.DurationOfBreakSeconds">
+            <summary>
+            Duration of break in seconds. Default: 30.
+            How long circuit stays open before allowing test requests.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions.SamplingDurationSeconds">
+            <summary>
+            Sampling duration in seconds. Default: 60.
+            Time window for tracking failure rate.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.CircuitBreakerOptions.MinimumThroughput">
+            <summary>
+            Minimum throughput before circuit can open. Default: 10.
+            Prevents circuit from opening due to low traffic spikes.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions">
+            <summary>
+            Timeout configuration options for database operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions.Enabled">
+            <summary>
+            Enable timeout policies. Default: true.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions.DefaultCommandTimeoutSeconds">
+            <summary>
+            Default command timeout in seconds. Default: 30.
+            Used when CommandOptionsDto.CommandTimeout is not specified.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions.ComplexQueryTimeoutSeconds">
+            <summary>
+            Timeout for complex queries in seconds. Default: 60.
+            Used for queries involving multiple tables or large datasets.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions.BulkOperationTimeoutSeconds">
+            <summary>
+            Timeout for bulk operations in seconds. Default: 300 (5 minutes).
+            Used for SqlBulkCopy and PostgreSQL COPY operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions.TimeoutOptions.LongRunningQueryTimeoutSeconds">
+            <summary>
+            Timeout for long-running reports in seconds. Default: 600 (10 minutes).
+            Used for complex analytics and reporting queries.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.Common.Exceptions.SqlExceptionExtensions.ToDomainErrors(System.Collections.Generic.IEnumerable{Acontplus.Persistence.Common.Exceptions.SqlDomainException},System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
             <summary>
                 Converts multiple SqlDomainExceptions to a DomainErrors collection

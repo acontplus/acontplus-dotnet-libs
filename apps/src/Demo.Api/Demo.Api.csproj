@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\..\src\Acontplus.Logging\Acontplus.Logging.csproj" />
     <ProjectReference Include="..\..\..\src\Acontplus.Notifications\Acontplus.Notifications.csproj" />
     <ProjectReference Include="..\..\..\src\Acontplus.Reports\Acontplus.Reports.csproj" />
+    <ProjectReference Include="..\..\..\src\Acontplus.S3Application\Acontplus.S3Application.csproj" />
     <ProjectReference Include="..\..\..\src\Acontplus.Services\Acontplus.Services.csproj" />
     <ProjectReference Include="..\..\..\src\Acontplus.Utilities\Acontplus.Utilities.csproj" />
     <ProjectReference Include="..\Demo.Application\Demo.Application.csproj" />

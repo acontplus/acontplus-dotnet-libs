@@ -2,6 +2,7 @@ using Acontplus.Core.Extensions;
 using Acontplus.Notifications.Abstractions;
 using Acontplus.Notifications.Models;
 using Amazon.SimpleEmailV2.Model;
+using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -25,6 +26,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
     private readonly IConfiguration _configuration;
     private readonly ILogger<AmazonSesService> _logger;
+    private readonly IMemoryCache _templateCache;
     private readonly AmazonSimpleEmailServiceV2Client _sesClient;
     private readonly AsyncRetryPolicy _retryPolicy;
     private readonly AsyncRetryPolicy _bulkRetryPolicy;
@@ -43,10 +45,14 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
     private readonly string? _mediaImagesPath;
     private readonly string? _templatesPath;
 
-    public AmazonSesService(IConfiguration configuration, ILogger<AmazonSesService> logger)
+    public AmazonSesService(
+        IConfiguration configuration,
+        ILogger<AmazonSesService> logger,
+        IMemoryCache? memoryCache = null)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _templateCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
         _serviceStopwatch = Stopwatch.StartNew();
 
         // Initialize SES v2 client with configuration
@@ -435,7 +441,17 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
             throw new FileNotFoundException($"Template file not found: {templatePath}");
         }
 
-        var templateContent = await File.ReadAllTextAsync(templatePath, ct).ConfigureAwait(false);
+        // Try to get template content from cache
+        var cacheKey = $"email_template:{templateName}";
+        var templateContent = await _templateCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromMinutes(30);
+            entry.Priority = CacheItemPriority.Normal;
+
+            _logger.LogDebug("Loading and caching template: {TemplateName}", templateName);
+            return await File.ReadAllTextAsync(templatePath, ct).ConfigureAwait(false);
+        });
+
         var templateData = string.IsNullOrEmpty(jsonData)
             ? new Dictionary<string, object>()
             : JsonExtensions.DeserializeOptimized<IDictionary<string, object>>(jsonData) ?? new Dictionary<string, object>();
@@ -446,7 +462,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
             ProcessLogoInTemplate(templateData, logo, ct);
         }
 
-        return ProcessTemplate(templateContent, templateData);
+        return ProcessTemplate(templateContent!, templateData);
     }
 
     private void ProcessLogoInTemplate(IDictionary<string, object> templateData, string logo, CancellationToken ct)

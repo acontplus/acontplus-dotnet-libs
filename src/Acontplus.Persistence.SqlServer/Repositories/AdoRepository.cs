@@ -1,6 +1,8 @@
 using Acontplus.Core.Enums;
 using Acontplus.Core.Extensions;
+using Acontplus.Persistence.Common.Configuration;
 using Acontplus.Persistence.SqlServer.Mapping;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,32 +16,84 @@ namespace Acontplus.Persistence.SqlServer.Repositories;
 /// </summary>
 public class AdoRepository : IAdoRepository
 {
-    // Polly retry policy for transient SQL errors and timeouts
-    private static readonly AsyncRetryPolicy RetryPolicy = Policy
-        .Handle<SqlException>(SqlServerExceptionHandler.IsTransientException)
-        .Or<TimeoutException>()
-        .WaitAndRetryAsync(3, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
-            (ex, timeSpan, retryCount, context) =>
-            {
-                // Optional: Log each retry attempt
-                // context.GetLogger()?.LogWarning(ex, "Retry {RetryCount} for ADO.NET operation.", retryCount);
-            });
-
     private readonly IConfiguration _configuration;
     private readonly ConcurrentDictionary<string, string> _connectionStrings = new();
     private readonly ILogger<AdoRepository> _logger;
+    private readonly PersistenceResilienceOptions _resilienceOptions;
     private DbConnection? _currentConnection;
 
     // Fields for sharing connection/transaction with UnitOfWork
     private DbTransaction? _currentTransaction;
 
+    // Lazy retry policy - created on first use with current configuration
+    private AsyncRetryPolicy? _retryPolicy;
+
     /// <summary>
-    ///     Constructor for AdoRepository.
+    ///     Lazy-loaded retry policy based on configuration.
     /// </summary>
-    public AdoRepository(IConfiguration configuration, ILogger<AdoRepository> logger)
+    private AsyncRetryPolicy RetryPolicy
+    {
+        get
+        {
+            if (_retryPolicy != null)
+                return _retryPolicy;
+
+            if (!_resilienceOptions.RetryPolicy.Enabled)
+            {
+                // If retry is disabled, create a pass-through policy
+                _retryPolicy = Policy
+                    .Handle<SqlException>(ex => false)
+                    .RetryAsync(0);
+                return _retryPolicy;
+            }
+
+            var maxRetries = _resilienceOptions.RetryPolicy.MaxRetries;
+            var baseDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.BaseDelaySeconds);
+            var maxDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.MaxDelaySeconds);
+            var exponentialBackoff = _resilienceOptions.RetryPolicy.ExponentialBackoff;
+
+            _retryPolicy = Policy
+                .Handle<SqlException>(SqlServerExceptionHandler.IsTransientException)
+                .Or<TimeoutException>()
+                .WaitAndRetryAsync(
+                    maxRetries,
+                    retryAttempt =>
+                    {
+                        if (exponentialBackoff)
+                        {
+                            var calculatedDelay = TimeSpan.FromSeconds(
+                                _resilienceOptions.RetryPolicy.BaseDelaySeconds * Math.Pow(2, retryAttempt - 1));
+
+                            return calculatedDelay > maxDelay ? maxDelay : calculatedDelay;
+                        }
+
+                        return baseDelay;
+                    },
+                    (exception, timeSpan, retryCount, context) =>
+                    {
+                        _logger.LogWarning(
+                            exception,
+                            "[ADO Repository] Retry {RetryCount}/{MaxRetries} after {Delay}ms for SQL Server operation",
+                            retryCount,
+                            maxRetries,
+                            timeSpan.TotalMilliseconds);
+                    });
+
+            return _retryPolicy;
+        }
+    }
+
+    /// <summary>
+    ///     Constructor for AdoRepository with resilience configuration.
+    /// </summary>
+    public AdoRepository(
+        IConfiguration configuration,
+        ILogger<AdoRepository> logger,
+        IOptions<PersistenceResilienceOptions> resilienceOptions)
     {
         _configuration = configuration;
         _logger = logger;
+        _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
     }
 
     /// <summary>
@@ -1383,12 +1437,19 @@ public class AdoRepository : IAdoRepository
 
     private static string GenerateCountSql(string sql)
     {
-        // Simple count SQL generation - removes ORDER BY and wraps in COUNT
+        // Remove ORDER BY clause - match ORDER BY followed by everything until end or closing paren
+        // Use Multiline mode where $ matches end of line, not Singleline where . matches newlines
         var cleanSql = Regex.Replace(
             sql,
-            @"\s+ORDER\s+BY\s+[^)]*$",
+            @"\s+ORDER\s+BY\s+[^;]+$",
             string.Empty,
-            RegexOptions.IgnoreCase);
+            RegexOptions.IgnoreCase | RegexOptions.Multiline).Trim();
+
+        // Fallback: if cleanSql is empty or just whitespace, use original sql
+        if (string.IsNullOrWhiteSpace(cleanSql))
+        {
+            cleanSql = sql;
+        }
 
         return $"SELECT COUNT(*) FROM ({cleanSql}) AS CountQuery";
     }

@@ -149,9 +149,14 @@
             Optimized for PostgreSQL with high-performance, scalable operations.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository})">
+        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.RetryPolicy">
             <summary>
-            Constructor for AdoRepository.
+            Lazy-loaded retry policy based on configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Constructor for AdoRepository with resilience configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SetTransaction(System.Data.Common.DbTransaction)">

@@ -5,8 +5,8 @@
 ### Environment variables defined in http-client.env.json (Rider/IntelliJ)
 ### For Visual Studio, change @baseUrl manually or use settings.json
 
-@baseUrl = {{baseUrl}}
-# @baseUrl = https://localhost:7111
+# @baseUrl = {{baseUrl}}
+@baseUrl = https://localhost:7111
 
 ### ========================================
 ### 1. BARCODE & REPORTS
@@ -76,7 +76,7 @@ GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&searchTerm=test&so
 GET {{baseUrl}}/api/usuario/paged-complex?pageIndex=1&pageSize=20&sortBy=Email
 
 ### Get paginated users from stored procedure
-GET {{baseUrl}}/api/usuario/paged-sp?pageIndex=1&pageSize=15&sortBy=Username&sortDirection=Asc&searchTerm=admin
+GET {{baseUrl}}/api/usuario/paged-sp?pageIndex=1&pageSize=15&sortBy=Username&sortDirection=Asc
 
 ### Bulk insert users
 POST {{baseUrl}}/api/usuario/bulk

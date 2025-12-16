@@ -7,15 +7,15 @@
     <PackageVersion Include="Acontplus.Analytics" Version="1.0.0" />
     <PackageVersion Include="Acontplus.Barcode" Version="1.1.1" />
     <PackageVersion Include="Acontplus.Core" Version="2.1.0" />
-    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.5" />
+    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.6" />
     <PackageVersion Include="Acontplus.Utilities" Version="2.0.4" />
     <PackageVersion Include="Asp.Versioning.Http" Version="8.1.0" />
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.5" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.14.2" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.10" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.6" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.15" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.10.1" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0-rc.2" />
     <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
@@ -47,6 +47,7 @@
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="Polly" Version="8.6.5" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.14.0" />
     <PackageVersion Include="ReportViewerCore.NETCore" Version="15.1.27" />
