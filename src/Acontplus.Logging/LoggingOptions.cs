@@ -9,6 +9,8 @@ public class LoggingOptions
     public string RollingInterval { get; set; } = "Day";
     public int? RetainedFileCountLimit { get; set; } = 7;
     public long? FileSizeLimitBytes { get; set; } = 10 * 1024 * 1024;
+    public string Formatter { get; set; } = "Plain"; // Plain or Json
+    public string? OutputTemplate { get; set; } = "{CustomTimestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
     public bool EnableDatabaseLogging { get; set; }
     public string? DatabaseConnectionString { get; set; }
     public bool EnableElasticsearchLogging { get; set; }
