@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Acontplus.Notifications</PackageId>
-    <Version>1.4.7</Version>
+    <Version>1.5.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
@@ -16,7 +16,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary notification patterns, MailKit integration, Amazon SES support, WhatsApp messaging, push notifications, Scriban templating, queue management, and enterprise-ready delivery systems for cloud-native applications.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.5.0: Added template caching with IMemoryCache (30min sliding expiration) for improved performance on high-frequency templates. Reduces I/O operations and speeds up email rendering. Backward compatible - optional IMemoryCache injection in AmazonSesService constructor.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -28,6 +28,7 @@
     <PackageReference Include="Acontplus.Utilities" />
     <PackageReference Include="AWSSDK.SimpleEmailV2" />
     <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Scriban" />

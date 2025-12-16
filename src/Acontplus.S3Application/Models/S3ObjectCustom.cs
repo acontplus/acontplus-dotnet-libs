@@ -14,12 +14,12 @@ public sealed class S3ObjectCustom : IDisposable
     /// <summary>
     /// Gets the AWS region for the S3 bucket.
     /// </summary>
-    public string Region { get; private set; }
+    public string? Region { get; private set; }
 
     /// <summary>
     /// Gets the S3 bucket name.
     /// </summary>
-    public string BucketName { get; private set; }
+    public string? BucketName { get; private set; }
 
     /// <summary>
     /// Gets the file content as a byte array.
@@ -29,12 +29,12 @@ public sealed class S3ObjectCustom : IDisposable
     /// <summary>
     /// Gets the S3 object key (path/filename in the bucket).
     /// </summary>
-    public string S3ObjectKey { get; private set; }
+    public string? S3ObjectKey { get; private set; }
 
     /// <summary>
     /// Gets the full S3 object URL.
     /// </summary>
-    public string S3ObjectUrl { get; private set; }
+    public string? S3ObjectUrl { get; private set; }
 
     /// <summary>
     /// Gets the AWS credentials for this object.
@@ -44,7 +44,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <summary>
     /// Gets the MIME type of the file.
     /// </summary>
-    public string ContentType { get; private set; }
+    public string? ContentType { get; private set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="S3ObjectCustom"/> class using configuration.
@@ -53,24 +53,51 @@ public sealed class S3ObjectCustom : IDisposable
     public S3ObjectCustom(IConfiguration configuration)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        BucketName = configuration["S3Bucket:Name"];
-        Region = configuration["S3Bucket:Region"];
-        AwsCredentials = new AwsCredentials
+
+        // Use unified AWS:S3 configuration with fallback to legacy keys
+        BucketName = configuration["AWS:S3:DefaultBucketName"]
+                     ?? configuration["S3Bucket:Name"];
+
+        Region = configuration["AWS:S3:Region"]
+                 ?? configuration["S3Bucket:Region"]
+                 ?? "us-east-1";
+
+        var accessKey = configuration["AWS:AccessKey"]
+                        ?? configuration["AwsConfiguration:AWSAccessKey"];
+        var secretKey = configuration["AWS:SecretKey"]
+                        ?? configuration["AwsConfiguration:AWSSecretKey"];
+
+        // Only set credentials if provided (optional for IAM roles)
+        if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
         {
-            Key = configuration["AwsConfiguration:AWSAccessKey"],
-            Secret = configuration["AwsConfiguration:AWSSecretKey"]
-        };
+            AwsCredentials = new AwsCredentials
+            {
+                Key = accessKey,
+                Secret = secretKey
+            };
+        }
+
         ValidateConfiguration();
     }
 
     private void ValidateConfiguration()
     {
         if (string.IsNullOrEmpty(BucketName))
-            throw new InvalidOperationException("S3 bucket name is not configured");
+            throw new InvalidOperationException(
+                "S3 bucket name is not configured. Set 'AWS:S3:DefaultBucketName' in appsettings.json");
+
         if (string.IsNullOrEmpty(Region))
-            throw new InvalidOperationException("S3 region is not configured");
-        if (string.IsNullOrEmpty(AwsCredentials.Key) || string.IsNullOrEmpty(AwsCredentials.Secret))
-            throw new InvalidOperationException("AWS credentials are not properly configured");
+            throw new InvalidOperationException(
+                "S3 region is not configured. Set 'AWS:S3:Region' in appsettings.json");
+
+        // Credentials are optional when using IAM roles or instance profiles
+        // Only validate if AwsCredentials object was created
+        if (AwsCredentials != null &&
+            (string.IsNullOrEmpty(AwsCredentials.Key) || string.IsNullOrEmpty(AwsCredentials.Secret)))
+        {
+            throw new InvalidOperationException(
+                "AWS credentials are incomplete. Either provide both 'AWS:AccessKey' and 'AWS:SecretKey', or use IAM roles");
+        }
     }
 
     /// <summary>

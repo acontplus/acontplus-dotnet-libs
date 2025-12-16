@@ -1,4 +1,6 @@
 using Acontplus.Core.Domain.Common.Events;
+using Acontplus.Persistence.Common.Configuration;
+using Acontplus.S3Application.Extensions;
 using Demo.Api.Endpoints.Business.Analytics;
 using Demo.Api.Endpoints.Demo;
 using Demo.Api.Endpoints.Infrastructure;
@@ -37,6 +39,18 @@ public static class ProgramExtensions
         // Configure Report Services
         services.AddReportServices(configuration);
 
+        // ========================================
+        // S3 STORAGE SERVICES (v2.0.0)
+        // ========================================
+        // Features: Connection pooling, Polly retry, rate limiting
+        services.AddS3Storage(configuration);
+
+        // ========================================
+        // EMAIL NOTIFICATION SERVICES (v1.5.0)
+        // ========================================
+        // Optional: Enable template caching for better performance
+        services.AddMemoryCache();
+
         return services;
     }
 
@@ -54,6 +68,11 @@ public static class ProgramExtensions
             sqlServerOptions.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
                 x => x.MigrationsAssembly("Acontplus.TestInfrastructure"));
         });
+
+        // Configure persistence resilience from appsettings.json
+        // This enables dynamic retry policies, circuit breakers, and timeouts for ADO repositories
+        services.Configure<PersistenceResilienceOptions>(
+            configuration.GetSection(PersistenceResilienceOptions.SectionName));
 
         return services;
     }
@@ -176,6 +195,14 @@ public static class ProgramExtensions
         app.MapBarcodeEndpoints();
         app.MapConfigurationTestEndpoints();
         app.MapPrintEndpoints();
+
+        // ========================================
+        // DEMO: S3 STORAGE & EMAIL NOTIFICATIONS
+        // ========================================
+        // Demonstrates v2.0.0 S3 and v1.5.0 Notifications features
+        var storageGroup = app.MapGroup("/api/demo/storage")
+            .WithTags("Storage & Notifications Demo");
+        storageGroup.MapStorageAndNotificationsEndpoints();
 
         // Map demo endpoints
         app.MapBusinessExceptionTestEndpoints();

@@ -4,6 +4,91 @@
         <name>Acontplus.S3Application</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.S3Application.Configuration.S3StorageOptions">
+            <summary>
+            Configuration options for S3 storage service including performance and resilience settings.
+            </summary>
+        </member>
+        <member name="F:Acontplus.S3Application.Configuration.S3StorageOptions.SectionName">
+            <summary>
+            Configuration section name for S3 storage options.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.MaxRequestsPerSecond">
+            <summary>
+            Gets or sets the maximum number of requests per second to prevent throttling.
+            Default is 100 requests/second.
+            AWS S3 limits: 3,500 PUT/COPY/POST/DELETE and 5,500 GET/HEAD per prefix per second.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.TimeoutSeconds">
+            <summary>
+            Gets or sets the request timeout in seconds.
+            Default is 60 seconds.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.MaxRetries">
+            <summary>
+            Gets or sets the maximum number of retry attempts for transient failures.
+            Default is 3 retries.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.RetryBaseDelayMs">
+            <summary>
+            Gets or sets the base delay in milliseconds for exponential backoff between retries.
+            Default is 500ms.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.Region">
+            <summary>
+            Gets or sets the AWS region endpoint (e.g., "us-east-1", "eu-west-1").
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.DefaultBucketName">
+            <summary>
+            Gets or sets the default bucket name for operations.
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.ForcePathStyle">
+            <summary>
+            Gets or sets whether to use path-style addressing for S3 buckets.
+            Default is false (uses virtual-hosted-style).
+            </summary>
+        </member>
+        <member name="P:Acontplus.S3Application.Configuration.S3StorageOptions.EnableMetrics">
+            <summary>
+            Gets or sets whether to enable request metrics and logging.
+            Default is false.
+            </summary>
+        </member>
+        <member name="T:Acontplus.S3Application.Extensions.S3ServiceCollectionExtensions">
+            <summary>
+            Extension methods for registering S3 storage services in the dependency injection container.
+            </summary>
+        </member>
+        <member name="M:Acontplus.S3Application.Extensions.S3ServiceCollectionExtensions.AddS3Storage(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers S3 storage services with default configuration.
+            </summary>
+            <param name="services">The service collection.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="M:Acontplus.S3Application.Extensions.S3ServiceCollectionExtensions.AddS3Storage(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers S3 storage services with configuration from appsettings.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="configuration">The configuration instance.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="M:Acontplus.S3Application.Extensions.S3ServiceCollectionExtensions.AddS3Storage(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Acontplus.S3Application.Configuration.S3StorageOptions})">
+            <summary>
+            Registers S3 storage services with explicit configuration action.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="configureOptions">Action to configure S3 storage options.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
         <member name="T:Acontplus.S3Application.Interfaces.IS3StorageService">
             <summary>
             Defines a contract for AWS S3 storage operations, including async CRUD, retrieval, and presigned URL generation.
@@ -177,51 +262,84 @@
         </member>
         <member name="T:Acontplus.S3Application.Services.S3StorageService">
             <summary>
-            Provides a concrete implementation of <see cref="T:Acontplus.S3Application.Interfaces.IS3StorageService"/> for performing AWS S3 storage operations, including async CRUD, retrieval, and presigned URL generation.
+            Provides a scalable, resilient implementation of <see cref="T:Acontplus.S3Application.Interfaces.IS3StorageService"/> for AWS S3 storage operations.
+            Features: connection pooling, retry policies with exponential backoff, rate limiting, and proper resource management.
+            </summary>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.#ctor(Microsoft.Extensions.Options.IOptions{Acontplus.S3Application.Configuration.S3StorageOptions},Microsoft.Extensions.Logging.ILogger{Acontplus.S3Application.Services.S3StorageService})">
+            <summary>
+            Initializes a new instance of <see cref="T:Acontplus.S3Application.Services.S3StorageService"/> with configuration and logging.
+            </summary>
+            <param name="options">S3 storage configuration options.</param>
+            <param name="logger">Logger instance for diagnostics.</param>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.GetOrCreateClient(Acontplus.S3Application.Models.AwsCredentials,System.String)">
+            <summary>
+            Gets or creates a pooled S3 client for the specified credentials and region.
+            </summary>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.CreateRetryPolicy">
+            <summary>
+            Creates retry policy for transient S3 errors with exponential backoff.
+            </summary>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.EnforceRateLimitAsync(System.Threading.CancellationToken)">
+            <summary>
+            Enforces rate limiting to prevent AWS throttling.
+            </summary>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.CleanupOldTimestamps">
+            <summary>
+            Removes timestamps older than the rate limit window.
             </summary>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.UploadAsync(Acontplus.S3Application.Models.S3ObjectCustom)">
             <summary>
-            Uploads a new object to S3 asynchronously.
+            Uploads a new object to S3 asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object to upload.</param>
             <returns>A response with status and metadata.</returns>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.UpdateAsync(Acontplus.S3Application.Models.S3ObjectCustom)">
             <summary>
-            Updates an existing object in S3 asynchronously.
+            Updates an existing object in S3 asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object to update.</param>
             <returns>A response with status and metadata.</returns>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.DeleteAsync(Acontplus.S3Application.Models.S3ObjectCustom)">
             <summary>
-            Deletes an object from S3 asynchronously.
+            Deletes an object from S3 asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object to delete.</param>
             <returns>A response with status and metadata.</returns>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.GetObjectAsync(Acontplus.S3Application.Models.S3ObjectCustom)">
             <summary>
-            Retrieves an object from S3 asynchronously.
+            Retrieves an object from S3 asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object to retrieve.</param>
             <returns>A response with file content and metadata.</returns>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.DoesObjectExistAsync(Acontplus.S3Application.Models.S3ObjectCustom)">
             <summary>
-            Checks if an object exists in S3 asynchronously.
+            Checks if an object exists in S3 asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object to check.</param>
             <returns>True if the object exists; otherwise, false.</returns>
         </member>
         <member name="M:Acontplus.S3Application.Services.S3StorageService.GetPresignedUrlAsync(Acontplus.S3Application.Models.S3ObjectCustom,System.Int32)">
             <summary>
-            Generates a presigned URL for an S3 object asynchronously.
+            Generates a presigned URL for an S3 object asynchronously with retry policy and rate limiting.
             </summary>
             <param name="s3ObjectCustom">The S3 object for which to generate the URL.</param>
             <param name="expirationInMinutes">The expiration time in minutes for the URL.</param>
             <returns>A response containing the presigned URL.</returns>
+        </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.Dispose">
+            <summary>
+            Disposes all pooled S3 clients and releases resources.
+            </summary>
         </member>
     </members>
 </doc>

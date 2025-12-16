@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Acontplus.S3Application</PackageId>
-    <Version>1.2.4</Version>
+    <Version>2.0.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
@@ -16,7 +16,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary cloud storage patterns, comprehensive AWS S3 integration, async CRUD operations, presigned URL generation, bucket management, and enterprise-ready cloud file handling for cloud-native applications.</PackageReleaseNotes>
+    <PackageReleaseNotes>BREAKING CHANGE v2.0.0: Major scalability improvements with connection pooling, Polly retry policies with exponential backoff, rate limiting (100 req/s default), configurable resilience options, proper IDisposable implementation, structured logging, and thread-safe operations. Requires IOptions&lt;S3StorageOptions&gt; and ILogger&lt;S3StorageService&gt; in DI. Use AddS3Storage() extension for registration.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -34,5 +34,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AWSSDK.Core" />
     <PackageReference Include="AWSSDK.S3" />
+    <PackageReference Include="Polly" />
   </ItemGroup>
 </Project>
