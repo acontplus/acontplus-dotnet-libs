@@ -129,6 +129,16 @@ public static class StorageAndNotificationsEndpoints
         IConfiguration configuration,
         int expirationMinutes = 30)
     {
+        // Validate and sanitize fileName to prevent path traversal
+        if (string.IsNullOrWhiteSpace(fileName) ||
+            fileName.Contains("..") ||
+            fileName.Contains("/") ||
+            fileName.Contains("\\") ||
+            Path.GetInvalidFileNameChars().Any(fileName.Contains))
+        {
+            return Results.BadRequest(new { message = "Invalid file name" });
+        }
+
         try
         {
             var s3Object = new S3ObjectCustom(configuration);
@@ -171,6 +181,25 @@ public static class StorageAndNotificationsEndpoints
         IConfiguration configuration,
         CancellationToken ct)
     {
+        // Validate input parameters
+        if (string.IsNullOrWhiteSpace(request.To) ||
+            !IsValidEmail(request.To))
+        {
+            return Results.BadRequest(new { message = "Invalid recipient email address" });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TemplateName) ||
+            request.TemplateName.Contains("..") ||
+            Path.GetInvalidFileNameChars().Any(request.TemplateName.Contains))
+        {
+            return Results.BadRequest(new { message = "Invalid template name" });
+        }
+
+        if (request.TemplateData == null)
+        {
+            return Results.BadRequest(new { message = "Template data cannot be null" });
+        }
+
         try
         {
             var email = new EmailModel
@@ -255,7 +284,11 @@ public static class StorageAndNotificationsEndpoints
         }
 
         var duration = DateTime.UtcNow - startTime;
-        var successCount = results.Count(r => (bool)r.GetType().GetProperty("success")!.GetValue(r)!);
+        var successCount = results.Count(r =>
+        {
+            var successProperty = r.GetType().GetProperty("success");
+            return successProperty?.GetValue(r) is bool success && success;
+        });
 
         return Results.Ok(new
         {
@@ -272,6 +305,28 @@ public static class StorageAndNotificationsEndpoints
                 retryPolicy = "Transient failures retried with exponential backoff"
             }
         });
+    }
+
+    /// <summary>
+    /// Validates email address format using a simple regex pattern.
+    /// </summary>
+    private static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            // Basic email validation pattern
+            var pattern = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+            return System.Text.RegularExpressions.Regex.IsMatch(email, pattern,
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase,
+                TimeSpan.FromMilliseconds(100));
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public record TemplatedEmailRequest(
