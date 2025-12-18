@@ -52,7 +52,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _templateCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
+        _templateCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache), "IMemoryCache must be registered in DI container");
         _serviceStopwatch = Stopwatch.StartNew();
 
         // Initialize SES v2 client with configuration
@@ -462,7 +462,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
             ProcessLogoInTemplate(templateData, logo, ct);
         }
 
-        return ProcessTemplate(templateContent!, templateData);
+        return ProcessTemplate(templateContent ?? throw new InvalidOperationException("Template content is null"), templateData);
     }
 
     private void ProcessLogoInTemplate(IDictionary<string, object> templateData, string logo, CancellationToken ct)
