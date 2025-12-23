@@ -9,8 +9,8 @@ This directory contains GitHub Actions workflows for automated building, testing
 **Purpose**: Validates code quality and package integrity on every push and pull request.
 
 **Triggers**:
-- Push to `main`, `master`, or `develop` branches
-- Pull requests to `main`, `master`, or `develop` branches
+- Push to `main` branch
+- Pull requests to `main` branch
 - Manual workflow dispatch
 
 **Jobs**:
@@ -27,8 +27,7 @@ This directory contains GitHub Actions workflows for automated building, testing
 **Purpose**: Automatically detects version changes and publishes new NuGet packages.
 
 **Triggers**:
-- Push to `main` or `master` branch (when `.csproj` files change)
-- Pull requests (validation only, no publishing)
+- Push to `main` branch (when `.csproj` files change)
 - Manual workflow dispatch with options
 
 **Jobs**:
@@ -100,7 +99,7 @@ env:
    <Version>2.1.0</Version>
    ```
 
-2. **Commit and push** to `main` or `master`:
+2. **Commit and push** to `main`:
    ```bash
    git add src/Acontplus.Core/Acontplus.Core.csproj
    git commit -m "feat(core): add new feature"
@@ -236,7 +235,7 @@ GitHub will notify you (via email/web) when:
 - Use GitHub Secrets for sensitive data (API keys)
 - Limit API key permissions to "Push" only
 - Regularly rotate API keys
-- Use branch protection rules for `main`/`master`
+- Use branch protection rules for `main`
 - Review changes before merging to main
 
 ❌ **DON'T**:
