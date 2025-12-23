@@ -63,7 +63,7 @@ This guide will help you configure GitHub Actions for automated NuGet package pu
 
 ### Automatic Workflow Triggers
 
-✅ **On Push to Main/Master**:
+✅ **On Push to Main**:
 - Detects which packages have new versions
 - Builds and tests all packages
 - Publishes changed packages to NuGet.org
@@ -185,7 +185,7 @@ If you need to republish an existing version (use sparingly):
 
 **Solutions**:
 - Ensure changes are in `src/**/*.csproj` files
-- Check branch name is `main` or `master`
+- Check branch name is `main`
 - Verify workflows are enabled in Settings → Actions
 
 ### ❌ Build Failures

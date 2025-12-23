@@ -4,16 +4,9 @@ on:
   push:
     branches:
       - main
-      - master
     paths:
       - 'src/**/*.csproj'
       - 'Directory.Packages.props'
-  pull_request:
-    branches:
-      - main
-      - master
-    paths:
-      - 'src/**/*.csproj'
   workflow_dispatch:
     inputs:
       packages:
@@ -145,7 +138,7 @@ jobs:
   build-and-publish:
     name: Build & Publish
     needs: detect-changes
-    if: needs.detect-changes.outputs.has-changes == 'true'
+    if: needs.detect-changes.outputs.has-changes == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       matrix:

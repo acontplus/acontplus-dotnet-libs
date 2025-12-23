@@ -83,7 +83,7 @@ Use this checklist to ensure your GitHub Actions for NuGet publishing is properl
 
 - [ ] API key is stored only in GitHub Secrets (not in code)
 - [ ] No sensitive information in workflow files
-- [ ] Branch protection rules enabled on main/master
+- [ ] Branch protection rules enabled on main
 - [ ] Require pull request reviews before merging
 - [ ] Set API key expiration date (recommended: 1 year)
 - [ ] Document API key rotation process
