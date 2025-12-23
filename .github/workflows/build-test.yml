@@ -1,0 +1,133 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  build:
+    name: Build Solution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+  validate-packages:
+    name: Validate Package Versions
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate package versions
+        shell: pwsh
+        run: |
+          Write-Host "Validating package versions..."
+
+          $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
+          $errors = @()
+
+          foreach ($project in $projectFiles) {
+            [xml]$csproj = Get-Content $project.FullName
+            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+            $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+            $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
+
+            if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+              continue
+            }
+
+            # Validate semantic versioning
+            if ($version -notmatch '^\d+\.\d+\.\d+(-[a-zA-Z0-9\.\-]+)?(\+[a-zA-Z0-9\.\-]+)?$') {
+              $errors += "❌ $packageId has invalid version format: $version"
+            }
+            else {
+              Write-Host "✅ $packageId v$version - Valid"
+            }
+          }
+
+          if ($errors.Count -gt 0) {
+            Write-Host "`n❌ Validation Errors:"
+            foreach ($error in $errors) {
+              Write-Host $error
+            }
+            exit 1
+          }
+
+          Write-Host "`n✅ All package versions are valid!"
+
+  pack-verify:
+    name: Pack and Verify
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore and build
+        run: |
+          dotnet restore
+          dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Pack all packages
+        run: |
+          mkdir -p nupkgs
+          dotnet pack --configuration ${{ env.CONFIGURATION }} --no-build --output nupkgs
+
+      - name: List generated packages
+        shell: pwsh
+        run: |
+          $packages = Get-ChildItem -Path "nupkgs" -Filter "*.nupkg"
+
+          Write-Host "📦 Generated NuGet Packages:"
+          Write-Host "=============================="
+
+          foreach ($pkg in $packages) {
+            $sizeKB = [math]::Round($pkg.Length / 1KB, 2)
+            Write-Host "  - $($pkg.Name) ($sizeKB KB)"
+          }
+
+          Write-Host "`nTotal packages: $($packages.Count)"
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: nupkgs/*.nupkg
+          retention-days: 7

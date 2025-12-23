@@ -1,0 +1,296 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/**/*.csproj'
+      - 'Directory.Packages.props'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/**/*.csproj'
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Specific packages to publish (comma-separated, empty for all changed)'
+        required: false
+        type: string
+      force:
+        description: 'Force publish even if version exists'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  detect-changes:
+    name: Detect Version Changes
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.detect.outputs.packages }}
+      has-changes: ${{ steps.detect.outputs.has-changes }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Detect changed packages
+        id: detect
+        shell: pwsh
+        run: |
+          $changedPackages = @()
+
+          # Manual workflow dispatch with specific packages
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.packages }}" -ne "") {
+            $specifiedPackages = "${{ inputs.packages }}" -split ','
+            foreach ($pkg in $specifiedPackages) {
+              $pkg = $pkg.Trim()
+              $changedPackages += @{
+                Name = $pkg
+                Version = ""
+                Path = ""
+              }
+            }
+          }
+          else {
+            # Find all library projects
+            $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
+
+            foreach ($project in $projectFiles) {
+              [xml]$csproj = Get-Content $project.FullName
+              $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+              $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+              $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
+
+              # Skip if not a package project
+              if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+                continue
+              }
+
+              Write-Host "Checking $packageId version $version"
+
+              # Check if this is a new version or force publish
+              $force = "${{ inputs.force }}" -eq "true"
+              if ($force) {
+                Write-Host "Force publish enabled for $packageId"
+                $changedPackages += @{
+                  Name = $packageId
+                  Version = $version
+                  Path = $project.Directory.Name
+                }
+              }
+              else {
+                # Check if package version exists on NuGet.org
+                try {
+                  $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageId.ToLower())/index.json"
+                  $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+                  $existingVersions = $response.versions
+
+                  if ($existingVersions -notcontains $version) {
+                    Write-Host "New version detected for $packageId : $version"
+                    $changedPackages += @{
+                      Name = $packageId
+                      Version = $version
+                      Path = $project.Directory.Name
+                    }
+                  }
+                  else {
+                    Write-Host "Version $version already exists for $packageId"
+                  }
+                }
+                catch {
+                  # Package doesn't exist yet, this is a new package
+                  Write-Host "New package detected: $packageId version $version"
+                  $changedPackages += @{
+                    Name = $packageId
+                    Version = $version
+                    Path = $project.Directory.Name
+                  }
+                }
+              }
+            }
+          }
+
+          # Output results
+          if ($changedPackages.Count -gt 0) {
+            $packagesJson = $changedPackages | ConvertTo-Json -Compress
+            if ($changedPackages.Count -eq 1) {
+              $packagesJson = "[$packagesJson]"
+            }
+            Write-Host "Changed packages: $packagesJson"
+            "packages=$packagesJson" >> $env:GITHUB_OUTPUT
+            "has-changes=true" >> $env:GITHUB_OUTPUT
+          }
+          else {
+            Write-Host "No changed packages detected"
+            "packages=[]" >> $env:GITHUB_OUTPUT
+            "has-changes=false" >> $env:GITHUB_OUTPUT
+          }
+
+  build-and-publish:
+    name: Build & Publish
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.detect-changes.outputs.packages) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Find project file
+        id: find-project
+        shell: pwsh
+        run: |
+          $packageName = "${{ matrix.package.Name }}"
+          $projectPath = Get-ChildItem -Path "src" -Filter "$packageName.csproj" -Recurse | Select-Object -First 1
+
+          if ($null -eq $projectPath) {
+            Write-Error "Project file not found for $packageName"
+            exit 1
+          }
+
+          Write-Host "Found project: $($projectPath.FullName)"
+          "project-path=$($projectPath.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Pack NuGet package
+        run: |
+          dotnet pack "${{ steps.find-project.outputs.project-path }}" \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            --output nupkgs
+
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "nupkgs/*.nupkg" \
+            --api-key $NUGET_API_KEY \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-${{ matrix.package.Name }}-${{ matrix.package.Version }}
+          path: nupkgs/*.nupkg
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: [detect-changes, build-and-publish]
+    if: needs.detect-changes.outputs.has-changes == 'true' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release notes
+        id: release-notes
+        shell: pwsh
+        run: |
+          $packages = '${{ needs.detect-changes.outputs.packages }}' | ConvertFrom-Json
+
+          $releaseNotes = "## 📦 Published Packages`n`n"
+
+          foreach ($pkg in $packages) {
+            $releaseNotes += "- **$($pkg.Name)** ``v$($pkg.Version)```n"
+          }
+
+          $releaseNotes += "`n## 🔗 NuGet Gallery`n`n"
+          foreach ($pkg in $packages) {
+            $packageUrl = "https://www.nuget.org/packages/$($pkg.Name)/$($pkg.Version)"
+            $releaseNotes += "- [$($pkg.Name) v$($pkg.Version)]($packageUrl)`n"
+          }
+
+          # Save to file for GitHub release
+          $releaseNotes | Out-File -FilePath release-notes.md -Encoding utf8
+
+          # Create tag name
+          if ($packages.Count -eq 1) {
+            $tagName = "$($packages[0].Name)-v$($packages[0].Version)"
+          }
+          else {
+            $date = Get-Date -Format "yyyy-MM-dd"
+            $tagName = "release-$date"
+          }
+
+          "tag-name=$tagName" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.release-notes.outputs.tag-name }}
+          name: ${{ steps.release-notes.outputs.tag-name }}
+          body_path: release-notes.md
+          files: artifacts/**/*.nupkg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-completion:
+    name: Notify Completion
+    needs: [detect-changes, build-and-publish]
+    if: always() && needs.detect-changes.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Report status
+        shell: pwsh
+        run: |
+          $status = "${{ needs.build-and-publish.result }}"
+          $packages = '${{ needs.detect-changes.outputs.packages }}' | ConvertFrom-Json
+
+          Write-Host "============================================"
+          Write-Host "NuGet Publish Workflow Complete"
+          Write-Host "============================================"
+          Write-Host "Status: $status"
+          Write-Host "Packages processed: $($packages.Count)"
+
+          foreach ($pkg in $packages) {
+            Write-Host "  - $($pkg.Name) v$($pkg.Version)"
+          }
+
+          if ($status -eq "success") {
+            Write-Host "✅ All packages published successfully!"
+          }
+          else {
+            Write-Host "❌ Some packages failed to publish. Check logs above."
+            exit 1
+          }

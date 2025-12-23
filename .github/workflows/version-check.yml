@@ -1,0 +1,167 @@
+name: Version Check
+
+on:
+  schedule:
+    # Run daily at 9 AM UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  check-versions:
+    name: Check Package Versions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Compare local vs published versions
+        shell: pwsh
+        run: |
+          Write-Host "================================================"
+          Write-Host "Package Version Comparison Report"
+          Write-Host "================================================"
+          Write-Host ""
+
+          $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
+          $unpublishedPackages = @()
+          $publishedPackages = @()
+          $newPackages = @()
+
+          foreach ($project in $projectFiles) {
+            [xml]$csproj = Get-Content $project.FullName
+            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+            $localVersion = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+            $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
+
+            if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+              continue
+            }
+
+            try {
+              # Check NuGet.org for published versions
+              $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageId.ToLower())/index.json"
+              $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+              $publishedVersions = $response.versions
+              $latestPublished = $publishedVersions[-1]
+
+              if ($publishedVersions -contains $localVersion) {
+                $publishedPackages += @{
+                  Name = $packageId
+                  LocalVersion = $localVersion
+                  PublishedVersion = $latestPublished
+                  Status = "✅ Published"
+                }
+                Write-Host "✅ $packageId"
+                Write-Host "   Local: $localVersion | Published: $latestPublished"
+              }
+              else {
+                $unpublishedPackages += @{
+                  Name = $packageId
+                  LocalVersion = $localVersion
+                  PublishedVersion = $latestPublished
+                  Status = "📦 Unpublished"
+                }
+                Write-Host "📦 $packageId"
+                Write-Host "   Local: $localVersion (NEW) | Latest Published: $latestPublished"
+              }
+            }
+            catch {
+              # Package doesn't exist on NuGet.org yet
+              $newPackages += @{
+                Name = $packageId
+                LocalVersion = $localVersion
+                PublishedVersion = "N/A"
+                Status = "🆕 New Package"
+              }
+              Write-Host "🆕 $packageId"
+              Write-Host "   Local: $localVersion | Not yet published"
+            }
+
+            Write-Host ""
+          }
+
+          # Summary
+          Write-Host "================================================"
+          Write-Host "Summary"
+          Write-Host "================================================"
+          Write-Host "✅ Published & Up-to-date: $($publishedPackages.Count)"
+          Write-Host "📦 Unpublished Versions: $($unpublishedPackages.Count)"
+          Write-Host "🆕 New Packages: $($newPackages.Count)"
+          Write-Host ""
+
+          # Create summary file
+          $summary = "# Package Version Report`n`n"
+
+          if ($unpublishedPackages.Count -gt 0) {
+            $summary += "## 📦 Unpublished Versions`n`n"
+            $summary += "These packages have new versions ready to publish:`n`n"
+            foreach ($pkg in $unpublishedPackages) {
+              $summary += "- **$($pkg.Name)**: v$($pkg.LocalVersion) (latest published: v$($pkg.PublishedVersion))`n"
+            }
+            $summary += "`n"
+          }
+
+          if ($newPackages.Count -gt 0) {
+            $summary += "## 🆕 New Packages`n`n"
+            $summary += "These packages are not yet published:`n`n"
+            foreach ($pkg in $newPackages) {
+              $summary += "- **$($pkg.Name)**: v$($pkg.LocalVersion)`n"
+            }
+            $summary += "`n"
+          }
+
+          if ($publishedPackages.Count -gt 0) {
+            $summary += "## ✅ Published Packages`n`n"
+            foreach ($pkg in $publishedPackages) {
+              $summary += "- **$($pkg.Name)**: v$($pkg.LocalVersion)`n"
+            }
+          }
+
+          # Output to GitHub step summary
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+
+          # Create issue if there are unpublished packages
+          if ($unpublishedPackages.Count -gt 0 -or $newPackages.Count -gt 0) {
+            Write-Host "⚠️  There are unpublished package versions!"
+            "has-unpublished=true" >> $env:GITHUB_OUTPUT
+          }
+          else {
+            Write-Host "✅ All packages are up to date!"
+            "has-unpublished=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Create issue for unpublished packages
+        if: steps.check-versions.outputs.has-unpublished == 'true' && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = '📦 Unpublished Package Versions Detected';
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['automation', 'package-version']
+            });
+
+            const existingIssue = issues.data.find(issue => issue.title === issueTitle);
+
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: 'Automated workflow has detected unpublished package versions.\n\nCheck the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\nTo publish these packages:\n1. Review the version changes\n2. Push to main branch or\n3. Manually trigger the "Publish NuGet Packages" workflow',
+                labels: ['automation', 'package-version', 'needs-publish']
+              });
+            }
