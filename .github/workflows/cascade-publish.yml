@@ -98,7 +98,7 @@ jobs:
                 }
               }
             }
-            
+
             Write-Host "   Dependencies: $($deps -join ', ')" -ForegroundColor Cyan
             $dependencies[$packageId] = $deps
           }
@@ -107,21 +107,32 @@ jobs:
           Write-Host "📊 Dependency Graph:"
           $dependencies | ConvertTo-Json | Write-Host
 
-          # Find packages that depend on root package (directly or transitively)
-          $rootPackage = "Acontplus.${{ inputs.root-package }}"
-          
+          # Normalize root package input to avoid double 'Acontplus.' prefix
+          $inputRoot = "${{ inputs.root-package }}".Trim()
+          if ($inputRoot -like "Acontplus.*") {
+            $rootPackage = $inputRoot
+            Write-Host "ℹ️ Input already includes prefix: $inputRoot" -ForegroundColor Yellow
+          }
+          elseif ([string]::IsNullOrWhiteSpace($inputRoot)) {
+            Write-Host "❌ ERROR: Root package input is empty" -ForegroundColor Red
+            exit 1
+          }
+          else {
+            $rootPackage = "Acontplus.$inputRoot"
+          }
+
           Write-Host ""
           Write-Host "🎯 Looking for root package: $rootPackage"
-          
+
           if (-not $dependencies.ContainsKey($rootPackage)) {
             Write-Host "❌ ERROR: Root package '$rootPackage' not found in dependency graph!" -ForegroundColor Red
             Write-Host "Available packages:" -ForegroundColor Yellow
             $dependencies.Keys | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
             exit 1
           }
-          
+
           Write-Host "✅ Root package found in dependency graph"
-          
+
           $affectedPackages = @()
 
           function Get-Dependents {
@@ -130,7 +141,7 @@ jobs:
             $directDependents = $dependencies.Keys | Where-Object {
               $dependencies[$_] -contains $package
             }
-            
+
             Write-Host "   Dependents of $package`: $($directDependents -join ', ')"
 
             foreach ($dependent in $directDependents) {
