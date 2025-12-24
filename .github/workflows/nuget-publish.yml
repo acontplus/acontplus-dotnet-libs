@@ -51,17 +51,28 @@ jobs:
         id: detect
         shell: pwsh
         run: |
+          function Normalize-PackageName {
+            param([string]$name)
+            $trimmed = $name.Trim()
+            if ([string]::IsNullOrWhiteSpace($trimmed)) { return $trimmed }
+            if ($trimmed -like "Acontplus.*") { return $trimmed }
+            return "Acontplus.$trimmed"
+          }
+
           $changedPackages = @()
 
           # Manual workflow dispatch with specific packages
           if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.packages }}" -ne "") {
             $specifiedPackages = "${{ inputs.packages }}" -split ','
             foreach ($pkg in $specifiedPackages) {
-              $pkg = $pkg.Trim()
-              $changedPackages += @{
-                Name = $pkg
-                Version = ""
-                Path = ""
+              $normalized = Normalize-PackageName $pkg
+              if (-not [string]::IsNullOrWhiteSpace($normalized)) {
+                Write-Host "Manual publish request for: $normalized"
+                $changedPackages += @{
+                  Name = $normalized
+                  Version = ""
+                  Path = ""
+                }
               }
             }
           }
