@@ -25,11 +25,6 @@ on:
           - minor
           - none
         default: patch
-      create-pr:
-        description: 'Create PR instead of publishing directly'
-        required: false
-        type: boolean
-        default: true
       run-tests:
         description: 'Run tests before publishing'
         required: false
@@ -185,13 +180,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-
-      - name: Create branch for changes
-        if: ${{ inputs.create-pr }}
-        run: |
-          BRANCH_NAME="cascade-update/${{ inputs.root-package }}-$(date +%s)"
-          git checkout -b $BRANCH_NAME
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Update packages in cascade
         id: cascade-update
@@ -469,56 +457,7 @@ jobs:
           }
 
           git commit -m $commitMsg
-
-          if ("${{ inputs.create-pr }}" -eq "true") {
-            git push origin $env:BRANCH_NAME
-          } else {
-            git push
-          }
-
-      - name: Create Pull Request
-        if: ${{ !inputs.dry-run && inputs.create-pr }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const changelog = fs.readFileSync('CHANGELOG_UPDATE.md', 'utf8');
-
-            const pr = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🔄 Cascade version bump: ${{ inputs.root-package }}',
-              head: process.env.BRANCH_NAME,
-              base: 'main',
-              body: changelog
-            });
-
-            console.log(`Created PR #${pr.data.number}`);
-
-            // Add labels
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.data.number,
-              labels: ['automated', 'version-bump', 'dependencies']
-            });
-
-            // Add assignees and reviewers
-            await github.rest.issues.addAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.data.number,
-              assignees: ['${{ github.actor }}']
-            });
-
-            await github.rest.pulls.requestReviewers({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.data.number,
-              reviewers: ['${{ github.actor }}']
-            });
-
-            console.log(`✅ PR created: ${pr.data.html_url}`);
+          git push origin main
 
       - name: Upload artifacts
         if: ${{ !inputs.dry-run }}
@@ -531,7 +470,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [calculate-dependencies, update-and-publish]
-    if: ${{ !inputs.dry-run && !inputs.create-pr }}
+    if: ${{ !inputs.dry-run }}
     runs-on: ubuntu-latest
 
     steps:
@@ -569,7 +508,7 @@ jobs:
   rollback:
     name: Rollback on Failure
     needs: [calculate-dependencies, update-and-publish]
-    if: failure() && !inputs.dry-run && !inputs.create-pr
+    if: failure() && !inputs.dry-run
     runs-on: ubuntu-latest
 
     steps:
@@ -646,24 +585,19 @@ jobs:
         shell: pwsh
         run: |
           $status = "${{ needs.update-and-publish.result }}"
-          $createPr = "${{ inputs.create-pr }}" -eq "true"
 
           Write-Host "================================================"
           Write-Host "Cascade Publish Workflow Complete"
           Write-Host "================================================"
           Write-Host "Status: $status"
-          Write-Host "Mode: $(if ($createPr) { 'Pull Request' } else { 'Direct Publish' })"
+          Write-Host "Mode: Direct Push to Main"
           Write-Host "Root Package: Acontplus.${{ inputs.root-package }}"
           Write-Host ""
 
           if ($status -eq "success") {
-            if ($createPr) {
-              Write-Host "✅ Pull request created successfully!"
-              Write-Host "Review and merge the PR to publish packages."
-            } else {
-              Write-Host "✅ All packages published successfully!"
-              Write-Host "Packages are now available on NuGet.org"
-            }
+            Write-Host "✅ All packages published successfully!"
+            Write-Host "Changes pushed to main branch"
+            Write-Host "Packages are now available on NuGet.org"
           } else {
             Write-Host "❌ Workflow failed. Check logs and rollback issue."
             exit 1

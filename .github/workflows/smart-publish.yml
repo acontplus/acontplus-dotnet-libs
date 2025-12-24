@@ -220,7 +220,6 @@ jobs:
 
             body += `   - **Bump Type**: \`patch\` (or appropriate version bump)\n`;
             body += `   - **Cascade Bump**: \`patch\`\n`;
-            body += `   - **Create PR**: ✅ true\n`;
             body += `   - **Run Tests**: ✅ true\n\n`;
 
             body += `### ⚠️ Important\n\n`;
