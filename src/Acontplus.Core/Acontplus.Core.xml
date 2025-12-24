@@ -2546,6 +2546,12 @@
             Método alternativo más agresivo para casos extremos donde hay mucho HTML mezclado
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:Acontplus.Core.Validation.XmlValidator.SafeEscapeXmlContent(System.String)" -->
+        <member name="M:Acontplus.Core.Validation.XmlValidator.SafeEscapeXmlContent(System.String)">
+            <summary>
+            Limpia caracteres especiales menor que y mayor que SOLO del contenido de texto entre etiquetas.
+            NO modifica las etiquetas XML válidas.
+            Usa un enfoque simple: reemplaza caracteres que NO son parte de etiquetas XML válidas.
+            </summary>
+        </member>
     </members>
 </doc>

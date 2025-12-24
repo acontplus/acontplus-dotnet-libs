@@ -79,13 +79,6 @@ public class DataXmlComprobante
                     var nodeInfoNotaDebito = xmlComp.GetElementsByTagName("infoNotaDebito")[0];
                     if (nodeInfoNotaDebito != null) GetInfoNotaDebito(comp.CodDoc, comp, nodeInfoNotaDebito);
 
-
-                    var nodeInfoGuiaRemision = xmlComp.GetElementsByTagName("infoGuiaRemision")[0];
-                    if (nodeInfoGuiaRemision != null) GetInfoGuiaRemision(comp, nodeInfoGuiaRemision);
-
-                    var nodeDestinatarios = xmlComp.GetElementsByTagName("destinatarios")[0];
-                    if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
-
                     var nodeMotivos = xmlComp.GetElementsByTagName("motivos")[0];
                     if (nodeMotivos != null) GetMotivosNotaDebito(comp, nodeMotivos);
 
@@ -93,6 +86,13 @@ public class DataXmlComprobante
                 case "06":
                     var nodeGr = xmlComp.GetElementsByTagName("guiaRemision")[0];
                     comp.VersionComp = nodeGr?.Attributes?["version"]?.Value ?? string.Empty;
+
+                    var nodeInfoGuiaRemision = xmlComp.GetElementsByTagName("infoGuiaRemision")[0];
+                    if (nodeInfoGuiaRemision != null) GetInfoGuiaRemision(comp, nodeInfoGuiaRemision);
+
+                    var nodeDestinatarios = xmlComp.GetElementsByTagName("destinatarios")[0];
+                    if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
+
                     break;
                 case "07":
                     var nodeRet = xmlComp.GetElementsByTagName("comprobanteRetencion")[0];
@@ -259,9 +259,17 @@ public class DataXmlComprobante
                 var infoFactura = obj as InfoFactura;
                 infoFactura?.CreateTotalTaxes(totalImpuestos);
                 break;
+            case "03":
+                var infoLiquidacion = obj as InfoLiquidacionCompra;
+                infoLiquidacion?.CreateTotalTaxes(totalImpuestos);
+                break;
             case "04":
                 var infoNotaCredito = obj as InfoNotaCredito;
                 infoNotaCredito?.CreateTotalTaxes(totalImpuestos);
+                break;
+            case "05":
+                var infoNotaDebito = obj as InfoNotaDebito;
+                infoNotaDebito?.CreateTotalTaxes(totalImpuestos);
                 break;
         }
     }
