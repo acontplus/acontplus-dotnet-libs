@@ -478,18 +478,47 @@ jobs:
 
       - name: Create Pull Request
         if: ${{ !inputs.dry-run && inputs.create-pr }}
-        uses: peter-evans/create-pull-request@v6
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.BRANCH_NAME }}
-          title: "🔄 Cascade version bump: ${{ inputs.root-package }}"
-          body-path: CHANGELOG_UPDATE.md
-          labels: |
-            automated
-            version-bump
-            dependencies
-          assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
+          script: |
+            const fs = require('fs');
+            const changelog = fs.readFileSync('CHANGELOG_UPDATE.md', 'utf8');
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 Cascade version bump: ${{ inputs.root-package }}',
+              head: process.env.BRANCH_NAME,
+              base: 'main',
+              body: changelog
+            });
+
+            console.log(`Created PR #${pr.data.number}`);
+
+            // Add labels
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              labels: ['automated', 'version-bump', 'dependencies']
+            });
+
+            // Add assignees and reviewers
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              assignees: ['${{ github.actor }}']
+            });
+
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.data.number,
+              reviewers: ['${{ github.actor }}']
+            });
+
+            console.log(`✅ PR created: ${pr.data.html_url}`);
 
       - name: Upload artifacts
         if: ${{ !inputs.dry-run }}
