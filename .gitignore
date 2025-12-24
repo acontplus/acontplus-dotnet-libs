@@ -231,8 +231,8 @@ ServiceFabricBackup/
 ###################
 # Specific Exclusions
 ###################
-# Test API Development Settings (already specified)
-apps/src/Acontplus.TestApi/appsettings.Development.json
+# Demo API Development Settings (already specified)
+apps/src/Demo.Api/appsettings.Development.json
 
 # Include important config templates (negative patterns)
 !**/appsettings.json

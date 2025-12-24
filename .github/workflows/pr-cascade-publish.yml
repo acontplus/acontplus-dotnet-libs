@@ -1,0 +1,261 @@
+name: PR - Publish Cascade Updates
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'src/**/*.csproj'
+      - 'Directory.Packages.props'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+# Prevents duplicate runs with other workflows
+concurrency:
+  group: publish-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  check-pr:
+    name: Check if PR is from Cascade Update
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      is-cascade: ${{ steps.check.outputs.is-cascade }}
+      packages: ${{ steps.detect.outputs.packages }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if cascade update
+        id: check
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          if [[ "$BRANCH_NAME" == cascade-update/* ]]; then
+            echo "is-cascade=true" >> $GITHUB_OUTPUT
+            echo "This is a cascade update PR"
+          else
+            echo "is-cascade=false" >> $GITHUB_OUTPUT
+            echo "Not a cascade update PR"
+          fi
+
+      - name: Detect changed packages
+        if: steps.check.outputs.is-cascade == 'true'
+        id: detect
+        shell: pwsh
+        run: |
+          # Find all changed .csproj files
+          $changedFiles = git diff --name-only HEAD~1 HEAD | Where-Object { $_ -like "src/*.csproj" }
+          $packages = @()
+
+          foreach ($file in $changedFiles) {
+            if (Test-Path $file) {
+              [xml]$csproj = Get-Content $file
+              $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+              $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+
+              if ($packageId -and $version) {
+                $packages += @{
+                  Name = $packageId
+                  Version = $version
+                }
+              }
+            }
+          }
+
+          $packagesJson = $packages | ConvertTo-Json -Compress
+          if ($packages.Count -eq 1) {
+            $packagesJson = "[$packagesJson]"
+          }
+
+          "packages=$packagesJson" >> $env:GITHUB_OUTPUT
+
+  publish-packages:
+    name: Publish to NuGet
+    needs: check-pr
+    if: needs.check-pr.outputs.is-cascade == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.check-pr.outputs.packages) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: |
+          dotnet nuget locals http-cache --clear
+          dotnet restore --force
+
+      - name: Build solution
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: |
+          TEST_PROJECT=$(find tests -name "${{ matrix.package.Name }}.Tests.csproj" | head -n 1)
+          if [ -n "$TEST_PROJECT" ]; then
+            echo "Running tests for ${{ matrix.package.Name }}"
+            dotnet test "$TEST_PROJECT" --configuration ${{ env.CONFIGURATION }} --no-build
+          else
+            echo "No tests found for ${{ matrix.package.Name }}"
+          fi
+
+      - name: Find project file
+        id: find-project
+        shell: pwsh
+        run: |
+          $packageName = "${{ matrix.package.Name }}"
+          $projectPath = Get-ChildItem -Path "src" -Filter "$packageName.csproj" -Recurse | Select-Object -First 1
+
+          if ($null -eq $projectPath) {
+            Write-Error "Project file not found for $packageName"
+            exit 1
+          }
+
+          Write-Host "Found project: $($projectPath.FullName)"
+          "project-path=$($projectPath.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Pack NuGet package
+        run: |
+          dotnet pack "${{ steps.find-project.outputs.project-path }}" \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            --output nupkgs
+
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "nupkgs/*.nupkg" \
+            --api-key $NUGET_API_KEY \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+      - name: Verify package availability
+        shell: pwsh
+        run: |
+          $packageName = "${{ matrix.package.Name }}"
+          $version = "${{ matrix.package.Version }}"
+
+          Write-Host "Waiting 30s for NuGet indexing..."
+          Start-Sleep -Seconds 30
+
+          $maxRetries = 10
+          $verified = $false
+
+          for ($i = 1; $i -le $maxRetries; $i++) {
+            try {
+              $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
+              $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+
+              if ($response.versions -contains $version) {
+                Write-Host "✅ Package $packageName v$version verified on NuGet.org"
+                $verified = $true
+                break
+              }
+            }
+            catch {
+              Write-Host "Retry $i/$maxRetries - package not yet available..."
+            }
+
+            Start-Sleep -Seconds 10
+          }
+
+          if (-not $verified) {
+            Write-Host "❌ CRITICAL: Package $packageName v$version not available after $maxRetries retries" -ForegroundColor Red
+            Write-Host "Cannot continue - dependent packages in cascade may fail" -ForegroundColor Red
+            exit 1
+          }
+
+  create-release:
+    name: Create GitHub Release
+    needs: [check-pr, publish-packages]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $packages = '${{ needs.check-pr.outputs.packages }}' | ConvertFrom-Json
+
+          $notes = "## 🚀 Cascade Release`n`n"
+          $notes += "Merged PR: #${{ github.event.pull_request.number }}`n`n"
+          $notes += "### 📦 Published Packages`n`n"
+
+          foreach ($pkg in $packages) {
+            $url = "https://www.nuget.org/packages/$($pkg.Name)/$($pkg.Version)"
+            $notes += "- [$($pkg.Name) v$($pkg.Version)]($url)`n"
+          }
+
+          $notes | Out-File -FilePath release-notes.md -Encoding utf8
+
+          # Create tag
+          $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+          $tag = "cascade-release-$timestamp"
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.notes.outputs.tag }}
+          name: 🚀 Cascade Release - ${{ steps.notes.outputs.tag }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-success:
+    name: Notify Success
+    needs: [publish-packages, create-release]
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Success notification
+        run: |
+          echo "✅ All packages published successfully!"
+          echo "Check NuGet.org for availability"
+
+  notify-failure:
+    name: Notify Failure
+    needs: [publish-packages]
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create failure issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 PR Cascade Publish Failed',
+              body: `## ⚠️ PR Merge Publish Failure
+
+              **PR**: #${{ github.event.pull_request.number }}
+              **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+              The automated publish after PR merge failed. Check the workflow logs for details.
+
+              cc: @${{ github.event.pull_request.user.login }}`,
+              labels: ['bug', 'automated', 'publish-failed']
+            });

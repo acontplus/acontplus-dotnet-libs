@@ -35,11 +35,10 @@ This repository contains multiple libraries and sample applications, each in its
 
 ### Sample Applications (apps/)
 
-- **Acontplus.TestApi**: Example ASP.NET Core Web API demonstrating integration of all libraries, including authentication, reporting, notifications, and more.
-- **Acontplus.TestApplication**: Application layer sample with DTOs, services, and domain logic.
-- **Acontplus.TestDomain**: Domain models/entities for sample/test scenarios.
-- **Acontplus.TestInfrastructure**: Infrastructure and persistence for test/sample apps.
-- **Acontplus.TestHostApi**: (Reserved for future host-level API samples.)
+- **Demo.Api**: Example ASP.NET Core Web API demonstrating integration of all libraries, including authentication, reporting, notifications, and more.
+- **Demo.Application**: Application layer sample with DTOs, services, and domain logic.
+- **Demo.Domain**: Domain models/entities for sample/demo scenarios.
+- **Demo.Infrastructure**: Infrastructure and persistence for demo/sample apps.
 
 ---
 

@@ -1,12 +1,17 @@
-name: Publish NuGet Packages
+name: Publish NuGet Packages (Legacy)
+
+# ⚠️ NOTE: This workflow is now LEGACY and only runs via manual dispatch
+# Automatic publishing is handled by smart-publish.yml which detects
+# dependencies and chooses the appropriate strategy.
+# Keep this workflow for emergency manual publishing only.
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**/*.csproj'
-      - 'Directory.Packages.props'
+  # push:  # DISABLED - causes conflict with smart-publish.yml
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'src/**/*.csproj'
+  #     - 'Directory.Packages.props'
   workflow_dispatch:
     inputs:
       packages:

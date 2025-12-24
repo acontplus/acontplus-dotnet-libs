@@ -58,10 +58,10 @@ Use the affected library or component name in parentheses. Choose from:
 - `s3` - Acontplus.S3Application (AWS S3 storage)
 
 ### Sample Applications (apps/)
-- `test-api` - Acontplus.TestApi
-- `test-app` - Acontplus.TestApplication
-- `test-domain` - Acontplus.TestDomain
-- `test-infra` - Acontplus.TestInfrastructure
+- `demo-api` - Demo.Api
+- `demo-app` - Demo.Application
+- `demo-domain` - Demo.Domain
+- `demo-infra` - Demo.Infrastructure
 
 ### Infrastructure & Configuration
 - `build` - Build configuration, Directory.Packages.props, .csproj files
@@ -74,7 +74,7 @@ Use the affected library or component name in parentheses. Choose from:
 ### Special Cases
 - Omit scope only if the change affects multiple libraries across the entire workspace
 - For multi-package version updates, use `build(deps)` or just `build`
-- Use kebab-case for multi-word scopes (e.g., `api-docs`, `test-api`)
+- Use kebab-case for multi-word scopes (e.g., `api-docs`, `demo-api`)
 
 ## Valid Examples
 

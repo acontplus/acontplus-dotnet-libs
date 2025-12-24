@@ -12,18 +12,19 @@ using Scrutor;
 namespace Demo.Api.Extensions;
 
 /// <summary>
-/// Consolidated extension methods for configuring the Test API application.
+/// Consolidated extension methods for configuring the Demo API application.
 /// </summary>
 public static class ProgramExtensions
 {
     /// <summary>
-    /// Adds all services required for the Test API application.
+    /// Adds all services required for the Demo API application.
     /// </summary>
-    public static IServiceCollection AddAllTestServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAllDemoServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add Test API specific services (HTTP context, OpenAPI, JSON config)
+        // Add Demo API specific services (HTTP context, OpenAPI, JSON config)
         services.AddHttpContextAccessor();
         services.AddOpenApi();
+        services.AddAntiforgery();
         JsonConfigurationService.ConfigureAspNetCore(services, useStrictMode: false);
         JsonConfigurationService.RegisterJsonConfiguration(services);
 
@@ -104,6 +105,7 @@ public static class ProgramExtensions
         services.AddScoped<ICookieService, CookieService>();
         services.AddScoped<ICaptchaService, CaptchaService>();
         services.AddScoped<ICedulaService, CedulaService>();
+        services.AddScoped<IXmlSriFileService, XmlSriFileService>();
         services.AddScoped<IMailKitService, AmazonSesService>();
         services.AddTransient<ISqlExceptionTranslator, SqlExceptionTranslator>();
         services.AddDataProtection();
@@ -146,9 +148,9 @@ public static class ProgramExtensions
     }
 
     /// <summary>
-    /// Configures the middleware pipeline for the Test API.
+    /// Configures the middleware pipeline for the Demo API.
     /// </summary>
-    public static void ConfigureTestApiMiddleware(this WebApplication app)
+    public static void ConfigureDemoApiMiddleware(this WebApplication app)
     {
         // Configure the HTTP request pipeline.
         // Use Serilog request logging BEFORE other middleware like UseRouting, UseAuthentication, etc.
@@ -164,16 +166,18 @@ public static class ProgramExtensions
         app.UseRouting();
         app.UseHttpsRedirection();
         app.UseResponseCompression();
+        app.UseAuthentication();
         app.UseAuthorization();
+        app.UseAntiforgery();
 
         // Controllers have been converted to Minimal API endpoints
         // app.MapControllers();
     }
 
     /// <summary>
-    /// Maps all endpoints for the Test API.
+    /// Maps all endpoints for the Demo API.
     /// </summary>
-    public static void MapTestApiEndpoints(this WebApplication app)
+    public static void MapDemoApiEndpoints(this WebApplication app)
     {
         // Map health checks using infrastructure extension
         app.MapHealthCheckEndpoints();

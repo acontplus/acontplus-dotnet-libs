@@ -1152,11 +1152,11 @@ builder.Services.AddDistributedCacheService();
 
 ### Live Demo
 
-See `apps/src/Acontplus.TestApi/Endpoints/Core/LookupEndpoints.cs` for a working example.
+See `apps/src/Demo.Api/Endpoints/Core/LookupEndpoints.cs` for a working example.
 
 ### References
 
-- **Live Example**: `apps/src/Acontplus.TestApi` - Complete working implementation
+- **Live Example**: `apps/src/Demo.Api` - Complete working implementation
 - **Package**: `Acontplus.Services` - Service implementation
 - **DTO**: `Acontplus.Core/Dtos/Responses/LookupItem.cs` - Shared DTO
 

@@ -1,53 +1,174 @@
-# GitHub Actions CI/CD Workflows
+# 🔄 GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows for automated building, testing, and publishing of NuGet packages.
+Este directorio contiene workflows automatizados para CI/CD del monorepo Acontplus.
 
-## Workflows
+## 📁 Workflows Disponibles
 
-### 1. Build and Test (`build-test.yml`)
+### 🧠 **smart-publish.yml** ⭐⭐ INTELIGENTE - RECOMENDADO
+**Detección automática y estrategia de publicación inteligente**
 
-**Purpose**: Validates code quality and package integrity on every push and pull request.
+- ✅ **Análisis automático** de dependencias al mergear PR
+- ✅ **Detecta** si paquetes tienen dependientes
+- ✅ **Estrategia automática**:
+  - Si tiene dependientes → Crea issue con recomendación de cascade
+  - Si NO tiene dependientes → Publica directamente
+- ✅ Tests automáticos
+- ✅ Comentarios en PR con recomendaciones
+- ✅ Zero configuración necesaria
 
-**Triggers**:
-- Push to `main` branch
-- Pull requests to `main` branch
-- Manual workflow dispatch
+**Trigger**: Automático al mergear cualquier PR que modifique `.csproj`
 
-**Jobs**:
-- **Build Solution**: Compiles all projects
-- **Validate Package Versions**: Checks semantic versioning compliance
-- **Pack and Verify**: Generates NuGet packages and verifies their structure
-
-**Artifacts**: NuGet packages (retained for 7 days)
+**Cómo funciona**:
+1. Merges un PR con cambio de versión
+2. Workflow analiza automáticamente las dependencias
+3. Decide la estrategia apropiada
+4. Ejecuta o recomienda la acción
 
 ---
 
-### 2. Publish NuGet Packages (`nuget-publish.yml`)
+### 🔄 **cascade-publish.yml**
+**Publicación en cascada de paquetes NuGet con dependencias**
 
-**Purpose**: Automatically detects version changes and publishes new NuGet packages.
+- ✅ Cálculo automático del grafo de dependencias
+- ✅ Actualización secuencial en orden topológico
+- ✅ Tests automáticos antes de publicar
+- ✅ Creación de PR para review (recomendado)
+- ✅ Verificación de disponibilidad en NuGet.org
+- ✅ Changelog automático
+- ✅ Rollback support con issues automáticos
 
-**Triggers**:
-- Push to `main` branch (when `.csproj` files change)
-- Manual workflow dispatch with options
+**Uso**: Manual via GitHub UI → Actions → Cascade Publish (o cuando smart-publish lo recomienda)
 
-**Jobs**:
+**Documentación completa**: [CASCADE_PUBLISH_GUIDE.md](../../docs/CASCADE_PUBLISH_GUIDE.md)
 
-#### Detect Changes
-Compares package versions in `.csproj` files with NuGet.org to identify new versions.
+---
 
-#### Build and Publish
-- Builds the solution
-- Packs changed packages
-- Publishes to NuGet.org
-- Uploads artifacts to GitHub
+### 🚀 **pr-cascade-publish.yml** ⭐ NUEVO
+**Publicación automática al mergear PRs de cascade**
 
-#### Create Release
-- Creates a GitHub release with the new version tag
-- Attaches `.nupkg` files to the release
-- Generates release notes with NuGet Gallery links
+- ✅ Detecta merges de branches `cascade-update/*`
+- ✅ Publica automáticamente a NuGet.org
+- ✅ Ejecuta tests finales
+- ✅ Crea GitHub Release
+- ✅ Notificaciones de éxito/fallo
 
-#### Notify Completion
-Reports the overall status of the workflow.
+**Trigger**: Automático al mergear PR
+
+---
+
+### 📦 **nuget-publish.yml** ⚠️ LEGACY
+**Publicación individual de paquetes (Solo manual)**
+
+- ⚠️ **DESACTIVADO automáticamente** para evitar conflictos con smart-publish
+- ✅ Solo para uso manual en emergencias
+- ✅ Publicación paralela de múltiples paquetes
+- ✅ Soporte para publicación forzada
+
+**Trigger**: ~~Push a `main`~~ Solo Manual (workflow_dispatch)
+
+**Nota**: Este workflow ha sido reemplazado por `smart-publish.yml` para operación normal. Se mantiene como fallback para casos de emergencia.
+
+---
+
+### ✅ **version-check.yml**
+**Verificación de versiones publicadas**
+
+- ✅ Compara versiones locales vs NuGet.org
+- ✅ Identifica paquetes sin publicar
+- ✅ Detecta paquetes nuevos
+- ✅ Ejecución diaria automática
+
+**Trigger**: Cron diario (9 AM UTC) o Manual
+
+---
+
+### 🏗️ **build-test.yml**
+**Build y tests continuos**
+
+- ✅ Build de toda la solución
+- ✅ Ejecución de tests
+- ✅ Validación de código
+
+**Trigger**: Push y Pull Requests
+
+---
+
+## 🎯 Flujo de Trabajo Recomendado
+
+### **Desarrollo Normal** ⭐ AUTOMÁTICO CON SMART-PUBLISH
+
+1. **Creas feature branch** y haces cambios
+   ```bash
+   git checkout -b feature/nueva-funcionalidad
+   # Editar código, actualizar versión en .csproj
+   ```
+
+2. **Create PR** → `build-test.yml` valida automáticamente
+
+3. **Review y merge a main**
+
+4. **`smart-publish.yml` se ejecuta automáticamente** y decide:
+
+   **Escenario A: Paquete sin dependientes (ej: Barcode, S3Application)**
+   ```
+   ✅ Publica directamente a NuGet.org
+   ✅ Crea GitHub Release
+   ✅ Listo! ✨
+   ```
+
+   **Escenario B: Paquete con dependientes (ej: Core, Utilities)**
+   ```
+   ⚠️ Crea issue recomendando cascade update
+   ⚠️ Comenta en tu PR con instrucciones
+   ➡️ Debes ejecutar manualmente cascade-publish.yml
+   ```
+
+### **Actualización en Cascada** (Cuando smart-publish lo recomienda)
+
+1. **Ejecutar `cascade-publish.yml`** manualmente:
+   ```
+   GitHub → Actions → Cascade Publish → Run workflow
+
+   Parámetros:
+   - Root Package: Core (o el paquete que actualizas)
+   - Bump Type: minor/patch/major
+   - Cascade Bump: patch (para dependientes)
+   - Create PR: ✅ true (IMPORTANTE - permite review)
+   - Run Tests: ✅ true
+   - Dry Run: false
+   ```
+
+2. **Se crea PR automáticamente** con:
+   - Cambios de versión en todos los paquetes dependientes
+   - Changelog detallado
+   - Labels: automated, version-bump, dependencies
+
+3. **Review y merge** el PR
+
+4. **`pr-cascade-publish.yml` publica automáticamente** al mergear
+
+📖 **Documentación completa**: [CASCADE_PUBLISH_GUIDE.md](../../docs/CASCADE_PUBLISH_GUIDE.md)
+
+### **Publicación Individual**
+
+1. Actualizar versión en `.csproj` manualmente
+2. Commit y push a `main`
+3. `nuget-publish.yml` detecta y publica
+
+---
+
+## 🔒 Prevención de Conflictos
+
+Los workflows están configurados para **evitar publicaciones duplicadas**:
+
+### Mecanismos de Protección
+
+1. **Concurrency Control**: smart-publish y pr-cascade-publish usan el mismo grupo de concurrencia
+2. **Branch Detection**: smart-publish se salta automáticamente branches `cascade-update/*`
+3. **Trigger Selectivo**: nuget-publish desactivado automáticamente (solo manual)
+4. **Eligibility Check**: Verificación explícita antes de ejecutar
+
+**Documentación completa**: [WORKFLOWS_CONFLICT_RESOLUTION.md](../../docs/WORKFLOWS_CONFLICT_RESOLUTION.md)
 
 ---
 
