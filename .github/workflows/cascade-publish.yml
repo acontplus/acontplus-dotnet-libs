@@ -1,0 +1,640 @@
+name: Cascade Publish NuGet Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      root-package:
+        description: 'Core'
+        required: true
+        type: string
+      bump-type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+      cascade-bump:
+        description: 'Bump type for dependent packages'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - none
+        default: patch
+      create-pr:
+        description: 'Create PR instead of publishing directly'
+        required: false
+        type: boolean
+        default: true
+      run-tests:
+        description: 'Run tests before publishing'
+        required: false
+        type: boolean
+        default: true
+      dry-run:
+        description: 'Dry run (no actual publish)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  calculate-dependencies:
+    name: Calculate Update Order
+    runs-on: ubuntu-latest
+    outputs:
+      update-order: ${{ steps.calculate.outputs.update-order }}
+      packages-to-update: ${{ steps.calculate.outputs.packages-to-update }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Calculate dependency order
+        id: calculate
+        shell: pwsh
+        run: |
+          # Parse all project dependencies
+          $dependencies = @{}
+          $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
+
+          foreach ($project in $projectFiles) {
+            [xml]$csproj = Get-Content $project.FullName
+            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+            $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
+
+            if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+              continue
+            }
+
+            $deps = @()
+            foreach ($itemGroup in $csproj.Project.ItemGroup) {
+              if ($itemGroup.PackageReference) {
+                foreach ($packageRef in $itemGroup.PackageReference) {
+                  if ($packageRef.Include -like "Acontplus.*") {
+                    $deps += $packageRef.Include
+                  }
+                }
+              }
+            }
+            $dependencies[$packageId] = $deps
+          }
+
+          Write-Host "Dependency Graph:"
+          $dependencies | ConvertTo-Json | Write-Host
+
+          # Find packages that depend on root package (directly or transitively)
+          $rootPackage = "Acontplus.${{ inputs.root-package }}"
+          $affectedPackages = @()
+
+          function Get-Dependents {
+            param($package)
+
+            $directDependents = $dependencies.Keys | Where-Object {
+              $dependencies[$_] -contains $package
+            }
+
+            foreach ($dependent in $directDependents) {
+              if ($dependent -notin $affectedPackages) {
+                $affectedPackages += $dependent
+                Get-Dependents $dependent
+              }
+            }
+          }
+
+          # Start with root package
+          $affectedPackages += $rootPackage
+          Get-Dependents $rootPackage
+
+          Write-Host "`nAffected Packages:"
+          $affectedPackages | Write-Host
+
+          # Topological sort for update order
+          $visited = @{}
+          $updateOrder = @()
+
+          function Visit-Package {
+            param($package)
+
+            if ($visited[$package] -eq "visiting") {
+              throw "Circular dependency detected: $package"
+            }
+            if ($visited[$package] -eq "visited") {
+              return
+            }
+
+            $visited[$package] = "visiting"
+
+            # Visit dependencies first
+            foreach ($dep in $dependencies[$package]) {
+              if ($dependencies.ContainsKey($dep) -and $dep -in $affectedPackages) {
+                Visit-Package $dep
+              }
+            }
+
+            $visited[$package] = "visited"
+            $updateOrder += $package
+          }
+
+          foreach ($package in $affectedPackages) {
+            if ($visited[$package] -ne "visited") {
+              Visit-Package $package
+            }
+          }
+
+          Write-Host "`nUpdate Order (dependencies first):"
+          $updateOrder | ForEach-Object { Write-Host "  $_" }
+
+          # Output for next job
+          $orderJson = $updateOrder | ConvertTo-Json -Compress
+          $packagesJson = $affectedPackages | ConvertTo-Json -Compress
+
+          "update-order=$orderJson" >> $env:GITHUB_OUTPUT
+          "packages-to-update=$packagesJson" >> $env:GITHUB_OUTPUT
+
+  update-and-publish:
+    name: Update & Publish Packages
+    needs: calculate-dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      - name: Create branch for changes
+        if: ${{ inputs.create-pr }}
+        run: |
+          BRANCH_NAME="cascade-update/${{ inputs.root-package }}-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Update packages in cascade
+        id: cascade-update
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $updateOrder = '${{ needs.calculate-dependencies.outputs.update-order }}' | ConvertFrom-Json
+          $rootPackage = "Acontplus.${{ inputs.root-package }}"
+          $bumpType = "${{ inputs.bump-type }}"
+          $cascadeBump = "${{ inputs.cascade-bump }}"
+          $dryRun = "${{ inputs.dry-run }}" -eq "true"
+
+          $publishedPackages = @()
+          $failedPackages = @()
+
+          Write-Host "================================================"
+          Write-Host "Cascade Update & Publish"
+          Write-Host "================================================"
+          Write-Host "Root Package: $rootPackage"
+          Write-Host "Root Bump: $bumpType"
+          Write-Host "Cascade Bump: $cascadeBump"
+          Write-Host "Dry Run: $dryRun"
+          Write-Host "Update Order: $($updateOrder -join ', ')"
+          Write-Host "================================================`n"
+
+          foreach ($packageName in $updateOrder) {
+            Write-Host "`n--- Processing: $packageName ---" -ForegroundColor Cyan
+
+            # Find project file
+            $projectPath = Get-ChildItem -Path "src" -Filter "$packageName.csproj" -Recurse | Select-Object -First 1
+
+            if ($null -eq $projectPath) {
+              Write-Host "❌ Project file not found for $packageName" -ForegroundColor Red
+              $failedPackages += $packageName
+              continue
+            }
+
+            # Determine bump type
+            $currentBump = if ($packageName -eq $rootPackage) { $bumpType } else { $cascadeBump }
+
+            if ($currentBump -eq "none") {
+              Write-Host "⏭️ Skipping version bump for $packageName" -ForegroundColor Yellow
+              continue
+            }
+
+            # Parse current version
+            [xml]$csproj = Get-Content $projectPath.FullName
+            $currentVersion = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+            Write-Host "Current version: $currentVersion"
+
+            # Calculate new version
+            $versionParts = $currentVersion -split '\.'
+            $major = [int]$versionParts[0]
+            $minor = [int]$versionParts[1]
+            $patch = [int]$versionParts[2]
+
+            switch ($currentBump) {
+              "major" { $major++; $minor = 0; $patch = 0 }
+              "minor" { $minor++; $patch = 0 }
+              "patch" { $patch++ }
+            }
+
+            $newVersion = "$major.$minor.$patch"
+            Write-Host "New version: $newVersion"
+
+            if (-not $dryRun) {
+              # Update .csproj file
+              $csproj.Project.PropertyGroup.Version = $newVersion
+              $csproj.Save($projectPath.FullName)
+              Write-Host "✅ Updated $packageName to $newVersion"
+
+              # Update Directory.Packages.props
+              $packagePropsPath = "Directory.Packages.props"
+              [xml]$packageProps = Get-Content $packagePropsPath
+
+              $packageVersion = $packageProps.Project.ItemGroup.PackageVersion | Where-Object {
+                $_.Include -eq $packageName
+              }
+
+              if ($packageVersion) {
+                $packageVersion.Version = $newVersion
+                $packageProps.Save($packagePropsPath)
+                Write-Host "✅ Updated Directory.Packages.props"
+              }
+
+              # Restore and build
+              Write-Host "Building $packageName..."
+              # Clear NuGet cache to ensure latest versions are used
+              dotnet nuget locals http-cache --clear
+              dotnet restore $projectPath.FullName --force
+              dotnet build $projectPath.FullName --configuration ${{ env.CONFIGURATION }} --no-restore
+
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "❌ Build failed for $packageName" -ForegroundColor Red
+                $failedPackages += $packageName
+                continue
+              }
+
+              # Run tests if enabled
+              if ("${{ inputs.run-tests }}" -eq "true") {
+                Write-Host "Running tests for $packageName..."
+                $testProject = Get-ChildItem -Path "tests" -Filter "$packageName.Tests.csproj" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+
+                if ($testProject) {
+                  dotnet test $testProject.FullName --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+                  if ($LASTEXITCODE -ne 0) {
+                    Write-Host "❌ Tests failed for $packageName" -ForegroundColor Red
+                    $failedPackages += $packageName
+                    continue
+                  }
+                  Write-Host "✅ Tests passed for $packageName"
+                } else {
+                  Write-Host "⚠️ No tests found for $packageName" -ForegroundColor Yellow
+                }
+              }
+
+              # Pack
+              Write-Host "Packing $packageName..."
+              dotnet pack $projectPath.FullName `
+                --configuration ${{ env.CONFIGURATION }} `
+                --no-build `
+                --output nupkgs
+
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "❌ Pack failed for $packageName" -ForegroundColor Red
+                $failedPackages += $packageName
+                continue
+              }
+
+              # Publish to NuGet (skip if creating PR)
+              if ("${{ inputs.create-pr }}" -ne "true") {
+                Write-Host "Publishing $packageName to NuGet.org..."
+                dotnet nuget push "nupkgs/$packageName.$newVersion.nupkg" `
+                  --api-key $env:NUGET_API_KEY `
+                  --source https://api.nuget.org/v3/index.json `
+                  --skip-duplicate
+
+                if ($LASTEXITCODE -eq 0) {
+                  Write-Host "✅ Published $packageName v$newVersion" -ForegroundColor Green
+                  $publishedPackages += @{
+                    Name = $packageName
+                    Version = $newVersion
+                  }
+
+                  # Wait for NuGet indexing
+                  Write-Host "Waiting 30s for NuGet indexing..."
+                  Start-Sleep -Seconds 30
+
+                  # Verify package is available
+                  Write-Host "Verifying package availability..."
+                  $maxRetries = 10
+                  $retryCount = 0
+                  $verified = $false
+
+                  while ($retryCount -lt $maxRetries -and -not $verified) {
+                    try {
+                      $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
+                      $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+
+                      if ($response.versions -contains $newVersion) {
+                        Write-Host "✅ Package $packageName v$newVersion verified on NuGet.org"
+                        $verified = $true
+                      } else {
+                        $retryCount++
+                        Write-Host "⏳ Retry $retryCount/$maxRetries - waiting for package to be indexed..."
+                        Start-Sleep -Seconds 10
+                      }
+                    }
+                    catch {
+                      $retryCount++
+                      Write-Host "⏳ Retry $retryCount/$maxRetries - package not yet available..."
+                      Start-Sleep -Seconds 10
+                    }
+                  }
+
+                  if (-not $verified) {
+                    Write-Host "❌ CRITICAL: Package $packageName v$newVersion not available on NuGet.org after $($maxRetries) retries" -ForegroundColor Red
+                    Write-Host "Cannot continue cascade - dependent packages need this version" -ForegroundColor Red
+                    $failedPackages += $packageName
+                    # Stop cascade to prevent build failures in dependent packages
+                    break
+                  }
+                }
+                else {
+                  Write-Host "❌ Publish failed for $packageName" -ForegroundColor Red
+                  $failedPackages += $packageName
+                }
+              } else {
+                Write-Host "📋 Staged for PR: $packageName v$newVersion"
+                $publishedPackages += @{
+                  Name = $packageName
+                  Version = $newVersion
+                }
+              }
+            } else {
+              Write-Host "🔍 [DRY RUN] Would update $packageName from $currentVersion to $newVersion"
+            }
+          }
+
+          # Summary
+          Write-Host "`n================================================"
+          Write-Host "Summary"
+          Write-Host "================================================"
+          Write-Host "✅ Published: $($publishedPackages.Count)"
+          Write-Host "❌ Failed: $($failedPackages.Count)"
+
+          if ($publishedPackages.Count -gt 0) {
+            Write-Host "`nPublished Packages:"
+            foreach ($pkg in $publishedPackages) {
+              Write-Host "  - $($pkg.Name) v$($pkg.Version)"
+            }
+          }
+
+          if ($failedPackages.Count -gt 0) {
+            Write-Host "`nFailed Packages:" -ForegroundColor Red
+            $failedPackages | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+            exit 1
+          }
+
+          # Save for commit message
+          $publishedJson = $publishedPackages | ConvertTo-Json -Compress
+          "published=$publishedJson" >> $env:GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        if: ${{ !inputs.dry-run }}
+        id: changelog
+        shell: pwsh
+        run: |
+          $published = '${{ steps.cascade-update.outputs.published }}' | ConvertFrom-Json
+          $rootPackage = "${{ inputs.root-package }}"
+
+          # Generate detailed changelog
+          $changelog = "# 🔄 Cascade Version Update - Acontplus.$rootPackage`n`n"
+          $changelog += "## 📊 Update Summary`n`n"
+          $changelog += "- **Root Package**: Acontplus.$rootPackage`n"
+          $changelog += "- **Bump Type**: ${{ inputs.bump-type }}`n"
+          $changelog += "- **Cascade Bump**: ${{ inputs.cascade-bump }}`n"
+          $changelog += "- **Total Packages Updated**: $($published.Count)`n`n"
+
+          $changelog += "## 📦 Updated Packages`n`n"
+          $changelog += "| Package | New Version |`n"
+          $changelog += "|---------|-------------|`n"
+
+          foreach ($pkg in $published) {
+            $shortName = $pkg.Name -replace "Acontplus\.", ""
+            $changelog += "| $shortName | ``v$($pkg.Version)`` |`n"
+          }
+
+          $changelog += "`n## 🔗 NuGet Links`n`n"
+          foreach ($pkg in $published) {
+            $url = "https://www.nuget.org/packages/$($pkg.Name)/$($pkg.Version)"
+            $changelog += "- [$($pkg.Name) v$($pkg.Version)]($url)`n"
+          }
+
+          # Save changelog
+          $changelog | Out-File -FilePath "CHANGELOG_UPDATE.md" -Encoding utf8
+
+          # Output for PR body
+          $changelogEncoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($changelog))
+          "changelog=$changelogEncoded" >> $env:GITHUB_OUTPUT
+
+      - name: Commit version changes
+        if: ${{ !inputs.dry-run }}
+        shell: pwsh
+        run: |
+          $published = '${{ steps.cascade-update.outputs.published }}' | ConvertFrom-Json
+
+          git add .
+
+          # Create commit message following conventions
+          $rootShortName = "${{ inputs.root-package }}".ToLower()
+          $commitMsg = "build(deps): cascade version bump starting from $rootShortName`n`n"
+
+          foreach ($pkg in $published) {
+            $shortName = ($pkg.Name -replace "Acontplus\.", "").ToLower()
+            $commitMsg += "- $shortName v$($pkg.Version)`n"
+          }
+
+          git commit -m $commitMsg
+
+          if ("${{ inputs.create-pr }}" -eq "true") {
+            git push origin $env:BRANCH_NAME
+          } else {
+            git push
+          }
+
+      - name: Create Pull Request
+        if: ${{ !inputs.dry-run && inputs.create-pr }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH_NAME }}
+          title: "🔄 Cascade version bump: ${{ inputs.root-package }}"
+          body: ${{ steps.changelog.outputs.changelog && fromJSON(steps.changelog.outputs.changelog) || 'Automated cascade version update' }}
+          labels: |
+            automated
+            version-bump
+            dependencies
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+
+      - name: Upload artifacts
+        if: ${{ !inputs.dry-run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cascade-nupkgs
+          path: nupkgs/*.nupkg
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: [calculate-dependencies, update-and-publish]
+    if: ${{ !inputs.dry-run && !inputs.create-pr }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cascade-nupkgs
+          path: nupkgs
+
+      - name: Read changelog
+        id: read-changelog
+        run: |
+          if [ -f "CHANGELOG_UPDATE.md" ]; then
+            CHANGELOG=$(cat CHANGELOG_UPDATE.md)
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}-cascade-${{ inputs.root-package }}
+          name: 🔄 Cascade Release - ${{ inputs.root-package }}
+          body: ${{ steps.read-changelog.outputs.changelog || format('Cascade version bump starting from {0}', inputs.root-package) }}
+          files: nupkgs/*.nupkg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  rollback:
+    name: Rollback on Failure
+    needs: [calculate-dependencies, update-and-publish]
+    if: failure() && !inputs.dry-run && !inputs.create-pr
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Notify rollback needed
+        shell: pwsh
+        run: |
+          Write-Host "================================================" -ForegroundColor Red
+          Write-Host "⚠️ ROLLBACK REQUIRED" -ForegroundColor Red
+          Write-Host "================================================" -ForegroundColor Red
+          Write-Host ""
+          Write-Host "The cascade publish failed for some packages."
+          Write-Host "Some packages may have been published to NuGet.org."
+          Write-Host ""
+          Write-Host "Manual steps required:"
+          Write-Host "1. Check which packages were published successfully"
+          Write-Host "2. Consider unlisting failed/partial releases"
+          Write-Host "3. Revert version changes if needed"
+          Write-Host "4. Re-run the workflow after fixing issues"
+          Write-Host ""
+          Write-Host "⚠️ NuGet packages cannot be deleted, only unlisted"
+          Write-Host "================================================" -ForegroundColor Red
+
+      - name: Create rollback issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Cascade Publish Failed - Rollback Required',
+              body: `## ⚠️ Cascade Publish Failure
+
+              **Root Package**: Acontplus.${{ inputs.root-package }}
+              **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+              ### Action Required
+
+              The cascade publish workflow failed. Some packages may have been partially published.
+
+              #### Manual Steps:
+
+              1. ✅ Review the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              2. ✅ Check NuGet.org for published packages
+              3. ✅ Determine which packages need to be unlisted
+              4. ✅ Revert version changes in codebase if needed
+              5. ✅ Fix any issues that caused the failure
+              6. ✅ Re-run the cascade publish workflow
+
+              ### Important
+
+              - NuGet packages **cannot be deleted**, only unlisted
+              - Check [Directory.Packages.props](https://github.com/${{ github.repository }}/blob/main/Directory.Packages.props) for current versions
+              - Consider using \`dry-run: true\` to test before actual publish
+
+              cc: @${{ github.actor }}`,
+              labels: ['bug', 'critical', 'automated', 'rollback-needed']
+            });
+
+            console.log(`Created issue #${issue.data.number}`);
+
+            console.log(`Created issue #${issue.data.number}`);
+
+  notify:
+    name: Notify Completion
+    needs: [calculate-dependencies, update-and-publish, create-release]
+    if: always() && !inputs.dry-run
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Report final status
+        shell: pwsh
+        run: |
+          $status = "${{ needs.update-and-publish.result }}"
+          $createPr = "${{ inputs.create-pr }}" -eq "true"
+
+          Write-Host "================================================"
+          Write-Host "Cascade Publish Workflow Complete"
+          Write-Host "================================================"
+          Write-Host "Status: $status"
+          Write-Host "Mode: $(if ($createPr) { 'Pull Request' } else { 'Direct Publish' })"
+          Write-Host "Root Package: Acontplus.${{ inputs.root-package }}"
+          Write-Host ""
+
+          if ($status -eq "success") {
+            if ($createPr) {
+              Write-Host "✅ Pull request created successfully!"
+              Write-Host "Review and merge the PR to publish packages."
+            } else {
+              Write-Host "✅ All packages published successfully!"
+              Write-Host "Packages are now available on NuGet.org"
+            }
+          } else {
+            Write-Host "❌ Workflow failed. Check logs and rollback issue."
+            exit 1
+          }

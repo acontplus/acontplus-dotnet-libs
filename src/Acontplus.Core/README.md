@@ -796,7 +796,7 @@ For distributed scenarios, drop-in replacements available:
 
 - **[Event Bus Guide](../../docs/EVENT_BUS_GUIDE.md)** - Complete usage guide with CQRS examples
 - **[Quick Reference](../../docs/EVENT_BUS_QUICK_REFERENCE.md)** - 30-second setup guide
-- **[TestApi Example](../../apps/src/Acontplus.TestApi/Features/Orders/)** - Full CQRS implementation
+- **[Demo.Api Example](../../apps/src/Demo.Api/Features/Orders/)** - Full CQRS implementation
 
 ### 🔥 **Advanced JSON Extensions**
 

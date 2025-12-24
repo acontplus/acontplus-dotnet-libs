@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xsd:simpleType name="numeroRuc">
+		<xsd:annotation>
+			<xsd:documentation>Número de RUC del Contribuyente</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{10}001"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="idCliente">
+		<xsd:annotation>
+			<xsd:documentation>Número de RUC, Cédula o Pasaporte del Comprador</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="13"/>
+			<xsd:pattern value="[0-9a-zA-Z]{0,13}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="fechaType">
+		<xsd:annotation>
+			<xsd:documentation>Fecha de emisión del documento</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[012])/20[0-9][0-9]"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="establecimiento">
+		<xsd:annotation>
+			<xsd:documentation>Número del establecimiento</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{3}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="puntoEmision">
+		<xsd:annotation>
+			<xsd:documentation>Número del punto de emisión</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{3}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="secuencial">
+		<xsd:annotation>
+			<xsd:documentation>Secuencial del documento</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{9}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="codTipoDoc">
+		<xsd:annotation>
+			<xsd:documentation>Código del tipo de documento (05 para Nota de Débito)</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="5"/>
+			<xsd:maxInclusive value="5"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:element name="notaDebito">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="infoTributaria" type="infoTributaria"/>
+				<xsd:element name="infoNotaDebito" type="infoNotaDebito"/>
+				<xsd:element name="motivos" type="motivos"/>
+				<xsd:element name="infoAdicional" type="infoAdicional" minOccurs="0"/>
+
+			</xsd:sequence>
+			<xsd:attribute name="id" type="xsd:string" use="required"/>
+			<xsd:attribute name="version" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:complexType name="infoTributaria">
+		<xsd:sequence>
+			<xsd:element name="ambiente" type="ambiente"/>
+			<xsd:element name="tipoEmision" type="tipoEmision"/>
+			<xsd:element name="razonSocial" type="razonSocial"/>
+			<xsd:element name="nombreComercial" type="nombreComercial" minOccurs="0"/>
+			<xsd:element name="ruc" type="numeroRuc"/>
+			<xsd:element name="claveAcceso" type="claveAcceso"/>
+			<xsd:element name="codDoc" type="codTipoDoc"/>
+			<xsd:element name="estab" type="establecimiento"/>
+			<xsd:element name="ptoEmi" type="puntoEmision"/>
+			<xsd:element name="secuencial" type="secuencial"/>
+			<xsd:element name="dirMatriz" type="dirMatriz"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="infoNotaDebito">
+		<xsd:sequence>
+			<xsd:element name="fechaEmision" type="fechaType"/>
+			<xsd:element name="dirEstablecimiento" type="dirEstablecimiento" minOccurs="0"/>
+			<xsd:element name="tipoIdentificacionComprador" type="tipoIdentificacion"/>
+			<xsd:element name="razonSocialComprador" type="razonSocial"/>
+			<xsd:element name="identificacionComprador" type="idCliente"/>
+			<xsd:element name="contribuyenteEspecial" type="contribuyenteEspecial" minOccurs="0"/>
+			<xsd:element name="obligadoContabilidad" type="obligadoContabilidad"/>
+			<xsd:element name="rise" type="rise" minOccurs="0"/>
+			<xsd:element name="codDocModificado" type="codDocModificado"/>
+			<xsd:element name="numDocModificado" type="numDocModificado"/>
+			<xsd:element name="fechaEmisionDocSustento" type="fechaType"/>
+			<xsd:element name="totalSinImpuestos" type="totalSinImpuestos"/>
+			<xsd:element name="impuestos" type="impuestos" minOccurs="0"/>
+			<xsd:element name="valorTotal" type="importeTotal"/>
+			<xsd:element name="pagos" type="pagos" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="motivos">
+		<xsd:sequence>
+			<xsd:element name="motivo" type="motivo" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="motivo">
+		<xsd:sequence>
+			<xsd:element name="razon" type="razon"/>
+			<xsd:element name="valor" type="valorModificacion"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="impuestos">
+		<xsd:sequence>
+			<xsd:element name="impuesto" type="impuesto" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="impuesto">
+		<xsd:sequence>
+			<xsd:element name="codigo" type="codigo"/>
+			<xsd:element name="codigoPorcentaje" type="codigoPorcentaje"/>
+			<xsd:element name="tarifa" type="tarifa"/>
+			<xsd:element name="baseImponible" type="baseImponible"/>
+			<xsd:element name="valor" type="valor"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="infoAdicional">
+		<xsd:sequence>
+			<xsd:element name="campoAdicional" type="campoAdicional" maxOccurs="15"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="campoAdicional">
+		<xsd:simpleContent>
+			<xsd:extension base="campoAdicionalValue">
+				<xsd:attribute name="nombre" type="campoAdicionalName" use="required"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="pagos">
+		<xsd:sequence>
+			<xsd:element name="pago" type="pago" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="pago">
+		<xsd:sequence>
+			<xsd:element name="formaPago" type="formaPago"/>
+			<xsd:element name="total" type="total"/>
+			<xsd:element name="plazo" type="plazo" minOccurs="0"/>
+			<xsd:element name="unidadTiempo" type="unidadTiempo" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="ambiente">
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="1"/>
+			<xsd:maxInclusive value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="tipoEmision">
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="1"/>
+			<xsd:maxInclusive value="1"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="razonSocial">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="nombreComercial">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="claveAcceso">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{49}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="dirMatriz">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="dirEstablecimiento">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="tipoIdentificacion">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{2}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="contribuyenteEspecial">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{3,5}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="obligadoContabilidad">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SI"/>
+			<xsd:enumeration value="NO"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="rise">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="40"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="codDocModificado">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{2}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="numDocModificado">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{3}-[0-9]{3}-[0-9]{9}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="totalSinImpuestos">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="importeTotal">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="valorModificacion">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="razon">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="codigo">
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="2"/>
+			<xsd:maxInclusive value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="codigoPorcentaje">
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="0"/>
+			<xsd:maxInclusive value="9999"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="tarifa">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="4"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="baseImponible">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="valor">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="campoAdicionalName">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="campoAdicionalValue">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1"/>
+			<xsd:maxLength value="300"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="formaPago">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[0-9]{2}"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="total">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:totalDigits value="14"/>
+			<xsd:fractionDigits value="2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="plazo">
+		<xsd:restriction base="xsd:integer">
+			<xsd:minInclusive value="0"/>
+			<xsd:maxInclusive value="999"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="unidadTiempo">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="dias"/>
+			<xsd:enumeration value="meses"/>
+			<xsd:enumeration value="años"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

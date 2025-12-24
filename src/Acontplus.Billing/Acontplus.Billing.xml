@@ -4,6 +4,57 @@
         <name>Acontplus.Billing</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Billing.Constants.DocumentTypes">
+            <summary>
+            SRI Electronic Document Type Codes (Ecuador)
+            Based on SRI Ficha Técnica v2.32
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.Factura">
+            <summary>
+            Invoice - Factura (Code: 01)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.LiquidacionCompra">
+            <summary>
+            Purchase Settlement - Liquidación de Compra de Bienes y Prestación de Servicios (Code: 03)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.NotaCredito">
+            <summary>
+            Credit Note - Nota de Crédito (Code: 04)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.NotaDebito">
+            <summary>
+            Debit Note - Nota de Débito (Code: 05)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.GuiaRemision">
+            <summary>
+            Delivery Guide - Guía de Remisión (Code: 06)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.DocumentTypes.ComprobanteRetencion">
+            <summary>
+            Withholding Receipt - Comprobante de Retención (Code: 07)
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Constants.DocumentTypes.GetDocumentName(System.String)">
+            <summary>
+            Gets the document type name in Spanish
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Constants.DocumentTypes.IsValidDocumentCode(System.String)">
+            <summary>
+            Validates if a document code is valid according to SRI normatives
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Constants.DocumentTypes.GetAllDocumentCodes">
+            <summary>
+            Gets all valid document codes
+            </summary>
+        </member>
         <member name="M:Acontplus.Billing.Interfaces.Services.IAtsXmlService.CreateAtsXmlAsync(Acontplus.Billing.Models.Documents.AtsData)">
             <summary>
             Creates the ATS XML document.

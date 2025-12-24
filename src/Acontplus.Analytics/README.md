@@ -309,12 +309,12 @@ if (dashboard.IsSuccess)
 ### Clean Architecture Implementation
 
 ```
-├── API Layer (Acontplus.TestApi)
+├── API Layer (Demo.Api)
 │   └── Endpoints/Business/Analytics/SalesAnalyticsEndpoints.cs
 │       → Maps HTTP requests to service calls
 │       → Applies localization at presentation layer
 │
-├── Application Layer (Acontplus.TestApplication)
+├── Application Layer (Demo.Application)
 │   ├── Interfaces/ISalesAnalyticsService.cs
 │   │   → Domain-specific analytics contract
 │   ├── Services/SalesAnalyticsService.cs
@@ -399,7 +399,7 @@ public class SalesAnalyticsService : StatisticsService<
 
 #### 4. API Layer - Endpoints
 
-**File**: `apps/src/Acontplus.TestApi/Endpoints/Business/Analytics/SalesAnalyticsEndpoints.cs`
+**File**: `apps/src/Demo.Api/Endpoints/Business/Analytics/SalesAnalyticsEndpoints.cs`
 
 ```csharp
 public static class SalesAnalyticsEndpoints

@@ -4,19 +4,34 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive .NET library for electronic invoicing and digital document handling in Ecuador, providing models, services, and utilities to facilitate integration with SRI (Servicio de Rentas Internas) systems.
+A comprehensive .NET library for electronic invoicing and digital document handling in Ecuador, fully compliant with SRI (Servicio de Rentas Internas) normatives v2.32. Provides complete support for all electronic document types, XML generation, validation, parsing, and web service integration.
 
 ## 🚀 Features
 
-- Electronic document models (invoices, credit notes, etc.)
-- XML document generation, validation, and parsing
-- SRI (Ecuadorian Tax Authority) web service integration
-- Document validation and verification
-- CAPTCHA handling for human verification processes
-- ID card (cédula) and RUC validation
-- XML to HTML/PDF document conversion
-- Token-based authentication management
-- Dependency Injection support
+### 📋 Complete SRI Document Type Support
+All 6 electronic document types according to SRI Ficha Técnica v2.32:
+
+- ✅ **Factura (01)** - Invoice with embedded XSD schemas (v1.0.0, v1.1.0, v2.0.0, v2.1.0)
+- ✅ **Liquidación de Compra (03)** - Purchase Settlement with XSD validation (v1.0.0)
+- ✅ **Nota de Crédito (04)** - Credit Note with schemas (v1.0.0, v1.1.0)
+- ✅ **Nota de Débito (05)** - Debit Note with XSD validation (v1.0.0)
+- ✅ **Guía de Remisión (06)** - Delivery Guide with schema support (v1.0.0)
+- ✅ **Comprobante de Retención (07)** - Withholding Receipt with schemas (v1.0.0, v2.0.0)
+
+### 🔧 Core Capabilities
+
+- **XML Generation**: Complete XML document generation for all SRI document types
+- **XML Parsing**: Robust parsing and deserialization of SRI-authorized documents
+- **XSD Validation**: Embedded XSD schemas for all document types and versions
+- **SRI Web Services**: Full integration with SRI authentication and submission endpoints
+- **Document Conversion**: XML to HTML/PDF rendering for all document types
+- **ATS Support**: Anexo Transaccional Simplificado (ATS) generation and parsing
+- **Identity Validation**: Ecuadorian ID card (cédula) and RUC validation with digit verification
+- **CAPTCHA Handling**: Automated CAPTCHA processing for SRI web interactions
+- **Token Management**: Secure token-based authentication with automatic renewal
+- **Reimbursement Support**: Complete reimbursement (reembolsos) handling
+- **Payment Methods**: Multi-payment method support with installment tracking
+- **Additional Info**: Flexible additional information fields (up to 15 custom fields)
 
 ## 📦 Installation
 
@@ -33,7 +48,7 @@ dotnet add package Acontplus.Billing
 ### PackageReference
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Billing" Version="1.0.17" />
+  <PackageReference Include="Acontplus.Billing" Version="1.2.0" />
 </ItemGroup>
 ```
 
@@ -120,12 +135,47 @@ public class DocumentRenderer
 
 ## 📚 API Documentation
 
-- `ICedulaService`, `IRucService` - Ecuadorian ID and RUC validation
-- `IWebServiceSri` - SRI web service integration
-- `IDocumentConverter` - XML to HTML/PDF conversion
-- `IXmlDocumentParser`, `IAtsXmlService` - XML parsing services
-- `ComprobanteElectronico` - Electronic document model
-- `ResponseSri` - SRI response model
+### Document Type Constants
+```csharp
+using Acontplus.Billing.Constants;
+
+// Access document type codes
+DocumentTypes.Factura;                  // "01"
+DocumentTypes.LiquidacionCompra;        // "03"
+DocumentTypes.NotaCredito;              // "04"
+DocumentTypes.NotaDebito;               // "05"
+DocumentTypes.GuiaRemision;             // "06"
+DocumentTypes.ComprobanteRetencion;     // "07"
+
+// Get document name
+var name = DocumentTypes.GetDocumentName("01"); // "Factura"
+
+// Validate document code
+bool isValid = DocumentTypes.IsValidDocumentCode("01"); // true
+```
+
+### Core Services
+
+- **`ICedulaService`, `IRucService`** - Ecuadorian ID and RUC validation with checksum verification
+- **`IWebServiceSri`** - SRI web service authentication and document submission
+- **`IDocumentConverter`** - XML to HTML/PDF conversion for all document types
+- **`IXmlDocumentParser`** - Parse SRI-authorized XML documents
+- **`IAtsXmlService`** - Generate ATS (Anexo Transaccional Simplificado) XML
+- **`IElectronicDocumentService`** - High-level document management
+- **`IDocumentValidator`** - XSD schema validation
+
+### Document Models
+
+All document types include complete model classes:
+- **`ComprobanteElectronico`** - Base electronic document container
+- **`InfoFactura`** - Invoice information
+- **`InfoLiquidacionCompra`** - Purchase settlement information
+- **`InfoNotaCredito`** - Credit note information
+- **`InfoNotaDebito`** - Debit note information with motivos
+- **`InfoGuiaRemision`** - Delivery guide information
+- **`InfoCompRetencion`** - Withholding information
+- **`Destinatario`** - Delivery guide recipients with details
+- **`DocSustento`** - Supporting documents with retentions and reimbursements
 
 ## 🤝 Contributing
 

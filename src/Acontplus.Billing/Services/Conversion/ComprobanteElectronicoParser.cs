@@ -45,8 +45,11 @@ public class ComprobanteElectronicoParser : IXmlDocumentParser<ComprobanteElectr
                 return false;
             }
 
+            // Sanitizar el XML antes de cargarlo para evitar errores de parsing
+            var cleanedXml = XmlValidator.CleanXmlForSqlServer(nodeComp.InnerText);
+
             var xmlComp = new XmlDocument();
-            xmlComp.LoadXml(nodeComp.InnerText);
+            xmlComp.LoadXml(cleanedXml);
 
             // Parse basic tributary info
             var nodeInfoTrib = xmlComp.GetElementsByTagName("infoTributaria")[0];

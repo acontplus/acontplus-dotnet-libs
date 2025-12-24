@@ -542,15 +542,15 @@ This creates:
 
 ```json
 {
-  "apiName": "Acontplus.TestApi",
+  "apiName": "Demo.Api",
   "status": "Healthy",
   "checks": [
     {
       "name": "self",
       "status": "Healthy",
-      "description": "Acontplus.TestApi is running",
+      "description": "Demo.Api is running",
       "data": {
-        "application": "Acontplus.TestApi",
+        "application": "Demo.Api",
         "tags": "live, ready",
         "lastCheckTime": "2025-11-27T12:00:00Z"
       }
@@ -777,13 +777,13 @@ services.AddHostedService<OrderAnalyticsHandler>();
 │   └── Services/
 │       └── OrderService.cs          - CQRS Command/Query handlers
 │
-├── 🏗️ Infrastructure Layer (Acontplus.TestInfrastructure)
+├── 🏗️ Infrastructure Layer (Demo.Infrastructure)
 │   └── EventHandlers/
 │       ├── OrderNotificationHandler.cs   - Email notifications
 │       ├── OrderAnalyticsHandler.cs      - Analytics tracking
 │       └── OrderWorkflowHandler.cs       - Workflow automation
 │
-└── 🌐 Presentation Layer (Acontplus.TestApi)
+└── 🌐 Presentation Layer (Demo.Api)
     └── Endpoints/Business/
         └── OrderEndpoints.cs        - Minimal API endpoints
 ```
@@ -958,10 +958,10 @@ public async Task CreateOrder_PublishesOrderCreatedEvent()
 
 ### Live Demo
 
-Run the TestApi and use HTTP requests to test:
+Run the Demo.Api and use HTTP requests to test:
 
 ```bash
-cd apps/src/Acontplus.TestApi
+cd apps/src/Demo.Api
 dotnet run
 ```
 

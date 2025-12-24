@@ -19,8 +19,16 @@ namespace Acontplus.Billing.Services.Documents
                 rawXml = await reader.ReadToEndAsync();
             }
 
+            return await GetAsync(rawXml);
+        }
+
+        public async Task<XmlSriFileModel?> GetAsync(string xmlSri)
+        {
+            if (string.IsNullOrWhiteSpace(xmlSri))
+                throw new ArgumentException("XML string is null or empty", nameof(xmlSri));
+
             // Limpiar el XML usando la nueva función
-            rawXml = XmlValidator.CleanXmlForSqlServer(rawXml);
+            var rawXml = XmlValidator.CleanXmlForSqlServer(xmlSri);
 
             var xmlDocSri = new XmlDocument();
             xmlDocSri.LoadXml(rawXml);
@@ -33,6 +41,8 @@ namespace Acontplus.Billing.Services.Documents
 
             // Decodificar y limpiar el contenido interno del comprobante
             var xmlInterno = WebUtility.HtmlDecode(nodeComp.InnerText);
+
+            // Aplicar todas las sanitizaciones para evitar errores de parsing
             xmlInterno = XmlValidator.CleanXmlForSqlServer(xmlInterno);
 
             var xmlComprobante = new XmlDocument();
@@ -68,7 +78,7 @@ namespace Acontplus.Billing.Services.Documents
             var xmlFinal = new XmlDocument();
             xmlFinal.LoadXml(nodeAuth!.OuterXml);
 
-            return new XmlSriFileModel
+            return await Task.FromResult(new XmlSriFileModel
             {
                 CodDoc = codDoc,
                 ClaveAcceso = claveAcceso,
@@ -76,7 +86,7 @@ namespace Acontplus.Billing.Services.Documents
                 VersionComp = versionComp,
                 XmlSri = xmlFinal,
                 XmlComprobante = xmlComprobante
-            };
+            });
         }
 
         private void SetVersionAndFechaEmision(XmlDocument xmlComprobante, string codDoc, out string versionComp,

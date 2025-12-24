@@ -36,13 +36,48 @@ public static class XmlValidator
         try
         {
             var schemaSet = new XmlSchemaSet();
+
+            // Handle schema compilation warnings (like missing xmldsig-core-schema.xsd)
+            // These are informational and don't prevent validation of the main document structure
+            schemaSet.ValidationEventHandler += (sender, e) =>
+            {
+                // Only report errors, ignore warnings about missing schema imports
+                // xmldsig-core-schema.xsd is for digital signatures which are optional
+                if (e.Severity == XmlSeverityType.Error)
+                {
+                    validationErrors.Add(new ValidationError
+                    {
+                        Message = $"Schema compilation error: {e.Message}",
+                        Severity = e.Severity,
+                        LineNumber = e.Exception?.LineNumber ?? 0,
+                        LinePosition = e.Exception?.LinePosition ?? 0
+                    });
+                }
+                // Warnings are ignored (missing xmldsig schema, etc.)
+            };
+
             schemaSet.Add(null, XmlReader.Create(xsdStream));
 
             // Configure XmlReaderSettings
-            var settings = new XmlReaderSettings { ValidationType = ValidationType.Schema, Schemas = schemaSet };
+            var settings = new XmlReaderSettings
+            {
+                ValidationType = ValidationType.Schema,
+                Schemas = schemaSet,
+                ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings |
+                                 XmlSchemaValidationFlags.ProcessSchemaLocation |
+                                 XmlSchemaValidationFlags.ProcessInlineSchema
+            };
 
             settings.ValidationEventHandler += (sender, e) =>
             {
+                // Filter out warnings about missing ds:Signature elements since they're optional
+                // and the xmldsig schema isn't included
+                if (e.Message.Contains("ds:Signature") ||
+                    e.Message.Contains("xmldsig-core-schema"))
+                {
+                    return; // Ignore signature-related validation issues
+                }
+
                 validationErrors.Add(new ValidationError
                 {
                     Message = e.Message,
@@ -111,16 +146,19 @@ public static class XmlValidator
             // 2. Eliminar caracteres BOM (Byte Order Mark) si existen
             xml = RemoveBomChars(xml);
 
-            // 3. Limpiar etiquetas HTML que pueden estar mezcladas con XML
+            // 3. Escapar caracteres < y > en contenido de texto ANTES de otras limpiezas
+            xml = SafeEscapeXmlContent(xml);
+
+            // 4. Limpiar etiquetas HTML que pueden estar mezcladas con XML
             xml = CleanHtmlTags(xml);
 
-            // 4. Corregir ampersands no escapados (&) que no sean parte de entidades XML
+            // 5. Corregir ampersands no escapados (&) que no sean parte de entidades XML
             xml = EscapeUnescapedAmpersands(xml);
 
-            // 5. Normalizar saltos de línea
+            // 6. Normalizar saltos de línea
             xml = NormalizeLineBreaks(xml);
 
-            // 6. Eliminar caracteres no válidos para XML
+            // 7. Eliminar caracteres no válidos para XML
             xml = RemoveInvalidXmlChars(xml);
 
             return xml;
@@ -176,6 +214,18 @@ public static class XmlValidator
         { "&pound;", "&#163;" },     // Pound symbol
         { "&yen;", "&#165;" },       // Yen symbol
         { "&cent;", "&#162;" },      // Cent symbol
+        { "&ntilde;", "ñ" },         // Ñ minúscula
+        { "&Ntilde;", "Ñ" },         // Ñ mayúscula
+        { "&aacute;", "á" },         // á
+        { "&eacute;", "é" },         // é
+        { "&iacute;", "í" },         // í
+        { "&oacute;", "ó" },         // ó
+        { "&uacute;", "ú" },         // ú
+        { "&Aacute;", "Á" },         // Á
+        { "&Eacute;", "É" },         // É
+        { "&Iacute;", "Í" },         // Í
+        { "&Oacute;", "Ó" },         // Ó
+        { "&Uacute;", "Ú" },         // Ú
     };
 
         foreach (var entity in htmlToXmlEntities)
@@ -319,5 +369,45 @@ public static class XmlValidator
 
         // Si después de limpiar queda muy poco contenido, es probable que fuera principalmente HTML
         return xml.Trim().Length < 10 ? string.Empty : xml;
+    }
+
+    /// <summary>
+    /// Limpia caracteres especiales menor que y mayor que SOLO del contenido de texto entre etiquetas.
+    /// NO modifica las etiquetas XML válidas.
+    /// Usa un enfoque simple: reemplaza caracteres que NO son parte de etiquetas XML válidas.
+    /// </summary>
+    private static string SafeEscapeXmlContent(string xml)
+    {
+        if (string.IsNullOrWhiteSpace(xml))
+            return xml;
+
+        try
+        {
+            // Estrategia: Buscar patrones específicos problemáticos como <TEXTO> dentro de contenido
+            // Por ejemplo: "BATERIA <BORNE NORMAL> 12V" -> "BATERIA BORNE NORMAL 12V"
+
+            // Patrón: Busca < seguido de texto que NO es una etiqueta XML válida
+            // Una etiqueta XML válida empieza con letra, /, ! o ?
+            // Entonces <BORNE es inválido porque después de > hay <B que no es </
+
+            // Patrón más específico: Busca <PALABRA> donde PALABRA no tiene espacios y está en mayúsculas
+            // Esto captura <BORNE NORMAL> pero no <descripcion> ni </descripcion>
+            xml = Regex.Replace(xml, @"<([A-Z\s]+)>", "$1", RegexOptions.None);
+
+            // También remover < y > sueltos que puedan quedar
+            // Pero solo si NO están formando una etiqueta válida
+            // Patrón: < que NO está seguido de / o letra minúscula o ! o ?
+            xml = Regex.Replace(xml, @"<(?![/a-z!?])", "&lt;", RegexOptions.IgnoreCase);
+
+            // Remover > que NO está precedido por / o letra o "
+            xml = Regex.Replace(xml, @"(?<![/a-zA-Z""])>(?!<)", "&gt;", RegexOptions.None);
+
+            return xml;
+        }
+        catch (Exception)
+        {
+            //Log.Error(ex, "Error limpiando contenido XML");
+            return xml;
+        }
     }
 }

@@ -2546,5 +2546,6 @@
             Método alternativo más agresivo para casos extremos donde hay mucho HTML mezclado
             </summary>
         </member>
+        <!-- Badly formed XML comment ignored for member "M:Acontplus.Core.Validation.XmlValidator.SafeEscapeXmlContent(System.String)" -->
     </members>
 </doc>

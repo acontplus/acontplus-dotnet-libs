@@ -9,14 +9,17 @@ public class ComprobanteElectronico
     public InfoTributaria InfoTributaria { get; set; } = new();
 
     public InfoFactura? InfoFactura { get; set; }
+    public InfoLiquidacionCompra? InfoLiquidacionCompra { get; set; }
+    public InfoNotaCredito? InfoNotaCredito { get; set; }
+    public InfoNotaDebito? InfoNotaDebito { get; set; }
+    public InfoGuiaRemision? InfoGuiaRemision { get; set; }
+    public InfoCompRetencion? InfoCompRetencion { get; set; }
+
     public List<Detalle>? Detalles { get; set; }
     public List<Impuesto>? Impuestos { get; set; }
-
-    public InfoCompRetencion? InfoCompRetencion { get; set; }
     public List<ImpuestoRetencion>? ImpuestosRetencion { get; set; }
     public List<DocSustento>? DocSustentos { get; set; }
-
-    public InfoNotaCredito? InfoNotaCredito { get; set; }
+    public List<Destinatario>? Destinatarios { get; set; }
 
     public List<InfoAdicional>? InfoAdicional { get; set; }
 
@@ -28,13 +31,16 @@ public class ComprobanteElectronico
                 InfoFactura = obj as InfoFactura;
                 break;
             case "03":
+                InfoLiquidacionCompra = obj as InfoLiquidacionCompra;
                 break;
             case "04":
                 InfoNotaCredito = obj as InfoNotaCredito;
                 break;
             case "05":
+                InfoNotaDebito = obj as InfoNotaDebito;
                 break;
             case "06":
+                InfoGuiaRemision = obj as InfoGuiaRemision;
                 break;
             case "07":
                 InfoCompRetencion = obj as InfoCompRetencion;
@@ -65,6 +71,11 @@ public class ComprobanteElectronico
     public void CreateAdditionalInfo(object? obj)
     {
         InfoAdicional = obj as List<InfoAdicional>;
+    }
+
+    public void CreateDestinatarios(object? obj)
+    {
+        Destinatarios = obj as List<Destinatario>;
     }
 }
 
@@ -347,4 +358,140 @@ public class InfoAdicional
 {
     public string? Nombre { get; set; }
     public string? Valor { get; set; }
+}
+
+public class InfoLiquidacionCompra
+{
+    public string FechaEmision { get; set; } = string.Empty;
+    public string DirEstablecimiento { get; set; } = string.Empty;
+    public string ContribuyenteEspecial { get; set; } = string.Empty;
+    public string ObligadoContabilidad { get; set; } = string.Empty;
+    public string TipoIdentificacionProveedor { get; set; } = string.Empty;
+    public string RazonSocialProveedor { get; set; } = string.Empty;
+    public string IdentificacionProveedor { get; set; } = string.Empty;
+    public string DireccionProveedor { get; set; } = string.Empty;
+    public string TotalSinImpuestos { get; set; } = string.Empty;
+    public string TotalDescuento { get; set; } = string.Empty;
+    public string CodDocReembolso { get; set; } = string.Empty;
+    public string TotalComprobantesReembolso { get; set; } = string.Empty;
+    public string TotalBaseImponibleReembolso { get; set; } = string.Empty;
+    public string TotalImpuestoReembolso { get; set; } = string.Empty;
+    public string ImporteTotal { get; set; } = string.Empty;
+    public string Moneda { get; set; } = string.Empty;
+    public List<TotalImpuesto>? TotalImpuestos { get; set; }
+    public List<Pago>? Pagos { get; set; }
+    public List<ReembolsoDetalle>? Reembolsos { get; set; }
+
+    public void CreateTotalTaxes(object? obj)
+    {
+        TotalImpuestos = obj as List<TotalImpuesto>;
+    }
+
+    public void CreatePayments(object? obj)
+    {
+        Pagos = obj as List<Pago>;
+    }
+
+    public void CreateReembolsos(object? obj)
+    {
+        Reembolsos = obj as List<ReembolsoDetalle>;
+    }
+}
+
+public class InfoNotaDebito
+{
+    public string FechaEmision { get; set; } = string.Empty;
+    public string DirEstablecimiento { get; set; } = string.Empty;
+    public string TipoIdentificacionComprador { get; set; } = string.Empty;
+    public string RazonSocialComprador { get; set; } = string.Empty;
+    public string IdentificacionComprador { get; set; } = string.Empty;
+    public string ContribuyenteEspecial { get; set; } = string.Empty;
+    public string ObligadoContabilidad { get; set; } = string.Empty;
+    public string Rise { get; set; } = string.Empty;
+    public string CodDocModificado { get; set; } = string.Empty;
+    public string NumDocModificado { get; set; } = string.Empty;
+    public string FechaEmisionDocSustento { get; set; } = string.Empty;
+    public string TotalSinImpuestos { get; set; } = string.Empty;
+    public string ImpuestoTotal { get; set; } = string.Empty;
+    public string Moneda { get; set; } = string.Empty;
+    public List<TotalImpuesto>? TotalImpuestos { get; set; }
+    public List<MotivoNotaDebito>? Motivos { get; set; }
+    public List<Pago>? Pagos { get; set; }
+
+    public void CreateTotalTaxes(object? obj)
+    {
+        TotalImpuestos = obj as List<TotalImpuesto>;
+    }
+
+    public void CreateMotivos(object? obj)
+    {
+        Motivos = obj as List<MotivoNotaDebito>;
+    }
+
+    public void CreatePayments(object? obj)
+    {
+        Pagos = obj as List<Pago>;
+    }
+}
+
+public class MotivoNotaDebito
+{
+    public string Razon { get; set; } = string.Empty;
+    public string Valor { get; set; } = string.Empty;
+}
+
+public class InfoGuiaRemision
+{
+    public string DirEstablecimiento { get; set; } = string.Empty;
+    public string DirPartida { get; set; } = string.Empty;
+    public string RazonSocialTransportista { get; set; } = string.Empty;
+    public string TipoIdentificacionTransportista { get; set; } = string.Empty;
+    public string RucTransportista { get; set; } = string.Empty;
+    public string Rise { get; set; } = string.Empty;
+    public string ObligadoContabilidad { get; set; } = string.Empty;
+    public string ContribuyenteEspecial { get; set; } = string.Empty;
+    public string FechaIniTransporte { get; set; } = string.Empty;
+    public string FechaFinTransporte { get; set; } = string.Empty;
+    public string Placa { get; set; } = string.Empty;
+}
+
+public class Destinatario
+{
+    public string IdentificacionDestinatario { get; set; } = string.Empty;
+    public string RazonSocialDestinatario { get; set; } = string.Empty;
+    public string DirDestinatario { get; set; } = string.Empty;
+    public string MotivoTraslado { get; set; } = string.Empty;
+    public string DocAduaneroUnico { get; set; } = string.Empty;
+    public string CodEstabDestino { get; set; } = string.Empty;
+    public string Ruta { get; set; } = string.Empty;
+    public string CodDocSustento { get; set; } = string.Empty;
+    public string NumDocSustento { get; set; } = string.Empty;
+    public string NumAutDocSustento { get; set; } = string.Empty;
+    public string FechaEmisionDocSustento { get; set; } = string.Empty;
+    public List<DetalleDestinatario>? Detalles { get; set; }
+
+    public void CreateDetalles(object? obj)
+    {
+        Detalles = obj as List<DetalleDestinatario>;
+    }
+}
+
+public class DetalleDestinatario
+{
+    public string CodigoInterno { get; set; } = string.Empty;
+    public string CodigoAdicional { get; set; } = string.Empty;
+    public string Descripcion { get; set; } = string.Empty;
+    public string Cantidad { get; set; } = string.Empty;
+    public List<DetalleAdicional>? DetallesAdicionales { get; set; }
+
+    public void CreateDetallesAdicionales(object? obj)
+    {
+        DetallesAdicionales = obj as List<DetalleAdicional>;
+    }
+}
+
+public class DetalleAdicional
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Valor { get; set; } = string.Empty;
 }

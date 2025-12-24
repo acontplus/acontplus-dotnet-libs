@@ -31,7 +31,7 @@ try
 
     // Configure all services using organized extension methods
     builder.Services
-        .AddAllTestServices(builder.Configuration)
+        .AddAllDemoServices(builder.Configuration)
         .AddDatabaseServices(builder.Configuration)
         .AddBusinessServices();
 
@@ -39,8 +39,8 @@ try
     var app = builder.Build();
 
     // Configure middleware and endpoints using organized extension methods
-    app.ConfigureTestApiMiddleware();
-    app.MapTestApiEndpoints();
+    app.ConfigureDemoApiMiddleware();
+    app.MapDemoApiEndpoints();
 
     await app.RunAsync();
 }

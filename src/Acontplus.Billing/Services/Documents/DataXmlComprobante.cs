@@ -17,7 +17,11 @@ public class DataXmlComprobante
             var nodeComp = nodeAuth.SelectSingleNode("comprobante");
             var xmlComp = new XmlDocument();
             if (nodeComp != null)
-                xmlComp.LoadXml(nodeComp.InnerText);
+            {
+                // Sanitizar el XML antes de cargarlo para evitar errores de parsing
+                var cleanedXml = XmlValidator.CleanXmlForSqlServer(nodeComp.InnerText);
+                xmlComp.LoadXml(cleanedXml);
+            }
             else
                 return false;
 
@@ -50,6 +54,12 @@ public class DataXmlComprobante
                 case "03":
                     var nodeLiq = xmlComp.GetElementsByTagName("liquidacionCompra")[0];
                     comp.VersionComp = nodeLiq?.Attributes?["version"]?.Value ?? string.Empty;
+
+                    var nodeInfoLiquidacion = xmlComp.GetElementsByTagName("infoLiquidacionCompra")[0];
+                    if (nodeInfoLiquidacion != null) GetInfoLiquidacionCompra(comp.CodDoc, comp, nodeInfoLiquidacion);
+
+                    GetDetails(comp, xmlComp.GetElementsByTagName("detalles")[0]);
+
                     break;
                 case "04":
                     var nodeNc = xmlComp.GetElementsByTagName("notaCredito")[0];
@@ -65,6 +75,20 @@ public class DataXmlComprobante
                 case "05":
                     var nodeNd = xmlComp.GetElementsByTagName("notaDebito")[0];
                     comp.VersionComp = nodeNd?.Attributes?["version"]?.Value ?? string.Empty;
+
+                    var nodeInfoNotaDebito = xmlComp.GetElementsByTagName("infoNotaDebito")[0];
+                    if (nodeInfoNotaDebito != null) GetInfoNotaDebito(comp.CodDoc, comp, nodeInfoNotaDebito);
+
+
+                    var nodeInfoGuiaRemision = xmlComp.GetElementsByTagName("infoGuiaRemision")[0];
+                    if (nodeInfoGuiaRemision != null) GetInfoGuiaRemision(comp, nodeInfoGuiaRemision);
+
+                    var nodeDestinatarios = xmlComp.GetElementsByTagName("destinatarios")[0];
+                    if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
+
+                    var nodeMotivos = xmlComp.GetElementsByTagName("motivos")[0];
+                    if (nodeMotivos != null) GetMotivosNotaDebito(comp, nodeMotivos);
+
                     break;
                 case "06":
                     var nodeGr = xmlComp.GetElementsByTagName("guiaRemision")[0];
@@ -540,5 +564,213 @@ public class DataXmlComprobante
 
         doc.CreatePayments(pagos);
     }
-}
 
+    private void GetInfoLiquidacionCompra(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoLiquidacion)
+    {
+        var infoLiq = new InfoLiquidacionCompra
+        {
+            FechaEmision = nodeInfoLiquidacion.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoLiquidacion.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoLiquidacion.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoLiquidacion.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+            TipoIdentificacionProveedor = nodeInfoLiquidacion.SelectSingleNode("tipoIdentificacionProveedor")?.InnerText ?? string.Empty,
+            RazonSocialProveedor = nodeInfoLiquidacion.SelectSingleNode("razonSocialProveedor")?.InnerText ?? string.Empty,
+            IdentificacionProveedor = nodeInfoLiquidacion.SelectSingleNode("identificacionProveedor")?.InnerText ?? string.Empty,
+            DireccionProveedor = nodeInfoLiquidacion.SelectSingleNode("direccionProveedor")?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoLiquidacion.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty,
+            TotalDescuento = nodeInfoLiquidacion.SelectSingleNode("totalDescuento")?.InnerText ?? string.Empty,
+            CodDocReembolso = nodeInfoLiquidacion.SelectSingleNode("codDocReembolso")?.InnerText ?? string.Empty,
+            TotalComprobantesReembolso = nodeInfoLiquidacion.SelectSingleNode("totalComprobantesReembolso")?.InnerText ?? string.Empty,
+            TotalBaseImponibleReembolso = nodeInfoLiquidacion.SelectSingleNode("totalBaseImponibleReembolso")?.InnerText ?? string.Empty,
+            TotalImpuestoReembolso = nodeInfoLiquidacion.SelectSingleNode("totalImpuestoReembolso")?.InnerText ?? string.Empty,
+            ImporteTotal = nodeInfoLiquidacion.SelectSingleNode("importeTotal")?.InnerText ?? string.Empty,
+            Moneda = nodeInfoLiquidacion.SelectSingleNode("moneda")?.InnerText ?? string.Empty
+        };
+
+        GetTotalTaxes(codDoc, infoLiq, nodeInfoLiquidacion.SelectSingleNode("totalConImpuestos"));
+        GetLiquidacionPayments(infoLiq, nodeInfoLiquidacion.SelectSingleNode("pagos"));
+        GetLiquidacionReembolsos(infoLiq, nodeInfoLiquidacion.SelectSingleNode("reembolsos"));
+
+        ce.CreateInfoComp(codDoc, infoLiq);
+    }
+
+    private void GetLiquidacionPayments(InfoLiquidacionCompra info, XmlNode? payments)
+    {
+        if (payments == null) return;
+
+        var pagos = (from XmlNode item in payments
+                     select new Pago
+                     {
+                         FormaPago = item.SelectSingleNode("formaPago")?.InnerText ?? string.Empty,
+                         Total = item.SelectSingleNode("total")?.InnerText ?? string.Empty,
+                         Plazo = item.SelectSingleNode("plazo")?.InnerText ?? string.Empty,
+                         UnidadTiempo = item.SelectSingleNode("unidadTiempo")?.InnerText ?? string.Empty
+                     }).ToList();
+
+        info.CreatePayments(pagos);
+    }
+
+    private void GetLiquidacionReembolsos(InfoLiquidacionCompra info, XmlNode? nodeReembolsos)
+    {
+        if (nodeReembolsos == null) return;
+
+        var reembolsos = new List<ReembolsoDetalle>();
+        foreach (XmlElement item in nodeReembolsos)
+        {
+            var reembolso = new ReembolsoDetalle
+            {
+                TipoIdentificacionProveedorReembolso = item.GetElementsByTagName("tipoIdentificacionProveedorReembolso")[0]?.InnerText ?? string.Empty,
+                IdentificacionProveedorReembolso = item.GetElementsByTagName("identificacionProveedorReembolso")[0]?.InnerText ?? string.Empty,
+                CodPaisPagoProveedorReembolso = item.GetElementsByTagName("codPaisPagoProveedorReembolso")[0]?.InnerText ?? string.Empty,
+                TipoProveedorReembolso = item.GetElementsByTagName("tipoProveedorReembolso")[0]?.InnerText ?? string.Empty,
+                CodDocReembolso = item.GetElementsByTagName("codDocReembolso")[0]?.InnerText ?? string.Empty,
+                EstabDocReembolso = item.GetElementsByTagName("estabDocReembolso")[0]?.InnerText ?? string.Empty,
+                PtoEmiDocReembolso = item.GetElementsByTagName("ptoEmiDocReembolso")[0]?.InnerText ?? string.Empty,
+                SecuencialDocReembolso = item.GetElementsByTagName("secuencialDocReembolso")[0]?.InnerText ?? string.Empty,
+                FechaEmisionDocReembolso = item.GetElementsByTagName("fechaEmisionDocReembolso")[0]?.InnerText ?? string.Empty,
+                NumeroAutorizacionDocReemb = item.GetElementsByTagName("numeroautorizacionDocReemb")[0]?.InnerText ?? string.Empty
+            };
+            GetImpuestosReembolsos(reembolso, item.SelectSingleNode("detalleImpuestos"));
+            reembolsos.Add(reembolso);
+        }
+
+        info.CreateReembolsos(reembolsos);
+    }
+
+    private void GetInfoNotaDebito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaDebito)
+    {
+        var infoNd = new InfoNotaDebito
+        {
+            FechaEmision = nodeInfoNotaDebito.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoNotaDebito.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+            TipoIdentificacionComprador = nodeInfoNotaDebito.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty,
+            RazonSocialComprador = nodeInfoNotaDebito.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty,
+            IdentificacionComprador = nodeInfoNotaDebito.SelectSingleNode("identificacionComprador")?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoNotaDebito.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoNotaDebito.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+            Rise = nodeInfoNotaDebito.SelectSingleNode("rise")?.InnerText ?? string.Empty,
+            CodDocModificado = nodeInfoNotaDebito.SelectSingleNode("codDocModificado")?.InnerText ?? string.Empty,
+            NumDocModificado = nodeInfoNotaDebito.SelectSingleNode("numDocModificado")?.InnerText ?? string.Empty,
+            FechaEmisionDocSustento = nodeInfoNotaDebito.SelectSingleNode("fechaEmisionDocSustento")?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoNotaDebito.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty,
+            ImpuestoTotal = nodeInfoNotaDebito.SelectSingleNode("valorTotal")?.InnerText ?? string.Empty,
+            Moneda = nodeInfoNotaDebito.SelectSingleNode("moneda") == null ? "DOLAR" : nodeInfoNotaDebito.SelectSingleNode("moneda")?.InnerText ?? string.Empty
+        };
+
+        GetTotalTaxes(codDoc, infoNd, nodeInfoNotaDebito.SelectSingleNode("impuestos"));
+        GetNotaDebitoPayments(infoNd, nodeInfoNotaDebito.SelectSingleNode("pagos"));
+
+        ce.CreateInfoComp(codDoc, infoNd);
+    }
+
+    private void GetMotivosNotaDebito(ComprobanteElectronico comp, XmlNode nodeMotivos)
+    {
+        if (nodeMotivos == null) return;
+
+        var motivos = (from XmlNode item in nodeMotivos
+                       select new MotivoNotaDebito
+                       {
+                           Razon = item.SelectSingleNode("razon")?.InnerText ?? string.Empty,
+                           Valor = item.SelectSingleNode("valor")?.InnerText ?? string.Empty
+                       }).ToList();
+
+        comp.InfoNotaDebito?.CreateMotivos(motivos);
+    }
+
+    private void GetNotaDebitoPayments(InfoNotaDebito info, XmlNode? payments)
+    {
+        if (payments == null) return;
+
+        var pagos = (from XmlNode item in payments
+                     select new Pago
+                     {
+                         FormaPago = item.SelectSingleNode("formaPago")?.InnerText ?? string.Empty,
+                         Total = item.SelectSingleNode("total")?.InnerText ?? string.Empty,
+                         Plazo = item.SelectSingleNode("plazo")?.InnerText ?? string.Empty,
+                         UnidadTiempo = item.SelectSingleNode("unidadTiempo")?.InnerText ?? string.Empty
+                     }).ToList();
+
+        info.CreatePayments(pagos);
+    }
+
+    private void GetInfoGuiaRemision(ComprobanteElectronico ce, XmlNode nodeInfoGuiaRemision)
+    {
+        var infoGr = new InfoGuiaRemision
+        {
+            DirEstablecimiento = nodeInfoGuiaRemision.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+            DirPartida = nodeInfoGuiaRemision.SelectSingleNode("dirPartida")?.InnerText ?? string.Empty,
+            RazonSocialTransportista = nodeInfoGuiaRemision.SelectSingleNode("razonSocialTransportista")?.InnerText ?? string.Empty,
+            TipoIdentificacionTransportista = nodeInfoGuiaRemision.SelectSingleNode("tipoIdentificacionTransportista")?.InnerText ?? string.Empty,
+            RucTransportista = nodeInfoGuiaRemision.SelectSingleNode("rucTransportista")?.InnerText ?? string.Empty,
+            Rise = nodeInfoGuiaRemision.SelectSingleNode("rise")?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoGuiaRemision.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoGuiaRemision.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
+            FechaIniTransporte = nodeInfoGuiaRemision.SelectSingleNode("fechaIniTransporte")?.InnerText ?? string.Empty,
+            FechaFinTransporte = nodeInfoGuiaRemision.SelectSingleNode("fechaFinTransporte")?.InnerText ?? string.Empty,
+            Placa = nodeInfoGuiaRemision.SelectSingleNode("placa")?.InnerText ?? string.Empty
+        };
+
+        ce.CreateInfoComp("06", infoGr);
+    }
+
+    private void GetDestinatarios(ComprobanteElectronico comp, XmlNode nodeDestinatarios)
+    {
+        if (nodeDestinatarios == null) return;
+
+        var destinatarios = new List<Destinatario>();
+        foreach (XmlElement item in nodeDestinatarios)
+        {
+            var destinatario = new Destinatario
+            {
+                IdentificacionDestinatario = item.GetElementsByTagName("identificacionDestinatario")[0]?.InnerText ?? string.Empty,
+                RazonSocialDestinatario = item.GetElementsByTagName("razonSocialDestinatario")[0]?.InnerText ?? string.Empty,
+                DirDestinatario = item.GetElementsByTagName("dirDestinatario")[0]?.InnerText ?? string.Empty,
+                MotivoTraslado = item.GetElementsByTagName("motivoTraslado")[0]?.InnerText ?? string.Empty,
+                DocAduaneroUnico = item.GetElementsByTagName("docAduaneroUnico")[0]?.InnerText ?? string.Empty,
+                CodEstabDestino = item.GetElementsByTagName("codEstabDestino")[0]?.InnerText ?? string.Empty,
+                Ruta = item.GetElementsByTagName("ruta")[0]?.InnerText ?? string.Empty,
+                CodDocSustento = item.GetElementsByTagName("codDocSustento")[0]?.InnerText ?? string.Empty,
+                NumDocSustento = item.GetElementsByTagName("numDocSustento")[0]?.InnerText ?? string.Empty,
+                NumAutDocSustento = item.GetElementsByTagName("numAutDocSustento")[0]?.InnerText ?? string.Empty,
+                FechaEmisionDocSustento = item.GetElementsByTagName("fechaEmisionDocSustento")[0]?.InnerText ?? string.Empty
+            };
+
+            GetDetallesDestinatario(destinatario, item.SelectSingleNode("detalles"));
+            destinatarios.Add(destinatario);
+        }
+
+        comp.CreateDestinatarios(destinatarios);
+    }
+
+    private void GetDetallesDestinatario(Destinatario destinatario, XmlNode? nodeDetalles)
+    {
+        if (nodeDetalles == null) return;
+
+        var detalles = new List<DetalleDestinatario>();
+        foreach (XmlElement item in nodeDetalles)
+        {
+            var detalle = new DetalleDestinatario
+            {
+                CodigoInterno = item.GetElementsByTagName("codigoInterno")[0]?.InnerText ?? string.Empty,
+                CodigoAdicional = item.GetElementsByTagName("codigoAdicional")[0]?.InnerText ?? string.Empty,
+                Descripcion = item.GetElementsByTagName("descripcion")[0]?.InnerText ?? string.Empty,
+                Cantidad = item.GetElementsByTagName("cantidad")[0]?.InnerText ?? string.Empty
+            };
+
+            var nodeDetAdicionales = item.SelectSingleNode("detallesAdicionales");
+            if (nodeDetAdicionales != null)
+            {
+                var detallesAdicionales = (from XmlElement detAd in nodeDetAdicionales
+                                           select new DetalleAdicional
+                                           {
+                                               Nombre = detAd.GetAttribute("nombre"),
+                                               Valor = detAd.InnerText
+                                           }).ToList();
+                detalle.CreateDetallesAdicionales(detallesAdicionales);
+            }
+
+            detalles.Add(detalle);
+        }
+
+        destinatario.CreateDetalles(detalles);
+    }}

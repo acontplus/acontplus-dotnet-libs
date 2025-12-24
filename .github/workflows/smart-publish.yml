@@ -1,0 +1,424 @@
+name: Smart Publish - Auto Cascade Detection
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'src/**/*.csproj'
+      - 'Directory.Packages.props'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+# Prevents duplicate runs with other workflows
+concurrency:
+  group: publish-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  check-eligibility:
+    name: Check Workflow Eligibility
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+      reason: ${{ steps.check.outputs.reason }}
+
+    steps:
+      - name: Check if this workflow should run
+        id: check
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+
+          # Skip if it's a cascade-update branch (handled by pr-cascade-publish.yml)
+          if [[ "$BRANCH_NAME" == cascade-update/* ]]; then
+            echo "should-run=false" >> $GITHUB_OUTPUT
+            echo "reason=cascade-branch" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping: This is a cascade branch, handled by pr-cascade-publish.yml"
+            exit 0
+          fi
+
+          echo "should-run=true" >> $GITHUB_OUTPUT
+          echo "reason=normal-pr" >> $GITHUB_OUTPUT
+          echo "✅ Proceeding: Normal PR, smart-publish will handle it"
+
+  analyze-changes:
+    name: Analyze Package Changes
+    needs: check-eligibility
+    runs-on: ubuntu-latest
+    if: needs.check-eligibility.outputs.should-run == 'true'
+    outputs:
+      strategy: ${{ steps.analyze.outputs.strategy }}
+      changed-packages: ${{ steps.analyze.outputs.changed-packages }}
+      has-dependents: ${{ steps.analyze.outputs.has-dependents }}
+      cascade-needed: ${{ steps.analyze.outputs.cascade-needed }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze changed packages and dependencies
+        id: analyze
+        shell: pwsh
+        run: |
+          Write-Host "================================================"
+          Write-Host "Smart Publish - Analyzing Changes"
+          Write-Host "================================================`n"
+
+          # Build dependency graph
+          $dependencies = @{}
+          $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
+
+          foreach ($project in $projectFiles) {
+            [xml]$csproj = Get-Content $project.FullName
+            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+            $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
+
+            if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+              continue
+            }
+
+            $deps = @()
+            foreach ($itemGroup in $csproj.Project.ItemGroup) {
+              if ($itemGroup.PackageReference) {
+                foreach ($packageRef in $itemGroup.PackageReference) {
+                  if ($packageRef.Include -like "Acontplus.*") {
+                    $deps += $packageRef.Include
+                  }
+                }
+              }
+            }
+            $dependencies[$packageId] = $deps
+          }
+
+          Write-Host "Dependency Graph:"
+          $dependencies | ConvertTo-Json | Write-Host
+
+          # Detect changed packages
+          $changedFiles = git diff --name-only HEAD~1 HEAD | Where-Object { $_ -like "src/*/*.csproj" }
+          $changedPackages = @()
+
+          foreach ($file in $changedFiles) {
+            if (Test-Path $file) {
+              [xml]$csproj = Get-Content $file
+              $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+              $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+
+              if ($packageId -and $version) {
+                Write-Host "`n📦 Detected change: $packageId v$version"
+
+                # Check if this package has dependents
+                $dependents = $dependencies.Keys | Where-Object {
+                  $dependencies[$_] -contains $packageId
+                }
+
+                $changedPackages += @{
+                  Name = $packageId
+                  Version = $version
+                  Dependents = @($dependents)
+                  HasDependents = $dependents.Count -gt 0
+                }
+
+                if ($dependents.Count -gt 0) {
+                  Write-Host "  ⚠️ Has $($dependents.Count) dependent(s):" -ForegroundColor Yellow
+                  $dependents | ForEach-Object { Write-Host "    - $_" }
+                } else {
+                  Write-Host "  ✅ No dependents - standalone package" -ForegroundColor Green
+                }
+              }
+            }
+          }
+
+          # Determine strategy
+          $hasDependents = $changedPackages | Where-Object { $_.HasDependents } | Measure-Object | Select-Object -ExpandProperty Count
+          $cascadeNeeded = $hasDependents -gt 0
+
+          Write-Host "`n================================================"
+          Write-Host "Analysis Result:"
+          Write-Host "================================================"
+          Write-Host "Changed packages: $($changedPackages.Count)"
+          Write-Host "Packages with dependents: $hasDependents"
+
+          if ($cascadeNeeded) {
+            Write-Host "Strategy: 🔄 CASCADE UPDATE NEEDED" -ForegroundColor Yellow
+            Write-Host "Reason: One or more packages have dependents" -ForegroundColor Yellow
+          } else {
+            Write-Host "Strategy: ✅ SIMPLE PUBLISH" -ForegroundColor Green
+            Write-Host "Reason: No packages have dependents" -ForegroundColor Green
+          }
+
+          # Output for next jobs
+          $strategy = if ($cascadeNeeded) { "cascade" } else { "simple" }
+          $packagesJson = $changedPackages | ConvertTo-Json -Compress
+          if ($changedPackages.Count -eq 1) {
+            $packagesJson = "[$packagesJson]"
+          }
+
+          "strategy=$strategy" >> $env:GITHUB_OUTPUT
+          "changed-packages=$packagesJson" >> $env:GITHUB_OUTPUT
+          "has-dependents=$hasDependents" >> $env:GITHUB_OUTPUT
+          "cascade-needed=$cascadeNeeded" >> $env:GITHUB_OUTPUT
+
+  trigger-cascade:
+    name: Trigger Cascade Update
+    needs: [check-eligibility, analyze-changes]
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create cascade update issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const packages = JSON.parse('${{ needs.analyze-changes.outputs.changed-packages }}');
+            const packagesWithDeps = packages.filter(p => p.HasDependents);
+
+            let body = `## 🔄 Cascade Update Required\n\n`;
+            body += `A merged PR has updated package(s) that have dependents. A cascade update is recommended.\n\n`;
+            body += `### 📦 Changed Packages with Dependents\n\n`;
+
+            for (const pkg of packagesWithDeps) {
+              const shortName = pkg.Name.replace('Acontplus.', '');
+              body += `#### ${shortName} (v${pkg.Version})\n`;
+              body += `**Dependents:**\n`;
+              for (const dep of pkg.Dependents) {
+                body += `- ${dep}\n`;
+              }
+              body += `\n`;
+            }
+
+            body += `### 🎯 Recommended Action\n\n`;
+            body += `1. Go to [Actions → Cascade Publish](/${{ github.repository }}/actions/workflows/cascade-publish.yml)\n`;
+            body += `2. Click "Run workflow"\n`;
+            body += `3. Configure:\n`;
+
+            if (packagesWithDeps.length === 1) {
+              const rootPkg = packagesWithDeps[0].Name.replace('Acontplus.', '');
+              body += `   - **Root Package**: \`${rootPkg}\`\n`;
+            } else {
+              body += `   - **Root Package**: Choose the primary package updated\n`;
+            }
+
+            body += `   - **Bump Type**: \`patch\` (or appropriate version bump)\n`;
+            body += `   - **Cascade Bump**: \`patch\`\n`;
+            body += `   - **Create PR**: ✅ true\n`;
+            body += `   - **Run Tests**: ✅ true\n\n`;
+
+            body += `### ⚠️ Important\n\n`;
+            body += `The changed package has been published, but its dependents are still using the old version. `;
+            body += `Run the cascade update to ensure all dependent packages are updated to use the latest version.\n\n`;
+            body += `**Merged PR**: #${{ github.event.pull_request.number }}\n`;
+            body += `**Author**: @${{ github.event.pull_request.user.login }}\n`;
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 Cascade Update Recommended',
+              body: body,
+              labels: ['cascade-needed', 'automated', 'dependencies'],
+              assignees: ['${{ github.event.pull_request.user.login }}']
+            });
+
+            console.log(`Created issue #${issue.data.number}`);
+
+            // Add comment to the original PR
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              body: `⚠️ **Cascade Update Recommended**\n\nThis PR updated packages with dependents. See issue #${issue.data.number} for details on running a cascade update.`
+            });
+
+  simple-publish:
+    name: Simple Publish (No Dependents)
+    needs: [check-eligibility, analyze-changes]
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.analyze-changes.outputs.changed-packages) }}
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: |
+          dotnet nuget locals http-cache --clear
+          dotnet restore --force
+
+      - name: Build solution
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: |
+          TEST_PROJECT=$(find tests -name "${{ matrix.package.Name }}.Tests.csproj" 2>/dev/null | head -n 1)
+          if [ -n "$TEST_PROJECT" ]; then
+            echo "Running tests for ${{ matrix.package.Name }}"
+            dotnet test "$TEST_PROJECT" --configuration ${{ env.CONFIGURATION }} --no-build
+          else
+            echo "No tests found for ${{ matrix.package.Name }}"
+          fi
+
+      - name: Find project file
+        id: find-project
+        shell: pwsh
+        run: |
+          $packageName = "${{ matrix.package.Name }}"
+          $projectPath = Get-ChildItem -Path "src" -Filter "$packageName.csproj" -Recurse | Select-Object -First 1
+
+          if ($null -eq $projectPath) {
+            Write-Error "Project file not found for $packageName"
+            exit 1
+          }
+
+          Write-Host "Found project: $($projectPath.FullName)"
+          "project-path=$($projectPath.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Pack NuGet package
+        run: |
+          dotnet pack "${{ steps.find-project.outputs.project-path }}" \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            --output nupkgs
+
+      - name: Publish to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "nupkgs/*.nupkg" \
+            --api-key $NUGET_API_KEY \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+
+      - name: Verify package availability
+        shell: pwsh
+        run: |
+          $packageName = "${{ matrix.package.Name }}"
+          $version = "${{ matrix.package.Version }}"
+
+          Write-Host "Waiting 30s for NuGet indexing..."
+          Start-Sleep -Seconds 30
+
+          $maxRetries = 10
+          $verified = $false
+
+          for ($i = 1; $i -le $maxRetries; $i++) {
+            try {
+              $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
+              $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+
+              if ($response.versions -contains $version) {
+                Write-Host "✅ Package $packageName v$version verified on NuGet.org"
+                $verified = $true
+                break
+              }
+            }
+            catch {
+              Write-Host "Retry $i/$maxRetries - package not yet available..."
+            }
+
+            Start-Sleep -Seconds 10
+          }
+
+          if (-not $verified) {
+            Write-Host "❌ CRITICAL: Package $packageName v$version not available after $maxRetries retries" -ForegroundColor Red
+            Write-Host "Package published but not indexed - this may cause dependency resolution issues" -ForegroundColor Red
+            exit 1
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-${{ matrix.package.Name }}-${{ matrix.package.Version }}
+          path: nupkgs/*.nupkg
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: [check-eligibility, analyze-changes, simple-publish]
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $packages = '${{ needs.analyze-changes.outputs.changed-packages }}' | ConvertFrom-Json
+
+          $notes = "## 📦 Simple Package Release`n`n"
+          $notes += "**Merged PR**: #${{ github.event.pull_request.number }}`n"
+          $notes += "**Strategy**: Simple publish (no dependents)`n`n"
+          $notes += "### Published Packages`n`n"
+
+          foreach ($pkg in $packages) {
+            $url = "https://www.nuget.org/packages/$($pkg.Name)/$($pkg.Version)"
+            $notes += "- [$($pkg.Name) v$($pkg.Version)]($url)`n"
+          }
+
+          $notes | Out-File -FilePath release-notes.md -Encoding utf8
+
+          $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+          $tag = "release-$timestamp"
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.notes.outputs.tag }}
+          name: 📦 Release - ${{ steps.notes.outputs.tag }}
+          body_path: release-notes.md
+          files: artifacts/**/*.nupkg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-completion:
+    name: Notify Completion
+    needs: [check-eligibility, analyze-changes, trigger-cascade, simple-publish]
+    if: always() && needs.check-eligibility.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Summary
+        shell: pwsh
+        run: |
+          $strategy = "${{ needs.analyze-changes.outputs.strategy }}"
+          $cascadeNeeded = "${{ needs.analyze-changes.outputs.cascade-needed }}" -eq "true"
+
+          Write-Host "================================================"
+          Write-Host "Smart Publish Workflow Complete"
+          Write-Host "================================================"
+          Write-Host "Strategy: $strategy"
+
+          if ($cascadeNeeded) {
+            Write-Host "⚠️ Cascade update recommended"
+            Write-Host "Check the created issue for instructions"
+          } else {
+            Write-Host "✅ Simple publish completed"
+            Write-Host "Packages published to NuGet.org"
+          }
