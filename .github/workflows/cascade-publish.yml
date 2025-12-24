@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       root-package:
-        description: 'Core'
+        description: 'Root package to update (e.g., Core, Utilities)'
         required: true
         type: string
       bump-type:
@@ -451,10 +451,6 @@ jobs:
           # Save changelog
           $changelog | Out-File -FilePath "CHANGELOG_UPDATE.md" -Encoding utf8
 
-          # Output for PR body
-          $changelogEncoded = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($changelog))
-          "changelog=$changelogEncoded" >> $env:GITHUB_OUTPUT
-
       - name: Commit version changes
         if: ${{ !inputs.dry-run }}
         shell: pwsh
@@ -487,7 +483,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ env.BRANCH_NAME }}
           title: "🔄 Cascade version bump: ${{ inputs.root-package }}"
-          body: ${{ steps.changelog.outputs.changelog && fromJSON(steps.changelog.outputs.changelog) || 'Automated cascade version update' }}
+          body-path: CHANGELOG_UPDATE.md
           labels: |
             automated
             version-bump

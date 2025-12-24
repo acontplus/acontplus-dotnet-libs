@@ -15,6 +15,11 @@ env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
 
+# Cancel in-progress runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build Solution
