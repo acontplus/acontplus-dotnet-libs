@@ -163,6 +163,8 @@ jobs:
     name: Update & Publish Packages
     needs: calculate-dependencies
     runs-on: ubuntu-latest
+    outputs:
+      branch-name: ${{ steps.create-branch.outputs.branch-name }}
 
     steps:
       - name: Checkout code
@@ -180,6 +182,14 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
+      - name: Create branch for changes
+        id: create-branch
+        run: |
+          BRANCH_NAME="cascade-update/${{ inputs.root-package }}-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Update packages in cascade
         id: cascade-update
@@ -457,7 +467,7 @@ jobs:
           }
 
           git commit -m $commitMsg
-          git push origin main
+          git push origin $env:BRANCH_NAME
 
       - name: Upload artifacts
         if: ${{ !inputs.dry-run }}
@@ -585,18 +595,21 @@ jobs:
         shell: pwsh
         run: |
           $status = "${{ needs.update-and-publish.result }}"
+          $branch = "${{ needs.update-and-publish.outputs.branch-name }}"
 
           Write-Host "================================================"
           Write-Host "Cascade Publish Workflow Complete"
           Write-Host "================================================"
           Write-Host "Status: $status"
-          Write-Host "Mode: Direct Push to Main"
+          Write-Host "Mode: Branch push (main is protected)"
           Write-Host "Root Package: Acontplus.${{ inputs.root-package }}"
+          Write-Host "Branch: $branch"
           Write-Host ""
 
           if ($status -eq "success") {
             Write-Host "✅ All packages published successfully!"
-            Write-Host "Changes pushed to main branch"
+            Write-Host "Changes pushed to branch: $branch"
+            Write-Host "Open a PR from this branch to merge version updates into main."
             Write-Host "Packages are now available on NuGet.org"
           } else {
             Write-Host "❌ Workflow failed. Check logs and rollback issue."
