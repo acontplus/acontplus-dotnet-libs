@@ -472,13 +472,15 @@ jobs:
           }
           git push origin $env:BRANCH_NAME
 
+      # Note: Artifacts kept for local debugging but not used in release
       - name: Upload artifacts
         if: ${{ !inputs.dry-run }}
         uses: actions/upload-artifact@v4
         with:
-          name: cascade-nupkgs
+          name: cascade-nupkgs-${{ github.run_id }}
           path: nupkgs/*.nupkg
-          retention-days: 30
+          retention-days: 7
+          if-no-files-found: warn
 
   create-release:
     name: Create GitHub Release
@@ -489,12 +491,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
         with:
-          name: cascade-nupkgs
-          path: nupkgs
+          ref: ${{ needs.update-and-publish.outputs.branch-name }}
 
       - name: Read changelog
         id: read-changelog
@@ -504,6 +502,8 @@ jobs:
             echo "changelog<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Cascade version bump starting from ${{ inputs.root-package }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Create release
@@ -511,8 +511,7 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}-cascade-${{ inputs.root-package }}
           name: 🔄 Cascade Release - ${{ inputs.root-package }}
-          body: ${{ steps.read-changelog.outputs.changelog || format('Cascade version bump starting from {0}', inputs.root-package) }}
-          files: nupkgs/*.nupkg
+          body: ${{ steps.read-changelog.outputs.changelog }}
           draft: false
           prerelease: false
         env:
