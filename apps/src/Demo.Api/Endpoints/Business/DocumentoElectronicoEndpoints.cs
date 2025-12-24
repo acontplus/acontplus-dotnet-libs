@@ -13,12 +13,11 @@ public static class DocumentoElectronicoEndpoints
 
         group.MapPost("/", ValidateXml)
             .WithName("ValidateXml")
-            .DisableAntiforgery()
             .Produces<ApiResponse<List<ValidationError>>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
-    private static async Task<IResult> ValidateXml(IFormFile file, HttpContext httpContext)
+    private static async Task<IResult> ValidateXml(IFormFile file, HttpContext httpContext, ILogger<Program> logger)
     {
         try
         {
@@ -33,7 +32,7 @@ public static class DocumentoElectronicoEndpoints
 
             // Auto-detect document type and version from XML
             var xsdFileName = GetXsdFileName(xmlSriFile.XmlSri);
-            Console.WriteLine($"Detected schema: {xsdFileName}");
+            logger.LogInformation("Detected schema: {SchemaFileName}", xsdFileName);
 
             var xsdStream = ResourceHelper.GetXsdStream($"Schemas.{xsdFileName}");
             var errors = XmlValidator.Validate(xmlSriFile.XmlSri, xsdStream);
@@ -44,15 +43,15 @@ public static class DocumentoElectronicoEndpoints
                 var docName = string.IsNullOrEmpty(xmlSriFile.CodDoc)
                     ? "Unknown"
                     : DocumentTypes.GetDocumentName(xmlSriFile.CodDoc);
-                Console.WriteLine($"✓ XML is valid ({docName})");
+                logger.LogInformation("XML validation successful for {DocumentName}", docName);
             }
             else
             {
-                Console.WriteLine($"✗ XML validation failed. {errors.Count} error(s) found:");
+                logger.LogWarning("XML validation failed with {ErrorCount} error(s)", errors.Count);
                 foreach (var error in errors)
                 {
-                    Console.WriteLine(
-                        $"  [{error.Severity}] Line {error.LineNumber}:{error.LinePosition} - {error.Message}");
+                    logger.LogWarning("[{Severity}] Line {LineNumber}:{LinePosition} - {Message}",
+                        error.Severity, error.LineNumber, error.LinePosition, error.Message);
                 }
             }
 
@@ -60,13 +59,13 @@ public static class DocumentoElectronicoEndpoints
         }
         catch (FileNotFoundException ex)
         {
-            Console.WriteLine($"✗ Schema not found: {ex.Message}");
+            logger.LogError(ex, "Schema file not found");
             return Results.BadRequest(ApiResponse<List<ValidationError>>.Failure(
                 new ApiError("SCHEMA_NOT_FOUND", "Schema file not found for this document type or version")));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Validation error: {ex.Message}");
+            logger.LogError(ex, "Validation error occurred");
             return Results.BadRequest(ApiResponse<List<ValidationError>>.Failure(
                 new ApiError("VALIDATION_ERROR", ex.Message)));
         }
