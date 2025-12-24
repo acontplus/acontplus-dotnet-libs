@@ -154,9 +154,15 @@ jobs:
 
           # Output for next jobs
           $strategy = if ($cascadeNeeded) { "cascade" } else { "simple" }
-          $packagesJson = $changedPackages | ConvertTo-Json -Compress
-          if ($changedPackages.Count -eq 1) {
+
+          # Ensure valid JSON output (empty array if no changes)
+          if ($changedPackages.Count -eq 0) {
+            $packagesJson = "[]"
+          } elseif ($changedPackages.Count -eq 1) {
+            $packagesJson = $changedPackages | ConvertTo-Json -Compress
             $packagesJson = "[$packagesJson]"
+          } else {
+            $packagesJson = $changedPackages | ConvertTo-Json -Compress
           }
 
           "strategy=$strategy" >> $env:GITHUB_OUTPUT
@@ -240,7 +246,7 @@ jobs:
   simple-publish:
     name: Simple Publish (No Dependents)
     needs: [check-eligibility, analyze-changes]
-    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false'
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false' && needs.analyze-changes.outputs.changed-packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
