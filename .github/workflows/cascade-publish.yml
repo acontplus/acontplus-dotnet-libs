@@ -186,7 +186,16 @@ jobs:
       - name: Create branch for changes
         id: create-branch
         run: |
-          BRANCH_NAME="cascade-update/${{ inputs.root-package }}-$(date +%s)"
+          # Build a unique branch name using package, run id, and timestamp to avoid collisions
+          BRANCH_NAME="cascade-update/${{ inputs.root-package }}-${{ github.run_id }}-$(date +%s)"
+
+          # If by any chance it already exists locally, add an extra random suffix
+          if git show-ref --verify --quiet refs/heads/$BRANCH_NAME; then
+            echo "Branch $BRANCH_NAME already exists, adding random suffix"
+            RAND_SUFFIX=$(openssl rand -hex 4)
+            BRANCH_NAME="cascade-update/${{ inputs.root-package }}-${{ github.run_id }}-$(date +%s)-$RAND_SUFFIX"
+          fi
+
           git checkout -b $BRANCH_NAME
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
@@ -321,70 +330,61 @@ jobs:
                 continue
               }
 
-              # Publish to NuGet (skip if creating PR)
-              if ("${{ inputs.create-pr }}" -ne "true") {
-                Write-Host "Publishing $packageName to NuGet.org..."
-                dotnet nuget push "nupkgs/$packageName.$newVersion.nupkg" `
-                  --api-key $env:NUGET_API_KEY `
-                  --source https://api.nuget.org/v3/index.json `
-                  --skip-duplicate
+              Write-Host "Publishing $packageName to NuGet.org..."
+              dotnet nuget push "nupkgs/$packageName.$newVersion.nupkg" `
+                --api-key $env:NUGET_API_KEY `
+                --source https://api.nuget.org/v3/index.json `
+                --skip-duplicate
 
-                if ($LASTEXITCODE -eq 0) {
-                  Write-Host "✅ Published $packageName v$newVersion" -ForegroundColor Green
-                  $publishedPackages += @{
-                    Name = $packageName
-                    Version = $newVersion
-                  }
-
-                  # Wait for NuGet indexing
-                  Write-Host "Waiting 30s for NuGet indexing..."
-                  Start-Sleep -Seconds 30
-
-                  # Verify package is available
-                  Write-Host "Verifying package availability..."
-                  $maxRetries = 10
-                  $retryCount = 0
-                  $verified = $false
-
-                  while ($retryCount -lt $maxRetries -and -not $verified) {
-                    try {
-                      $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
-                      $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
-
-                      if ($response.versions -contains $newVersion) {
-                        Write-Host "✅ Package $packageName v$newVersion verified on NuGet.org"
-                        $verified = $true
-                      } else {
-                        $retryCount++
-                        Write-Host "⏳ Retry $retryCount/$maxRetries - waiting for package to be indexed..."
-                        Start-Sleep -Seconds 10
-                      }
-                    }
-                    catch {
-                      $retryCount++
-                      Write-Host "⏳ Retry $retryCount/$maxRetries - package not yet available..."
-                      Start-Sleep -Seconds 10
-                    }
-                  }
-
-                  if (-not $verified) {
-                    Write-Host "❌ CRITICAL: Package $packageName v$newVersion not available on NuGet.org after $($maxRetries) retries" -ForegroundColor Red
-                    Write-Host "Cannot continue cascade - dependent packages need this version" -ForegroundColor Red
-                    $failedPackages += $packageName
-                    # Stop cascade to prevent build failures in dependent packages
-                    break
-                  }
-                }
-                else {
-                  Write-Host "❌ Publish failed for $packageName" -ForegroundColor Red
-                  $failedPackages += $packageName
-                }
-              } else {
-                Write-Host "📋 Staged for PR: $packageName v$newVersion"
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "✅ Published $packageName v$newVersion" -ForegroundColor Green
                 $publishedPackages += @{
                   Name = $packageName
                   Version = $newVersion
                 }
+
+                # Wait for NuGet indexing
+                Write-Host "Waiting 30s for NuGet indexing..."
+                Start-Sleep -Seconds 30
+
+                # Verify package is available
+                Write-Host "Verifying package availability..."
+                $maxRetries = 10
+                $retryCount = 0
+                $verified = $false
+
+                while ($retryCount -lt $maxRetries -and -not $verified) {
+                  try {
+                    $searchUrl = "https://api.nuget.org/v3-flatcontainer/$($packageName.ToLower())/index.json"
+                    $response = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
+
+                    if ($response.versions -contains $newVersion) {
+                      Write-Host "✅ Package $packageName v$newVersion verified on NuGet.org"
+                      $verified = $true
+                    } else {
+                      $retryCount++
+                      Write-Host "⏳ Retry $retryCount/$maxRetries - waiting for package to be indexed..."
+                      Start-Sleep -Seconds 10
+                    }
+                  }
+                  catch {
+                    $retryCount++
+                    Write-Host "⏳ Retry $retryCount/$maxRetries - package not yet available..."
+                    Start-Sleep -Seconds 10
+                  }
+                }
+
+                if (-not $verified) {
+                  Write-Host "❌ CRITICAL: Package $packageName v$newVersion not available on NuGet.org after $($maxRetries) retries" -ForegroundColor Red
+                  Write-Host "Cannot continue cascade - dependent packages need this version" -ForegroundColor Red
+                  $failedPackages += $packageName
+                  # Stop cascade to prevent build failures in dependent packages
+                  break
+                }
+              }
+              else {
+                Write-Host "❌ Publish failed for $packageName" -ForegroundColor Red
+                $failedPackages += $packageName
               }
             } else {
               Write-Host "🔍 [DRY RUN] Would update $packageName from $currentVersion to $newVersion"
@@ -467,6 +467,9 @@ jobs:
           }
 
           git commit -m $commitMsg
+          if ([string]::IsNullOrEmpty($env:BRANCH_NAME)) {
+            throw "BRANCH_NAME environment variable is not set"
+          }
           git push origin $env:BRANCH_NAME
 
       - name: Upload artifacts
