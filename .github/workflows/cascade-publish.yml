@@ -225,6 +225,13 @@ jobs:
           Write-Host "Update Order: $($updateOrder -join ', ')"
           Write-Host "================================================`n"
 
+          if ($updateOrder.Count -eq 0) {
+            Write-Host "❌ ERROR: No packages found in update order" -ForegroundColor Red
+            Write-Host "Root package: $rootPackage" -ForegroundColor Red
+            Write-Host "This usually means the root package doesn't exist or has no dependents" -ForegroundColor Red
+            exit 1
+          }
+
           foreach ($packageName in $updateOrder) {
             Write-Host "`n--- Processing: $packageName ---" -ForegroundColor Cyan
 
@@ -263,16 +270,18 @@ jobs:
             }
 
             $newVersion = "$major.$minor.$patch"
-            Write-Host "New version: $newVersion"
+            Write-Host "Current version: $currentVersion → New version: $newVersion" -ForegroundColor Cyan
 
             if (-not $dryRun) {
               # Update .csproj file
+              Write-Host "Updating $($projectPath.FullName)..."
               $csproj.Project.PropertyGroup.Version = $newVersion
               $csproj.Save($projectPath.FullName)
-              Write-Host "✅ Updated $packageName to $newVersion"
+              Write-Host "✅ Updated $packageName to $newVersion in .csproj"
 
               # Update Directory.Packages.props
               $packagePropsPath = "Directory.Packages.props"
+              Write-Host "Updating $packagePropsPath..."
               [xml]$packageProps = Get-Content $packagePropsPath
 
               $packageVersion = $packageProps.Project.ItemGroup.PackageVersion | Where-Object {
@@ -280,13 +289,23 @@ jobs:
               }
 
               if ($packageVersion) {
+                $oldPropsVersion = $packageVersion.Version
                 $packageVersion.Version = $newVersion
                 $packageProps.Save($packagePropsPath)
-                Write-Host "✅ Updated Directory.Packages.props"
+                Write-Host "✅ Updated Directory.Packages.props: $packageName from $oldPropsVersion to $newVersion"
+              } else {
+                Write-Host "⚠️ Package $packageName not found in Directory.Packages.props" -ForegroundColor Yellow
               }
 
+              # Verify files were updated
+              Write-Host "`n📋 Verifying file updates..."
+              Write-Host "Git status:"
+              git status --short
+              Write-Host "`n📝 Changes in modified files:"
+              git diff --no-pager
+
               # Restore and build
-              Write-Host "Building $packageName..."
+              Write-Host "`n🔨 Building $packageName..."
               # Clear NuGet cache to ensure latest versions are used
               dotnet nuget locals http-cache --clear
               dotnet restore $projectPath.FullName --force
@@ -333,6 +352,10 @@ jobs:
                 $failedPackages += $packageName
                 continue
               }
+
+              # List created files for debugging
+              Write-Host "Files in nupkgs directory:"
+              Get-ChildItem $nupkgDir | ForEach-Object { Write-Host "  - $($_.Name)" }
 
               # Verify .nupkg was created
               $nupkgPath = Join-Path $nupkgDir "$packageName.$newVersion.nupkg"
