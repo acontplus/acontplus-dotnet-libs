@@ -45,6 +45,11 @@ env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
 jobs:
   calculate-dependencies:
     name: Calculate Update Order

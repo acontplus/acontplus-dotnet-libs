@@ -13,6 +13,10 @@ env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
 
+permissions:
+  contents: write
+  issues: write
+
 # Prevents duplicate runs with other workflows
 concurrency:
   group: publish-${{ github.event.pull_request.number }}
