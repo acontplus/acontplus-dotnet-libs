@@ -483,7 +483,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [calculate-dependencies, update-and-publish]
-    if: ${{ !inputs.dry-run }}
+    if: ${{ !inputs.dry-run && needs.update-and-publish.result == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
