@@ -317,12 +317,16 @@ jobs:
                 }
               }
 
-              # Pack
+              # Pack - create nupkg directory at workspace root
+              $nupkgDir = Join-Path $pwd "nupkgs"
+              if (-not (Test-Path $nupkgDir)) {
+                New-Item -ItemType Directory -Path $nupkgDir | Out-Null
+              }
+
               Write-Host "Packing $packageName..."
               dotnet pack $projectPath.FullName `
                 --configuration ${{ env.CONFIGURATION }} `
-                --no-build `
-                --output nupkgs
+                --output $nupkgDir
 
               if ($LASTEXITCODE -ne 0) {
                 Write-Host "❌ Pack failed for $packageName" -ForegroundColor Red
@@ -330,8 +334,16 @@ jobs:
                 continue
               }
 
+              # Verify .nupkg was created
+              $nupkgPath = Join-Path $nupkgDir "$packageName.$newVersion.nupkg"
+              if (-not (Test-Path $nupkgPath)) {
+                Write-Host "❌ Package file not found: $nupkgPath" -ForegroundColor Red
+                $failedPackages += $packageName
+                continue
+              }
+
               Write-Host "Publishing $packageName to NuGet.org..."
-              dotnet nuget push "nupkgs/$packageName.$newVersion.nupkg" `
+              dotnet nuget push $nupkgPath `
                 --api-key $env:NUGET_API_KEY `
                 --source https://api.nuget.org/v3/index.json `
                 --skip-duplicate
