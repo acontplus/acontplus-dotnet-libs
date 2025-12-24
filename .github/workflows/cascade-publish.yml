@@ -61,16 +61,30 @@ jobs:
         id: calculate
         shell: pwsh
         run: |
+          Write-Host "================================================"
+          Write-Host "🔍 CALCULATING DEPENDENCIES"
+          Write-Host "================================================"
+          Write-Host "Root package: Acontplus.${{ inputs.root-package }}"
+          Write-Host ""
+
           # Parse all project dependencies
           $dependencies = @{}
           $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
 
+          Write-Host "📁 Found $($projectFiles.Count) .csproj files in src/"
+          Write-Host ""
+
           foreach ($project in $projectFiles) {
+            Write-Host "📝 Processing: $($project.Name)"
             [xml]$csproj = Get-Content $project.FullName
             $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
             $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
 
+            Write-Host "   PackageId: $packageId"
+            Write-Host "   GeneratePackageOnBuild: $generatePackage"
+
             if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
+              Write-Host "   ⏭️ Skipping (not a package project)" -ForegroundColor Yellow
               continue
             }
 
@@ -84,14 +98,30 @@ jobs:
                 }
               }
             }
+            
+            Write-Host "   Dependencies: $($deps -join ', ')" -ForegroundColor Cyan
             $dependencies[$packageId] = $deps
           }
 
-          Write-Host "Dependency Graph:"
+          Write-Host ""
+          Write-Host "📊 Dependency Graph:"
           $dependencies | ConvertTo-Json | Write-Host
 
           # Find packages that depend on root package (directly or transitively)
           $rootPackage = "Acontplus.${{ inputs.root-package }}"
+          
+          Write-Host ""
+          Write-Host "🎯 Looking for root package: $rootPackage"
+          
+          if (-not $dependencies.ContainsKey($rootPackage)) {
+            Write-Host "❌ ERROR: Root package '$rootPackage' not found in dependency graph!" -ForegroundColor Red
+            Write-Host "Available packages:" -ForegroundColor Yellow
+            $dependencies.Keys | ForEach-Object { Write-Host "  - $_" -ForegroundColor Yellow }
+            exit 1
+          }
+          
+          Write-Host "✅ Root package found in dependency graph"
+          
           $affectedPackages = @()
 
           function Get-Dependents {
@@ -100,6 +130,8 @@ jobs:
             $directDependents = $dependencies.Keys | Where-Object {
               $dependencies[$_] -contains $package
             }
+            
+            Write-Host "   Dependents of $package`: $($directDependents -join ', ')"
 
             foreach ($dependent in $directDependents) {
               if ($dependent -notin $affectedPackages) {
@@ -110,13 +142,18 @@ jobs:
           }
 
           # Start with root package
+          Write-Host ""
+          Write-Host "🔄 Finding all affected packages..."
           $affectedPackages += $rootPackage
           Get-Dependents $rootPackage
 
-          Write-Host "`nAffected Packages:"
-          $affectedPackages | Write-Host
+          Write-Host ""
+          Write-Host "📦 Affected Packages ($($affectedPackages.Count)):"
+          $affectedPackages | ForEach-Object { Write-Host "  - $_" -ForegroundColor Cyan }
 
           # Topological sort for update order
+          Write-Host ""
+          Write-Host "🔄 Calculating update order (topological sort)..."
           $visited = @{}
           $updateOrder = @()
 
@@ -149,15 +186,26 @@ jobs:
             }
           }
 
-          Write-Host "`nUpdate Order (dependencies first):"
-          $updateOrder | ForEach-Object { Write-Host "  $_" }
+          Write-Host ""
+          Write-Host "✅ Update Order (dependencies first):"
+          $updateOrder | ForEach-Object { Write-Host "  $_" -ForegroundColor Green }
 
           # Output for next job
           $orderJson = $updateOrder | ConvertTo-Json -Compress
           $packagesJson = $affectedPackages | ConvertTo-Json -Compress
 
+          Write-Host ""
+          Write-Host "📤 Setting outputs..."
+          Write-Host "   update-order: $orderJson"
+          Write-Host "   packages-to-update: $packagesJson"
+
           "update-order=$orderJson" >> $env:GITHUB_OUTPUT
           "packages-to-update=$packagesJson" >> $env:GITHUB_OUTPUT
+
+          Write-Host ""
+          Write-Host "================================================"
+          Write-Host "✅ CALCULATION COMPLETE"
+          Write-Host "================================================"
 
   update-and-publish:
     name: Update & Publish Packages
