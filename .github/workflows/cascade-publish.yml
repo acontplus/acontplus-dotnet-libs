@@ -133,7 +133,7 @@ jobs:
 
           Write-Host "✅ Root package found in dependency graph"
 
-          $affectedPackages = @()
+          $affectedPackages = [System.Collections.Generic.List[string]]::new()
 
           function Get-Dependents {
             param($package)
@@ -146,7 +146,7 @@ jobs:
 
             foreach ($dependent in $directDependents) {
               if ($dependent -notin $affectedPackages) {
-                $affectedPackages += $dependent
+                $affectedPackages.Add($dependent)
                 Get-Dependents $dependent
               }
             }
@@ -155,7 +155,7 @@ jobs:
           # Start with root package
           Write-Host ""
           Write-Host "🔄 Finding all affected packages..."
-          $affectedPackages += $rootPackage
+          $affectedPackages.Add($rootPackage)
           Get-Dependents $rootPackage
 
           Write-Host ""
@@ -166,7 +166,7 @@ jobs:
           Write-Host ""
           Write-Host "🔄 Calculating update order (topological sort)..."
           $visited = @{}
-          $updateOrder = @()
+          $updateOrder = [System.Collections.Generic.List[string]]::new()
 
           function Visit-Package {
             param($package)
@@ -188,7 +188,7 @@ jobs:
             }
 
             $visited[$package] = "visited"
-            $updateOrder += $package
+            $updateOrder.Add($package)
           }
 
           foreach ($package in $affectedPackages) {
