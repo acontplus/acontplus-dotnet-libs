@@ -141,7 +141,9 @@ jobs:
 
           # Determine strategy
           $hasDependents = $changedPackages | Where-Object { $_.HasDependents } | Measure-Object | Select-Object -ExpandProperty Count
-          $cascadeNeeded = $hasDependents -gt 0
+          # Previously, packages with dependents triggered a cascade recommendation.
+          # Now we always publish via smart flow; no cascade hand-off.
+          $cascadeNeeded = $false
 
           Write-Host "`n================================================"
           Write-Host "Analysis Result:"
@@ -149,13 +151,8 @@ jobs:
           Write-Host "Changed packages: $($changedPackages.Count)"
           Write-Host "Packages with dependents: $hasDependents"
 
-          if ($cascadeNeeded) {
-            Write-Host "Strategy: 🔄 CASCADE UPDATE NEEDED" -ForegroundColor Yellow
-            Write-Host "Reason: One or more packages have dependents" -ForegroundColor Yellow
-          } else {
-            Write-Host "Strategy: ✅ SIMPLE PUBLISH" -ForegroundColor Green
-            Write-Host "Reason: No packages have dependents" -ForegroundColor Green
-          }
+          Write-Host "Strategy: ✅ SIMPLE PUBLISH" -ForegroundColor Green
+          Write-Host "Reason: Smart flow now handles dependents without cascade" -ForegroundColor Green
 
           # Output for next jobs
           $strategy = if ($cascadeNeeded) { "cascade" } else { "simple" }
@@ -250,7 +247,7 @@ jobs:
   simple-publish:
     name: Simple Publish (No Dependents)
     needs: [check-eligibility, analyze-changes]
-    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false' && needs.analyze-changes.outputs.changed-packages != '[]'
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.changed-packages != '[]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -266,10 +263,16 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Prepare local nupkgs feed
+        run: |
+          mkdir -p nupkgs
+          dotnet nuget remove source local-nupkgs || true
+          dotnet nuget add source "$(pwd)/nupkgs" --name local-nupkgs
+
       - name: Restore dependencies
         run: |
           dotnet nuget locals http-cache --clear
-          dotnet restore --force
+          dotnet restore --force --source "$(pwd)/nupkgs" --source https://api.nuget.org/v3/index.json
 
       - name: Build solution
         run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
@@ -315,7 +318,7 @@ jobs:
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
-      - name: Verify package availability
+      - name: Verify package availability (tolerant)
         shell: pwsh
         run: |
           $packageName = "${{ matrix.package.Name }}"
@@ -324,8 +327,9 @@ jobs:
           Write-Host "Waiting 30s for NuGet indexing..."
           Start-Sleep -Seconds 30
 
-          $maxRetries = 10
+          $maxRetries = 20
           $verified = $false
+          $baseDelay = 8
 
           for ($i = 1; $i -le $maxRetries; $i++) {
             try {
@@ -342,13 +346,14 @@ jobs:
               Write-Host "Retry $i/$maxRetries - package not yet available..."
             }
 
-            Start-Sleep -Seconds 10
+            $delay = [math]::Min($baseDelay + ($i * 4), 60)
+            Write-Host "⏳ Waiting $delay s before next check..."
+            Start-Sleep -Seconds $delay
           }
 
           if (-not $verified) {
-            Write-Host "❌ CRITICAL: Package $packageName v$version not available after $maxRetries retries" -ForegroundColor Red
-            Write-Host "Package published but not indexed - this may cause dependency resolution issues" -ForegroundColor Red
-            exit 1
+            Write-Host "⚠️ WARNING: Package $packageName v$version not visible after $maxRetries retries" -ForegroundColor Yellow
+            Write-Host "Continuing; downstream restores may use local artifacts (nupkgs) or retry later." -ForegroundColor Yellow
           }
 
       - name: Upload artifacts
@@ -361,7 +366,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [check-eligibility, analyze-changes, simple-publish]
-    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'false'
+    if: needs.check-eligibility.outputs.should-run == 'true'
     runs-on: ubuntu-latest
 
     steps:

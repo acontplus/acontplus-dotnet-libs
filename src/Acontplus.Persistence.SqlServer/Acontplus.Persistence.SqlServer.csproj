@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.SqlServer</PackageId>
-    <Version>2.0.6</Version>
+    <Version>2.0.7</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
