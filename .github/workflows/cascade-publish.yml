@@ -311,6 +311,12 @@ jobs:
               continue
             }
 
+            # Ensure local nupkg cache exists (used as local source for dependents)
+            $nupkgDir = Join-Path $pwd "nupkgs"
+            if (-not (Test-Path $nupkgDir)) {
+              New-Item -ItemType Directory -Path $nupkgDir | Out-Null
+            }
+
             # Parse current version
             [xml]$csproj = Get-Content $projectPath.FullName
             $currentVersion = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
@@ -367,7 +373,7 @@ jobs:
               Write-Host "`n🔨 Building $packageName..."
               # Clear NuGet cache to ensure latest versions are used
               dotnet nuget locals http-cache --clear
-              dotnet restore $projectPath.FullName --force
+              dotnet restore $projectPath.FullName --force --source $nupkgDir --source https://api.nuget.org/v3/index.json
               dotnet build $projectPath.FullName --configuration ${{ env.CONFIGURATION }} --no-restore
 
               if ($LASTEXITCODE -ne 0) {
@@ -395,12 +401,7 @@ jobs:
                 }
               }
 
-              # Pack - create nupkg directory at workspace root
-              $nupkgDir = Join-Path $pwd "nupkgs"
-              if (-not (Test-Path $nupkgDir)) {
-                New-Item -ItemType Directory -Path $nupkgDir | Out-Null
-              }
-
+              # Pack - create nupkg directory at workspace root (already ensured above)
               Write-Host "Packing $packageName..."
               dotnet pack $projectPath.FullName `
                 --configuration ${{ env.CONFIGURATION }} `
@@ -441,11 +442,12 @@ jobs:
                 Write-Host "Waiting 30s for NuGet indexing..."
                 Start-Sleep -Seconds 30
 
-                # Verify package is available
+                # Verify package is available (longer wait with backoff)
                 Write-Host "Verifying package availability..."
-                $maxRetries = 10
+                $maxRetries = 20
                 $retryCount = 0
                 $verified = $false
+                $baseDelay = 8
 
                 while ($retryCount -lt $maxRetries -and -not $verified) {
                   try {
@@ -457,23 +459,23 @@ jobs:
                       $verified = $true
                     } else {
                       $retryCount++
-                      Write-Host "⏳ Retry $retryCount/$maxRetries - waiting for package to be indexed..."
-                      Start-Sleep -Seconds 10
+                      $delay = [math]::Min($baseDelay + ($retryCount * 4), 60)
+                      Write-Host "⏳ Retry $retryCount/$maxRetries - waiting $delay s for indexing..."
+                      Start-Sleep -Seconds $delay
                     }
                   }
                   catch {
                     $retryCount++
-                    Write-Host "⏳ Retry $retryCount/$maxRetries - package not yet available..."
-                    Start-Sleep -Seconds 10
+                    $delay = [math]::Min($baseDelay + ($retryCount * 4), 60)
+                    Write-Host "⏳ Retry $retryCount/$maxRetries - package not yet available, waiting $delay s..." -ForegroundColor Yellow
+                    Start-Sleep -Seconds $delay
                   }
                 }
 
                 if (-not $verified) {
-                  Write-Host "❌ CRITICAL: Package $packageName v$newVersion not available on NuGet.org after $($maxRetries) retries" -ForegroundColor Red
-                  Write-Host "Cannot continue cascade - dependent packages need this version" -ForegroundColor Red
-                  $failedPackages += $packageName
-                  # Stop cascade to prevent build failures in dependent packages
-                  break
+                  Write-Host "⚠️ WARNING: Package $packageName v$newVersion not visible on NuGet.org after $($maxRetries) retries" -ForegroundColor Yellow
+                  Write-Host "Continuing cascade using local nupkgs source ($nupkgDir) for restores" -ForegroundColor Yellow
+                  # Do NOT mark as failed; dependents will restore from local nupkgDir
                 }
               }
               else {
