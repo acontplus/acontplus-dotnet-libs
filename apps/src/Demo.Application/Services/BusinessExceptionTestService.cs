@@ -66,7 +66,7 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
     {
         _logger.LogInformation("Creating customer with email: {Email}", email);
 
-        if (_customers.Values.Any(c => c.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+        if (_customers.Values.Any(c => c.Email?.Equals(email, StringComparison.OrdinalIgnoreCase) ?? false))
         {
             _logger.LogWarning("Customer with email already exists: {Email}", email);
             return Task.FromResult(Result<CustomerModel, DomainError>.Failure(

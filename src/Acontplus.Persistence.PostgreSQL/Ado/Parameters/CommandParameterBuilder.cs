@@ -20,7 +20,7 @@ public static class CommandParameterBuilder
         cmd.Parameters.Add(param);
     }
 
-    public static object GetParameter(NpgsqlCommand command, string parameterName)
+    public static object? GetParameter(NpgsqlCommand command, string parameterName)
     {
         return command.Parameters[parameterName].Value;
     }

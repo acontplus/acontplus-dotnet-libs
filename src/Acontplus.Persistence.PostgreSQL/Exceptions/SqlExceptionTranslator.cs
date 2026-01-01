@@ -66,7 +66,7 @@ public class PostgresExceptionTranslator : ISqlExceptionTranslator
     /// <summary>
     /// Recursively searches for NpgsqlException in the exception chain
     /// </summary>
-    private static NpgsqlException FindNpgsqlException(Exception ex)
+    private static NpgsqlException? FindNpgsqlException(Exception? ex)
     {
         if (ex == null) return null;
 

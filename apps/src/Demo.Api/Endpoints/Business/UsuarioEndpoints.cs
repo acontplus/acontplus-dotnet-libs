@@ -127,6 +127,10 @@ public static class UsuarioEndpoints
         IUsuarioService usuarioService)
     {
         var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(usuarioDto);
+        if (usuario == null)
+            return Results.BadRequest(ApiResponse.Failure(
+                [new ApiError("MAPPING_ERROR", "Invalid user data")]));
+
         var result = await usuarioService.AddAsync(usuario);
 
         return result.Match<IResult>(
@@ -150,6 +154,10 @@ public static class UsuarioEndpoints
         IUsuarioService usuarioService)
     {
         var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(usuarioDto);
+        if (usuario == null)
+            return Results.BadRequest(ApiResponse.Failure(
+                [new ApiError("MAPPING_ERROR", "Invalid user data")]));
+
         return await usuarioService.UpdateAsync(id, usuario).ToMinimalApiResultAsync();
     }
 
@@ -243,10 +251,19 @@ public static class UsuarioEndpoints
             PaginationRequest = PaginationRequest.WithFilter("IsDeleted", false);
         }
 
-        PaginationRequest = PaginationRequest
-            .WithFilter("Status", "Active")
-            .WithFilter("MinAge", minAge)
-            .WithFilter("Role", role);
+        if (role != null)
+        {
+            PaginationRequest = PaginationRequest
+                .WithFilter("Status", "Active")
+                .WithFilter("MinAge", minAge)
+                .WithFilter("Role", role);
+        }
+        else
+        {
+            PaginationRequest = PaginationRequest
+                .WithFilter("Status", "Active")
+                .WithFilter("MinAge", minAge);
+        }
 
         return await usuarioService.GetPagedUsersAdoAsync(PaginationRequest).ToGetMinimalApiResultAsync();
     }

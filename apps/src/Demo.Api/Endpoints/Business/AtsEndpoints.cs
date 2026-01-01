@@ -39,7 +39,7 @@ public static class AtsEndpoints
 
             return Results.File(xmlBytes, "text/xml", fileName + ".xml");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Log the exception if needed
             return Results.Problem("Error generating ATS XML", statusCode: 500);
