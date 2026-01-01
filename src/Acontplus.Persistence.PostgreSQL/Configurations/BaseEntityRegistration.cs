@@ -160,7 +160,7 @@ public static class BaseEntityRegistration
         }
         if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
             return true;
-        Type baseType = givenType.BaseType;
+        Type? baseType = givenType.BaseType;
         return baseType != null && IsAssignableToGenericType(baseType, genericType);
     }
 

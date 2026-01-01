@@ -17,7 +17,7 @@ public static class PostgresServiceCollectionExtensions
     public static IServiceCollection AddPostgresPersistence<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder> postgresOptions,
-        object serviceKey = null)
+        object? serviceKey = null)
         where TContext : DbContext
     {
         services.AddDbContextPool<TContext>(postgresOptions, poolSize: 128);

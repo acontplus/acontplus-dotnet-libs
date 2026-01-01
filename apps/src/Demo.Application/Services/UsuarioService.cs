@@ -153,16 +153,22 @@ namespace Demo.Application.Services
                     parameters: parameters,
                     options: options);
 
+                // Handle null result
+                if (result == null)
+                {
+                    return DomainError.NotFound("SP_NO_RESULT", "Stored procedure returned no result");
+                }
+
                 // Example: If result has a SQL error code, map it to DomainError
                 if (!result.IsSuccess && !string.IsNullOrEmpty(result.Code))
                 {
-                    var sqlError = SqlResponseAdapter.MapSqlServerError(result.Code, result.Message);
+                    var sqlError = SqlResponseAdapter.MapSqlServerError(result.Code, result.Message ?? "Unknown error");
                     return sqlError;
                 }
 
                 return result.IsSuccess
                     ? Result<SpResponse, DomainError>.Success(result)
-                    : DomainError.Internal(result.Code, result.Message);
+                    : DomainError.Internal(result.Code ?? "UNKNOWN_ERROR", result.Message ?? "An error occurred");
             }
             catch (DbException ex)
             {
@@ -239,7 +245,7 @@ namespace Demo.Application.Services
                 };
 
                 return new PagedResult<UsuarioDto>(
-                    items: userDtos,
+                    items: userDtos.Where(u => u != null).Cast<UsuarioDto>(),
                     pageIndex: pagedResult.PageIndex,
                     pageSize: pagedResult.PageSize,
                     totalCount: pagedResult.TotalCount,
@@ -293,8 +299,11 @@ namespace Demo.Application.Services
                     continue;
                 }
                 var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(dto);
-                await _usuarioRepository.AddAsync(usuario);
-                imported.Add(usuario);
+                if (usuario != null)
+                {
+                    await _usuarioRepository.AddAsync(usuario);
+                    imported.Add(usuario);
+                }
             }
             try
             {

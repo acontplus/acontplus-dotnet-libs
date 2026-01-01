@@ -7,7 +7,7 @@ public static class PostgresExceptionHandler
     public static bool IsTransientException(NpgsqlException ex)
     {
         // 40001: serialization_failure, 40P01: deadlock_detected, 23505: unique_violation, 23503: foreign_key_violation
-        return ex.SqlState is "40001" or "40P01" or "23505" or "23503" || ex.SqlState.StartsWith("08");
+        return ex.SqlState is "40001" or "40P01" or "23505" or "23503" || (ex.SqlState?.StartsWith("08") ?? false);
     }
 
     public static SqlErrorInfo MapSqlException(NpgsqlException ex)
@@ -70,8 +70,9 @@ public static class PostgresExceptionHandler
         [CallerMemberName] string caller = "")
     {
         var errorInfo = MapSqlException(ex);
+        var sqlStateHashCode = ex.SqlState?.GetHashCode() ?? 0;
         logger.Log(GetLogLevel(errorInfo.ErrorType),
-            new EventId(ex.SqlState.GetHashCode(), errorInfo.Code),
+            new EventId(sqlStateHashCode, errorInfo.Code),
             "Postgres Error in {Operation} called from {Caller}: {ErrorType} - {Message}",
             operation, caller, errorInfo.ErrorType, errorInfo.Message);
         if (logger.IsEnabled(LogLevel.Debug))
@@ -82,7 +83,7 @@ public static class PostgresExceptionHandler
                 ex.Message,
                 ex.StackTrace,
                 ex.Source,
-                ex.TargetSite,
+                TargetSite = ex.TargetSite?.ToString(),
                 ex.Data,
                 errorInfo.Code,
                 IsTransient = IsTransientException(ex)

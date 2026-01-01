@@ -14,23 +14,19 @@ public static class StorageAndNotificationsEndpoints
     {
         group.MapPost("/upload-and-notify", UploadFileAndNotify)
             .WithName("UploadAndNotify")
-            .WithDescription("Uploads a file to S3 and sends email notification")
-            .WithOpenApi();
+            .WithDescription("Uploads a file to S3 and sends email notification");
 
         group.MapGet("/presigned-url/{fileName}", GeneratePresignedUrl)
             .WithName("GeneratePresignedUrl")
-            .WithDescription("Generates a presigned URL for file download")
-            .WithOpenApi();
+            .WithDescription("Generates a presigned URL for file download");
 
         group.MapPost("/send-templated-email", SendTemplatedEmail)
             .WithName("SendTemplatedEmail")
-            .WithDescription("Sends email using cached template (v1.5.0 feature)")
-            .WithOpenApi();
+            .WithDescription("Sends email using cached template (v1.5.0 feature)");
 
         group.MapPost("/bulk-upload", BulkUpload)
             .WithName("BulkUpload")
-            .WithDescription("Demonstrates bulk file upload with connection pooling")
-            .WithOpenApi();
+            .WithDescription("Demonstrates bulk file upload with connection pooling");
 
         return group;
     }
