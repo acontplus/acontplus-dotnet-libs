@@ -4,12 +4,6 @@
         <name>Acontplus.Persistence.Common</name>
     </assembly>
     <members>
-        <member name="T:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider">
-            <summary>
-                Default implementation of IConnectionStringProvider using IConfiguration.
-                Supports hierarchical, environment-based, and secure connection string resolution.
-            </summary>
-        </member>
         <member name="T:Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions">
             <summary>
             Resilience configuration options for persistence layer (ADO.NET repositories).
@@ -136,6 +130,12 @@
             <summary>
             Timeout for long-running reports in seconds. Default: 600 (10 minutes).
             Used for complex analytics and reporting queries.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider">
+            <summary>
+                Default implementation of IConnectionStringProvider using IConfiguration.
+                Supports hierarchical, environment-based, and secure connection string resolution.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.Common.Exceptions.SqlExceptionExtensions.ToDomainErrors(System.Collections.Generic.IEnumerable{Acontplus.Persistence.Common.Exceptions.SqlDomainException},System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
