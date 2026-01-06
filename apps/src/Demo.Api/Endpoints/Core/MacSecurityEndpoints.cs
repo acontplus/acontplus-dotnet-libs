@@ -61,7 +61,7 @@ public static class MacSecurityEndpoints
         }
         catch (Exception ex)
         {
-            var error = new ApiError("MAC_GENERATION_SHA512_ERROR", $"Failed to generate MAC (SHA512): {ex.Message}");
+            var error = new ApiError("MAC_GENERATION_ERROR", $"Failed to generate MAC: {ex.Message}");
             return Results.BadRequest(ApiResponse.Failure(error));
         }
     }
@@ -83,7 +83,7 @@ public static class MacSecurityEndpoints
         }
         catch (Exception ex)
         {
-            var error = new ApiError("MAC_GENERATION_ERROR", $"Failed to generate MAC: {ex.Message}");
+            var error = new ApiError("MAC_GENERATION_SHA512_ERROR", $"Failed to generate MAC (SHA512): {ex.Message}");
             return Results.BadRequest(ApiResponse.Failure(error));
         }
     }
