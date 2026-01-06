@@ -1,6 +1,7 @@
 using Acontplus.Core.Domain.Common.Events;
 using Acontplus.Persistence.Common.Configuration;
 using Acontplus.S3Application.Extensions;
+using Acontplus.Utilities.Security.Services;
 using Demo.Api.Endpoints.Business.Analytics;
 using Demo.Api.Endpoints.Demo;
 using Demo.Api.Endpoints.Infrastructure;
@@ -111,6 +112,11 @@ public static class ProgramExtensions
         services.AddDataProtection();
 
         // ========================================
+        // SECURITY SERVICES
+        // ========================================
+        services.AddScoped<IMacSecurityService, MacSecurityService>();
+
+        // ========================================
         // EVENT SYSTEMS CONFIGURATION
         // ========================================
 
@@ -193,6 +199,7 @@ public static class ProgramExtensions
 
         // Map core endpoints
         app.MapEncryptionEndpoints();
+        app.MapMacSecurityEndpoints();
         app.MapLookupEndpoints();
 
         // Map infrastructure endpoints

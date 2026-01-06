@@ -588,6 +588,65 @@
             <returns>The validated combined path</returns>
             <exception cref="T:System.Security.SecurityException">Thrown if path traversal is detected in any segment</exception>
         </member>
+        <member name="T:Acontplus.Utilities.Security.Interfaces.IMacSecurityService">
+            <summary>
+            Service for generating and verifying Message Authentication Codes (MAC) using HMAC algorithms.
+            Provides integrity and authenticity verification for API messages and data.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.GenerateMac(System.String,System.String)">
+            <summary>
+            Generates a MAC (HMAC-SHA256) for the given data using the provided secret key.
+            </summary>
+            <param name="data">The data to generate a MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.GenerateMacSha512(System.String,System.String)">
+            <summary>
+            Generates a MAC (HMAC-SHA512) for the given data using the provided secret key.
+            </summary>
+            <param name="data">The data to generate a MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.VerifyMac(System.String,System.String,System.String)">
+            <summary>
+            Verifies that a MAC signature matches the expected MAC for the given data and secret key.
+            Uses timing-safe comparison to prevent timing attacks.
+            </summary>
+            <param name="data">The original data</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.VerifyMacSha512(System.String,System.String,System.String)">
+            <summary>
+            Verifies that a MAC signature (SHA512) matches the expected MAC for the given data and secret key.
+            Uses timing-safe comparison to prevent timing attacks.
+            </summary>
+            <param name="data">The original data</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.GenerateMacForJson(System.Object,System.String)">
+            <summary>
+            Generates a MAC for JSON data (automatically serializes object to JSON before computing MAC).
+            </summary>
+            <param name="data">The object to serialize and generate MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IMacSecurityService.VerifyMacForJson(System.Object,System.String,System.String)">
+            <summary>
+            Verifies a MAC signature for JSON data.
+            </summary>
+            <param name="data">The object to serialize and verify MAC for</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
+        </member>
         <member name="T:Acontplus.Utilities.Security.Interfaces.ISensitiveDataEncryptionService">
             <summary>
             Defines asynchronous methods for encrypting and decrypting sensitive data.
@@ -608,6 +667,71 @@
             <param name="passphrase">The decryption key (must match the key used for encryption).</param>
             <param name="encryptedData">The byte array containing the IV followed by the encrypted data.</param>
             <returns>A Task containing the decrypted plaintext string.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Security.Services.MacSecurityService">
+            <summary>
+            Implementation of MAC (Message Authentication Code) security service using HMAC algorithms.
+            Provides secure message integrity and authenticity verification for API communications.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.GenerateMac(System.String,System.String)">
+            <summary>
+            Generates a MAC (HMAC-SHA256) for the given data using the provided secret key.
+            </summary>
+            <param name="data">The data to generate a MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when data or secretKey is null or empty</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.GenerateMacSha512(System.String,System.String)">
+            <summary>
+            Generates a MAC (HMAC-SHA512) for the given data using the provided secret key.
+            Provides stronger security than SHA256 at the cost of a larger signature.
+            </summary>
+            <param name="data">The data to generate a MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when data or secretKey is null or empty</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.VerifyMac(System.String,System.String,System.String)">
+            <summary>
+            Verifies that a MAC signature matches the expected MAC for the given data and secret key.
+            Uses timing-safe comparison (CryptographicOperations.FixedTimeEquals) to prevent timing attacks.
+            </summary>
+            <param name="data">The original data</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.VerifyMacSha512(System.String,System.String,System.String)">
+            <summary>
+            Verifies that a MAC signature (SHA512) matches the expected MAC for the given data and secret key.
+            Uses timing-safe comparison (CryptographicOperations.FixedTimeEquals) to prevent timing attacks.
+            </summary>
+            <param name="data">The original data</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.GenerateMacForJson(System.Object,System.String)">
+            <summary>
+            Generates a MAC for JSON data (automatically serializes object to JSON before computing MAC).
+            Uses System.Text.Json for serialization with default options.
+            </summary>
+            <param name="data">The object to serialize and generate MAC for</param>
+            <param name="secretKey">The secret key to use for HMAC generation</param>
+            <returns>Base64-encoded MAC signature</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when data or secretKey is null</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.MacSecurityService.VerifyMacForJson(System.Object,System.String,System.String)">
+            <summary>
+            Verifies a MAC signature for JSON data.
+            Uses System.Text.Json for serialization with default options.
+            </summary>
+            <param name="data">The object to serialize and verify MAC for</param>
+            <param name="providedMac">The MAC signature to verify (Base64-encoded)</param>
+            <param name="secretKey">The secret key used for MAC generation</param>
+            <returns>True if the MAC is valid, false otherwise</returns>
         </member>
         <member name="M:Acontplus.Utilities.Security.Services.SensitiveDataEncryptionService.EncryptToBytesAsync(System.String,System.String)">
             <summary>
