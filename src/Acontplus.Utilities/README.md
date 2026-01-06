@@ -11,6 +11,7 @@ A comprehensive .NET utility library providing common functionality for business
 - **API Response Extensions** - Comprehensive Result<T> to IActionResult/IResult conversions with domain error handling, pagination, and warnings support
 - **Domain Extensions** - Consolidated domain-to-API conversion logic for clean architectural separation
 - **FilterQuery Extensions** - Type-safe filter value extraction from FilterQuery with `GetFilterValue<T>()` and `TryGetFilterValue<T>()`
+- **MAC Security** - HMAC-SHA256/SHA512 message authentication for API integrity and webhook verification
 - **Encryption** - Data encryption/decryption utilities with BCrypt support
 - **External Validations** - Third-party validation integrations and data validation helpers
 - **Custom Logging** - Enhanced logging capabilities
@@ -147,7 +148,78 @@ byte[] encrypted = await encryptionService.EncryptToBytesAsync("password", "data
 string decrypted = await encryptionService.DecryptFromBytesAsync("password", encrypted);
 ```
 
-### 5. Pagination Metadata Example
+### 5. MAC (Message Authentication Code) Security
+
+The MAC security service provides HMAC-based message authentication for API security, ensuring data integrity and authenticity.
+
+```csharp
+using Acontplus.Utilities.Security.Interfaces;
+using Acontplus.Utilities.Security.Services;
+
+// Register the service in your DI container
+services.AddScoped<IMacSecurityService, MacSecurityService>();
+
+// Use in your API
+public class SecureApiController : ControllerBase
+{
+    private readonly IMacSecurityService _macService;
+    
+    public SecureApiController(IMacSecurityService macService)
+    {
+        _macService = macService;
+    }
+
+    [HttpPost("secure-endpoint")]
+    public IActionResult ProcessSecureData([FromBody] SecureRequest request)
+    {
+        // Verify MAC signature from client
+        var isValid = _macService.VerifyMac(
+            request.Data, 
+            request.MacSignature, 
+            _configuration["ApiSecretKey"]);
+        
+        if (!isValid)
+            return Unauthorized("Invalid MAC signature");
+        
+        // Process data...
+        var responseData = ProcessData(request.Data);
+        
+        // Generate MAC for response
+        var responseMac = _macService.GenerateMac(
+            responseData, 
+            _configuration["ApiSecretKey"]);
+        
+        return Ok(new { Data = responseData, Mac = responseMac });
+    }
+    
+    [HttpPost("secure-json")]
+    public IActionResult ProcessJsonData([FromBody] object jsonData)
+    {
+        // Generate MAC for JSON object
+        var mac = _macService.GenerateMacForJson(jsonData, _configuration["ApiSecretKey"]);
+        
+        return Ok(new { Data = jsonData, Mac = mac });
+    }
+}
+```
+
+**MAC Service Features:**
+- ✅ **HMAC-SHA256** - Fast and secure for most use cases
+- ✅ **HMAC-SHA512** - Enhanced security for sensitive operations
+- ✅ **JSON Support** - Automatic serialization for object signing
+- ✅ **Timing-Safe Verification** - Protection against timing attacks using `CryptographicOperations.FixedTimeEquals`
+- ✅ **API Security** - Verify request authenticity and prevent tampering
+- ✅ **Webhook Signatures** - Validate incoming webhook payloads
+- ✅ **Message Integrity** - Ensure data hasn't been modified in transit
+
+**Use Cases:**
+- API request/response signing
+- Webhook payload verification
+- Message queue integrity
+- Token generation and validation
+- Secure inter-service communication
+
+### 6. Pagination Metadata Example
 
 ```csharp
 var metadata = new Dictionary<string, object>()
@@ -536,6 +608,7 @@ byte[] decompressed = CompressionUtils.DecompressGZip(compressed);
 
 ### Core Utilities
 - `SensitiveDataEncryptionService` - AES encryption/decryption helpers with BCrypt support
+- `MacSecurityService` - HMAC-SHA256/SHA512 message authentication for API security and data integrity
 - `FileExtensions` - File name sanitization and byte array utilities
 - `CompressionUtils` - GZip/Deflate compression helpers
 - `TextHandlers` - String formatting and splitting utilities
