@@ -35,13 +35,47 @@ public record OrderCreatedResult(
 
 /// <summary>
 /// Order data transfer object for API responses
+/// Note: Uses class with init properties for Dapper compatibility
 /// </summary>
-public record OrderDto(
-    int OrderId,
-    string CustomerName,
-    string ProductName,
-    int Quantity,
-    decimal Price,
-    decimal TotalAmount,
-    DateTime CreatedAt,
-    string Status);
+public class OrderDto
+{
+    public int OrderId { get; init; }
+    public string CustomerName { get; init; } = string.Empty;
+    public string ProductName { get; init; } = string.Empty;
+    public int Quantity { get; init; }
+    public decimal Price { get; init; }
+    public decimal TotalAmount { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public int Status { get; init; }
+}
+
+/// <summary>
+/// Order summary statistics for dashboard
+/// Note: Uses class with init properties for Dapper compatibility
+/// </summary>
+public class OrderSummaryDto
+{
+    public int TotalOrders { get; init; }
+    public decimal TotalRevenue { get; init; }
+    public int PendingOrders { get; init; }
+    public int CompletedOrders { get; init; }
+}
+
+/// <summary>
+/// Dashboard data combining multiple result sets
+/// </summary>
+public record OrderDashboardDto(
+    OrderSummaryDto Summary,
+    IEnumerable<OrderDto> RecentOrders,
+    IEnumerable<TopCustomerDto> TopCustomers);
+
+/// <summary>
+/// Top customer by order value
+/// Note: Uses class with init properties for Dapper compatibility
+/// </summary>
+public class TopCustomerDto
+{
+    public string CustomerName { get; init; } = string.Empty;
+    public int OrderCount { get; init; }
+    public decimal TotalSpent { get; init; }
+}
