@@ -6,17 +6,18 @@
   <ItemGroup>
     <PackageVersion Include="Acontplus.Analytics" Version="1.0.0" />
     <PackageVersion Include="Acontplus.Barcode" Version="1.1.1" />
-    <PackageVersion Include="Acontplus.Core" Version="2.1.1" />
+    <PackageVersion Include="Acontplus.Core" Version="2.2.0" />
     <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.7" />
     <PackageVersion Include="Acontplus.Utilities" Version="2.0.5" />
     <PackageVersion Include="Asp.Versioning.Http" Version="8.1.1" />
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.1" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.6" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.16.1" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.8" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.17" />
     <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageVersion Include="Dapper" Version="2.1.66" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0-rc.2" />
     <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
     <PackageVersion Include="Humanizer" Version="3.0.1" />

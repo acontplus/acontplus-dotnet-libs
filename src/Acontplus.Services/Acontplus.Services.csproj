@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Services</PackageId>
-    <Version>2.1.6</Version>
+    <Version>2.1.7</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
