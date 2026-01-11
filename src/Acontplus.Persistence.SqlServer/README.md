@@ -17,6 +17,7 @@ ADO.NET repositories, and SQL Server-specific features for high-performance data
 - **Advanced Error Translation** - SQL Server error code mapping to domain exceptions with retry policies
 - **Transaction Management** - Distributed transactions and savepoints support
 - **High-Performance ADO.NET** - Direct database access with 10,000+ records/sec bulk operations
+- **Dapper Integration** - Lightweight micro-ORM for complex queries with automatic object mapping
 - **SqlBulkCopy Integration** - Optimized bulk inserts with automatic column mapping
 - **Streaming Queries** - Memory-efficient `IAsyncEnumerable<T>` for large datasets
 - **SQL Injection Prevention** - Regex validation and keyword blacklisting for dynamic queries
@@ -47,21 +48,28 @@ dotnet add package Acontplus.Persistence.SqlServer
 
 ## 🎯 Quick Start
 
-### 1. Configure SQL Server Context
+### 1. Configure SQL Server Persistence
 
 ```csharp
-services.AddDbContext<BaseContext>(options =>
+// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository automatically)
+services.AddSqlServerPersistence<MyDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
         sqlOptions.CommandTimeout(60);
     }));
 
-// Register repositories
-services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-services.AddScoped<IAdoRepository, AdoRepository>();
+// Option 2: Add Dapper alongside EF Core (for complex queries)
+services.AddSqlServerPersistence<MyDbContext>(options => options.UseSqlServer(connectionString));
+services.AddSqlServerDapperRepository();
 
-// Configure ADO.NET resilience (optional - has sensible defaults)
+// Option 3: Lightweight - Dapper only (no EF Core overhead)
+services.AddSqlServerDapperRepository();
+
+// Option 4: Lightweight - ADO.NET only (no EF Core, no Dapper)
+services.AddSqlServerAdoRepository();
+
+// Configure resilience options (optional - has sensible defaults)
 services.Configure<PersistenceResilienceOptions>(
     configuration.GetSection(PersistenceResilienceOptions.SectionName));
 ```
@@ -287,7 +295,66 @@ public async Task<List<List<dynamic>>> GetDashboardDataAsync()
 }
 ```
 
-### 4. Advanced EF Core Query Operations
+### 4. Dapper Repository (Lightweight Micro-ORM)
+
+For complex queries where you need automatic object mapping without EF Core overhead:
+
+```csharp
+public class ReportService
+{
+    private readonly IDapperRepository _dapper;
+
+    public ReportService(IDapperRepository dapper)
+    {
+        _dapper = dapper;
+    }
+
+    // Simple query with automatic mapping
+    public async Task<IEnumerable<OrderDto>> GetOrdersByStatusAsync(string status)
+    {
+        var sql = @"
+            SELECT o.Id, o.OrderNumber, c.CustomerName, o.TotalAmount, o.Status
+            FROM dbo.Orders o
+            INNER JOIN dbo.Customers c ON o.CustomerId = c.Id
+            WHERE o.Status = @Status";
+
+        return await _dapper.QueryAsync<OrderDto>(sql, new { Status = status });
+    }
+
+    // Paginated query with automatic count
+    public async Task<PagedResult<OrderDto>> GetPagedOrdersAsync(PaginationRequest pagination)
+    {
+        var sql = @"
+            SELECT o.Id, o.OrderNumber, c.CustomerName, o.TotalAmount, o.Status
+            FROM dbo.Orders o
+            INNER JOIN dbo.Customers c ON o.CustomerId = c.Id
+            WHERE o.IsDeleted = 0";
+
+        return await _dapper.GetPagedAsync<OrderDto>(sql, pagination);
+    }
+
+    // Multiple result sets in one query
+    public async Task<(IEnumerable<Order> Orders, IEnumerable<Customer> Customers)> GetDashboardAsync()
+    {
+        var sql = @"
+            SELECT TOP 10 * FROM dbo.Orders ORDER BY CreatedAt DESC;
+            SELECT TOP 10 * FROM dbo.Customers ORDER BY CreatedAt DESC;";
+
+        return await _dapper.QueryMultipleAsync<Order, Customer>(sql);
+    }
+
+    // Execute stored procedure
+    public async Task<int> ProcessOrderAsync(int orderId)
+    {
+        return await _dapper.ExecuteAsync(
+            "dbo.ProcessOrder",
+            new { OrderId = orderId },
+            commandType: CommandType.StoredProcedure);
+    }
+}
+```
+
+### 5. Advanced EF Core Query Operations
 
 ```csharp
 // Complex queries with SQL Server optimizations

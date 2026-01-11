@@ -91,15 +91,42 @@
                 Base configuration for simple entities that don't inherit from BaseEntity.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions.EnsureResilienceOptionsRegistered(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Ensures PersistenceResilienceOptions is registered with default values.
+            Called internally by persistence registration methods.
+            To configure from appsettings.json, add this in your Startup/Program.cs:
+            services.Configure&lt;PersistenceResilienceOptions&gt;(configuration.GetSection("Persistence:Resilience"));
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions.AddSqlServerPersistence``1(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Microsoft.EntityFrameworkCore.DbContextOptionsBuilder},System.Object)">
             <summary>
                 Registers a SQL Server DbContext and its corresponding UnitOfWork implementation,
                 optionally with a service key using .NET 8+ keyed DI.
+                Also registers IAdoRepository which is required by UnitOfWork.
             </summary>
             <typeparam name="TContext">The DbContext type to register.</typeparam>
             <param name="services">The IServiceCollection.</param>
             <param name="sqlServerOptions">The SQL Server-specific options for DbContext.</param>
             <param name="serviceKey">Optional key to register the services with (for keyed DI).</param>
+            <returns>The updated IServiceCollection.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions.AddSqlServerDapperRepository(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Registers the Dapper repository for SQL Server with resilience policies.
+            Can be used independently or alongside Entity Framework Core.
+            </summary>
+            <param name="services">The IServiceCollection.</param>
+            <param name="serviceKey">Optional key to register the service with (for keyed DI).</param>
+            <returns>The updated IServiceCollection.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions.AddSqlServerAdoRepository(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Registers the ADO.NET repository for SQL Server with resilience policies.
+            Can be used independently or alongside Entity Framework Core.
+            </summary>
+            <param name="services">The IServiceCollection.</param>
+            <param name="serviceKey">Optional key to register the service with (for keyed DI).</param>
             <returns>The updated IServiceCollection.</returns>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlExceptionTranslator.FindSqlException(System.Exception)">
@@ -348,6 +375,107 @@
                 Falls back to regex validation with comprehensive keyword blacklist.
             </summary>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Repositories.DapperRepository">
+            <summary>
+            Dapper-based repository implementation for SQL Server.
+            Provides simplified data access with automatic object mapping.
+            </summary>
+            <remarks>
+            This implementation uses Dapper for lightweight ORM functionality with:
+            <list type="bullet">
+            <item><description>Automatic type mapping</description></item>
+            <item><description>Retry policies with exponential backoff</description></item>
+            <item><description>Transaction support via Unit of Work</description></item>
+            <item><description>SQL Server-specific optimizations</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.RetryPolicy">
+            <summary>
+            Lazy-loaded retry policy based on configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.DefaultTimeout">
+            <summary>
+            Gets the default command timeout from configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Constructor for DapperRepository with resilience configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QueryFirstOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QuerySingleOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.ExecuteAsync(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.ExecuteScalarAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QueryMultipleAsync``2(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QueryMultipleAsync``3(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.SetTransaction(System.Data.Common.DbTransaction)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.SetConnection(System.Data.Common.DbConnection)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.ClearTransaction">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.GetConnectionAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets a connection for the operation. Returns a tuple with the connection and whether it should be disposed.
+            When using a shared connection (from UnitOfWork), it should NOT be disposed by the caller.
+            When creating a new connection, it SHOULD be disposed by the caller.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.ExecuteWithConnectionAsync``1(System.Func{System.Data.Common.DbConnection,System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation with proper connection lifecycle management.
+            Automatically handles connection disposal for owned connections only.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.SafeColumnNameRegex">
+            <remarks>
+            Pattern:<br/>
+            <code>^[a-zA-Z_][a-zA-Z0-9_]*$</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ Match if at the beginning of the string.<br/>
+            ○ Match a character in the set [A-Z_a-z].<br/>
+            ○ Match a character in the set [0-9A-Z_a-z] atomically any number of times.<br/>
+            ○ Match if at the end of the string or if before an ending newline.<br/>
+            </code>
+            </remarks>
+        </member>
         <member name="P:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper.NowInEcuador">
             <summary>
                 Obtener la hora actual en Ecuador
@@ -367,6 +495,50 @@
             <summary>
                 Convertir de zona horaria local a UTC (para guardar en BD)
             </summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeColumnNameRegex method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout">
+            <summary>Default timeout value set in <see cref="T:System.AppContext"/>, or <see cref="F:System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> if none was set.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_hasTimeout">
+            <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_asciiWordChars">
+            <summary>Supports searching for characters in or not in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".</summary>
         </member>
     </members>
 </doc>

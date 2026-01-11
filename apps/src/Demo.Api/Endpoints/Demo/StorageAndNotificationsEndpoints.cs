@@ -1,4 +1,3 @@
-using Acontplus.Notifications.Abstractions;
 using Acontplus.Notifications.Models;
 using Acontplus.S3Application.Interfaces;
 using Acontplus.S3Application.Models;

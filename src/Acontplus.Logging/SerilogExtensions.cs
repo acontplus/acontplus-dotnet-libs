@@ -1,7 +1,6 @@
 using Elastic.Ingest.Elasticsearch;
 using Elastic.Serilog.Sinks;
 using Serilog.Formatting;
-using Serilog.Formatting.Compact;
 using Serilog.Formatting.Display;
 
 namespace Acontplus.Logging;

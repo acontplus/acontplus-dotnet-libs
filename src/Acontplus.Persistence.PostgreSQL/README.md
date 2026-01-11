@@ -13,6 +13,7 @@ PostgreSQL implementation of the Acontplus persistence layer. Provides optimized
 - **PostgreSQL Optimization** - LIMIT-OFFSET pagination, parallel queries, and connection pooling
 - **Advanced Error Translation** - PostgreSQL error code mapping to domain exceptions with retry policies
 - **High-Performance ADO.NET** - Direct database access with 100,000+ records/sec COPY operations
+- **Dapper Integration** - Lightweight micro-ORM for complex queries with automatic object mapping
 - **COPY Command Integration** - Optimized bulk inserts with NpgsqlBinaryImporter
 - **Streaming Queries** - Memory-efficient `IAsyncEnumerable<T>` for large datasets
 - **JSON/JSONB Support** - Native JSON operations and indexing
@@ -43,20 +44,28 @@ dotnet add package Acontplus.Persistence.PostgreSQL
 
 ## 🎯 Quick Start
 
-### 1. Configure PostgreSQL Context
+### 1. Configure PostgreSQL Persistence
+
 ```csharp
-services.AddDbContext<BaseContext>(options =>
+// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository automatically)
+services.AddPostgresPersistence<MyDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
         npgsqlOptions.CommandTimeout(60);
     }));
 
-// Register repositories
-services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-services.AddScoped<IAdoRepository, AdoRepository>();
+// Option 2: Add Dapper alongside EF Core (for complex queries)
+services.AddPostgresPersistence<MyDbContext>(options => options.UseNpgsql(connectionString));
+services.AddPostgresDapperRepository();
 
-// Configure ADO.NET resilience (optional - has sensible defaults)
+// Option 3: Lightweight - Dapper only (no EF Core overhead)
+services.AddPostgresDapperRepository();
+
+// Option 4: Lightweight - ADO.NET only (no EF Core, no Dapper)
+services.AddPostgresAdoRepository();
+
+// Configure resilience options (optional - has sensible defaults)
 services.Configure<PersistenceResilienceOptions>(
     configuration.GetSection(PersistenceResilienceOptions.SectionName));
 ```
@@ -276,7 +285,65 @@ public async Task<List<List<dynamic>>> GetDashboardDataAsync()
 }
 ```
 
-### 4. Advanced EF Core Query Operations
+### 4. Dapper Repository (Lightweight Micro-ORM)
+
+For complex queries where you need automatic object mapping without EF Core overhead:
+
+```csharp
+public class ReportService
+{
+    private readonly IDapperRepository _dapper;
+
+    public ReportService(IDapperRepository dapper)
+    {
+        _dapper = dapper;
+    }
+
+    // Simple query with automatic mapping
+    public async Task<IEnumerable<OrderDto>> GetOrdersByStatusAsync(string status)
+    {
+        var sql = @"
+            SELECT o.id, o.order_number, c.customer_name, o.total_amount, o.status
+            FROM orders o
+            INNER JOIN customers c ON o.customer_id = c.id
+            WHERE o.status = @Status";
+
+        return await _dapper.QueryAsync<OrderDto>(sql, new { Status = status });
+    }
+
+    // Paginated query with automatic count
+    public async Task<PagedResult<OrderDto>> GetPagedOrdersAsync(PaginationRequest pagination)
+    {
+        var sql = @"
+            SELECT o.id, o.order_number, c.customer_name, o.total_amount, o.status
+            FROM orders o
+            INNER JOIN customers c ON o.customer_id = c.id
+            WHERE o.is_deleted = false";
+
+        return await _dapper.GetPagedAsync<OrderDto>(sql, pagination);
+    }
+
+    // Multiple result sets in one query
+    public async Task<(IEnumerable<Order> Orders, IEnumerable<Customer> Customers)> GetDashboardAsync()
+    {
+        var sql = @"
+            SELECT * FROM orders ORDER BY created_at DESC LIMIT 10;
+            SELECT * FROM customers ORDER BY created_at DESC LIMIT 10;";
+
+        return await _dapper.QueryMultipleAsync<Order, Customer>(sql);
+    }
+
+    // Execute PostgreSQL function
+    public async Task<int> ProcessOrderAsync(int orderId)
+    {
+        return await _dapper.ExecuteAsync(
+            "SELECT process_order(@OrderId)",
+            new { OrderId = orderId });
+    }
+}
+```
+
+### 5. Advanced EF Core Query Operations
 ```csharp
 // Complex queries with PostgreSQL optimizations
 public async Task<IReadOnlyList<OrderSummary>> GetOrderSummariesAsync(
