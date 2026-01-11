@@ -327,6 +327,115 @@
             Clears the current transaction and connection.
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.IDapperRepository">
+            <summary>
+            Dapper-based repository interface for simplified high-performance SQL operations.
+            Provides a lighter-weight alternative to <see cref="T:Acontplus.Core.Abstractions.Persistence.IAdoRepository"/> with Dapper's automatic mapping capabilities.
+            </summary>
+            <remarks>
+            <para>
+            <b>When to use IDapperRepository vs IAdoRepository:</b>
+            </para>
+            <list type="bullet">
+            <item><description><b>IDapperRepository</b>: Simple CRUD, quick queries, anonymous type parameters, automatic object mapping</description></item>
+            <item><description><b>IAdoRepository</b>: Complex scenarios, bulk operations, DataSet results, streaming, full control</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a SQL query and maps results to a collection of objects.
+            Uses Dapper's automatic type mapping.
+            </summary>
+            <typeparam name="T">The type to map results to.</typeparam>
+            <param name="sql">The SQL query to execute.</param>
+            <param name="parameters">Anonymous object or dictionary of parameters.</param>
+            <param name="commandTimeout">Optional command timeout in seconds.</param>
+            <param name="commandType">The type of command (Text, StoredProcedure, TableDirect).</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A collection of mapped objects.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.QueryFirstOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a SQL query and returns the first result or null.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.QuerySingleOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a SQL query expecting exactly one result or null.
+            Throws if more than one result is returned.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.ExecuteAsync(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a non-query SQL command (INSERT, UPDATE, DELETE).
+            Returns the number of affected rows.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.ExecuteScalarAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a query and returns a single scalar value.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.QueryMultipleAsync``2(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a query that returns multiple result sets.
+            Returns a tuple with the results from each result set.
+            </summary>
+            <typeparam name="T1">Type for the first result set.</typeparam>
+            <typeparam name="T2">Type for the second result set.</typeparam>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.QueryMultipleAsync``3(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <summary>
+            Executes a query that returns three result sets.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Executes a paginated SQL query with automatic count query.
+            Uses database-specific pagination (OFFSET-FETCH for SQL Server, LIMIT-OFFSET for PostgreSQL).
+            </summary>
+            <typeparam name="T">The type to map results to.</typeparam>
+            <param name="sql">Main SELECT query (without OFFSET/LIMIT).</param>
+            <param name="pagination">Pagination parameters including sort, filters, and search.</param>
+            <param name="commandTimeout">Optional command timeout in seconds.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Executes a paginated SQL query with a custom count query for complex scenarios.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Executes a paginated stored procedure.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Executes a filtered SQL query with sorting and search capabilities (non-paginated).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Executes a filtered stored procedure (non-paginated).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.SetTransaction(System.Data.Common.DbTransaction)">
+            <summary>
+            Sets the current database transaction from the Unit of Work.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.SetConnection(System.Data.Common.DbConnection)">
+            <summary>
+            Sets the current database connection from the Unit of Work.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDapperRepository.ClearTransaction">
+            <summary>
+            Clears the current transaction and connection.
+            </summary>
+        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetQueryable(System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
             <summary>
             Gets a queryable for building complex queries with joins, custom projections, and advanced filtering.

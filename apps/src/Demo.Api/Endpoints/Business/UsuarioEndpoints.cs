@@ -251,7 +251,7 @@ public static class UsuarioEndpoints
             PaginationRequest = PaginationRequest.WithFilter("IsDeleted", false);
         }
 
-        if (role != null)
+        if (role != null && role != "User")
         {
             PaginationRequest = PaginationRequest
                 .WithFilter("Status", "Active")
