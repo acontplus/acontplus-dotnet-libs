@@ -1,0 +1,36 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/src/">
+    <Project Path="apps/src/Demo.Api/Demo.Api.csproj" />
+    <Project Path="apps/src/Demo.Application/Demo.Application.csproj" />
+    <Project Path="apps/src/Demo.Domain/Demo.Domain.csproj" />
+    <Project Path="apps/src/Demo.Infrastructure/Demo.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Nuget.config" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Acontplus.Analytics/Acontplus.Analytics.csproj" />
+    <Project Path="src/Acontplus.ApiDocumentation/Acontplus.ApiDocumentation.csproj" />
+    <Project Path="src/Acontplus.Barcode/Acontplus.Barcode.csproj" />
+    <Project Path="src/Acontplus.Billing/Acontplus.Billing.csproj" />
+    <Project Path="src/Acontplus.Core/Acontplus.Core.csproj" />
+    <Project Path="src/Acontplus.Infrastructure/Acontplus.Infrastructure.csproj" />
+    <Project Path="src/Acontplus.Logging/Acontplus.Logging.csproj" />
+    <Project Path="src/Acontplus.Notifications/Acontplus.Notifications.csproj" />
+    <Project Path="src/Acontplus.Persistence.Common/Acontplus.Persistence.Common.csproj" />
+    <Project Path="src/Acontplus.Persistence.PostgreSQL/Acontplus.Persistence.PostgreSQL.csproj" />
+    <Project Path="src/Acontplus.Persistence.SqlServer/Acontplus.Persistence.SqlServer.csproj" />
+    <Project Path="src/Acontplus.Reports/Acontplus.Reports.csproj" />
+    <Project Path="src/Acontplus.S3Application/Acontplus.S3Application.csproj" />
+    <Project Path="src/Acontplus.Services/Acontplus.Services.csproj" />
+    <Project Path="src/Acontplus.Utilities/Acontplus.Utilities.csproj" />
+  </Folder>
+</Solution>
