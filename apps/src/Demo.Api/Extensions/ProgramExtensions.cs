@@ -67,13 +67,23 @@ public static class ProgramExtensions
         {
             // Configure SQL Server options
             sqlServerOptions.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
-                x => x.MigrationsAssembly("Acontplus.TestInfrastructure"));
+                x => x.MigrationsAssembly("Demo.Infrastructure"));
         });
 
         // Configure persistence resilience from appsettings.json
         // This enables dynamic retry policies, circuit breakers, and timeouts for ADO repositories
         services.Configure<PersistenceResilienceOptions>(
             configuration.GetSection(PersistenceResilienceOptions.SectionName));
+
+        // ========================================
+        // DAPPER REPOSITORY (v2.2.0)
+        // ========================================
+        // High-performance raw SQL queries with Dapper
+        // Uses same connection string and resilience options as EF Core
+        services.AddSqlServerDapperRepository();
+
+        // Register Dapper-based reporting service
+        services.AddScoped<IOrderReportService, OrderReportService>();
 
         return services;
     }
@@ -207,6 +217,14 @@ public static class ProgramExtensions
         var storageGroup = app.MapGroup("/api/demo/storage")
             .WithTags("Storage & Notifications Demo");
         storageGroup.MapStorageAndNotificationsEndpoints();
+
+        // ========================================
+        // DEMO: DAPPER REPOSITORY (v2.2.0)
+        // ========================================
+        // High-performance read operations using Dapper
+        var dapperGroup = app.MapGroup("/api/demo/dapper-reports")
+            .WithTags("Dapper Reports Demo");
+        dapperGroup.MapDapperReportEndpoints();
 
         // Map demo endpoints
         app.MapBusinessExceptionTestEndpoints();

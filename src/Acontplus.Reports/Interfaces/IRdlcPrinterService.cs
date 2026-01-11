@@ -1,5 +1,3 @@
-using Acontplus.Reports.Dtos;
-
 namespace Acontplus.Reports.Interfaces;
 
 public interface IRdlcPrinterService

@@ -116,15 +116,17 @@ public class OrderService : IOrderService
                     DomainError.NotFound("ORDER_NOT_FOUND", $"Order with ID {query.OrderId} not found"));
             }
 
-            var dto = new OrderDto(
-                order.Id,
-                order.CustomerName,
-                order.ProductName,
-                order.Quantity,
-                order.Price,
-                order.TotalAmount,
-                order.CreatedAt,
-                order.Status.ToString());
+            var dto = new OrderDto
+            {
+                OrderId = order.Id,
+                CustomerName = order.CustomerName,
+                ProductName = order.ProductName,
+                Quantity = order.Quantity,
+                Price = order.Price,
+                TotalAmount = order.TotalAmount,
+                CreatedAt = order.CreatedAt,
+                Status = (int)order.Status
+            };
 
             return Result<OrderDto>.Success(dto);
         }
@@ -147,15 +149,17 @@ public class OrderService : IOrderService
             var orderRepository = _unitOfWork.GetRepository<Order>();
             var orders = await orderRepository.GetAllAsync(cancellationToken);
 
-            var dtos = orders.Select(order => new OrderDto(
-                order.Id,
-                order.CustomerName,
-                order.ProductName,
-                order.Quantity,
-                order.Price,
-                order.TotalAmount,
-                order.CreatedAt,
-                order.Status.ToString())).ToList();
+            var dtos = orders.Select(order => new OrderDto
+            {
+                OrderId = order.Id,
+                CustomerName = order.CustomerName,
+                ProductName = order.ProductName,
+                Quantity = order.Quantity,
+                Price = order.Price,
+                TotalAmount = order.TotalAmount,
+                CreatedAt = order.CreatedAt,
+                Status = (int)order.Status
+            }).ToList();
 
             return Result<IEnumerable<OrderDto>>.Success(dtos);
         }

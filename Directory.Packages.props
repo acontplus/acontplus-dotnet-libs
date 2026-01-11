@@ -7,18 +7,18 @@
     <PackageVersion Include="Acontplus.Analytics" Version="1.0.0" />
     <PackageVersion Include="Acontplus.Barcode" Version="1.1.1" />
     <PackageVersion Include="Acontplus.Core" Version="2.2.0" />
-    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.7" />
-    <PackageVersion Include="Acontplus.Utilities" Version="2.0.5" />
+    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.8" />
+    <PackageVersion Include="Acontplus.Utilities" Version="2.0.6" />
     <PackageVersion Include="Asp.Versioning.Http" Version="8.1.1" />
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.1" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageVersion Include="AWSSDK.Core" Version="4.0.3.8" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.17" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11.2" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageVersion Include="Dapper" Version="2.1.66" />
-    <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0-rc.2" />
+    <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0" />
     <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
     <PackageVersion Include="Humanizer" Version="3.0.1" />
     <PackageVersion Include="MailKit" Version="4.14.1" />
@@ -51,7 +51,7 @@
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.14.0" />
-    <PackageVersion Include="ReportViewerCore.NETCore" Version="15.1.29" />
+    <PackageVersion Include="ReportViewerCore.NETCore" Version="15.1.30" />
     <PackageVersion Include="Scriban" Version="6.5.2" />
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <PackageVersion Include="Serilog" Version="4.3.0" />

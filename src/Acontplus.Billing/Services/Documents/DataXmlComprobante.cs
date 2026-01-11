@@ -781,4 +781,5 @@ public class DataXmlComprobante
         }
 
         destinatario.CreateDetalles(detalles);
-    }}
+    }
+}

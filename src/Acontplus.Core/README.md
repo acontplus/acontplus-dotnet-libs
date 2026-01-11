@@ -8,7 +8,15 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
 
 ## 🚀 What's New (Latest Version)
 
-- **📡 Two Event Systems** - Complete event-driven architecture support
+- **�️ Dapper Repository Interface** - New `IDapperRepository` for lightweight micro-ORM data access
+  - Complete query methods: `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `QuerySingleOrDefaultAsync<T>`
+  - Execute methods: `ExecuteAsync`, `ExecuteScalarAsync<T>`
+  - Pagination support: `GetPagedAsync<T>`, `GetPagedFromStoredProcedureAsync<T>`
+  - Filtering support: `GetFilteredAsync<T>`, `GetFilteredFromStoredProcedureAsync<T>`
+  - Multiple result sets: `QueryMultipleAsync<T1, T2>`, `QueryMultipleAsync<T1, T2, T3>`
+  - Transaction coordination: `SetTransaction()`, `SetConnection()`, `ClearTransaction()`
+  - *Implementations provided in Acontplus.Persistence.SqlServer and Acontplus.Persistence.PostgreSQL*
+- **�📡 Two Event Systems** - Complete event-driven architecture support
   - **Domain Event Dispatcher** (`IDomainEventDispatcher` + `IDomainEventHandler<T>`) for DDD domain events
     - Generic entity events: `EntityCreatedEvent`, `EntityModifiedEvent`, `EntityDeletedEvent`, etc.
     - **Synchronous** execution within same transaction/Unit of Work
@@ -74,6 +82,7 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
 - **Domain-Driven Design (DDD)** - Complete DDD implementation with C# features
 - **Functional Result Pattern** - Railway-oriented programming with record structs
 - **Repository Pattern** - Comprehensive data access with bulk operations
+- **Dapper Repository** - Lightweight micro-ORM interface for high-performance queries
 - **Specification Pattern** - Type-safe query composition with expressions
 - **Event Sourcing Ready** - Domain events with event patterns
 - **Warnings System** - Success with warnings pattern for complex business operations
