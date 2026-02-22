@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>Analytics and statistics library for AcontPlus applications providing comprehensive metrics, trends, and business intelligence capabilities across multiple domains.</Description>
     <PackageId>Acontplus.Analytics</PackageId>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
