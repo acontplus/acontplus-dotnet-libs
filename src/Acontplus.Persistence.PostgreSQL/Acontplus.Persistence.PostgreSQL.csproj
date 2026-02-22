@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.PostgreSQL</PackageId>
-    <Version>1.3.1</Version>
+    <Version>1.3.2</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
