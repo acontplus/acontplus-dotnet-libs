@@ -7,9 +7,12 @@ public class PasswordSecurityService(IDataEncryptionService dataEncryptionServic
         return dataEncryptionService.DecryptFromBytes(encryptedPassword);
     }
 
+    // OWASP recommends work factor ≥12; increase over time as hardware improves.
+    private const int BcryptWorkFactor = 12;
+
     public string HashPassword(string password)
     {
-        return BCrypt.Net.BCrypt.HashPassword(password);
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: BcryptWorkFactor);
     }
 
     public (byte[] EncryptedPassword, string PasswordHash) SetPassword(string password)

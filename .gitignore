@@ -59,12 +59,6 @@ _site/
 *.sln.docstates
 *.userprefs
 
-# Visual Studio Code
-.vscode/
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
 
 # JetBrains Rider / IntelliJ IDEA
 .idea/

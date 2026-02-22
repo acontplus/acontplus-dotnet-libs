@@ -1,0 +1,61 @@
+{
+  // ─── End-of-line ────────────────────────────────────────────────────────────
+  "files.eol": "\n",
+  "editor.endOfLine": "lf",
+
+  // ─── Editor – general ────────────────────────────────────────────────────────
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "editor.rulers": [120],
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // ─── C# / .NET ───────────────────────────────────────────────────────────────
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+  "omnisharp.enableEditorConfigSupport": true,
+  "csharp.format.enable": true,
+
+  // ─── File nesting (monorepo) ─────────────────────────────────────────────────
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.csproj": "$(capture).csproj.user, $(capture).csproj.*",
+    "Directory.Packages.props": "Directory.Build.props, Directory.Build.targets, Nuget.config, .editorconfig",
+    "*.slnx": "*.sln",
+    "README.md": "CHANGELOG.md, LICENSE"
+  },
+
+  // ─── Search / file exclusions ────────────────────────────────────────────────
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/nupkgs": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/nupkgs": true,
+    "**/*.nupkg": true
+  },
+
+  // ─── Git ─────────────────────────────────────────────────────────────────────
+  "git.branchProtection": ["main"],
+  "git.pruneOnFetch": true,
+  "git.pullBeforeCheckout": true,
+
+  // ─── GitHub Copilot – commit message generation ──────────────────────────────
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Generate a SINGLE-LINE Conventional Commits message. Format: <type>(scope): <description>. Rules: max 72 chars total; no emoji; no bullet points; no body; no line breaks. Types (pick one): feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert. Scopes for src/ libraries (use short name, kebab-case): core, billing, notifications, reports, persistence, persistence-sqlserver, persistence-postgresql, services, utilities, api-docs, logging, barcode, s3, analytics, infrastructure. Scopes for apps/: demo-api, demo-app, demo-domain, demo-infra. Infrastructure scopes: build, ci, docs, config, scripts, deps. Omit scope only when the change spans every library. Valid regex: ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\(.+\\))?(!)?: .{1,50}"
+    }
+  ]
+}

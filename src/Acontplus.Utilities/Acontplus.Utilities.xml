@@ -595,34 +595,43 @@
         </member>
         <member name="M:Acontplus.Utilities.Security.Interfaces.ISensitiveDataEncryptionService.EncryptToBytesAsync(System.String,System.String)">
             <summary>
-            Asynchronously encrypts the provided plaintext string using the specified key and returns the encrypted data as a byte array.
+            Asynchronously encrypts the provided plaintext string using AES-256-GCM (authenticated encryption)
+            and returns the encrypted data as a byte array.
             </summary>
-            <param name="passphrase">The encryption key (must be 16, 24, or 32 bytes long).</param>
+            <param name="passphrase">The passphrase used to derive the AES-256 key via PBKDF2-HMAC-SHA256.</param>
             <param name="data">The plaintext string to encrypt.</param>
-            <returns>A Task containing a byte array with the IV followed by the encrypted data.</returns>
+            <returns>A Task containing a byte array with layout: Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Security.Interfaces.ISensitiveDataEncryptionService.DecryptFromBytesAsync(System.String,System.Byte[])">
             <summary>
-            Asynchronously decrypts the provided byte array using the specified key and returns the decrypted plaintext string.
+            Asynchronously decrypts the provided byte array using AES-256-GCM and returns the decrypted plaintext string.
+            Throws <see cref="T:System.Security.Cryptography.CryptographicException"/> if authentication tag verification fails.
             </summary>
-            <param name="passphrase">The decryption key (must match the key used for encryption).</param>
-            <param name="encryptedData">The byte array containing the IV followed by the encrypted data.</param>
+            <param name="passphrase">The passphrase (must match the one used for encryption).</param>
+            <param name="encryptedData">The byte array with layout: Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</param>
             <returns>A Task containing the decrypted plaintext string.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Security.Services.SensitiveDataEncryptionService">
+            <summary>
+            Provides authenticated encryption using AES-256-GCM (AEAD).
+            Layout of encrypted output: Salt (16 bytes) + Nonce (12 bytes) + Tag (16 bytes) + Ciphertext.
+            </summary>
         </member>
         <member name="M:Acontplus.Utilities.Security.Services.SensitiveDataEncryptionService.EncryptToBytesAsync(System.String,System.String)">
             <summary>
-            Encrypts the provided data using AES encryption and returns the encrypted byte array.
+            Encrypts the provided data using AES-256-GCM (authenticated encryption) and returns the encrypted byte array.
             </summary>
-            <param name="passphrase">The encryption key (must be 16, 24, or 32 bytes long).</param> 
+            <param name="passphrase">The passphrase used to derive the encryption key via PBKDF2-HMAC-SHA256.</param>
             <param name="data">The plaintext data to encrypt.</param>
-            <returns>A byte array containing the IV followed by the encrypted data.</returns>
+            <returns>A byte array containing Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Security.Services.SensitiveDataEncryptionService.DecryptFromBytesAsync(System.String,System.Byte[])">
             <summary>
-            Decrypts the provided byte array using AES encryption and returns the plaintext string.
+            Decrypts the provided byte array using AES-256-GCM and returns the plaintext string.
+            Throws <see cref="T:System.Security.Cryptography.CryptographicException"/> if the tag verification fails (data is tampered or passphrase is wrong).
             </summary>
-            <param name="passphrase">The decryption key (must match the key used for encryption).</param>
-            <param name="encryptedData">The byte array containing the IV followed by the encrypted data.</param>
+            <param name="passphrase">The passphrase used to derive the decryption key (must match the passphrase used for encryption).</param>
+            <param name="encryptedData">The byte array containing Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</param>
             <returns>The decrypted plaintext string.</returns>
         </member>
         <member name="T:Acontplus.Utilities.Text.TextHandlers">

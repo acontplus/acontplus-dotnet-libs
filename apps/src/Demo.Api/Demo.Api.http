@@ -272,3 +272,74 @@ GET {{baseUrl}}/api/customer/by-id-card?idCard={{idCard}}&sriOnly=true
 GET {{baseUrl}}/api/ats/download?fromDate=2025-03-01&toDate=2025-03-31
 
 ###
+
+### ========================================
+### 11. ENCRYPTION (AES-256-GCM + BCrypt)
+### ========================================
+
+### 11a. Encrypt plaintext → AES-256-GCM (returns Base64: Salt+Nonce+Tag+Ciphertext)
+POST {{baseUrl}}/encryption/encrypt
+Content-Type: application/json
+
+{
+  "plainText": "hola"
+}
+
+###
+
+### 11b. Decrypt Base64 ciphertext → plaintext
+### Paste the Base64 value from step 11a into EncryptedData below
+@encryptedValue=SlpzS0ZHWQdpf2BJAyeBYd+o6yjiL8VX6Me9oI6OGurPOL8iZdXaFeXFxLURiPCo
+POST {{baseUrl}}/encryption/decrypt
+Content-Type: application/json
+
+{
+  "encryptedData": "{{encryptedValue}}"
+}
+
+###
+
+### 11c. Hash a password with BCrypt (work factor 12)
+POST {{baseUrl}}/encryption/hash
+Content-Type: application/json
+
+{
+  "password": "MySecureP@ssw0rd!"
+}
+
+###
+
+### 11d. Set password — returns BCrypt hash + Data Protection encrypted bytes (Base64)
+POST {{baseUrl}}/encryption/setpassword
+Content-Type: application/json
+
+{
+  "password": "MySecureP@ssw0rd!"
+}
+
+###
+
+### 11e. Decrypt password bytes (Data Protection)
+### Paste the EncryptedPassword Base64 from step 11d
+@encryptedPassword=REPLACE_WITH_BASE64_FROM_STEP_11D
+POST {{baseUrl}}/encryption/decryptpassword
+Content-Type: application/json
+
+{
+  "encryptedPassword": "{{encryptedPassword}}"
+}
+
+###
+
+### 11f. Verify password against BCrypt hash
+### Paste the PasswordHash from step 11d
+@passwordHash=REPLACE_WITH_BCRYPT_HASH_FROM_STEP_11D
+POST {{baseUrl}}/encryption/verifypassword
+Content-Type: application/json
+
+{
+  "password": "MySecureP@ssw0rd!",
+  "passwordHash": "{{passwordHash}}"
+}
+
+###

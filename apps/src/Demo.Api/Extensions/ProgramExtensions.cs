@@ -96,7 +96,7 @@ public static class ProgramExtensions
         string[] nameSpaces =
         [
             "Acontplus.Reports.Services",
-            "Acontplus.Core.Security.Services",
+            "Acontplus.Utilities.Security.Services",
             "Demo.Application.Services",
         ];
 
