@@ -1,104 +1,90 @@
 ﻿namespace Acontplus.Utilities.Security.Services;
 
+/// <summary>
+/// Provides authenticated encryption using AES-256-GCM (AEAD).
+/// Layout of encrypted output: Salt (16 bytes) + Nonce (12 bytes) + Tag (16 bytes) + Ciphertext.
+/// </summary>
 public class SensitiveDataEncryptionService : ISensitiveDataEncryptionService
 {
+    private const int SaltSize = 16;  // 128-bit salt for PBKDF2
+    private const int NonceSize = 12; // 96-bit nonce (NIST recommended for GCM)
+    private const int TagSize = 16;   // 128-bit GCM authentication tag
+    private const int KeySize = 256;  // AES-256
+
     /// <summary>
-    /// Encrypts the provided data using AES encryption and returns the encrypted byte array.
+    /// Encrypts the provided data using AES-256-GCM (authenticated encryption) and returns the encrypted byte array.
     /// </summary>
-    /// <param name="passphrase">The encryption key (must be 16, 24, or 32 bytes long).</param> 
+    /// <param name="passphrase">The passphrase used to derive the encryption key via PBKDF2-HMAC-SHA256.</param>
     /// <param name="data">The plaintext data to encrypt.</param>
-    /// <returns>A byte array containing the IV followed by the encrypted data.</returns>
+    /// <returns>A byte array containing Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</returns>
     public async Task<byte[]> EncryptToBytesAsync(string passphrase, string data)
     {
         if (string.IsNullOrWhiteSpace(passphrase)) throw new ArgumentException("Passphrase cannot be null or empty.", nameof(passphrase));
         if (string.IsNullOrWhiteSpace(data)) throw new ArgumentException("Data cannot be null or empty.", nameof(data));
 
-        // Generate random salt (16 bytes)
-        var salt = RandomNumberGenerator.GetBytes(16);
+        var salt = RandomNumberGenerator.GetBytes(SaltSize);
+        var key = CryptographyHelper.DeriveKey(passphrase, KeySize, salt);
 
-        // Derive key from passphrase and salt
-        var key = CryptographyHelper.DeriveKey(passphrase, 256, salt);
-
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.GenerateIV(); // Generate random IV
-        var iv = aes.IV;
-
-        using var memoryStream = new MemoryStream();
-
-        // Write Salt + IV to the beginning of the stream
-        await memoryStream.WriteAsync(salt);
-        await memoryStream.WriteAsync(iv);
-
-        using (var encryptor = aes.CreateEncryptor(aes.Key, iv))
-        await using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
-        await using (var streamWriter = new StreamWriter(cryptoStream))
+        try
         {
-            await streamWriter.WriteAsync(data);
+            var nonce = RandomNumberGenerator.GetBytes(NonceSize);
+            var plaintext = Encoding.UTF8.GetBytes(data);
+            var ciphertext = new byte[plaintext.Length];
+            var tag = new byte[TagSize];
+
+            using var aesGcm = new AesGcm(key, TagSize);
+            aesGcm.Encrypt(nonce, plaintext, ciphertext, tag);
+
+            // Layout: Salt (16) + Nonce (12) + Tag (16) + Ciphertext
+            var result = new byte[SaltSize + NonceSize + TagSize + ciphertext.Length];
+            Buffer.BlockCopy(salt, 0, result, 0, SaltSize);
+            Buffer.BlockCopy(nonce, 0, result, SaltSize, NonceSize);
+            Buffer.BlockCopy(tag, 0, result, SaltSize + NonceSize, TagSize);
+            Buffer.BlockCopy(ciphertext, 0, result, SaltSize + NonceSize + TagSize, ciphertext.Length);
+
+            return await Task.FromResult(result);
         }
-
-        var encryptedData = memoryStream.ToArray();
-
-        // Clear sensitive data
-        Array.Clear(key, 0, key.Length);
-
-        return encryptedData; // Salt + IV + Ciphertext
+        finally
+        {
+            Array.Clear(key, 0, key.Length);
+        }
     }
 
-
     /// <summary>
-    /// Decrypts the provided byte array using AES encryption and returns the plaintext string.
+    /// Decrypts the provided byte array using AES-256-GCM and returns the plaintext string.
+    /// Throws <see cref="CryptographicException"/> if the tag verification fails (data is tampered or passphrase is wrong).
     /// </summary>
-    /// <param name="passphrase">The decryption key (must match the key used for encryption).</param>
-    /// <param name="encryptedData">The byte array containing the IV followed by the encrypted data.</param>
+    /// <param name="passphrase">The passphrase used to derive the decryption key (must match the passphrase used for encryption).</param>
+    /// <param name="encryptedData">The byte array containing Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</param>
     /// <returns>The decrypted plaintext string.</returns>
     public async Task<string> DecryptFromBytesAsync(string passphrase, byte[] encryptedData)
     {
         if (string.IsNullOrWhiteSpace(passphrase)) throw new ArgumentException("Passphrase cannot be null or empty.", nameof(passphrase));
         if (encryptedData == null || encryptedData.Length == 0) throw new ArgumentException("Encrypted data cannot be null or empty.", nameof(encryptedData));
 
-        // Define sizes
-        const int saltSize = 16; // Salt size
-        const int ivSize = 16;   // AES block size in bytes
-
-        // Ensure the data length is sufficient
-        if (encryptedData.Length <= saltSize + ivSize)
+        var minLength = SaltSize + NonceSize + TagSize;
+        if (encryptedData.Length <= minLength)
             throw new ArgumentException("Encrypted data is invalid or corrupted.", nameof(encryptedData));
 
-        using var memoryStream = new MemoryStream(encryptedData);
+        var salt = encryptedData[..SaltSize];
+        var nonce = encryptedData[SaltSize..(SaltSize + NonceSize)];
+        var tag = encryptedData[(SaltSize + NonceSize)..(SaltSize + NonceSize + TagSize)];
+        var ciphertext = encryptedData[(SaltSize + NonceSize + TagSize)..];
 
-        // Read Salt from the beginning
-        var salt = new byte[saltSize];
-        await memoryStream.ReadExactlyAsync(salt, 0, salt.Length);
+        var key = CryptographyHelper.DeriveKey(passphrase, KeySize, salt);
 
-        // Derive key from passphrase and salt
-        var key = CryptographyHelper.DeriveKey(passphrase, 256, salt);
+        try
+        {
+            var plaintextBytes = new byte[ciphertext.Length];
+            using var aesGcm = new AesGcm(key, TagSize);
+            // AesGcm.Decrypt throws CryptographicException on tag mismatch — no silent corruption
+            aesGcm.Decrypt(nonce, ciphertext, tag, plaintextBytes);
 
-        // Read IV
-        var iv = new byte[ivSize];
-        await memoryStream.ReadExactlyAsync(iv, 0, iv.Length);
-
-        // Read Ciphertext
-        var ciphertextLength = encryptedData.Length - saltSize - ivSize;
-        var ciphertext = new byte[ciphertextLength];
-        await memoryStream.ReadExactlyAsync(ciphertext, 0, ciphertext.Length);
-
-        // Initialize AES
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = iv;
-
-        // Decrypt
-        using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        await using var cryptoStream = new CryptoStream(new MemoryStream(ciphertext), decryptor, CryptoStreamMode.Read);
-        using var streamReader = new StreamReader(cryptoStream);
-
-        // Read and return the plaintext
-        var plaintext = await streamReader.ReadToEndAsync();
-
-        // Clear sensitive data
-        Array.Clear(key, 0, key.Length);
-
-        return plaintext;
+            return await Task.FromResult(Encoding.UTF8.GetString(plaintextBytes));
+        }
+        finally
+        {
+            Array.Clear(key, 0, key.Length);
+        }
     }
 }

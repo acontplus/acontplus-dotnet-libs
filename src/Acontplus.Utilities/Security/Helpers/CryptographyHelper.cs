@@ -2,13 +2,15 @@ namespace Acontplus.Utilities.Security.Helpers;
 
 public static class CryptographyHelper
 {
+    // NIST SP 800-132 (2023) recommends ≥600,000 iterations for PBKDF2-HMAC-SHA256.
+    private const int Pbkdf2Iterations = 600_000;
+
     public static byte[] DeriveKey(string passphrase, int keySize, byte[] salt)
     {
-        // Use the new static Pbkdf2 method instead of the obsolete constructor
         return Rfc2898DeriveBytes.Pbkdf2(
             passphrase,
             salt,
-            100000,
+            Pbkdf2Iterations,
             HashAlgorithmName.SHA256,
             keySize / 8);
     }
@@ -19,4 +21,3 @@ public static class CryptographyHelper
         return hmac.ComputeHash(data);
     }
 }
-
