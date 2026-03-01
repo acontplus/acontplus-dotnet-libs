@@ -2,7 +2,7 @@ namespace Demo.Api.Endpoints.Core;
 
 public static class EncryptionEndpoints
 {
-    public static void MapEncryptionEndpoints(this WebApplication app)
+    public static void MapEncryptionEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/encryption")
             .WithTags("Encryption");

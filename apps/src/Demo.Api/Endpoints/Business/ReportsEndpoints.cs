@@ -2,7 +2,7 @@ namespace Demo.Api.Endpoints.Business;
 
 public static class ReportsEndpoints
 {
-    public static void MapReportsEndpoints(this WebApplication app)
+    public static void MapReportsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/reports")
             .WithTags("Reports");

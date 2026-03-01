@@ -346,7 +346,7 @@ Write-Host ""
 if (-not $SkipBuild) {
     Write-Host "Step 3: Building solution to verify changes..." -ForegroundColor Green
     try {
-        $solutionPath = Join-Path $workspaceRoot "Acontplus.DotNet.Libs.sln"
+        $solutionPath = Join-Path $workspaceRoot "acontplus-dotnet-libs.slnx"
 
         if (Test-Path $solutionPath) {
             Write-Host "  Running: dotnet build $solutionPath" -ForegroundColor Gray

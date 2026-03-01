@@ -10,14 +10,14 @@ $workspaceRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 function Get-PackageDependencies {
     $dependencies = @{}
     $srcPath = Join-Path $workspaceRoot "src"
-    
+
     if (Test-Path $srcPath) {
         $csprojFiles = Get-ChildItem -Path $srcPath -Recurse -Filter "*.csproj"
-        
+
         foreach ($csprojFile in $csprojFiles) {
             [xml]$csproj = Get-Content $csprojFile.FullName
             $packageName = $csproj.Project.PropertyGroup.PackageId
-            
+
             if ($packageName) {
                 $deps = @()
                 foreach ($itemGroup in $csproj.Project.ItemGroup) {
@@ -33,17 +33,17 @@ function Get-PackageDependencies {
             }
         }
     }
-    
+
     return $dependencies
 }
 
 # Function to get topological sort order
 function Get-UpdateOrder {
     param($dependencies)
-    
+
     $visited = @{}
     $result = @()
-    
+
     function Visit-Package($package) {
         if ($visited[$package] -eq "visiting") {
             throw "Circular dependency detected involving $package"
@@ -51,9 +51,9 @@ function Get-UpdateOrder {
         if ($visited[$package] -eq "visited") {
             return
         }
-        
+
         $visited[$package] = "visiting"
-        
+
         if ($dependencies[$package]) {
             foreach ($dep in $dependencies[$package]) {
                 if ($dependencies.ContainsKey($dep)) {
@@ -61,17 +61,17 @@ function Get-UpdateOrder {
                 }
             }
         }
-        
+
         $visited[$package] = "visited"
         $result += $package
     }
-    
+
     foreach ($package in $dependencies.Keys) {
         if ($visited[$package] -ne "visited") {
             Visit-Package $package
         }
     }
-    
+
     return $result
 }
 
@@ -99,7 +99,7 @@ foreach ($package in $updateOrder) {
 # Final build
 if (-not $SkipBuild) {
     Write-Host "`n--- Final Build ---" -ForegroundColor Cyan
-    $solutionPath = Join-Path $workspaceRoot "Acontplus.DotNet.Libs.sln"
+    $solutionPath = Join-Path $workspaceRoot "acontplus-dotnet-libs.slnx"
     if (Test-Path $solutionPath) {
         dotnet build $solutionPath
     }

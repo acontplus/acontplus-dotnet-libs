@@ -1,12 +1,16 @@
 using Acontplus.Core.Domain.Common.Events;
 using Acontplus.Persistence.Common.Configuration;
 using Acontplus.S3Application.Extensions;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
+using Asp.Versioning.Conventions;
 using Demo.Api.Endpoints.Business.Analytics;
 using Demo.Api.Endpoints.Demo;
 using Demo.Api.Endpoints.Infrastructure;
 using Demo.Application.Services;
 using Demo.Infrastructure.EventHandlers;
 using Demo.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Mvc;
 using Scrutor;
 
 namespace Demo.Api.Extensions;
@@ -170,7 +174,12 @@ public static class ProgramExtensions
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.UseApiVersioningAndDocumentation();
+            // NOTE: UseApiVersioningAndDocumentation() is intentionally NOT called here.
+            // For Minimal APIs, the IApiVersionDescriptionProvider requires all endpoint
+            // version sets to be registered first (via app.NewApiVersionSet() + WithApiVersionSet).
+            // Calling it here (before MapDemoApiEndpoints) would capture an empty version
+            // list and only show V1 in the Swagger UI dropdown.
+            // It is called at the end of MapDemoApiEndpoints() instead.
         }
 
         app.UseRouting();
@@ -189,51 +198,83 @@ public static class ProgramExtensions
     /// </summary>
     public static void MapDemoApiEndpoints(this WebApplication app)
     {
-        // Map health checks using infrastructure extension
-        app.MapHealthCheckEndpoints();
+        // ── Version set ──────────────────────────────────────────────────────────
+        // All endpoint groups that should appear in the Swagger dropdown MUST share
+        // the same IApiVersionSet (or at minimum reference it via WithApiVersionSet).
+        ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+            .HasApiVersion(new ApiVersion(1, 0))
+            .HasApiVersion(new ApiVersion(2, 0))
+            .ReportApiVersions()
+            .Build();
 
-        // Map all organized endpoints
-        app.MapAllEndpoints();
+        // ── Re-usable version groups ──────────────────────────────────────────────
+        // Assign each endpoint to exactly one group to control which Swagger
+        // "definition" it appears in:
+        //   v1Only   → visible under V1 only
+        //   v2Only   → visible under V2 only
+        //   allVersions → visible under both V1 and V2
+        //
+        // Using an empty prefix ("") means routes keep their original paths; the
+        // group only adds version metadata to the endpoint.
 
-        // Map specific business endpoints
-        app.MapAtsEndpoints();
-        app.MapDocumentoElectronicoEndpoints();
-        app.MapReportsEndpoints();
-        app.MapUsuarioEndpoints();
+        var v1Only = app.MapGroup("")
+            .WithApiVersionSet(apiVersionSet)
+            .MapToApiVersion(1, 0);
 
-        // Map core endpoints
-        app.MapEncryptionEndpoints();
-        app.MapLookupEndpoints();
+        var v2Only = app.MapGroup("")
+            .WithApiVersionSet(apiVersionSet)
+            .MapToApiVersion(2, 0);
 
-        // Map infrastructure endpoints
-        app.MapBarcodeEndpoints();
-        app.MapConfigurationTestEndpoints();
-        app.MapPrintEndpoints();
+        var allVersions = app.MapGroup("")
+            .WithApiVersionSet(apiVersionSet)
+            .HasApiVersion(new ApiVersion(1, 0))
+            .HasApiVersion(new ApiVersion(2, 0));
 
-        // ========================================
-        // DEMO: S3 STORAGE & EMAIL NOTIFICATIONS
-        // ========================================
-        // Demonstrates v2.0.0 S3 and v1.5.0 Notifications features
-        var storageGroup = app.MapGroup("/api/demo/storage")
-            .WithTags("Storage & Notifications Demo");
-        storageGroup.MapStorageAndNotificationsEndpoints();
+        // ── Version-neutral ───────────────────────────────────────────────────────
+        app.MapHealthCheckEndpoints(); // health checks are not versioned
 
-        // ========================================
-        // DEMO: DAPPER REPOSITORY (v2.2.0)
-        // ========================================
-        // High-performance read operations using Dapper
+        // ── V1-only endpoints ─────────────────────────────────────────────────────
+        // Example: Barcode is kept at V1. A newer implementation can be added to
+        // v2Only (e.g. a different barcode engine) without removing the V1 route.
+        v1Only.MapBarcodeEndpoints();
+
+        // ── V1-only demo: Dapper high-performance queries ─────────────────────────
         var dapperGroup = app.MapGroup("/api/demo/dapper-reports")
+            .WithApiVersionSet(apiVersionSet)
+            .MapToApiVersion(1, 0)
             .WithTags("Dapper Reports Demo");
         dapperGroup.MapDapperReportEndpoints();
 
-        // Map demo endpoints
-        app.MapBusinessExceptionTestEndpoints();
-        app.MapExceptionTestEndpoints();
+        // ── V2-only endpoints ─────────────────────────────────────────────────────
+        // Example: S3 Storage & Email Notifications were introduced in v2.0.0.
+        var storageGroup = app.MapGroup("/api/demo/storage")
+            .WithApiVersionSet(apiVersionSet)
+            .MapToApiVersion(2, 0)
+            .WithTags("Storage & Notifications Demo");
+        storageGroup.MapStorageAndNotificationsEndpoints();
 
-        // Map CQRS + Event Bus demo endpoints
-        app.MapOrderEndpoints();
+        // ── Available in both V1 and V2 ───────────────────────────────────────────
+        allVersions.MapAllEndpoints();
+        allVersions.MapAtsEndpoints();
+        allVersions.MapDocumentoElectronicoEndpoints();
+        allVersions.MapReportsEndpoints();
+        allVersions.MapUsuarioEndpoints();
+        allVersions.MapEncryptionEndpoints();
+        allVersions.MapLookupEndpoints();
+        allVersions.MapConfigurationTestEndpoints();
+        allVersions.MapPrintEndpoints();
+        allVersions.MapBusinessExceptionTestEndpoints();
+        allVersions.MapExceptionTestEndpoints();
+        allVersions.MapOrderEndpoints();
+        allVersions.MapSalesAnalyticsEndpoints();
 
-        // Map Analytics demo endpoints
-        app.MapSalesAnalyticsEndpoints();
+        // ── Swagger UI ────────────────────────────────────────────────────────────
+        // Called LAST so app.DescribeApiVersions() (inside the library) reads the
+        // fully-populated endpoint data sources and shows all registered versions
+        // in the dropdown (V1, V2, …).
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseApiVersioningAndDocumentation();
+        }
     }
 }

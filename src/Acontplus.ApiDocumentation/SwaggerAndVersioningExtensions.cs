@@ -16,13 +16,14 @@ public static class ApiDocumentationExtensions
 {
     /// <summary>
     /// Adds and configures API versioning and Swagger/OpenAPI documentation services to the application's service collection.
+    /// Supports both controller-based and Minimal API projects.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <returns>The configured <see cref="IServiceCollection"/> for chaining.</returns>
     public static IServiceCollection AddApiVersioningAndDocumentation(this IServiceCollection services)
     {
-        // 1. Configure API Versioning for Controllers
-        services.AddApiVersioning(options =>
+        // 1. Configure API Versioning for both Controllers and Minimal APIs
+        var versioningBuilder = services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
             options.AssumeDefaultVersionWhenUnspecified = true;
@@ -33,7 +34,16 @@ public static class ApiDocumentationExtensions
                 new HeaderApiVersionReader("X-Api-Version"),
                 new MediaTypeApiVersionReader("x-api-version")
             );
-        }).AddApiExplorer(options =>
+        });
+
+        // Register MVC versioning support (for controller-based APIs)
+        versioningBuilder.AddMvc();
+
+        // Register API Explorer for BOTH controllers and Minimal APIs.
+        // NOTE: Calling AddApiExplorer() directly on the builder (not chained from AddMvc())
+        // ensures the IApiVersionDescriptionProvider can discover versions from Minimal API
+        // endpoint version sets (app.NewApiVersionSet()) as well as MVC controller attributes.
+        versioningBuilder.AddApiExplorer(options =>
         {
             // Format the version as "vX" (e.g., "v1", "v2")
             options.GroupNameFormat = "'v'V";
@@ -41,15 +51,10 @@ public static class ApiDocumentationExtensions
             options.SubstituteApiVersionInUrl = true;
         });
 
-        // 2. Configure API Versioning for Minimal APIs
-        services.AddApiVersioning()
-            .AddMvc() // For controllers
-            .AddApiExplorer();
-
-        // 3. Add our custom options configurator for Swagger
+        // 2. Add our custom options configurator for Swagger
         services.ConfigureOptions<ConfigureSwaggerOptions>();
 
-        // 4. Configure Swagger Generator
+        // 3. Configure Swagger Generator
         services.AddSwaggerGen(options =>
         {
             // Enable JWT Bearer token authentication in the Swagger UI
@@ -83,25 +88,76 @@ public static class ApiDocumentationExtensions
     /// <summary>
     /// Configures the application pipeline to use Swagger and the Swagger UI with versioning support.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Preferred overload for Minimal APIs:</strong> call the <c>WebApplication</c> overload
+    /// instead — it uses <c>app.DescribeApiVersions()</c> which reads the live endpoint data sources
+    /// directly and always reflects every version registered via <c>app.NewApiVersionSet()</c>.
+    /// This <c>IApplicationBuilder</c> overload falls back to <see cref="IApiVersionDescriptionProvider"/>
+    /// which is a cached singleton and may miss versions registered by Minimal API endpoints.
+    /// </para>
+    /// </remarks>
     /// <param name="app">The <see cref="IApplicationBuilder"/> to configure.</param>
     /// <returns>The configured <see cref="IApplicationBuilder"/> for chaining.</returns>
     public static IApplicationBuilder UseApiVersioningAndDocumentation(this IApplicationBuilder app)
     {
-        // Enable middleware to serve generated Swagger as a JSON endpoint.
         app.UseSwagger();
 
-        // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-        // specifying the Swagger JSON endpoint for each API version.
         app.UseSwaggerUI(options =>
         {
-            var apiVersionDescriptionProvider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
+            var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
+            var descriptions = provider.ApiVersionDescriptions;
 
-            // Build a swagger endpoint for each discovered API version, showing the latest versions first.
-            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions.Reverse())
+            if (descriptions.Count == 0)
             {
-                var url = $"/swagger/{description.GroupName}/swagger.json";
-                var name = description.GroupName.ToUpperInvariant();
-                options.SwaggerEndpoint(url, name);
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
+                return;
+            }
+
+            foreach (var description in descriptions.Reverse())
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                    description.GroupName.ToUpperInvariant());
+            }
+        });
+
+        return app;
+    }
+
+    /// <summary>
+    /// Configures the application pipeline to use Swagger and the Swagger UI with versioning support.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This overload is the <strong>preferred choice for Minimal APIs</strong>. It calls
+    /// <c>app.DescribeApiVersions()</c> which scans the live endpoint data sources
+    /// rather than the cached <see cref="IApiVersionDescriptionProvider"/> singleton. This guarantees
+    /// that every version set registered via <c>app.NewApiVersionSet()</c> appears in the Swagger UI
+    /// dropdown regardless of when this method is called relative to DI initialisation.
+    /// </para>
+    /// <para>
+    /// <strong>Call order:</strong> invoke this method <em>after</em> all <c>app.MapXxx()</c> calls so
+    /// that endpoint version metadata is present in the data sources when the discovery runs.
+    /// </para>
+    /// </remarks>
+    /// <param name="app">The <see cref="WebApplication"/> to configure.</param>
+    /// <returns>The same <see cref="WebApplication"/> for chaining.</returns>
+    public static WebApplication UseApiVersioningAndDocumentation(this WebApplication app)
+    {
+        app.UseSwagger();
+
+        // DescribeApiVersions() reads directly from IEndpointRouteBuilder.DataSources.
+        // Unlike IApiVersionDescriptionProvider (a cached singleton), this reflects the
+        // actual endpoint version sets at the moment it is called, which is exactly what
+        // we need when the caller has just finished registering all Minimal API endpoints.
+        var descriptions = app.DescribeApiVersions();
+
+        app.UseSwaggerUI(options =>
+        {
+            foreach (var description in descriptions.Reverse())
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                    description.GroupName.ToUpperInvariant());
             }
         });
 
