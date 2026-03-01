@@ -2,7 +2,7 @@ namespace Demo.Api.Endpoints.Infrastructure;
 
 public static class BarcodeEndpoints
 {
-    public static void MapBarcodeEndpoints(this WebApplication app)
+    public static void MapBarcodeEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/barcode")
             .WithTags("Barcode");

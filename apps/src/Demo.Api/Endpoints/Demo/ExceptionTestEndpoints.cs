@@ -2,7 +2,7 @@ namespace Demo.Api.Endpoints.Demo;
 
 public static class ExceptionTestEndpoints
 {
-    public static void MapExceptionTestEndpoints(this WebApplication app)
+    public static void MapExceptionTestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/exception-test")
             .WithTags("Exception Test");

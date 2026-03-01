@@ -1,12 +1,12 @@
-using Acontplus.Billing.Constants;
 using System.Xml;
 using System.Xml.Linq;
+using Acontplus.Billing.Constants;
 
 namespace Demo.Api.Endpoints.Business;
 
 public static class DocumentoElectronicoEndpoints
 {
-    public static void MapDocumentoElectronicoEndpoints(this WebApplication app)
+    public static void MapDocumentoElectronicoEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/documento-electronico")
             .WithTags("Documento Electronico");

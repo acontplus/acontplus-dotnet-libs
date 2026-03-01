@@ -2,7 +2,7 @@ namespace Demo.Api.Endpoints.Infrastructure;
 
 public static class ConfigurationTestEndpoints
 {
-    public static void MapConfigurationTestEndpoints(this WebApplication app)
+    public static void MapConfigurationTestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/configuration-test")
             .WithTags("Configuration Test");
