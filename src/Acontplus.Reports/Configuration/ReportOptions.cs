@@ -74,4 +74,18 @@ public class ReportOptions
     /// Enable strict path validation to prevent directory traversal attacks (default true)
     /// </summary>
     public bool EnableStrictPathValidation { get; set; } = true;
+
+    // ── QuestPDF ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// QuestPDF license tier: Community (free, OSS), Professional, or Enterprise.
+    /// Default is Community which is free for projects with under $1M USD annual revenue.
+    /// </summary>
+    public Dtos.QuestPdfLicenseType QuestPdfLicenseType { get; set; } = Dtos.QuestPdfLicenseType.Community;
+
+    /// <summary>
+    /// Maximum number of concurrent QuestPDF generation tasks (default: <see cref="MaxConcurrentReports"/>).
+    /// When null, <see cref="MaxConcurrentReports"/> is applied.
+    /// </summary>
+    public int? MaxConcurrentQuestPdfReports { get; set; }
 }

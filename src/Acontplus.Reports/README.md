@@ -1,24 +1,20 @@
 # Acontplus.Reports
 
-
-
 [![NuGet](https://img.shields.io/nuget/v/Acontplus.Reports.svg)](https://www.nuget.org/packages/Acontplus.Reports)
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
-
 A high-performance .NET library for RDLC report generation and direct printing with advanced features for enterprise applications. Optimized for high concurrency, large reports, thermal printers, and production workloads.
-
-
 
 ## 🚀 Features
 
 ### Core Capabilities
+
 - ✅ **Async/Await Support** - Fully asynchronous API for better scalability
 - ✅ **RDLC Report Generation** - Support for PDF, Excel, Word, HTML5, Image exports
+- ✅ **QuestPDF Dynamic PDF** - Fluent code-first PDF generation without design-time files
 - ✅ **Direct Printing** - Print reports directly to thermal/receipt printers
 - ✅ **High Concurrency** - Built-in concurrency limiting and thread-safe operations
 - ✅ **Memory Optimization** - Stream pooling and efficient memory management for large reports
@@ -30,6 +26,7 @@ A high-performance .NET library for RDLC report generation and direct printing w
 - ✅ **Size Limits** - Configurable maximum report sizes
 
 ### Performance Optimizations
+
 - Report definition caching reduces file I/O
 - Concurrency limiting prevents resource exhaustion
 - Async operations improve scalability under load
@@ -40,19 +37,22 @@ A high-performance .NET library for RDLC report generation and direct printing w
 ## 📦 Installation
 
 ### NuGet Package Manager
+
 ```bash
 Install-Package Acontplus.Reports
 ```
 
 ### .NET CLI
+
 ```bash
 dotnet add package Acontplus.Reports
 ```
 
 ### PackageReference
+
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Reports" Version="1.3.15" />
+  <PackageReference Include="Acontplus.Reports" Version="1.6.0" />
 </ItemGroup>
 ```
 
@@ -459,28 +459,371 @@ public async Task<Dictionary<string, byte[]>> GenerateMultiFormatReport(
 }
 ```
 
+## 🎨 QuestPDF Dynamic PDF Generation
+
+`IQuestPdfReportService` provides code-first, fluent PDF generation via **QuestPDF 2026.x** — no RDLC templates, no design-time files. Reports are programmatically composed from typed request objects and rendered on any platform (.NET 10 / Linux / Windows / macOS).
+
+### QuestPDF License
+
+QuestPDF uses a tiered licensing model. The **Community** tier is free for projects with ≤ $1 M USD annual revenue and is the default. Set the tier once via `ReportOptions`:
+
+```json
+{
+  "Reports": {
+    "QuestPdfLicenseType": "Community"
+  }
+}
+```
+
+Or in code:
+
+```csharp
+builder.Services.AddReportServices(options =>
+{
+    options.QuestPdfLicenseType = QuestPdfLicenseType.Community; // Community | Professional | Enterprise
+});
+```
+
+### Registration
+
+```csharp
+// Option A — register both RDLC and QuestPDF together (recommended)
+builder.Services.AddReportServices(builder.Configuration);
+
+// Option B — register QuestPDF only (no RDLC dependency)
+builder.Services.AddQuestPdfReportService(builder.Configuration);
+
+// Option C — QuestPDF only, fluent options
+builder.Services.AddQuestPdfReportService(options =>
+{
+    options.QuestPdfLicenseType     = QuestPdfLicenseType.Community;
+    options.MaxConcurrentReports    = 20;
+    options.ReportGenerationTimeoutSeconds = 120;
+    options.EnableDetailedLogging   = true;
+});
+```
+
+---
+
+### Quick Start — Single DataTable
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class SalesReportController : ControllerBase
+{
+    private readonly IQuestPdfReportService _pdf;
+
+    public SalesReportController(IQuestPdfReportService pdf) => _pdf = pdf;
+
+    [HttpGet("sales")]
+    public async Task<IActionResult> GetSalesReport(CancellationToken ct)
+    {
+        var dt = await GetSalesDataAsync(); // Returns DataTable
+
+        // Minimal usage — auto-derives columns from DataTable schema
+        var response = await _pdf.GenerateFromDataTableAsync("Sales Report", dt, cancellationToken: ct);
+
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+}
+```
+
+---
+
+### Full Example — Multi-Section Invoice PDF
+
+```csharp
+public async Task<ReportResponse> BuildInvoicePdfAsync(
+    InvoiceData invoice,
+    CancellationToken ct = default)
+{
+    var request = new QuestPdfReportRequest
+    {
+        Title           = $"Invoice #{invoice.Number}",
+        SubTitle        = $"Issued: {invoice.Date:yyyy-MM-dd}",
+        Author          = "Acontplus ERP",
+        FileDownloadName = $"Invoice_{invoice.Number}",
+
+        Settings = new QuestPdfDocumentSettings
+        {
+            PageSize    = QuestPdfPageSize.A4,
+            Orientation = QuestPdfPageOrientation.Portrait,
+            FontFamily  = "Helvetica",
+            FontSize    = 9f,
+            ShowPageNumbers = true,
+            ShowTimestamp   = false,
+
+            ColorTheme = QuestPdfColorThemes.AcontplusDefault()
+        },
+
+        GlobalHeader = new QuestPdfHeaderFooterOptions
+        {
+            LogoPath        = "wwwroot/images/logo.png",
+            RightText       = "Acontplus ERP",
+            BackgroundColor = "#d61672",
+            ShowBorderBottom = false
+        },
+
+        Sections =
+        [
+            // ── 1. Key-value summary ──────────────────────────────────────
+            new QuestPdfSection
+            {
+                SectionTitle = "Invoice Details",
+                Type         = QuestPdfSectionType.KeyValueSummary,
+                KeyValues    = new()
+                {
+                    ["Invoice No."]    = invoice.Number,
+                    ["Date"]           = invoice.Date.ToString("yyyy-MM-dd"),
+                    ["Customer"]       = invoice.CustomerName,
+                    ["Address"]        = invoice.CustomerAddress,
+                    ["Payment Terms"]  = invoice.PaymentTerms
+                }
+            },
+
+            // ── 2. Line items table ───────────────────────────────────────
+            new QuestPdfSection
+            {
+                SectionTitle = "Line Items",
+                Type         = QuestPdfSectionType.DataTable,
+                Data         = invoice.LineItemsTable,   // DataTable
+                ShowTotalsRow = true,
+                Columns      =
+                [
+                    new QuestPdfTableColumn { ColumnName = "LineNo",      Header = "#",         RelativeWidth = 0.5f },
+                    new QuestPdfTableColumn { ColumnName = "Description", Header = "Description", RelativeWidth = 4f   },
+                    new QuestPdfTableColumn { ColumnName = "Qty",         Header = "Qty",        RelativeWidth = 1f, Alignment = QuestPdfColumnAlignment.Right, Format = "N2" },
+                    new QuestPdfTableColumn { ColumnName = "UnitPrice",   Header = "Unit Price", RelativeWidth = 1.5f, Alignment = QuestPdfColumnAlignment.Right, Format = "C2" },
+                    new QuestPdfTableColumn { ColumnName = "Total",       Header = "Total",      RelativeWidth = 1.5f, Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                             AggregateType = QuestPdfAggregateType.Sum, IsBold = true }
+                ]
+            },
+
+            // ── 3. Totals text block ──────────────────────────────────────
+            new QuestPdfSection
+            {
+                Type       = QuestPdfSectionType.Text,
+                TextBlocks =
+                [
+                    new QuestPdfTextBlock { Content = $"Subtotal:  {invoice.Subtotal:C2}", Bold = true },
+                    new QuestPdfTextBlock { Content = $"Tax (12%): {invoice.Tax:C2}"                  },
+                    new QuestPdfTextBlock { Content = $"TOTAL DUE: {invoice.Total:C2}", Bold = true, FontSize = 12f, Color = "#1E3A5F" }
+                ]
+            },
+
+            // ── 4. Custom section via delegate ────────────────────────────
+            new QuestPdfSection
+            {
+                SectionTitle = "Payment Instructions",
+                Type         = QuestPdfSectionType.Custom,
+                CustomComposer = container =>
+                {
+                    container
+                        .Background("#F0F4FF")
+                        .Padding(10)
+                        .Column(col =>
+                        {
+                            col.Item().Text("Bank Transfer").Bold().FontSize(10);
+                            col.Item().Text("Account: 1234-5678-9012").FontSize(9);
+                            col.Item().Text("SWIFT: ACONTPLUSXXX").FontSize(9);
+                        });
+                }
+            }
+        ]
+    };
+
+    return await _pdf.GenerateAsync(request, ct);
+}
+```
+
+---
+
+### Thermal / Receipt-Width Report
+
+```csharp
+var request = new QuestPdfReportRequest
+{
+    Title    = "Receipt",
+    Settings = new QuestPdfDocumentSettings
+    {
+        PageSize    = QuestPdfPageSize.Thermal80mm,   // 80mm wide
+        MarginLeft  = 5f,
+        MarginRight = 5f,
+        FontSize    = 8f
+    },
+    Sections =
+    [
+        new QuestPdfSection
+        {
+            Type = QuestPdfSectionType.KeyValueSummary,
+            KeyValues = new() { ["Store"] = "Acontplus POS", ["Cashier"] = "Jane" }
+        },
+        new QuestPdfSection
+        {
+            Type = QuestPdfSectionType.DataTable,
+            Data = receiptItemsTable,
+            Columns =
+            [
+                new QuestPdfTableColumn { ColumnName = "Item",  RelativeWidth = 3f },
+                new QuestPdfTableColumn { ColumnName = "Total", RelativeWidth = 1f, Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                         AggregateType = QuestPdfAggregateType.Sum }
+            ]
+        }
+    ]
+};
+var receipt = await _pdf.GenerateAsync(request, ct);
+```
+
+---
+
+### QuestPDF DTOs Reference
+
+#### `QuestPdfReportRequest`
+
+| Property           | Type                           | Description                           |
+| ------------------ | ------------------------------ | ------------------------------------- |
+| `Title`            | `string`                       | Document title (also in PDF metadata) |
+| `SubTitle`         | `string?`                      | Optional subtitle below title         |
+| `Author`           | `string?`                      | PDF metadata author                   |
+| `FileDownloadName` | `string?`                      | Suggested download filename           |
+| `Settings`         | `QuestPdfDocumentSettings`     | Page & theme config                   |
+| `GlobalHeader`     | `QuestPdfHeaderFooterOptions?` | Per-page header                       |
+| `GlobalFooter`     | `QuestPdfHeaderFooterOptions?` | Per-page footer                       |
+| `Sections`         | `List<QuestPdfSection>`        | Ordered content blocks                |
+
+#### `QuestPdfDocumentSettings`
+
+| Property          | Default                                  | Description                                           |
+| ----------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `PageSize`        | `A4`                                     | Page size preset                                      |
+| `Orientation`     | `Portrait`                               | Portrait or Landscape                                 |
+| `FontFamily`      | `"Helvetica"`                            | Default font family                                   |
+| `FontSize`        | `9f`                                     | Default body font size (pt)                           |
+| `ShowPageNumbers` | `true`                                   | Auto page number footer                               |
+| `ShowTimestamp`   | `false`                                  | Show UTC timestamp in footer                          |
+| `LicenseType`     | `Community`                              | QuestPDF license tier                                 |
+| `ColorTheme`      | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
+
+#### Color Themes
+
+Use the `QuestPdfColorThemes` static factory for ready-made presets that match the **Acontplus brand palette** (sourced from the AcontplusWeb design system).
+
+| Preset               | Description                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `AcontplusDefault()` | Magenta header `#d61672`, blush alternates `#fdf2f8`, wine totals — official brand |
+| `AcontplusAmber()`   | Amber/gold header `#ffa901`, warm alternates — seasonal or financial reports       |
+| `Corporate()`        | Navy header `#1E3A5F`, slate alternates — conservative enterprise documents        |
+| `Ocean()`            | Teal/cyan header `#0077B6`, cyan alternates — tech products and dashboards         |
+| `Monochrome()`       | Slate-grey header `#334155`, zero colour — legal or print-monochrome reports       |
+
+```csharp
+// Quick preset
+ColorTheme = QuestPdfColorThemes.AcontplusDefault()
+
+// Preset with individual override
+var theme = QuestPdfColorThemes.Corporate();
+theme.BorderColor = "#BDC3C7";
+ColorTheme = theme
+
+// Fully manual
+ColorTheme = new QuestPdfColorTheme
+{
+    HeaderBackground     = "#d61672",   // brand primary
+    AlternateRowBackground = "#fdf2f8", // brand light
+    AccentColor          = "#d61672",
+    TotalsBackground     = "#fce7f3",
+    TotalsTextColor      = "#831843",
+    KvKeyColor           = "#be185d",
+    FooterTextColor      = "#8c8c8c",
+    BorderColor          = "#eaeaea",
+    SuccessColor         = "#10b981",
+    WarningColor         = "#f59e0b",
+    ErrorColor           = "#ef4444"
+}
+```
+
+##### `QuestPdfColorTheme` properties
+
+| Property                 | Default   | Description                            |
+| ------------------------ | --------- | -------------------------------------- |
+| `HeaderBackground`       | `#d61672` | Table header / page-header background  |
+| `HeaderForeground`       | `#FFFFFF` | Table header text color                |
+| `RowBackground`          | `#FFFFFF` | Even row background                    |
+| `AlternateRowBackground` | `#fdf2f8` | Odd (alternate) row background         |
+| `TotalsBackground`       | `#fce7f3` | Totals row background                  |
+| `TotalsTextColor`        | `#831843` | Totals row text color                  |
+| `AccentColor`            | `#d61672` | Section titles and dividers            |
+| `SecondaryAccentColor`   | `#ffa901` | Charts, badges, call-out cells         |
+| `TextColor`              | `#252525` | Default body text                      |
+| `MutedTextColor`         | `#8c8c8c` | Dates, subtitles, empty-state messages |
+| `KvKeyColor`             | `#be185d` | Key-value label (left column) color    |
+| `FooterTextColor`        | `#8c8c8c` | Page footer text and page numbers      |
+| `BorderColor`            | `#eaeaea` | Row borders and section separators     |
+| `SuccessColor`           | `#10b981` | Success status indicators              |
+| `WarningColor`           | `#f59e0b` | Warning status indicators              |
+| `ErrorColor`             | `#ef4444` | Error / danger indicators              |
+
+#### `QuestPdfTableColumn`
+
+| Property        | Default  | Description                                        |
+| --------------- | -------- | -------------------------------------------------- |
+| `ColumnName`    | required | DataTable column name                              |
+| `Header`        | `null`   | Display label (uses ColumnName if null)            |
+| `RelativeWidth` | `null`   | Proportional width (auto-split if null)            |
+| `Alignment`     | `Left`   | Cell text alignment                                |
+| `Format`        | `null`   | .NET format string: `"C2"`, `"N0"`, `"yyyy-MM-dd"` |
+| `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`              |
+| `IsBold`        | `false`  | Bold cell text                                     |
+| `IsHidden`      | `false`  | Exclude from output                                |
+
+#### `QuestPdfSection` types
+
+| `Type`            | Required properties | Description                                    |
+| ----------------- | ------------------- | ---------------------------------------------- |
+| `DataTable`       | `Data`              | Renders a `DataTable` as a themed grid         |
+| `Text`            | `TextBlocks`        | Renders a list of formatted text blocks        |
+| `KeyValueSummary` | `KeyValues`         | Renders a two-column label/value panel         |
+| `Custom`          | `CustomComposer`    | Full control via `Action<IContainer>` delegate |
+
+#### Page Sizes
+
+`A4` · `A3` · `A5` · `Letter` · `Legal` · `Tabloid` · `Executive` · `Thermal80mm`
+
+---
+
+### Configuration Options (QuestPDF additions)
+
+| Option                         | Type                  | Default                         | Description                |
+| ------------------------------ | --------------------- | ------------------------------- | -------------------------- |
+| `QuestPdfLicenseType`          | `QuestPdfLicenseType` | `Community`                     | QuestPDF license tier      |
+| `MaxConcurrentQuestPdfReports` | `int?`                | inherits `MaxConcurrentReports` | Dedicated concurrency slot |
+
+---
+
 ## 📚 Advanced Configuration
 
 ### Configuration Options Reference
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `MainDirectory` | `string` | `"Reports"` | Main directory for RDLC files (relative to app base) |
-| `ExternalDirectory` | `string?` | `null` | External directory for offline reports (absolute path) |
-| `MaxReportSizeBytes` | `long` | `104857600` (100MB) | Maximum output size in bytes |
-| `ReportGenerationTimeoutSeconds` | `int` | `300` (5min) | Timeout for report generation |
-| `PrintJobTimeoutSeconds` | `int` | `180` (3min) | Timeout for print jobs |
-| `EnableReportDefinitionCache` | `bool` | `true` | Enable template caching |
-| `MaxCachedReportDefinitions` | `int` | `100` | Maximum cached templates |
-| `CacheTtlMinutes` | `int` | `60` | Cache expiration time |
-| `EnableMemoryPooling` | `bool` | `true` | Enable memory pooling |
-| `MaxConcurrentReports` | `int` | `10` | Max concurrent report generations |
-| `MaxConcurrentPrintJobs` | `int` | `5` | Max concurrent print jobs |
-| `EnableDetailedLogging` | `bool` | `false` | Detailed performance logging |
+| Option                           | Type      | Default             | Description                                            |
+| -------------------------------- | --------- | ------------------- | ------------------------------------------------------ |
+| `MainDirectory`                  | `string`  | `"Reports"`         | Main directory for RDLC files (relative to app base)   |
+| `ExternalDirectory`              | `string?` | `null`              | External directory for offline reports (absolute path) |
+| `MaxReportSizeBytes`             | `long`    | `104857600` (100MB) | Maximum output size in bytes                           |
+| `ReportGenerationTimeoutSeconds` | `int`     | `300` (5min)        | Timeout for report generation                          |
+| `PrintJobTimeoutSeconds`         | `int`     | `180` (3min)        | Timeout for print jobs                                 |
+| `EnableReportDefinitionCache`    | `bool`    | `true`              | Enable template caching                                |
+| `MaxCachedReportDefinitions`     | `int`     | `100`               | Maximum cached templates                               |
+| `CacheTtlMinutes`                | `int`     | `60`                | Cache expiration time                                  |
+| `EnableMemoryPooling`            | `bool`    | `true`              | Enable memory pooling                                  |
+| `MaxConcurrentReports`           | `int`     | `10`                | Max concurrent report generations                      |
+| `MaxConcurrentPrintJobs`         | `int`     | `5`                 | Max concurrent print jobs                              |
+| `EnableDetailedLogging`          | `bool`    | `false`             | Detailed performance logging                           |
 
 ### DTOs Reference
 
 #### ReportPropsDto
+
 Defines report properties (required in `parameters` DataSet as "ReportProps" table):
 
 ```csharp
@@ -493,6 +836,7 @@ public class ReportPropsDto
 ```
 
 #### RdlcPrinterDto
+
 Configures printer settings:
 
 ```csharp
@@ -510,6 +854,7 @@ public class RdlcPrinterDto
 ```
 
 #### RdlcPrintRequestDto
+
 Contains print data:
 
 ```csharp
@@ -524,6 +869,7 @@ public class RdlcPrintRequestDto
 ```
 
 #### ReportResponse
+
 Report output (implements IDisposable):
 
 ```csharp
@@ -569,18 +915,19 @@ catch (ReportSizeExceededException ex)
 
 ### Supported Export Formats
 
-| Format | Enum Value | Content Type | Extension |
-|--------|-----------|--------------|-----------|
-| PDF | `PDF` | `application/pdf` | `.pdf` |
-| Excel (Legacy) | `EXCEL` | `application/vnd.ms-excel` | `.xls` |
-| Excel (Modern) | `EXCELOPENXML` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | `.xlsx` |
-| Word | `WORDOPENXML` | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | `.docx` |
-| HTML | `HTML5` | `text/html` | `.html` |
-| Image | `IMAGE` | `image/jpeg` | `.jpg` |
+| Format         | Enum Value     | Content Type                                                              | Extension |
+| -------------- | -------------- | ------------------------------------------------------------------------- | --------- |
+| PDF            | `PDF`          | `application/pdf`                                                         | `.pdf`    |
+| Excel (Legacy) | `EXCEL`        | `application/vnd.ms-excel`                                                | `.xls`    |
+| Excel (Modern) | `EXCELOPENXML` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`       | `.xlsx`   |
+| Word           | `WORDOPENXML`  | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | `.docx`   |
+| HTML           | `HTML5`        | `text/html`                                                               | `.html`   |
+| Image          | `IMAGE`        | `image/jpeg`                                                              | `.jpg`    |
 
 ### Performance Tuning
 
 #### High Concurrency Scenario
+
 ```csharp
 // E-commerce, multi-tenant, high traffic
 options.MaxConcurrentReports = 50;
@@ -592,6 +939,7 @@ options.EnableMemoryPooling = true;
 ```
 
 #### Large Reports Scenario
+
 ```csharp
 // Financial statements, data warehouses, complex reports
 options.MaxReportSizeBytes = 500 * 1024 * 1024; // 500 MB
@@ -601,6 +949,7 @@ options.EnableMemoryPooling = true;
 ```
 
 #### Memory-Constrained Scenario
+
 ```csharp
 // Cloud containers, shared hosting, limited resources
 options.MaxConcurrentReports = 3;
@@ -611,6 +960,7 @@ options.MaxReportSizeBytes = 10 * 1024 * 1024; // 10 MB
 ```
 
 #### POS/Retail Scenario
+
 ```csharp
 // Point of sale, thermal printers, receipts
 options.MaxConcurrentPrintJobs = 10; // Multiple registers
@@ -623,6 +973,7 @@ options.EnableDetailedLogging = true; // Track print failures
 ## 🔍 Best Practices
 
 ### 1. Use Async Methods
+
 ```csharp
 // ✅ Good - Async
 var report = await _reportService.GetReportAsync(params, data, false, ct);
@@ -632,6 +983,7 @@ var report = _reportService.GetReport(params, data, false);
 ```
 
 ### 2. Implement Proper Cancellation
+
 ```csharp
 [HttpGet("report")]
 public async Task<IActionResult> GetReport(CancellationToken cancellationToken)
@@ -645,6 +997,7 @@ public async Task<IActionResult> GetReport(CancellationToken cancellationToken)
 ```
 
 ### 3. Dispose Report Responses
+
 ```csharp
 // ✅ Using statement ensures disposal
 using var report = await _reportService.GetReportAsync(params, data);
@@ -663,6 +1016,7 @@ finally
 ```
 
 ### 4. Structure Your DataSets Correctly
+
 ```csharp
 // Parameters DataSet structure:
 // - ReportProps table (required): ReportPath, ReportName, ReportFormat
@@ -674,6 +1028,7 @@ finally
 ```
 
 ### 5. Handle Exceptions Gracefully
+
 ```csharp
 try
 {
@@ -700,6 +1055,7 @@ catch (ReportGenerationException ex)
 ```
 
 ### 6. Enable Logging for Troubleshooting
+
 ```csharp
 // Development
 options.EnableDetailedLogging = true;
@@ -711,6 +1067,7 @@ options.EnableDetailedLogging = false;
 ## 🧪 Testing
 
 ### Unit Test Example
+
 ```csharp
 public class ReportServiceTests
 {
@@ -750,6 +1107,7 @@ public class ReportServiceTests
 We welcome contributions! Please see our [Contributing Guidelines](../../CONTRIBUTING.md) for details.
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/acontplus/acontplus-dotnet-libs.git
 cd acontplus-dotnet-libs

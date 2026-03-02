@@ -1,9 +1,3 @@
-using Acontplus.Core.Dtos.Requests;
-using Acontplus.Core.Enums;
-using Acontplus.Utilities.Dtos;
-using Demo.Application.Dtos;
-using Demo.Application.Interfaces;
-
 namespace Demo.Api.Endpoints.Demo;
 
 /// <summary>

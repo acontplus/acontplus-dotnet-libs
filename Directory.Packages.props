@@ -47,6 +47,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageVersion Include="Polly" Version="8.6.5" />
+    <PackageVersion Include="QuestPDF" Version="2026.2.2" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.3" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />

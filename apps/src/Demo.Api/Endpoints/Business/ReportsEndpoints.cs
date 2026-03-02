@@ -168,6 +168,348 @@ public static class ReportsEndpoints
             });
         });
 
+        // ── QuestPDF endpoints ────────────────────────────────────────────────────
+
+        group.MapGet("/questpdf/invoice", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
+            try
+            {
+                logger.LogInformation("Generating QuestPDF sample invoice");
+
+                // ── Line items DataTable ──────────────────────────────────────────
+                var lineItems = new DataTable("LineItems");
+                lineItems.Columns.Add("LineNo", typeof(int));
+                lineItems.Columns.Add("Description", typeof(string));
+                lineItems.Columns.Add("Qty", typeof(decimal));
+                lineItems.Columns.Add("UnitPrice", typeof(decimal));
+                lineItems.Columns.Add("Amount", typeof(decimal));
+
+                lineItems.Rows.Add(1, "Professional Services – Web Development", 20m, 25.00m, 500.00m);
+                lineItems.Rows.Add(2, "Consulting – System Architecture", 10m, 30.00m, 300.00m);
+                lineItems.Rows.Add(3, "Software License – Enterprise Edition", 1m, 200.00m, 200.00m);
+
+                // ── Build the document request ────────────────────────────────────
+                var request = new QuestPdfReportRequest
+                {
+                    Title = "Invoice #INV-2026-0042",
+                    SubTitle = "Issued: 2026-03-01  |  Due: 2026-03-31",
+                    Author = "Acontplus ERP",
+                    Subject = "Commercial Invoice",
+                    FileDownloadName = "Invoice_INV-2026-0042",
+
+                    Settings = new QuestPdfDocumentSettings
+                    {
+                        PageSize = QuestPdfPageSize.A4,
+                        Orientation = QuestPdfPageOrientation.Portrait,
+                        FontFamily = "Helvetica",
+                        FontSize = 9f,
+                        ShowPageNumbers = true,
+                        ShowTimestamp = true,
+                        ColorTheme = QuestPdfColorThemes.AcontplusDefault()
+                    },
+
+                    GlobalHeader = new QuestPdfHeaderFooterOptions
+                    {
+                        LeftText = "Acontplus Demo Company",
+                        RightText = "RUC: 1792123456001",
+                        BackgroundColor = "#d61672",
+                        ShowBorderBottom = false,
+                        FontSize = 9f
+                    },
+
+                    Sections =
+                    [
+                        // 1. Client & invoice summary
+                        new QuestPdfSection
+                        {
+                            SectionTitle = "Invoice Details",
+                            Type         = QuestPdfSectionType.KeyValueSummary,
+                            KeyValues    = new Dictionary<string, string>
+                            {
+                                ["Invoice No."]    = "INV-2026-0042",
+                                ["Issue Date"]     = "2026-03-01",
+                                ["Due Date"]       = "2026-03-31",
+                                ["Customer"]       = "ABC Corporation",
+                                ["Tax ID"]         = "1234567890001",
+                                ["Address"]        = "123 Business St, Suite 100, New York, USA",
+                                ["Payment Terms"]  = "Net 30"
+                            }
+                        },
+
+                        // 2. Line-items grid with totals row
+                        new QuestPdfSection
+                        {
+                            SectionTitle  = "Line Items",
+                            Type          = QuestPdfSectionType.DataTable,
+                            Data          = lineItems,
+                            ShowTotalsRow = true,
+                            Columns       =
+                            [
+                                new QuestPdfTableColumn { ColumnName = "LineNo",      Header = "#",          RelativeWidth = 0.5f },
+                                new QuestPdfTableColumn { ColumnName = "Description", Header = "Description", RelativeWidth = 5f   },
+                                new QuestPdfTableColumn { ColumnName = "Qty",         Header = "Qty",         RelativeWidth = 0.8f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N2" },
+                                new QuestPdfTableColumn { ColumnName = "UnitPrice",   Header = "Unit Price",  RelativeWidth = 1.5f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2" },
+                                new QuestPdfTableColumn { ColumnName = "Amount",      Header = "Amount",      RelativeWidth = 1.5f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                    AggregateType = QuestPdfAggregateType.Sum, IsBold = true }
+                            ]
+                        },
+
+                        // 3. Financial summary text
+                        new QuestPdfSection
+                        {
+                            Type       = QuestPdfSectionType.Text,
+                            TextBlocks =
+                            [
+                                new QuestPdfTextBlock { Content = "Subtotal:  $1,000.00", Bold = false, PaddingBottom = 2f  },
+                                new QuestPdfTextBlock { Content = "VAT (12%): $  120.00", Bold = false, PaddingBottom = 2f  },
+                                new QuestPdfTextBlock { Content = "TOTAL DUE: $1,120.00", Bold = true,  FontSize = 12f, Color = "#831843", PaddingBottom = 0f }
+                            ]
+                        },
+
+                        // 4. Bank-transfer payment instructions (key-value keeps Demo.Api free of QuestPDF.Fluent dependency)
+                        new QuestPdfSection
+                        {
+                            SectionTitle = "Payment Instructions",
+                            Type         = QuestPdfSectionType.KeyValueSummary,
+                            KeyValues    = new Dictionary<string, string>
+                            {
+                                ["Bank"]      = "Banco Pichincha",
+                                ["Account"]   = "2200123456789",
+                                ["SWIFT"]     = "PICHECEQ",
+                                ["Reference"] = "INV-2026-0042"
+                            }
+                        }
+                    ]
+                };
+
+                var response = await pdf.GenerateAsync(request, cancellationToken);
+
+                logger.LogInformation("QuestPDF invoice generated — {Bytes} bytes", response.FileContents.Length);
+
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating QuestPDF invoice");
+                return Results.Problem("Failed to generate QuestPDF invoice", statusCode: 500);
+            }
+        })
+        .WithName("QuestPdfSampleInvoice")
+        .WithDescription("Generates a full multi-section A4 invoice PDF using QuestPDF (key-value summary, data table with aggregate totals, text summary, custom payment block)");
+
+        group.MapGet("/questpdf/sales-report", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
+            try
+            {
+                logger.LogInformation("Generating QuestPDF sales report");
+
+                // ── Customers DataTable ───────────────────────────────────────────
+                var customers = new DataTable("Customers");
+                customers.Columns.Add("Id", typeof(int));
+                customers.Columns.Add("CustomerName", typeof(string));
+                customers.Columns.Add("City", typeof(string));
+                customers.Columns.Add("Segment", typeof(string));
+                customers.Columns.Add("Revenue", typeof(decimal));
+                customers.Columns.Add("Orders", typeof(int));
+
+                customers.Rows.Add(1, "ABC Corporation", "New York", "Enterprise", 45000.50m, 12);
+                customers.Rows.Add(2, "XYZ Industries", "Los Angeles", "SMB", 23500.75m, 8);
+                customers.Rows.Add(3, "Tech Solutions LLC", "San Francisco", "Startup", 8900.00m, 5);
+                customers.Rows.Add(4, "Global Trading Co", "Chicago", "Enterprise", 78200.25m, 20);
+                customers.Rows.Add(5, "Smart Systems Inc", "Boston", "SMB", 12300.00m, 6);
+                customers.Rows.Add(6, "Future Enterprises", "Seattle", "Startup", 5600.80m, 3);
+                customers.Rows.Add(7, "Digital Dynamics", "Miami", "SMB", 19800.50m, 9);
+                customers.Rows.Add(8, "Innovative Partners", "Denver", "Enterprise", 31200.00m, 11);
+                customers.Rows.Add(9, "CloudFirst Inc", "Austin", "Startup", 6450.00m, 4);
+                customers.Rows.Add(10, "Data Architects", "Portland", "SMB", 14700.00m, 7);
+
+                // ── Top monthly sales DataTable ───────────────────────────────────
+                var monthlySales = new DataTable("MonthlySales");
+                monthlySales.Columns.Add("Month", typeof(string));
+                monthlySales.Columns.Add("Revenue", typeof(decimal));
+                monthlySales.Columns.Add("Orders", typeof(int));
+                monthlySales.Columns.Add("Avg", typeof(decimal));
+
+                monthlySales.Rows.Add("Oct 2025", 38500.00m, 21, 1833.33m);
+                monthlySales.Rows.Add("Nov 2025", 51200.00m, 28, 1828.57m);
+                monthlySales.Rows.Add("Dec 2025", 62300.00m, 34, 1832.35m);
+                monthlySales.Rows.Add("Jan 2026", 44100.00m, 25, 1764.00m);
+                monthlySales.Rows.Add("Feb 2026", 57800.00m, 31, 1864.52m);
+                monthlySales.Rows.Add("Mar 2026", 18500.00m, 11, 1681.82m);
+
+                var request = new QuestPdfReportRequest
+                {
+                    Title = "Sales Report — Q1 2026",
+                    SubTitle = "Generated: 2026-03-01  |  Period: October 2025 – March 2026",
+                    FileDownloadName = "SalesReport_Q1_2026",
+
+                    Settings = new QuestPdfDocumentSettings
+                    {
+                        PageSize = QuestPdfPageSize.A4,
+                        Orientation = QuestPdfPageOrientation.Landscape,
+                        FontSize = 9f,
+                        ShowPageNumbers = true,
+                        ColorTheme = QuestPdfColorThemes.Corporate()
+                    },
+
+                    Sections =
+                    [
+                        // KPI summary
+                        new QuestPdfSection
+                        {
+                            SectionTitle = "Period KPIs",
+                            Type         = QuestPdfSectionType.KeyValueSummary,
+                            KeyValues    = new Dictionary<string, string>
+                            {
+                                ["Total Revenue"]        = "$245,652.80",
+                                ["Total Orders"]         = "85",
+                                ["Average Order Value"]  = "$2,890.03",
+                                ["New Customers"]        = "4",
+                                ["Top Segment"]          = "Enterprise ($154,400.75)",
+                                ["Top City"]             = "Chicago ($78,200.25)"
+                            }
+                        },
+
+                        // Monthly breakdown table
+                        new QuestPdfSection
+                        {
+                            SectionTitle  = "Monthly Revenue Breakdown",
+                            Type          = QuestPdfSectionType.DataTable,
+                            Data          = monthlySales,
+                            ShowTotalsRow = true,
+                            Columns       =
+                            [
+                                new QuestPdfTableColumn { ColumnName = "Month",   Header = "Month",           RelativeWidth = 2f },
+                                new QuestPdfTableColumn { ColumnName = "Revenue", Header = "Revenue (USD)",   RelativeWidth = 2f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                    AggregateType = QuestPdfAggregateType.Sum, IsBold = true },
+                                new QuestPdfTableColumn { ColumnName = "Orders",  Header = "Orders",          RelativeWidth = 1f,
+                                    Alignment = QuestPdfColumnAlignment.Right,
+                                    AggregateType = QuestPdfAggregateType.Sum },
+                                new QuestPdfTableColumn { ColumnName = "Avg",     Header = "Avg. Order (USD)",RelativeWidth = 2f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                    AggregateType = QuestPdfAggregateType.Average }
+                            ]
+                        },
+
+                        // Customer breakdown table
+                        new QuestPdfSection
+                        {
+                            SectionTitle  = "Top Customers",
+                            Type          = QuestPdfSectionType.DataTable,
+                            Data          = customers,
+                            ShowTotalsRow = true,
+                            Columns       =
+                            [
+                                new QuestPdfTableColumn { ColumnName = "Id",           Header = "#",            RelativeWidth = 0.4f },
+                                new QuestPdfTableColumn { ColumnName = "CustomerName", Header = "Customer",     RelativeWidth = 3f   },
+                                new QuestPdfTableColumn { ColumnName = "City",         Header = "City",         RelativeWidth = 1.5f },
+                                new QuestPdfTableColumn { ColumnName = "Segment",      Header = "Segment",      RelativeWidth = 1.2f },
+                                new QuestPdfTableColumn { ColumnName = "Revenue",      Header = "Revenue (USD)",RelativeWidth = 1.5f,
+                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                    AggregateType = QuestPdfAggregateType.Sum, IsBold = true },
+                                new QuestPdfTableColumn { ColumnName = "Orders",       Header = "Orders",       RelativeWidth = 0.8f,
+                                    Alignment = QuestPdfColumnAlignment.Right,
+                                    AggregateType = QuestPdfAggregateType.Sum }
+                            ]
+                        }
+                    ]
+                };
+
+                var response = await pdf.GenerateAsync(request, cancellationToken);
+
+                logger.LogInformation("QuestPDF sales report generated — {Bytes} bytes", response.FileContents.Length);
+
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating QuestPDF sales report");
+                return Results.Problem("Failed to generate QuestPDF sales report", statusCode: 500);
+            }
+        })
+        .WithName("QuestPdfSalesReport")
+        .WithDescription("Generates a landscape A4 quarterly sales report PDF using QuestPDF with two data-table sections and a KPI key-value panel");
+
+        group.MapGet("/questpdf/quick-table", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
+            try
+            {
+                logger.LogInformation("Generating QuestPDF quick-table report");
+
+                // Minimal usage: pass a plain DataTable — service auto-derives all columns
+                var products = new DataTable("Products");
+                products.Columns.Add("SKU", typeof(string));
+                products.Columns.Add("Product", typeof(string));
+                products.Columns.Add("Category", typeof(string));
+                products.Columns.Add("Stock", typeof(int));
+                products.Columns.Add("Price", typeof(decimal));
+                products.Columns.Add("LastUpdated", typeof(string));
+
+                products.Rows.Add("PRD-001", "Laptop Pro 15\"", "Electronics", 45, 1299.99m, "2026-02-28");
+                products.Rows.Add("PRD-002", "Wireless Keyboard", "Accessories", 120, 49.99m, "2026-02-27");
+                products.Rows.Add("PRD-003", "4K Monitor 27\"", "Electronics", 30, 399.99m, "2026-02-28");
+                products.Rows.Add("PRD-004", "USB-C Hub 7-Port", "Accessories", 200, 29.99m, "2026-02-25");
+                products.Rows.Add("PRD-005", "Noise-Cancel Headphones", "Electronics", 80, 149.99m, "2026-02-28");
+                products.Rows.Add("PRD-006", "Ergonomic Mouse", "Accessories", 150, 39.99m, "2026-02-26");
+                products.Rows.Add("PRD-007", "SSD 1TB NVMe", "Storage", 60, 89.99m, "2026-02-28");
+                products.Rows.Add("PRD-008", "Webcam 4K", "Accessories", 55, 79.99m, "2026-02-27");
+
+                // Uses GenerateFromDataTableAsync — the simplest one-liner API
+                var columns = new List<QuestPdfTableColumn>
+                {
+                    new() { ColumnName = "SKU",         Header = "SKU",           RelativeWidth = 1.2f },
+                    new() { ColumnName = "Product",     Header = "Product Name",  RelativeWidth = 3f   },
+                    new() { ColumnName = "Category",    Header = "Category",      RelativeWidth = 1.5f },
+                    new() { ColumnName = "Stock",       Header = "Stock",         RelativeWidth = 0.8f,
+                            Alignment = QuestPdfColumnAlignment.Right,
+                            AggregateType = QuestPdfAggregateType.Sum },
+                    new() { ColumnName = "Price",       Header = "Price (USD)",   RelativeWidth = 1.2f,
+                            Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                            AggregateType = QuestPdfAggregateType.Sum, IsBold = true },
+                    new() { ColumnName = "LastUpdated", Header = "Last Updated",  RelativeWidth = 1.5f }
+                };
+
+                var response = await pdf.GenerateFromDataTableAsync(
+                    "Product Inventory Snapshot — 2026-03-01",
+                    products,
+                    columns,
+                    new QuestPdfDocumentSettings
+                    {
+                        PageSize = QuestPdfPageSize.A4,
+                        Orientation = QuestPdfPageOrientation.Landscape,
+                        ShowPageNumbers = true
+                    },
+                    cancellationToken);
+
+                logger.LogInformation("QuestPDF quick-table generated — {Bytes} bytes", response.FileContents.Length);
+
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating QuestPDF quick-table");
+                return Results.Problem("Failed to generate QuestPDF quick-table report", statusCode: 500);
+            }
+        })
+        .WithName("QuestPdfQuickTable")
+        .WithDescription("Demonstrates GenerateFromDataTableAsync — the minimal single-DataTable API. Returns a landscape A4 product inventory PDF.");
+
         group.MapPost("/test-print", async (Microsoft.Extensions.Logging.ILogger<object> logger, HttpContext httpContext, string? printerName = null, CancellationToken cancellationToken = default) =>
         {
             var printerService = httpContext.RequestServices.GetRequiredService<IRdlcPrinterService>();

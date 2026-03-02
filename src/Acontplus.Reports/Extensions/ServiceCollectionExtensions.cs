@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
 
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
+        services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
 
         // Register printer service only on Windows 6.1+
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
@@ -60,6 +61,7 @@ public static class ServiceCollectionExtensions
 
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
+        services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
 
         // Register printer service only on Windows 6.1+
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
@@ -76,6 +78,30 @@ public static class ServiceCollectionExtensions
             return new Services.ReportDefinitionCache(max, ttl);
         });
 
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the QuestPDF dynamic PDF generation service without the RDLC stack.
+    /// Use this when you need QuestPDF exclusively.
+    /// </summary>
+    public static IServiceCollection AddQuestPdfReportService(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the QuestPDF dynamic PDF generation service without the RDLC stack.
+    /// Use this when you need QuestPDF exclusively.
+    /// </summary>
+    public static IServiceCollection AddQuestPdfReportService(
+        this IServiceCollection services,
+        Action<Configuration.ReportOptions> configureOptions)
+    {
+        services.Configure(configureOptions);
+        services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
         return services;
     }
 
