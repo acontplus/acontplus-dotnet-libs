@@ -1,7 +1,9 @@
+using System.Globalization;
+using System.Security;
+using Acontplus.Utilities.Security.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.Globalization;
 
 namespace Acontplus.Reports.Documents;
 
@@ -99,7 +101,7 @@ internal sealed class DynamicReportDocument : IDocument
 
         wrapper.Row(row =>
         {
-            if (!string.IsNullOrWhiteSpace(header.LogoPath) && File.Exists(header.LogoPath))
+            if (!string.IsNullOrWhiteSpace(header.LogoPath) && IsValidLogoPath(header.LogoPath) && File.Exists(header.LogoPath))
             {
                 row.AutoItem()
                     .MaxHeight(header.LogoMaxHeight)
@@ -531,6 +533,38 @@ internal sealed class DynamicReportDocument : IDocument
             return FormatCellValue(avg, format);
         }
         catch { return string.Empty; }
+    }
+
+    /// <summary>
+    /// Validates that <paramref name="path"/> is a safe, non-traversal image path.
+    /// Prevents CWE-22 path traversal attacks by rejecting null bytes, relative
+    /// directory components, and non-image file extensions.
+    /// </summary>
+    private static bool IsValidLogoPath(string path)
+    {
+        try
+        {
+            // Reject null bytes and relative traversal sequences
+            if (path.Contains('\0') || path.Contains(".."))
+                return false;
+
+            // Only allow common image extensions
+            PathSecurityValidator.ValidateFileExtension(path, ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp");
+
+            // Canonicalize the path; GetFullPath will throw on invalid input
+            var fullPath = Path.GetFullPath(path);
+
+            // The canonicalized path must be rooted and must equal itself (no hidden traversal)
+            return Path.IsPathRooted(fullPath);
+        }
+        catch (SecurityException)
+        {
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }
 

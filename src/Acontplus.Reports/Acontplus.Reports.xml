@@ -97,6 +97,13 @@
             data-driven PDF from a <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
             </summary>
         </member>
+        <member name="M:Acontplus.Reports.Documents.DynamicReportDocument.IsValidLogoPath(System.String)">
+            <summary>
+            Validates that <paramref name="path"/> is a safe, non-traversal image path.
+            Prevents CWE-22 path traversal attacks by rejecting null bytes, relative
+            directory components, and non-image file extensions.
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Documents.ContainerAlignExtensions">
             <summary>
             Internal extension to apply horizontal alignment to a QuestPDF container

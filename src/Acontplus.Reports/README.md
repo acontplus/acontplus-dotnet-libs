@@ -36,6 +36,28 @@ A high-performance .NET library for enterprise report generation. Covers RDLC re
 - Cancellation token support for graceful shutdowns
 - Separate semaphore controls for report generation and printing
 
+---
+
+## 🖥️ Platform Compatibility
+
+Different services in this library have different platform requirements. Always check this table before choosing a service in a cross-platform deployment (Linux containers, cloud, macOS CI).
+
+| Service         | Interface                 | Windows | Linux | macOS | Notes                                                                                                                                                                |
+| --------------- | ------------------------- | :-----: | :---: | :---: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RDLC generation | `IRdlcReportService`      |   ✅    |  ❌   |  ❌   | **Windows only.** Depends on `ReportViewerCore.NETCore` which requires GDI+ / `System.Drawing.Common`. Does not work on Linux or macOS regardless of `libgdiplus`.   |
+| RDLC printing   | `IRdlcPrinterService`     |   ✅    |  ❌   |  ❌   | **Windows 6.1+ only.** Registered automatically when `OperatingSystem.IsWindowsVersionAtLeast(6,1)` returns `true`; injecting it on other OSes will fail at runtime. |
+| QuestPDF PDF    | `IQuestPdfReportService`  |   ✅    |  ✅   |  ✅   | Fully cross-platform. No native dependencies. Preferred choice for PDF in containerized / cloud environments. Requires a valid QuestPDF license (Community is free). |
+| MiniExcel       | `IMiniExcelReportService` |   ✅    |  ✅   |  ✅   | Fully cross-platform. Pure managed code; no GDI+ or COM dependencies.                                                                                                |
+| ClosedXML       | `IClosedXmlReportService` |   ✅    |  ✅   |  ✅   | Fully cross-platform. Pure managed code; no GDI+ or COM dependencies.                                                                                                |
+
+### Linux / Docker / macOS
+
+> **Both RDLC services are Windows-only.** `IRdlcReportService` depends on `ReportViewerCore.NETCore` which does not run on Linux or macOS — `libgdiplus` is **not** sufficient to make it work. `IRdlcPrinterService` additionally requires Windows 6.1+ at the OS level.
+>
+> **Recommendation for containers and cross-platform deployments:** use `IQuestPdfReportService` for PDF, `IMiniExcelReportService` / `IClosedXmlReportService` for Excel. Never reference either RDLC service on non-Windows hosts.
+
+---
+
 ## 📦 Installation
 
 ### NuGet Package Manager
@@ -57,6 +79,40 @@ dotnet add package Acontplus.Reports
   <PackageReference Include="Acontplus.Reports" Version="1.7.0" />
 </ItemGroup>
 ```
+
+---
+
+## 🔀 Service Selection Guide
+
+Use this table to pick the right service for each use-case before writing any code.
+
+| Requirement                        | Recommended service                          | Reason                                                                        |
+| ---------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| PDF from existing `.rdlc` template | `IRdlcReportService`                         | Template-driven; **Windows only** — does not run on Linux or macOS            |
+| PDF via code (no template file)    | `IQuestPdfReportService`                     | Code-first, cross-platform, fluent composition                                |
+| PDF in Linux / Docker              | `IQuestPdfReportService`                     | **Only cross-platform PDF engine** — no GDI+ required                         |
+| PDF for thermal/receipt printer    | `IRdlcPrinterService` + `IRdlcReportService` | Direct Windows printing; Windows 6.1+ only                                    |
+| Bulk data download (CSV/Excel)     | `IMiniExcelReportService`                    | Streaming — constant memory regardless of row count; fastest for large tables |
+| Large DataTable API export         | `IMiniExcelReportService`                    | Minimal allocations; no in-memory DOM                                         |
+| POCO collection export             | `IMiniExcelReportService`                    | Native generic serialisation via `GenerateFromObjectsAsync<T>`                |
+| Formatted report for end users     | `IClosedXmlReportService`                    | Corporate styles, freeze panes, AutoFilter, formula totals                    |
+| Invoice / statement / dashboard    | `IClosedXmlReportService`                    | Rich formatting; users can open and edit the resulting workbook               |
+| Multi-sheet analytical workbook    | Both work; prefer `IClosedXmlReportService`  | ClosedXML adds per-sheet styles and formula rows; MiniExcel for raw data only |
+| Cross-platform Excel in containers | Either Excel service                         | Both are fully cross-platform; no native dependencies                         |
+
+### Quick decision diagram
+
+```
+Do you need PDF?
+├─ Yes — Do you have an .rdlc template?
+│   ├─ Yes, Windows only → IRdlcReportService
+│   └─ No, or cross-platform → IQuestPdfReportService  ← preferred
+└─ No — Do you need Excel?
+    ├─ Bulk / large data / POCO collection → IMiniExcelReportService
+    └─ Formatted report / corporate styles / formulas → IClosedXmlReportService
+```
+
+---
 
 ## 🎯 Quick Start
 
@@ -123,6 +179,10 @@ Ensure your RDLC files are included in your project:
 ## 📖 Comprehensive Usage Guide
 
 ### Report Generation Service
+
+> **Platform: Windows only ✅ / Linux ❌ / macOS ❌ / Docker ❌.**
+> `IRdlcReportService` depends on `ReportViewerCore.NETCore` (GDI+) and does not run on Linux or macOS.
+> For cross-platform PDF generation use `IQuestPdfReportService` instead.
 
 The `IRdlcReportService` provides methods for generating reports in various formats.
 
@@ -283,6 +343,8 @@ public class InvoiceController : ControllerBase
 ```
 
 ### Printer Service
+
+> **Platform: Windows 6.1+ only.** `IRdlcPrinterService` is only registered when `OperatingSystem.IsWindowsVersionAtLeast(6, 1)` returns `true`. Do **not** inject or resolve this service on Linux or macOS — it will not be available in the DI container.
 
 The `IRdlcPrinterService` enables direct printing to thermal printers, receipt printers, or standard printers.
 
@@ -463,7 +525,9 @@ public async Task<Dictionary<string, byte[]>> GenerateMultiFormatReport(
 
 ## 🎨 QuestPDF Dynamic PDF Generation
 
-`IQuestPdfReportService` provides code-first, fluent PDF generation via **QuestPDF 2026.x** — no RDLC templates, no design-time files. Reports are programmatically composed from typed request objects and rendered on any platform (.NET 10 / Linux / Windows / macOS).
+> **Platform:** Windows ✅ · Linux ✅ · macOS ✅ · Docker ✅ — **fully cross-platform, no native dependencies.**
+
+`IQuestPdfReportService` provides code-first, fluent PDF generation via **QuestPDF 2026.x** — no RDLC templates, no design-time files. Reports are programmatically composed from typed request objects and rendered on any platform (.NET 10 / Linux / Windows / macOS). This is the **recommended PDF engine** for containerized and cloud-native workloads.
 
 ### QuestPDF License
 
@@ -805,11 +869,12 @@ ColorTheme = new QuestPdfColorTheme
 
 ## � Excel Report Generation
 
-The library ships two complementary Excel engines. Choose based on your requirements:
+The library ships two complementary Excel engines. Both are **fully cross-platform** (Windows ✅ · Linux ✅ · macOS ✅ · Docker ✅) with no GDI+ or COM dependencies. Choose based on your requirements:
 
 | Feature            | `IMiniExcelReportService`                               | `IClosedXmlReportService`                           |
 | ------------------ | ------------------------------------------------------- | --------------------------------------------------- |
 | Engine             | [MiniExcel](https://github.com/mini-software/MiniExcel) | [ClosedXML](https://github.com/ClosedXML/ClosedXML) |
+| Platform           | ✅ Cross-platform                                       | ✅ Cross-platform                                   |
 | Memory model       | Streaming (no DOM)                                      | In-memory workbook                                  |
 | Best for           | Bulk data, large tables, APIs                           | Reports, invoices, dashboards                       |
 | Corporate styles   | ❌                                                      | ✅                                                  |
