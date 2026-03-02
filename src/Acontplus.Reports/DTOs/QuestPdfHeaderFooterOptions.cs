@@ -28,4 +28,19 @@ public class QuestPdfHeaderFooterOptions
 
     /// <summary>Font size for header/footer text (default: 8)</summary>
     public float FontSize { get; set; } = 8f;
+
+    // ── In-memory logo ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// In-memory logo bytes (PNG/JPEG/GIF).
+    /// Takes priority over <see cref="LogoPath"/> when set.
+    /// Equivalent to the RDLC <c>Source=Database</c> / <c>Parameters!logo.Value</c> pattern.
+    /// </summary>
+    public byte[]? LogoBytes { get; set; }
+
+    /// <summary>
+    /// MIME type of <see cref="LogoBytes"/> (e.g. <c>"image/png"</c>).
+    /// Optional — QuestPDF auto-detects the image format from the stream.
+    /// </summary>
+    public string? LogoMimeType { get; set; }
 }

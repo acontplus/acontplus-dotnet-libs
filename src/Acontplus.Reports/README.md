@@ -760,16 +760,27 @@ var receipt = await _pdf.GenerateAsync(request, ct);
 
 #### `QuestPdfDocumentSettings`
 
-| Property          | Default                                  | Description                                           |
-| ----------------- | ---------------------------------------- | ----------------------------------------------------- |
-| `PageSize`        | `A4`                                     | Page size preset                                      |
-| `Orientation`     | `Portrait`                               | Portrait or Landscape                                 |
-| `FontFamily`      | `"Helvetica"`                            | Default font family                                   |
-| `FontSize`        | `9f`                                     | Default body font size (pt)                           |
-| `ShowPageNumbers` | `true`                                   | Auto page number footer                               |
-| `ShowTimestamp`   | `false`                                  | Show UTC timestamp in footer                          |
-| `LicenseType`     | `Community`                              | QuestPDF license tier                                 |
-| `ColorTheme`      | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
+| Property            | Default                                  | Description                                           |
+| ------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `PageSize`          | `A4`                                     | Page size preset                                      |
+| `Orientation`       | `Portrait`                               | Portrait or Landscape                                 |
+| `FontFamily`        | `"Helvetica"`                            | Default font family                                   |
+| `FontSize`          | `9f`                                     | Default body font size (pt)                           |
+| `ShowPageNumbers`   | `true`                                   | Auto page number footer                               |
+| `ShowTimestamp`     | `false`                                  | Show UTC timestamp in footer                          |
+| `ShowWatermark`     | `false`                                  | Enable diagonal watermark overlay                     |
+| `WatermarkText`     | `null`                                   | Watermark text (requires `ShowWatermark = true`)      |
+| `WatermarkFontSize` | `80f`                                    | **New v1.8.0.** Watermark font size in points         |
+| `WatermarkColor`    | `"#EEEEEE"`                              | **New v1.8.0.** Watermark text colour (HTML hex)      |
+| `LicenseType`       | `Community`                              | QuestPDF license tier                                 |
+| `ColorTheme`        | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
+
+#### `QuestPdfHeaderFooterOptions` — new v1.8.0 logo properties
+
+| Property       | Default | Description                                                                                                                                        |
+| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LogoBytes`    | `null`  | **New v1.8.0.** Logo image bytes — bypasses the file system entirely. Takes priority over `LogoPath`. Ideal when the logo is stored in a database. |
+| `LogoMimeType` | `null`  | MIME type hint for `LogoBytes` (e.g. `"image/png"`).                                                                                               |
 
 #### Color Themes
 
@@ -832,25 +843,117 @@ ColorTheme = new QuestPdfColorTheme
 
 #### `QuestPdfTableColumn`
 
-| Property        | Default  | Description                                        |
-| --------------- | -------- | -------------------------------------------------- |
-| `ColumnName`    | required | DataTable column name                              |
-| `Header`        | `null`   | Display label (uses ColumnName if null)            |
-| `RelativeWidth` | `null`   | Proportional width (auto-split if null)            |
-| `Alignment`     | `Left`   | Cell text alignment                                |
-| `Format`        | `null`   | .NET format string: `"C2"`, `"N0"`, `"yyyy-MM-dd"` |
-| `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`              |
-| `IsBold`        | `false`  | Bold cell text                                     |
-| `IsHidden`      | `false`  | Exclude from output                                |
+| Property        | Default  | Description                                                                                                 |
+| --------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `ColumnName`    | required | DataTable column name (ignored when `IsGroupHeader = true`)                                                 |
+| `Header`        | `null`   | Display label (uses ColumnName if null)                                                                     |
+| `RelativeWidth` | `null`   | Proportional width (auto-split if null)                                                                     |
+| `Alignment`     | `Left`   | Cell text alignment                                                                                         |
+| `Format`        | `null`   | .NET format string: `"C2"`, `"N0"`, `"yyyy-MM-dd"`                                                          |
+| `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`                                                                       |
+| `IsBold`        | `false`  | Bold cell text                                                                                              |
+| `IsHidden`      | `false`  | Exclude from output                                                                                         |
+| `IsGroupHeader` | `false`  | **New v1.8.0.** Renders as a band/group header row spanning `ColumnSpan` columns. No `ColumnName` required. |
+| `ColumnSpan`    | `1`      | **New v1.8.0.** Number of data columns this band header spans (used only when `IsGroupHeader = true`).      |
+
+> **Grouped-header layout (Kardex-style):** Mix normal `QuestPdfTableColumn` entries with group-header descriptors (`IsGroupHeader = true, ColumnSpan = N`). Group descriptors appear as a coloured band row _above_ the normal header row, spanning the stated number of data columns left-to-right in the order they are declared.
 
 #### `QuestPdfSection` types
 
-| `Type`            | Required properties | Description                                    |
-| ----------------- | ------------------- | ---------------------------------------------- |
-| `DataTable`       | `Data`              | Renders a `DataTable` as a themed grid         |
-| `Text`            | `TextBlocks`        | Renders a list of formatted text blocks        |
-| `KeyValueSummary` | `KeyValues`         | Renders a two-column label/value panel         |
-| `Custom`          | `CustomComposer`    | Full control via `Action<IContainer>` delegate |
+| `Type`            | Required properties                                        | Description                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DataTable`       | `Data`                                                     | Renders a `DataTable` as a themed grid                                                                                                      |
+| `Text`            | `TextBlocks`                                               | Renders a list of formatted text blocks                                                                                                     |
+| `KeyValueSummary` | `KeyValues`                                                | Renders a two-column label/value panel                                                                                                      |
+| `Custom`          | `CustomComposer`                                           | Full control via `Action<IContainer>` delegate                                                                                              |
+| `Image`           | `ImageBytes`                                               | **New v1.8.0.** Renders a raw image (`byte[]`) with optional max width/height and alignment.                                                |
+| `Barcode`         | `BarcodeText` or `BarcodeBytes`                            | **New v1.8.0.** Generates a Code-128 or QR code image via `Acontplus.Barcode`.                                                              |
+| `MasterDetail`    | `Data`, `DetailData`, `MasterKeyColumn`, `DetailKeyColumn` | **New v1.8.0.** Master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern).                                |
+| `TwoColumn`       | `LeftContentType`, `RightSection`                          | **New v1.8.0.** Side-by-side columns; left renders the parent section using `LeftContentType`, right renders an independent `RightSection`. |
+| `InvoiceHeader`   | `InvoiceHeader`                                            | **New v1.8.0.** SRI Ecuador–style invoice header: company block (left) + SRI auth box (right) + buyer band (bottom).                        |
+
+##### `QuestPdfSection` — new v1.8.0 property groups
+
+**Image properties** (`Type = Image`)
+
+| Property         | Default | Description                              |
+| ---------------- | ------- | ---------------------------------------- |
+| `ImageBytes`     | `null`  | Raw image bytes                          |
+| `ImageMaxHeight` | `80f`   | Maximum height in points                 |
+| `ImageMaxWidth`  | `160f`  | Maximum width in points (`0` = no limit) |
+| `ImageAlignment` | `Left`  | Cell alignment                           |
+
+**Barcode properties** (`Type = Barcode`)
+
+| Property             | Default   | Description                                                    |
+| -------------------- | --------- | -------------------------------------------------------------- |
+| `BarcodeText`        | `null`    | Source text — barcode is generated at render time              |
+| `BarcodeBytes`       | `null`    | Pre-rendered barcode image (takes priority over `BarcodeText`) |
+| `BarcodeType`        | `Code128` | `QuestPdfBarcodeType.Code128` or `QrCode`                      |
+| `BarcodeWidth`       | `120f`    | Rendered width in points                                       |
+| `BarcodeHeight`      | `50f`     | Rendered height in points                                      |
+| `BarcodeAlignment`   | `Center`  | Alignment inside the container                                 |
+| `ShowBarcodeCaption` | `false`   | Include human-readable text label below the barcode            |
+
+**MasterDetail properties** (`Type = MasterDetail`)
+
+| Property              | Default | Description                                   |
+| --------------------- | ------- | --------------------------------------------- |
+| `MasterKeyColumn`     | `null`  | Column in `Data` used as join key             |
+| `DetailKeyColumn`     | `null`  | Column in `DetailData` used as join key       |
+| `DetailData`          | `null`  | DataTable containing the detail rows          |
+| `DetailColumns`       | `null`  | Column definitions for the detail sub-table   |
+| `DetailSectionTitle`  | `null`  | Optional heading above each detail sub-table  |
+| `ShowDetailTotalsRow` | `false` | Show aggregate totals on the detail sub-table |
+
+**TwoColumn properties** (`Type = TwoColumn`)
+
+| Property           | Default     | Description                                                                                     |
+| ------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
+| `LeftContentType`  | `DataTable` | Section type to render in the left column (uses the parent section's data/keyvalues/textblocks) |
+| `RightSection`     | `null`      | Fully independent `QuestPdfSection` rendered in the right column                                |
+| `LeftColumnRatio`  | `1`         | Proportional width of the left column                                                           |
+| `RightColumnRatio` | `1`         | Proportional width of the right column                                                          |
+| `TwoColumnGap`     | `8f`        | Gap in points between the two columns                                                           |
+
+#### `QuestPdfInvoiceHeader` (new v1.8.0)
+
+Used by `Type = InvoiceHeader` — models the standard SRI Ecuador electronic invoice header layout.
+
+| Property                | Default     | Description                                                          |
+| ----------------------- | ----------- | -------------------------------------------------------------------- |
+| `LogoBytes`             | `null`      | Company logo from database / memory (takes priority over `LogoPath`) |
+| `LogoPath`              | `null`      | Company logo from file system                                        |
+| `LogoMaxHeight`         | `50f`       | Maximum logo height in points                                        |
+| `CompanyName`           | `null`      | Legal company name                                                   |
+| `TradeName`             | `null`      | Commercial name                                                      |
+| `CompanyAddress`        | `null`      | Registered address                                                   |
+| `BranchAddress`         | `null`      | Branch / establishment address                                       |
+| `CompanyPhone`          | `null`      | Contact phone                                                        |
+| `CompanyEmail`          | `null`      | Contact e-mail                                                       |
+| `CompanyActivity`       | `null`      | Commercial activity                                                  |
+| `ContribuyenteEspecial` | `null`      | SRI special contributor number                                       |
+| `ObligadoContabilidad`  | `null`      | `"SI"` / `"NO"`                                                      |
+| `ContribuyenteRimpe`    | `null`      | RIMPE regime label                                                   |
+| `AgenteRetencion`       | `null`      | Retention agent resolution                                           |
+| `Ruc`                   | `null`      | RUC (tax ID)                                                         |
+| `DocumentType`          | `null`      | Document type label e.g. `"FACTURA"`                                 |
+| `DocumentNumber`        | `null`      | Sequential number `001-001-000000042`                                |
+| `AuthorizationNumber`   | `null`      | SRI authorization number                                             |
+| `AuthorizationDate`     | `null`      | Authorization date/time string                                       |
+| `AccessKey`             | `null`      | 49-character SRI access key                                          |
+| `Environment`           | `null`      | `"PRODUCCIÓN"` / `"PRUEBAS"`                                         |
+| `EmissionType`          | `null`      | `"EMISIÓN NORMAL"`                                                   |
+| `BuyerName`             | `null`      | Buyer legal name                                                     |
+| `BuyerIdentification`   | `null`      | Buyer RUC / CI                                                       |
+| `BuyerAddress`          | `null`      | Buyer address                                                        |
+| `EmissionDate`          | `null`      | Emission date string                                                 |
+| `DeliveryReference`     | `null`      | Dispatch / remission guide number                                    |
+| `ExtraFields`           | `{}`        | Additional buyer-block key-value pairs                               |
+| `LeftPanelRatio`        | `6`         | Proportional width of company block                                  |
+| `RightPanelRatio`       | `4`         | Proportional width of SRI auth box                                   |
+| `AuthBoxBorderColor`    | `"#d61672"` | Border colour of the SRI auth box                                    |
+| `FontSize`              | `8f`        | Base font size in points                                             |
 
 #### Page Sizes
 
@@ -1117,6 +1220,8 @@ AdvancedExcelHeaderStyle.CorporateBlue()  // default — dark blue bg, white tex
 AdvancedExcelHeaderStyle.DarkGreen()      // forest green bg, white text
 AdvancedExcelHeaderStyle.DarkGrey()       // charcoal bg, white text
 AdvancedExcelHeaderStyle.LightBlue()      // pastel blue bg, navy text
+AdvancedExcelHeaderStyle.Title()          // NEW v1.8.0 — white bg, dark-navy text, 14pt; used for ReportTitle / ReportSubTitle rows
+AdvancedExcelHeaderStyle.GroupHeader()    // NEW v1.8.0 — mid-blue bg, white text, 10pt; used for GroupHeaders band row
 
 // Or full customisation
 new AdvancedExcelHeaderStyle
@@ -1127,6 +1232,52 @@ new AdvancedExcelHeaderStyle
     FontSize           = 12,
     HorizontalAlignment = ExcelHorizontalAlignment.Left
 };
+```
+
+#### `AdvancedExcelWorksheetDefinition` — new v1.8.0 properties
+
+| Property           | Type                              | Default                | Description                                                                |
+| ------------------ | --------------------------------- | ---------------------- | -------------------------------------------------------------------------- |
+| `ReportTitle`      | `string?`                         | `null`                 | Optional merged title row rendered above all header rows.                  |
+| `ReportSubTitle`   | `string?`                         | `null`                 | Optional merged subtitle row rendered directly below the title.            |
+| `TitleStyle`       | `AdvancedExcelHeaderStyle?`       | `null → Title()`       | Style applied to title and subtitle rows.                                  |
+| `GroupHeaders`     | `List<AdvancedExcelGroupHeader>?` | `null`                 | Band-header descriptors that span one or more data columns (Kardex-style). |
+| `GroupHeaderStyle` | `AdvancedExcelHeaderStyle?`       | `null → GroupHeader()` | Style applied to the group-header band row.                                |
+
+#### `AdvancedExcelGroupHeader` (new v1.8.0)
+
+| Property           | Type              | Description                                        |
+| ------------------ | ----------------- | -------------------------------------------------- |
+| `Title`            | required `string` | Label displayed in the merged band cell.           |
+| `StartColumnIndex` | required `int`    | First column (1-based, inclusive) the band covers. |
+| `EndColumnIndex`   | required `int`    | Last column (1-based, inclusive) the band covers.  |
+
+> **Row order with title/subtitle/group headers:**
+> `ReportTitle` row → `ReportSubTitle` row → `GroupHeaders` row → Column header row → Data rows → Aggregate totals row.
+> `FreezeRows` and `SetAutoFilter` are automatically applied to the column header row, regardless of how many rows precede it.
+
+##### ClosedXML Kardex example
+
+```csharp
+new AdvancedExcelWorksheetDefinition
+{
+    Name            = "Kardex",
+    Data            = kardexTable,
+    ReportTitle     = "KARDEX — PRD-007: SSD 1TB NVMe",
+    ReportSubTitle  = "Período: Enero 2026  |  Método: Promedio Ponderado",
+    TitleStyle      = AdvancedExcelHeaderStyle.Title(),
+    GroupHeaders    =
+    [
+        new AdvancedExcelGroupHeader { Title = "ENTRADAS", StartColumnIndex = 4, EndColumnIndex = 6 },
+        new AdvancedExcelGroupHeader { Title = "SALIDAS",  StartColumnIndex = 7, EndColumnIndex = 9 },
+        new AdvancedExcelGroupHeader { Title = "SALDO",    StartColumnIndex = 10, EndColumnIndex = 12 }
+    ],
+    GroupHeaderStyle  = AdvancedExcelHeaderStyle.GroupHeader(),
+    AutoFilter        = true,
+    FreezeHeaderRow   = true,
+    IncludeAggregateRow = true,
+    Columns = [ /* 12 column definitions */ ]
+}
 ```
 
 #### `ExcelAggregateType` values
@@ -1475,6 +1626,21 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 ---
 
 ## 📋 Changelog
+
+### v1.8.0
+
+- **New** `QuestPdfSectionType.InvoiceHeader` — SRI Ecuador–style invoice header section (`QuestPdfInvoiceHeader` DTO): company block (left), SRI auth box with border (right), buyer band (bottom)
+- **New** `QuestPdfSectionType.Image` — raw `byte[]` image section with configurable max dimensions and alignment
+- **New** `QuestPdfSectionType.Barcode` — Code-128 / QR code section generated from text via `Acontplus.Barcode` (`QuestPdfBarcodeType` enum)
+- **New** `QuestPdfSectionType.MasterDetail` — master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern)
+- **New** `QuestPdfSectionType.TwoColumn` — side-by-side layout with independent left/right content, configurable column ratios and gap
+- **New** `QuestPdfTableColumn.IsGroupHeader` / `ColumnSpan` — grouped / band header rows in DataTable (Kardex pattern: Entradas | Salidas | Saldo)
+- **New** `QuestPdfHeaderFooterOptions.LogoBytes` + `LogoMimeType` — logo from `byte[]` instead of file path (database-sourced logos)
+- **New** `QuestPdfDocumentSettings.WatermarkFontSize` + `WatermarkColor` — configurable watermark appearance
+- **New** `AdvancedExcelWorksheetDefinition.ReportTitle`, `ReportSubTitle`, `TitleStyle`, `GroupHeaders`, `GroupHeaderStyle` — title, subtitle and band-header rows above column headers (ClosedXML)
+- **New** `AdvancedExcelGroupHeader` DTO — describes a merge-span band header (`Title`, `StartColumnIndex`, `EndColumnIndex`)
+- **New** `AdvancedExcelHeaderStyle.Title()` and `GroupHeader()` presets
+- **Demo** — six new endpoints in `ReportsEndpoints.cs`: `sri-invoice`, `barcode`, `master-detail`, `kardex`, `two-column`, `closedxml/grouped-report`
 
 ### v1.7.0
 

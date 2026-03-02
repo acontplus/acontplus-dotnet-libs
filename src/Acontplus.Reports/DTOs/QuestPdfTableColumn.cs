@@ -31,4 +31,21 @@ public class QuestPdfTableColumn
 
     /// <summary>Optional CSS-style font weight: "bold" renders the cell text bold</summary>
     public bool IsBold { get; set; } = false;
+
+    // ── Group / band headers ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// When <see langword="true"/> this descriptor defines a group (band) header cell
+    /// rendered in a separate row <em>above</em> the normal column header row.
+    /// Group headers are used to replicate RDLC <c>ColSpan</c> grouped headers
+    /// (e.g. Kardex Entradas / Salidas / Saldo bands).
+    /// Group header entries do not correspond to DataTable columns.
+    /// </summary>
+    public bool IsGroupHeader { get; set; } = false;
+
+    /// <summary>
+    /// Number of data columns this header cell spans (default: 1).
+    /// Only meaningful when <see cref="IsGroupHeader"/> is <see langword="true"/>.
+    /// </summary>
+    public int ColumnSpan { get; set; } = 1;
 }

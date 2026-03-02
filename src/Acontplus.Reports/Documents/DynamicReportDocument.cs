@@ -4,6 +4,7 @@ using Acontplus.Utilities.Security.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using ZXing;
 
 namespace Acontplus.Reports.Documents;
 
@@ -54,6 +55,14 @@ internal sealed class DynamicReportDocument : IDocument
             page.Header().Element(ComposePageHeader);
             page.Content().Element(ComposeContent);
             page.Footer().Element(ComposePageFooter);
+
+            if (s.ShowWatermark && !string.IsNullOrWhiteSpace(s.WatermarkText))
+                page.Foreground()
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Text(s.WatermarkText)
+                    .FontSize(s.WatermarkFontSize)
+                    .FontColor(s.WatermarkColor);
         });
     }
 
@@ -101,12 +110,19 @@ internal sealed class DynamicReportDocument : IDocument
 
         wrapper.Row(row =>
         {
-            if (!string.IsNullOrWhiteSpace(header.LogoPath) && IsValidLogoPath(header.LogoPath) && File.Exists(header.LogoPath))
+            if (header.LogoBytes is { Length: > 0 })
             {
                 row.AutoItem()
                     .MaxHeight(header.LogoMaxHeight)
                     .PaddingRight(8)
-                    .Image(header.LogoPath);
+                    .Image(new MemoryStream(header.LogoBytes)).FitHeight();
+            }
+            else if (!string.IsNullOrWhiteSpace(header.LogoPath) && IsValidLogoPath(header.LogoPath) && File.Exists(header.LogoPath))
+            {
+                row.AutoItem()
+                    .MaxHeight(header.LogoMaxHeight)
+                    .PaddingRight(8)
+                    .Image(header.LogoPath).FitHeight();
             }
 
             row.RelativeItem().Column(col =>
@@ -177,25 +193,48 @@ internal sealed class DynamicReportDocument : IDocument
                 col.Item().Height(6);
             }
 
-            col.Item().Element(c =>
-            {
-                switch (section.Type)
-                {
-                    case QuestPdfSectionType.Text:
-                        ComposeTextSection(c, section);
-                        break;
-                    case QuestPdfSectionType.KeyValueSummary:
-                        ComposeKeyValueSection(c, section);
-                        break;
-                    case QuestPdfSectionType.Custom:
-                        InvokeCustomSection(c, section);
-                        break;
-                    default:
-                        ComposeDataTableSection(c, section);
-                        break;
-                }
-            });
+            col.Item().Element(c => ComposeSectionContent(c, section, section.Type));
         });
+    }
+
+    /// <summary>
+    /// Dispatches to the correct compose method based on <paramref name="renderType"/>.
+    /// Called by <see cref="ComposeSection"/> and recursively by
+    /// <see cref="ComposeTwoColumnSection"/> for each column's content.
+    /// </summary>
+    private void ComposeSectionContent(
+        IContainer container, QuestPdfSection section, QuestPdfSectionType renderType)
+    {
+        switch (renderType)
+        {
+            case QuestPdfSectionType.Text:
+                ComposeTextSection(container, section);
+                break;
+            case QuestPdfSectionType.KeyValueSummary:
+                ComposeKeyValueSection(container, section);
+                break;
+            case QuestPdfSectionType.Image:
+                ComposeImageSection(container, section);
+                break;
+            case QuestPdfSectionType.Barcode:
+                ComposeBarcodeSection(container, section);
+                break;
+            case QuestPdfSectionType.MasterDetail:
+                ComposeMasterDetailSection(container, section);
+                break;
+            case QuestPdfSectionType.TwoColumn:
+                ComposeTwoColumnSection(container, section);
+                break;
+            case QuestPdfSectionType.InvoiceHeader:
+                ComposeInvoiceHeaderSection(container, section);
+                break;
+            case QuestPdfSectionType.Custom:
+                InvokeCustomSection(container, section);
+                break;
+            default:
+                ComposeDataTableSection(container, section);
+                break;
+        }
     }
 
     // ── Section: DataTable ───────────────────────────────────────────────────
@@ -212,12 +251,20 @@ internal sealed class DynamicReportDocument : IDocument
             return;
         }
 
-        // Resolve visible columns
-        var columns = ResolveColumns(dt, section.Columns);
+        // Separate band (group) header descriptors from regular data columns
+        var allColumns = ResolveColumns(dt, section.Columns);
+        var groupHeaders = allColumns.Where(c => c.IsGroupHeader).ToList();
+        var columns = allColumns.Where(c => !c.IsGroupHeader).ToList();
+
+        if (columns.Count == 0)
+        {
+            container.Text("No columns defined.").Italic().FontColor(theme.MutedTextColor);
+            return;
+        }
 
         container.Table(table =>
         {
-            // Column definitions
+            // Column definitions — data columns only, not band descriptors
             table.ColumnsDefinition(def =>
             {
                 var totalWeight = columns.Sum(c => c.RelativeWidth ?? 1f);
@@ -225,9 +272,30 @@ internal sealed class DynamicReportDocument : IDocument
                     def.RelativeColumn(col.RelativeWidth ?? (1f / columns.Count * totalWeight));
             });
 
-            // Header row (called once; iterate columns inside the delegate)
+            // Header — optional band row first, then individual column headers
             table.Header(header =>
             {
+                // Band / group header row (e.g. Kardex: Entradas | Salidas | Saldo)
+                if (groupHeaders.Count > 0)
+                {
+                    foreach (var grp in groupHeaders)
+                    {
+                        var span = (uint)Math.Max(1, Math.Min(grp.ColumnSpan, columns.Count));
+                        header.Cell()
+                            .ColumnSpan(span)
+                            .Background(theme.AccentColor)
+                            .Border(1)
+                            .BorderColor(theme.HeaderBackground)
+                            .Padding(4)
+                            .AlignCenter()
+                            .Text(grp.Header ?? string.Empty)
+                            .FontSize(s.TableHeaderFontSize)
+                            .Bold()
+                            .FontColor("#FFFFFF");
+                    }
+                }
+
+                // Normal column header row
                 foreach (var col in columns)
                 {
                     header.Cell()
@@ -367,6 +435,408 @@ internal sealed class DynamicReportDocument : IDocument
             container.Text("Custom section composer not configured.").Italic();
     }
 
+    // ── Section: Image ───────────────────────────────────────────────────────
+
+    private void ComposeImageSection(IContainer container, QuestPdfSection section)
+    {
+        var theme = _request.Settings.ColorTheme;
+
+        if (section.ImageBytes is not { Length: > 0 })
+        {
+            container.Text("Image not available.").Italic().FontColor(theme.MutedTextColor);
+            return;
+        }
+
+        IContainer aligned = section.ImageAlignment switch
+        {
+            QuestPdfColumnAlignment.Center => container.AlignCenter(),
+            QuestPdfColumnAlignment.Right => container.AlignRight(),
+            _ => container.AlignLeft()
+        };
+
+        IContainer sized = section.ImageMaxWidth > 0 ? aligned.MaxWidth(section.ImageMaxWidth) : aligned;
+
+        if (section.ImageMaxHeight > 0)
+            sized.MaxHeight(section.ImageMaxHeight).Image(new MemoryStream(section.ImageBytes));
+        else
+            sized.Image(new MemoryStream(section.ImageBytes));
+    }
+
+    // ── Section: Barcode ─────────────────────────────────────────────────────
+
+    private void ComposeBarcodeSection(IContainer container, QuestPdfSection section)
+    {
+        var theme = _request.Settings.ColorTheme;
+        byte[] barcodeBytes;
+
+        if (section.BarcodeBytes is { Length: > 0 })
+        {
+            barcodeBytes = section.BarcodeBytes;
+        }
+        else if (!string.IsNullOrWhiteSpace(section.BarcodeText))
+        {
+            try
+            {
+                var cfg = new BarcodeConfig
+                {
+                    Text = section.BarcodeText,
+                    Format = section.BarcodeType == QuestPdfBarcodeType.QrCode
+                                       ? BarcodeFormat.QR_CODE
+                                       : BarcodeFormat.CODE_128,
+                    Width = section.BarcodeWidth > 0 ? (int)section.BarcodeWidth * 3 : 900,
+                    Height = section.BarcodeHeight > 0 ? (int)section.BarcodeHeight * 3 : 150,
+                    IncludeLabel = section.ShowBarcodeCaption
+                };
+                barcodeBytes = BarcodeGen.Create(cfg);
+            }
+            catch
+            {
+                container.Text("Barcode generation failed.").Italic().FontColor(theme.MutedTextColor);
+                return;
+            }
+        }
+        else
+        {
+            container.Text("No barcode data.").Italic().FontColor(theme.MutedTextColor);
+            return;
+        }
+
+        IContainer aligned = section.BarcodeAlignment switch
+        {
+            QuestPdfColumnAlignment.Center => container.AlignCenter(),
+            QuestPdfColumnAlignment.Right => container.AlignRight(),
+            _ => container.AlignLeft()
+        };
+
+        IContainer sized = section.BarcodeWidth > 0
+            ? aligned.MaxWidth(section.BarcodeWidth).MaxHeight(section.BarcodeHeight)
+            : aligned.MaxHeight(section.BarcodeHeight);
+
+        sized.Image(new MemoryStream(barcodeBytes));
+    }
+
+    // ── Section: MasterDetail ────────────────────────────────────────────────
+
+    private void ComposeMasterDetailSection(IContainer container, QuestPdfSection section)
+    {
+        var dt = section.Data;
+        var theme = _request.Settings.ColorTheme;
+
+        if (dt is null || dt.Rows.Count == 0)
+        {
+            container.Text("No data available.").Italic().FontColor(theme.MutedTextColor);
+            return;
+        }
+
+        var allMasterCols = ResolveColumns(dt, section.Columns);
+        var masterCols = allMasterCols.Where(c => !c.IsGroupHeader).ToList();
+
+        container.Column(col =>
+        {
+            foreach (DataRow masterRow in dt.Rows)
+                col.Item().Element(c => ComposeMasterRow(c, masterRow, masterCols, section));
+        });
+    }
+
+    private void ComposeMasterRow(
+        IContainer container,
+        DataRow masterRow,
+        List<QuestPdfTableColumn> masterCols,
+        QuestPdfSection section)
+    {
+        var theme = _request.Settings.ColorTheme;
+        var s = _request.Settings;
+
+        container.Column(col =>
+        {
+            // Master row as a colored header band with key+value pairs
+            col.Item()
+                .Background(theme.HeaderBackground)
+                .Padding(5)
+                .Row(row =>
+                {
+                    foreach (var mc in masterCols)
+                    {
+                        var val = FormatCellValue(masterRow[mc.ColumnName], mc.Format);
+                        row.RelativeItem().Column(c2 =>
+                        {
+                            c2.Item().Text(mc.Header ?? mc.ColumnName)
+                                .FontSize(7).Bold().FontColor(theme.HeaderForeground);
+                            c2.Item().Text(val)
+                                .FontSize(s.FontSize).FontColor(theme.HeaderForeground);
+                        });
+                    }
+                });
+
+            // Filtered detail sub-table
+            if (section.DetailData is { Rows.Count: > 0 }
+                && !string.IsNullOrWhiteSpace(section.MasterKeyColumn)
+                && !string.IsNullOrWhiteSpace(section.DetailKeyColumn))
+            {
+                var masterKey = masterRow[section.MasterKeyColumn]?.ToString();
+                var filtered = section.DetailData.Rows.Cast<DataRow>()
+                    .Where(r => r[section.DetailKeyColumn]?.ToString() == masterKey)
+                    .ToList();
+
+                if (filtered.Count > 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(section.DetailSectionTitle))
+                        col.Item().PaddingLeft(8).PaddingTop(2)
+                            .Text(section.DetailSectionTitle)
+                            .FontSize(7).Italic().FontColor(theme.MutedTextColor);
+
+                    var detailSection = new QuestPdfSection
+                    {
+                        Data = CreateFilteredTable(section.DetailData, filtered),
+                        Columns = section.DetailColumns,
+                        ShowTotalsRow = section.ShowDetailTotalsRow
+                    };
+
+                    col.Item().PaddingLeft(8).Element(c => ComposeDataTableSection(c, detailSection));
+                }
+            }
+
+            col.Item().Height(4); // gap between master rows
+        });
+    }
+
+    private static DataTable CreateFilteredTable(DataTable original, List<DataRow> rows)
+    {
+        var clone = original.Clone(); // same schema, no rows
+        foreach (var r in rows)
+            clone.ImportRow(r);
+        return clone;
+    }
+
+    // ── Section: TwoColumn ───────────────────────────────────────────────────
+
+    private void ComposeTwoColumnSection(IContainer container, QuestPdfSection section)
+    {
+        container.Row(row =>
+        {
+            row.RelativeItem(section.LeftColumnRatio)
+               .PaddingRight(section.TwoColumnGap / 2)
+               .Element(c => ComposeSectionContent(c, section, section.LeftContentType));
+
+            if (section.RightSection is not null)
+                row.RelativeItem(section.RightColumnRatio)
+                   .PaddingLeft(section.TwoColumnGap / 2)
+                   .Element(c => ComposeSectionContent(c, section.RightSection, section.RightSection.Type));
+        });
+    }
+
+    // ── Section: InvoiceHeader ───────────────────────────────────────────────
+
+    private void ComposeInvoiceHeaderSection(IContainer container, QuestPdfSection section)
+    {
+        if (section.InvoiceHeader is null)
+        {
+            container.Text("InvoiceHeader not configured.").Italic();
+            return;
+        }
+
+        var inv = section.InvoiceHeader;
+        var theme = _request.Settings.ColorTheme;
+        var s = _request.Settings;
+
+        container.Column(mainCol =>
+        {
+            // Row 1: company info (left) + SRI authorization box (right)
+            mainCol.Item().Row(row =>
+            {
+                row.RelativeItem(inv.LeftPanelRatio)
+                   .PaddingRight(4)
+                   .Element(c => ComposeInvoiceCompanyBlock(c, inv, theme, s));
+
+                row.RelativeItem(inv.RightPanelRatio)
+                   .Element(c => ComposeInvoiceAuthBox(c, inv, theme, s));
+            });
+
+            // Row 2: buyer information
+            mainCol.Item().PaddingTop(4)
+                   .Element(c => ComposeInvoiceBuyerBlock(c, inv, theme, s));
+        });
+    }
+
+    private static void ComposeInvoiceCompanyBlock(
+        IContainer container, QuestPdfInvoiceHeader inv,
+        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+    {
+        container.Column(col =>
+        {
+            if (inv.LogoBytes is { Length: > 0 })
+                col.Item().MaxHeight(inv.LogoMaxHeight).MaxWidth(inv.LogoMaxHeight * 4).AlignLeft()
+                   .Image(new MemoryStream(inv.LogoBytes)).FitArea();
+            else if (!string.IsNullOrWhiteSpace(inv.LogoPath) && File.Exists(inv.LogoPath))
+                col.Item().MaxHeight(inv.LogoMaxHeight).MaxWidth(inv.LogoMaxHeight * 4).AlignLeft()
+                   .Image(inv.LogoPath).FitArea();
+
+            if (!string.IsNullOrWhiteSpace(inv.CompanyName))
+                col.Item().Text(inv.CompanyName)
+                   .FontSize(inv.FontSize + 1).Bold().FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.TradeName))
+                col.Item().Text(inv.TradeName)
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.CompanyAddress))
+                col.Item().Text(inv.CompanyAddress)
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.BranchAddress))
+                col.Item().Text(inv.BranchAddress)
+                   .FontSize(inv.FontSize).FontColor(theme.MutedTextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.CompanyPhone))
+                col.Item().Text($"Tel: {inv.CompanyPhone}")
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.CompanyEmail))
+                col.Item().Text(inv.CompanyEmail)
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.CompanyActivity))
+                col.Item().Text(inv.CompanyActivity)
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.ContribuyenteEspecial))
+                col.Item().Text($"Contribuyente Especial: {inv.ContribuyenteEspecial}")
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.ObligadoContabilidad))
+                col.Item().Text($"Obligado a llevar Contabilidad: {inv.ObligadoContabilidad}")
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.ContribuyenteRimpe))
+                col.Item().Text($"Contribuyente RIMPE: {inv.ContribuyenteRimpe}")
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+
+            if (!string.IsNullOrWhiteSpace(inv.AgenteRetencion))
+                col.Item().Text($"Agente de Retenci\u00f3n: {inv.AgenteRetencion}")
+                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+        });
+    }
+
+    private static void ComposeInvoiceAuthBox(
+        IContainer container, QuestPdfInvoiceHeader inv,
+        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+    {
+        container
+            .Border(1)
+            .BorderColor(inv.AuthBoxBorderColor)
+            .Padding(5)
+            .Column(col =>
+            {
+                InvoiceAuthRow(col, "RUC:", inv.Ruc, inv.FontSize, theme);
+
+                if (!string.IsNullOrWhiteSpace(inv.DocumentType))
+                    col.Item().AlignCenter().PaddingBottom(2)
+                       .Text(inv.DocumentType)
+                       .FontSize(inv.FontSize + 1).Bold().FontColor(theme.TextColor);
+
+                InvoiceAuthRow(col, "N\u00famero:", inv.DocumentNumber, inv.FontSize, theme);
+                InvoiceAuthRow(col, "N\u00ba Autorizaci\u00f3n:", inv.AuthorizationNumber, inv.FontSize, theme);
+                InvoiceAuthRow(col, "Fecha Autorizaci\u00f3n:", inv.AuthorizationDate, inv.FontSize, theme);
+                InvoiceAuthRow(col, "Ambiente:", inv.Environment, inv.FontSize, theme);
+                InvoiceAuthRow(col, "Tipo de Emisi\u00f3n:", inv.EmissionType, inv.FontSize, theme);
+
+                if (!string.IsNullOrWhiteSpace(inv.AccessKey))
+                {
+                    col.Item().PaddingTop(3).Text("Clave de Acceso:")
+                       .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                    col.Item().Text(inv.AccessKey)
+                       .FontSize(inv.FontSize - 2).FontColor(theme.MutedTextColor);
+                }
+            });
+    }
+
+    private static void InvoiceAuthRow(
+        ColumnDescriptor col, string label, string? value,
+        float fontSize, QuestPdfColorTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        col.Item().Row(r =>
+        {
+            r.RelativeItem(2).Text(label).FontSize(fontSize - 1).Bold().FontColor(theme.TextColor);
+            r.RelativeItem(3).Text(value).FontSize(fontSize - 1).FontColor(theme.TextColor);
+        });
+    }
+
+    private static void ComposeInvoiceBuyerBlock(
+        IContainer container, QuestPdfInvoiceHeader inv,
+        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+    {
+        container
+            .Border(1)
+            .BorderColor(inv.AuthBoxBorderColor)
+            .Padding(5)
+            .Column(col =>
+            {
+                col.Item().Row(row =>
+                {
+                    if (!string.IsNullOrWhiteSpace(inv.BuyerName))
+                        row.RelativeItem(3).Column(c2 =>
+                        {
+                            c2.Item().Text("Raz\u00f3n Social / Nombres:")
+                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                            c2.Item().Text(inv.BuyerName)
+                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                        });
+
+                    if (!string.IsNullOrWhiteSpace(inv.EmissionDate))
+                        row.RelativeItem(1).Column(c2 =>
+                        {
+                            c2.Item().Text("Fecha de Emisi\u00f3n:")
+                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                            c2.Item().Text(inv.EmissionDate)
+                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                        });
+                });
+
+                col.Item().Row(row =>
+                {
+                    if (!string.IsNullOrWhiteSpace(inv.BuyerIdentification))
+                        row.RelativeItem().Column(c2 =>
+                        {
+                            c2.Item().Text("Identificaci\u00f3n:")
+                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                            c2.Item().Text(inv.BuyerIdentification)
+                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                        });
+
+                    if (!string.IsNullOrWhiteSpace(inv.DeliveryReference))
+                        row.RelativeItem().Column(c2 =>
+                        {
+                            c2.Item().Text("Gu\u00eda de Remisi\u00f3n:")
+                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                            c2.Item().Text(inv.DeliveryReference)
+                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                        });
+                });
+
+                if (!string.IsNullOrWhiteSpace(inv.BuyerAddress))
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c2 =>
+                        {
+                            c2.Item().Text("Direcci\u00f3n:")
+                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                            c2.Item().Text(inv.BuyerAddress)
+                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                        });
+                    });
+
+                foreach (var kv in inv.ExtraFields)
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Text(kv.Key)
+                           .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
+                        row.RelativeItem(3).Text(kv.Value)
+                           .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                    });
+            });
+    }
+
     // ── Page Footer ──────────────────────────────────────────────────────────
 
     private void ComposePageFooter(IContainer container)
@@ -476,9 +946,9 @@ internal sealed class DynamicReportDocument : IDocument
                 .ToList();
         }
 
-        // Use explicit definitions, preserving order and hiding hidden ones
+        // Group-header descriptors have no matching DataTable column; regular columns must exist
         return requested
-            .Where(c => !c.IsHidden && dt.Columns.Contains(c.ColumnName))
+            .Where(c => c.IsGroupHeader || (!c.IsHidden && dt.Columns.Contains(c.ColumnName)))
             .ToList();
     }
 

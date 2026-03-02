@@ -58,4 +58,40 @@ public class AdvancedExcelWorksheetDefinition
     /// Enable text wrapping for all data cells in this worksheet (default: <see langword="false"/>).
     /// </summary>
     public bool WrapText { get; set; } = false;
+
+    // ── Title / subtitle rows ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Optional report title written as a single merged row above the column header row.
+    /// When set, the header row shifts down by one (or two if <see cref="ReportSubTitle"/> is also set).
+    /// Equivalent to the RDLC <c>tituloReporte</c> text box rendered above the Tablix.
+    /// </summary>
+    public string? ReportTitle { get; set; }
+
+    /// <summary>
+    /// Optional subtitle written in the row immediately below <see cref="ReportTitle"/>.
+    /// Only effective when <see cref="ReportTitle"/> is also set.
+    /// </summary>
+    public string? ReportSubTitle { get; set; }
+
+    /// <summary>
+    /// Style applied to the <see cref="ReportTitle"/> merged cell.
+    /// Defaults to a 14pt bold dark header when <see langword="null"/>.
+    /// </summary>
+    public AdvancedExcelHeaderStyle? TitleStyle { get; set; }
+
+    // ── Grouped column band headers ───────────────────────────────────────────
+
+    /// <summary>
+    /// Column band (group) headers rendered as a merged row above the normal column headers.
+    /// Replicates RDLC <c>ColSpan</c> grouped headers (e.g. Kardex Entradas / Salidas / Saldo bands).
+    /// Each entry specifies a title and the start/end 1-based column indices it spans.
+    /// </summary>
+    public List<AdvancedExcelGroupHeader>? GroupHeaders { get; set; }
+
+    /// <summary>
+    /// Style applied to group band header cells.
+    /// Defaults to a lighter variant of <see cref="HeaderStyle"/> when <see langword="null"/>.
+    /// </summary>
+    public AdvancedExcelHeaderStyle? GroupHeaderStyle { get; set; }
 }

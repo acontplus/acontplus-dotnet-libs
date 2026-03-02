@@ -149,25 +149,55 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
         if (visible.Count == 0)
             return;
 
-        // ── Header row (row 1) ────────────────────────────────────────────────
-        WriteHeaderRow(ws, visible, headerStyle);
+        int currentRow = 1;
+
+        // ── Optional title / subtitle rows ────────────────────────────────────
+        if (!string.IsNullOrWhiteSpace(wsDef.ReportTitle))
+        {
+            WriteTitleRow(ws, wsDef.ReportTitle, visible.Count, currentRow,
+                wsDef.TitleStyle ?? AdvancedExcelHeaderStyle.Title());
+            currentRow++;
+        }
+
+        if (!string.IsNullOrWhiteSpace(wsDef.ReportSubTitle))
+        {
+            WriteSubTitleRow(ws, wsDef.ReportSubTitle, visible.Count, currentRow,
+                wsDef.TitleStyle ?? AdvancedExcelHeaderStyle.Title());
+            currentRow++;
+        }
+
+        // ── Optional group-header band rows ───────────────────────────────────
+        if (wsDef.GroupHeaders is { Count: > 0 })
+        {
+            WriteGroupHeaderRow(ws, wsDef.GroupHeaders, visible.Count, currentRow,
+                wsDef.GroupHeaderStyle ?? AdvancedExcelHeaderStyle.GroupHeader());
+            currentRow++;
+        }
+
+        // ── Column header row ─────────────────────────────────────────────────
+        int headerRow = currentRow;
+        WriteHeaderRow(ws, visible, headerStyle, headerRow);
+        currentRow++;
 
         // ── Data rows ────────────────────────────────────────────────────────
-        int nextRow = WriteDataRows(ws, wsDef.Data, visible, wsDef);
+        int nextRow = WriteDataRows(ws, wsDef.Data, visible, wsDef, startRow: currentRow);
 
         // ── Aggregate / totals row ────────────────────────────────────────────
-        if (wsDef.IncludeAggregateRow && nextRow > 2)
+        if (wsDef.IncludeAggregateRow && nextRow > headerRow + 1)
         {
-            WriteAggregateRow(ws, visible, dataStartRow: 2, dataEndRow: nextRow - 1, totalsRow: nextRow);
+            WriteAggregateRow(ws, visible,
+                dataStartRow: headerRow + 1,
+                dataEndRow: nextRow - 1,
+                totalsRow: nextRow);
         }
 
         // ── Freeze header row ─────────────────────────────────────────────────
         if (wsDef.FreezeHeaderRow)
-            ws.SheetView.FreezeRows(1);
+            ws.SheetView.FreezeRows(headerRow);
 
-        // ── AutoFilter ────────────────────────────────────────────────────────
+        // ── AutoFilter on the header row ──────────────────────────────────────
         if (wsDef.AutoFilter)
-            ws.RangeUsed()?.SetAutoFilter();
+            ws.Range(headerRow, 1, headerRow, visible.Count).SetAutoFilter();
 
         // ── Column widths ─────────────────────────────────────────────────────
         if (wsDef.AutoFitColumns)
@@ -181,14 +211,69 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
         }
     }
 
+    private static void WriteTitleRow(
+        IXLWorksheet ws, string title, int colCount, int row, AdvancedExcelHeaderStyle style)
+    {
+        var cell = ws.Cell(row, 1);
+        cell.Value = (XLCellValue)title;
+        cell.Style.Font.Bold = true;
+        cell.Style.Font.FontSize = style.FontSize + 4;
+        cell.Style.Fill.BackgroundColor = XLColor.FromHtml(style.BackgroundColor);
+        cell.Style.Font.FontColor = XLColor.FromHtml(style.FontColor);
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        if (colCount > 1)
+            ws.Range(row, 1, row, colCount).Merge();
+    }
+
+    private static void WriteSubTitleRow(
+        IXLWorksheet ws, string subtitle, int colCount, int row, AdvancedExcelHeaderStyle style)
+    {
+        var cell = ws.Cell(row, 1);
+        cell.Value = (XLCellValue)subtitle;
+        cell.Style.Font.Bold = false;
+        cell.Style.Font.FontSize = style.FontSize + 1;
+        cell.Style.Fill.BackgroundColor = XLColor.FromHtml(style.BackgroundColor);
+        cell.Style.Font.FontColor = XLColor.FromHtml(style.FontColor);
+        cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        if (colCount > 1)
+            ws.Range(row, 1, row, colCount).Merge();
+    }
+
+    private static void WriteGroupHeaderRow(
+        IXLWorksheet ws,
+        List<AdvancedExcelGroupHeader> groups,
+        int colCount,
+        int row,
+        AdvancedExcelHeaderStyle style)
+    {
+        foreach (var grp in groups)
+        {
+            int startCol = Math.Max(1, grp.StartColumnIndex);
+            int endCol = Math.Min(colCount, grp.EndColumnIndex);
+
+            var cell = ws.Cell(row, startCol);
+            cell.Value = (XLCellValue)grp.Title;
+            cell.Style.Font.Bold = style.Bold;
+            cell.Style.Font.FontSize = style.FontSize;
+            cell.Style.Fill.BackgroundColor = XLColor.FromHtml(style.BackgroundColor);
+            cell.Style.Font.FontColor = XLColor.FromHtml(style.FontColor);
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+            if (endCol > startCol)
+                ws.Range(row, startCol, row, endCol).Merge();
+        }
+    }
+
     private static void WriteHeaderRow(
         IXLWorksheet ws,
         List<AdvancedExcelColumnDefinition> visible,
-        AdvancedExcelHeaderStyle style)
+        AdvancedExcelHeaderStyle style,
+        int headerRow = 1)
     {
         for (int i = 0; i < visible.Count; i++)
         {
-            var cell = ws.Cell(1, i + 1);
+            var cell = ws.Cell(headerRow, i + 1);
             cell.Value = (XLCellValue)(visible[i].Header ?? visible[i].ColumnName);
             cell.Style.Font.Bold = style.Bold;
             cell.Style.Font.FontSize = style.FontSize;
@@ -204,9 +289,10 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
         IXLWorksheet ws,
         DataTable data,
         List<AdvancedExcelColumnDefinition> visible,
-        AdvancedExcelWorksheetDefinition wsDef)
+        AdvancedExcelWorksheetDefinition wsDef,
+        int startRow = 2)
     {
-        int rowIndex = 2;
+        int rowIndex = startRow;
         var altColor = XLColor.FromHtml(wsDef.AlternatingRowColor);
 
         foreach (DataRow dataRow in data.Rows)

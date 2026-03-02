@@ -53,6 +53,18 @@ public class QuestPdfDocumentSettings
     /// <summary>Watermark text rendered diagonally behind content</summary>
     public string? WatermarkText { get; set; }
 
+    /// <summary>
+    /// Font size of the watermark text in points (default: 80).
+    /// Reduce for narrow pages or increase for landscape Tabloid reports.
+    /// </summary>
+    public float WatermarkFontSize { get; set; } = 80f;
+
+    /// <summary>
+    /// Hex color of the watermark text (default: <c>#EEEEEE</c> — near-white).
+    /// Use a very light grey so overlaid data content remains legible.
+    /// </summary>
+    public string WatermarkColor { get; set; } = "#EEEEEE";
+
     /// <summary>QuestPDF license type: Community or Professional/Enterprise (default: Community)</summary>
     public QuestPdfLicenseType LicenseType { get; set; } = QuestPdfLicenseType.Community;
 }
