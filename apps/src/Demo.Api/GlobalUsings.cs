@@ -29,6 +29,7 @@ global using Acontplus.Persistence.SqlServer.Exceptions;
 global using Acontplus.Persistence.SqlServer.Repositories;
 global using Acontplus.Persistence.SqlServer.Utilities;
 global using Acontplus.Reports.Dtos;
+global using Acontplus.Reports.Enums;
 global using Acontplus.Reports.Extensions;
 global using Acontplus.Reports.Interfaces;
 global using Acontplus.Services.Configuration;
@@ -53,4 +54,3 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Serilog;
 global using System;
 global using System.Data;
-

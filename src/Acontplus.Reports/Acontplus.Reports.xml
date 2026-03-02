@@ -79,6 +79,442 @@
             Enable strict path validation to prevent directory traversal attacks (default true)
             </summary>
         </member>
+        <member name="P:Acontplus.Reports.Configuration.ReportOptions.QuestPdfLicenseType">
+            <summary>
+            QuestPDF license tier: Community (free, OSS), Professional, or Enterprise.
+            Default is Community which is free for projects with under $1M USD annual revenue.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Configuration.ReportOptions.MaxConcurrentQuestPdfReports">
+            <summary>
+            Maximum number of concurrent QuestPDF generation tasks (default: <see cref="P:Acontplus.Reports.Configuration.ReportOptions.MaxConcurrentReports"/>).
+            When null, <see cref="P:Acontplus.Reports.Configuration.ReportOptions.MaxConcurrentReports"/> is applied.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Documents.DynamicReportDocument">
+            <summary>
+            QuestPDF <see cref="T:QuestPDF.Infrastructure.IDocument"/> implementation that composes a fully dynamic,
+            data-driven PDF from a <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Documents.ContainerAlignExtensions">
+            <summary>
+            Internal extension to apply horizontal alignment to a QuestPDF container
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfColorTheme">
+            <summary>
+            Defines the visual color theme applied to a QuestPDF report.
+            Default values use the official <b>Acontplus brand palette</b> sourced from the
+            AcontplusWeb design system (globals.css).
+            Use <see cref="T:Acontplus.Reports.Dtos.QuestPdfColorThemes"/> to obtain pre-built presets.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.HeaderBackground">
+            <summary>
+            Header row / page-header background color (hex).
+            Default: <c>#d61672</c> — Acontplus brand magenta.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.HeaderForeground">
+            <summary>
+            Header row / page-header foreground (text) color (hex).
+            Default: <c>#FFFFFF</c> — white.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.RowBackground">
+            <summary>
+            Even (non-alternate) data row background color (hex).
+            Default: <c>#FFFFFF</c> — white.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.AlternateRowBackground">
+            <summary>
+            Odd (alternate) data row background color (hex).
+            Default: <c>#fdf2f8</c> — Acontplus blush / light pink.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.TotalsBackground">
+            <summary>
+            Totals row background color (hex).
+            Default: <c>#fce7f3</c> — light pink, one step deeper than <see cref="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.AlternateRowBackground"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.TotalsTextColor">
+            <summary>
+            Totals row text color (hex).
+            Default: <c>#831843</c> — Acontplus deep wine / dark primary.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.AccentColor">
+            <summary>
+            Primary accent used for section titles, dividers and highlights (hex).
+            Default: <c>#d61672</c> — Acontplus brand magenta.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.SecondaryAccentColor">
+            <summary>
+            Secondary accent for charts, badges, call-out cells (hex).
+            Default: <c>#ffa901</c> — Acontplus brand amber.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.TextColor">
+            <summary>
+            Default body text color (hex).
+            Default: <c>#252525</c> — Acontplus near-black foreground.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.MutedTextColor">
+            <summary>
+            Muted / secondary text color used for dates, subtitles, footnotes (hex).
+            Default: <c>#8c8c8c</c> — Acontplus muted foreground.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.KvKeyColor">
+            <summary>
+            Key-value label (key column) text color (hex).
+            Default: <c>#be185d</c> — Acontplus primary-dark.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.FooterTextColor">
+            <summary>
+            Page footer text color (hex).
+            Default: <c>#8c8c8c</c> — Acontplus muted foreground.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.BorderColor">
+            <summary>
+            Default border / separator color (hex).
+            Default: <c>#eaeaea</c> — Acontplus border.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.SuccessColor">
+            <summary>
+            Success indicator color (hex).
+            Default: <c>#10b981</c> — Acontplus success emerald.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.WarningColor">
+            <summary>
+            Warning indicator color (hex).
+            Default: <c>#f59e0b</c> — Acontplus warning amber.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfColorTheme.ErrorColor">
+            <summary>
+            Error / danger indicator color (hex).
+            Default: <c>#ef4444</c> — Acontplus error red.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfColorThemes">
+            <summary>
+            Factory class that provides ready-to-use <see cref="T:Acontplus.Reports.Dtos.QuestPdfColorTheme"/> presets.<br/>
+            Use these as a starting point and then override individual properties as needed.<br/><br/>
+            Available presets:
+            <list type="bullet">
+              <item><see cref="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.AcontplusDefault"/> — official Acontplus brand (magenta / pink).</item>
+              <item><see cref="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.AcontplusAmber"/> — Acontplus amber / warm gold variant.</item>
+              <item><see cref="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Corporate"/> — conservative navy-blue for enterprise documents.</item>
+              <item><see cref="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Ocean"/> — deep teal / cyan palette.</item>
+              <item><see cref="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Monochrome"/> — slate grey, zero color distraction.</item>
+            </list>
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.AcontplusDefault">
+            <summary>
+            Official <b>Acontplus brand theme</b> — magenta header, blush alternates,
+            deep-wine totals. Matches the AcontplusWeb design system.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.AcontplusAmber">
+            <summary>
+            <b>Acontplus Amber</b> — the brand amber / warm-gold palette.
+            Great for invoices, financial summaries and seasonal reports.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Corporate">
+            <summary>
+            <b>Corporate</b> — classic navy-blue enterprise theme.
+            Conservative and widely accepted for legal, financial and government reports.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Ocean">
+            <summary>
+            <b>Ocean</b> — deep teal / cyan palette inspired by coastal blue.
+            Fresh and modern; suitable for tech products and dashboards.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.QuestPdfColorThemes.Monochrome">
+            <summary>
+            <b>Monochrome</b> — slate-grey, zero colour distraction.
+            Best for formal reports, legal documents or when colour printing is unavailable.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfDocumentSettings">
+            <summary>
+            Page layout and typographic settings for a QuestPDF document
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.PageSize">
+            <summary>Standard page size preset (default: A4)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.Orientation">
+            <summary>Page orientation (default: Portrait)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.MarginTop">
+            <summary>Top margin in points (default: 30)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.MarginBottom">
+            <summary>Bottom margin in points (default: 30)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.MarginLeft">
+            <summary>Left margin in points (default: 25)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.MarginRight">
+            <summary>Right margin in points (default: 25)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.FontFamily">
+            <summary>Default content font family (default: "Helvetica")</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.FontSize">
+            <summary>Default body font size in points (default: 9)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.TableHeaderFontSize">
+            <summary>Table header font size in points (default: 9)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.TitleFontSize">
+            <summary>Document title font size in points (default: 16)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.SectionTitleFontSize">
+            <summary>Section heading font size in points (default: 12)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.ColorTheme">
+            <summary>Visual color theme applied throughout the document</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.ShowPageNumbers">
+            <summary>Render a page number footer automatically (default: true)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.ShowTimestamp">
+            <summary>Include document generation timestamp in footer (default: false)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.ShowWatermark">
+            <summary>Show company/brand watermark behind content (default: false)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.WatermarkText">
+            <summary>Watermark text rendered diagonally behind content</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.LicenseType">
+            <summary>QuestPDF license type: Community or Professional/Enterprise (default: Community)</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfLicenseType">
+            <summary>
+            QuestPDF license tier configuration
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions">
+            <summary>
+            Configuration for the document-level header or footer band
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LeftText">
+            <summary>Primary text rendered left-aligned in the band</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.CenterText">
+            <summary>Text rendered centered in the band</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.RightText">
+            <summary>Text rendered right-aligned in the band</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoPath">
+            <summary>Path to an image file rendered on the left side of the header</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoMaxHeight">
+            <summary>Logo image max height in points (default: 30)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.BackgroundColor">
+            <summary>Background color of the header/footer band as hex</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.ShowBorderBottom">
+            <summary>Draw a bottom border line on the header band</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.FontSize">
+            <summary>Font size for header/footer text (default: 8)</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfReportRequest">
+            <summary>
+            Top-level request model for QuestPDF dynamic report generation
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.Title">
+            <summary>Document title displayed in the report header and PDF metadata</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.SubTitle">
+            <summary>Optional sub-title rendered below the main title</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.Author">
+            <summary>Author name stored in the PDF metadata</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.Subject">
+            <summary>Subject stored in the PDF metadata</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.FileDownloadName">
+            <summary>Desired file download name (without extension) returned in ReportResponse</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.Settings">
+            <summary>Page layout and theme configuration</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.GlobalHeader">
+            <summary>Global page header rendered on every page</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.GlobalFooter">
+            <summary>
+            Global page footer rendered on every page.
+            When null and Settings.ShowPageNumbers is true, a default page-number footer is generated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfReportRequest.Sections">
+            <summary>Ordered list of content sections composed into the document body</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfSection">
+            <summary>
+            Describes a single content section within a QuestPDF dynamic report.
+            Sections are rendered in order inside the document body.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.SectionTitle">
+            <summary>Optional heading displayed above section content</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.Type">
+            <summary>Determines how section content is composed (default: DataTable)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.Data">
+            <summary>Data source for DataTable sections</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.Columns">
+            <summary>
+            Column descriptors controlling visibility, ordering, and formatting.
+            When empty all DataTable columns are rendered in declaration order.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ShowTotalsRow">
+            <summary>Render a totals/aggregate row after the last data row</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.TextBlocks">
+            <summary>Text blocks rendered in a Text section</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.KeyValues">
+            <summary>
+            Ordered key-value pairs rendered in a two-column summary panel.
+            Key = label, Value = display text.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.CustomComposer">
+            <summary>
+            Delegate invoked to compose arbitrary QuestPDF content when Type is Custom.
+            The parameter is the container passed by QuestPDF.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.PaddingBottom">
+            <summary>Spacing in points added below this section (default: 12)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.PageBreakBefore">
+            <summary>When true the section always starts at the top of a new page</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfTableColumn">
+            <summary>
+            Describes a single column within a QuestPDF dynamic table section
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.ColumnName">
+            <summary>Exact column name as it appears in the source DataTable</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.Header">
+            <summary>Display header label (defaults to ColumnName if not set)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.RelativeWidth">
+            <summary>
+            Relative column width. When all columns specify a width the layout
+            distributes space proportionally. Leave null to auto-distribute evenly.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.Alignment">
+            <summary>Text alignment within the column cells (default: Left)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.Format">
+            <summary>Optional .NET composite format string applied to the cell value (e.g., "N2", "C2", "yyyy-MM-dd")</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.AggregateType">
+            <summary>Aggregate function rendered in the totals row (default: None)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.IsHidden">
+            <summary>When true the column is hidden from the rendered output</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.IsBold">
+            <summary>Optional CSS-style font weight: "bold" renders the cell text bold</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfTextBlock">
+            <summary>
+            A block of formatted text rendered in a text-type section
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.Content">
+            <summary>The text content to render</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.FontSize">
+            <summary>Font size override (null uses document default)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.Bold">
+            <summary>Render content as bold text</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.Italic">
+            <summary>Render content as italic text</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.Color">
+            <summary>Hex color override for text (null uses theme default)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.PaddingBottom">
+            <summary>Spacing in points added below this block</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfPageSize">
+            <summary>
+            Page size presets for QuestPDF documents
+            </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Thermal80mm">
+            <summary>Thermal/receipt-style narrow format (80mm wide)</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfPageOrientation">
+            <summary>
+            Page orientation for QuestPDF documents
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfColumnAlignment">
+            <summary>
+            Column content alignment within QuestPDF table cells
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfSectionType">
+            <summary>
+            Type of section rendered inside a QuestPDF document
+            </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.DataTable">
+            <summary>Render a DataTable as a formatted grid</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.Text">
+            <summary>Render free-form text blocks</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.KeyValueSummary">
+            <summary>Render a horizontal key-value summary panel</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.Custom">
+            <summary>Render a custom composed element via delegate</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfAggregateType">
+            <summary>
+            Horizontal cell alignment for numeric totals row
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportGenerationException">
             <summary>
             Exception thrown when report generation fails
@@ -130,6 +566,51 @@
             <param name="configureOptions">Action to configure report options</param>
             <returns>The service collection for chaining</returns>
         </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddQuestPdfReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers only the QuestPDF dynamic PDF generation service without the RDLC stack.
+            Use this when you need QuestPDF exclusively.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddQuestPdfReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Registers only the QuestPDF dynamic PDF generation service without the RDLC stack.
+            Use this when you need QuestPDF exclusively.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Interfaces.IQuestPdfReportService">
+            <summary>
+            Service for generating dynamic PDF documents using QuestPDF.
+            Supports data-driven table reports, multi-section layouts, key-value summaries,
+            rich text blocks, and fully custom composed content.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IQuestPdfReportService.GenerateAsync(Acontplus.Reports.Dtos.QuestPdfReportRequest,System.Threading.CancellationToken)">
+            <summary>
+            Generates a PDF from a fully configured <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
+            </summary>
+            <param name="request">Complete document definition including sections, settings, and headers.</param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> containing the PDF bytes and content metadata.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IQuestPdfReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.QuestPdfTableColumn},Acontplus.Reports.Dtos.QuestPdfDocumentSettings,System.Threading.CancellationToken)">
+            <summary>
+            Convenience overload that wraps a single <see cref="T:System.Data.DataTable"/> in a report.
+            </summary>
+            <param name="title">Document title.</param>
+            <param name="data">Source data table.</param>
+            <param name="columns">Optional column descriptors (visibility, formatting, aggregates).</param>
+            <param name="settings">Optional page and theme settings.</param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> containing the PDF bytes.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IQuestPdfReportService.ValidateConfiguration">
+            <summary>
+            Validates that all required QuestPDF dependencies and licence settings are
+            properly configured without generating a full document.
+            Throws <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> on misconfiguration.
+            </summary>
+        </member>
         <member name="M:Acontplus.Reports.Interfaces.IRdlcPrinterService.PrintAsync(Acontplus.Reports.Dtos.RdlcPrinterDto,Acontplus.Reports.Dtos.RdlcPrintRequestDto,System.Threading.CancellationToken)">
             <summary>
             Prints a report asynchronously with support for cancellation and timeout
@@ -175,6 +656,27 @@
             <summary>
             MemoryStream wrapper that returns rented arrays to the pool when disposed
             </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Services.QuestPdfReportService">
+            <summary>
+            High-performance QuestPDF dynamic PDF generation service with concurrency control,
+            timeout protection, and full enterprise reporting patterns.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.QuestPdfReportService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Reports.Services.QuestPdfReportService},Microsoft.Extensions.Options.IOptions{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Initializes a new instance of <see cref="T:Acontplus.Reports.Services.QuestPdfReportService"/>.
+            Applies the QuestPDF license at construction time.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.QuestPdfReportService.GenerateAsync(Acontplus.Reports.Dtos.QuestPdfReportRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.QuestPdfReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.QuestPdfTableColumn},Acontplus.Reports.Dtos.QuestPdfDocumentSettings,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.QuestPdfReportService.ValidateConfiguration">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Reports.Services.RdlcReportService">
             <summary>

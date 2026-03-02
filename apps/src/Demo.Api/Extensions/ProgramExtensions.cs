@@ -10,7 +10,6 @@ using Demo.Api.Endpoints.Infrastructure;
 using Demo.Application.Services;
 using Demo.Infrastructure.EventHandlers;
 using Demo.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Mvc;
 using Scrutor;
 
 namespace Demo.Api.Extensions;
