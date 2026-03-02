@@ -54,7 +54,7 @@ public sealed class MiniExcelReportService : IMiniExcelReportService, IDisposabl
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(_options.ReportGenerationTimeoutSeconds));
 
-            var stream = new MemoryStream();
+            using var stream = new MemoryStream();
 
             try
             {
@@ -151,7 +151,7 @@ public sealed class MiniExcelReportService : IMiniExcelReportService, IDisposabl
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(_options.ReportGenerationTimeoutSeconds));
 
-            var stream = new MemoryStream();
+            using var stream = new MemoryStream();
 
             await MiniExcel.SaveAsAsync(
                 stream, data,
