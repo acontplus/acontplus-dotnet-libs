@@ -1,8 +1,8 @@
+using System.Runtime.Versioning;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using System.Runtime.Versioning;
 
 namespace Acontplus.Reports.Extensions;
 
@@ -25,6 +25,8 @@ public static class ServiceCollectionExtensions
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
         services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
+        services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
+        services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
 
         // Register printer service only on Windows 6.1+
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
@@ -62,6 +64,8 @@ public static class ServiceCollectionExtensions
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
         services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
+        services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
+        services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
 
         // Register printer service only on Windows 6.1+
         if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
@@ -102,6 +106,56 @@ public static class ServiceCollectionExtensions
     {
         services.Configure(configureOptions);
         services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the MiniExcel service for high-performance bulk Excel exports.
+    /// Use this when you need lightweight Excel generation without the full RDLC/QuestPDF stack.
+    /// </summary>
+    public static IServiceCollection AddMiniExcelReportService(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the MiniExcel service with custom configuration.
+    /// </summary>
+    public static IServiceCollection AddMiniExcelReportService(
+        this IServiceCollection services,
+        Action<Configuration.ReportOptions> configureOptions)
+    {
+        services.Configure(configureOptions);
+        services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the ClosedXML service for advanced, richly formatted Excel workbooks.
+    /// Use this when you need corporate styling, formulas, and freeze panes without the full stack.
+    /// </summary>
+    public static IServiceCollection AddClosedXmlReportService(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only the ClosedXML service with custom configuration.
+    /// </summary>
+    public static IServiceCollection AddClosedXmlReportService(
+        this IServiceCollection services,
+        Action<Configuration.ReportOptions> configureOptions)
+    {
+        services.Configure(configureOptions);
+        services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
         return services;
     }
 

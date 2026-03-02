@@ -97,10 +97,319 @@
             data-driven PDF from a <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
             </summary>
         </member>
+        <member name="M:Acontplus.Reports.Documents.DynamicReportDocument.ComposeSectionContent(QuestPDF.Infrastructure.IContainer,Acontplus.Reports.Dtos.QuestPdfSection,Acontplus.Reports.Enums.QuestPdfSectionType)">
+            <summary>
+            Dispatches to the correct compose method based on <paramref name="renderType"/>.
+            Called by <see cref="M:Acontplus.Reports.Documents.DynamicReportDocument.ComposeSection(QuestPDF.Infrastructure.IContainer,Acontplus.Reports.Dtos.QuestPdfSection)"/> and recursively by
+            <see cref="M:Acontplus.Reports.Documents.DynamicReportDocument.ComposeTwoColumnSection(QuestPDF.Infrastructure.IContainer,Acontplus.Reports.Dtos.QuestPdfSection)"/> for each column's content.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Documents.DynamicReportDocument.IsValidLogoPath(System.String)">
+            <summary>
+            Validates that <paramref name="path"/> is a safe, non-traversal image path.
+            Prevents CWE-22 path traversal attacks by rejecting null bytes, relative
+            directory components, and non-image file extensions.
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Documents.ContainerAlignExtensions">
             <summary>
             Internal extension to apply horizontal alignment to a QuestPDF container
             </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition">
+            <summary>
+            Column descriptor for advanced Excel generation (ClosedXML).
+            Supports rich formatting, column widths, horizontal alignment, bold cells,
+            Excel number format codes, and aggregate totals rows.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.ColumnName">
+            <summary>Exact column name as it appears in the source <see cref="T:System.Data.DataTable"/></summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.Header">
+            <summary>
+            Display header label written to the header row.
+            Defaults to <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.ColumnName"/> when not specified.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.Width">
+            <summary>
+            Column width in character units.
+            <see langword="null"/> lets <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.AutoFitColumns"/> decide.
+            Explicit width overrides auto-fit.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.NumberFormat">
+            <summary>
+            Excel built-in or custom number format code applied to data cells.
+            Examples: <c>"#,##0.00"</c>, <c>"$#,##0.00_);[Red]($#,##0.00)"</c>,
+                      <c>"yyyy-MM-dd"</c>, <c>"0.00%"</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.Alignment">
+            <summary>Horizontal alignment of data cells (default: <see cref="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.General"/>)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.IsBold">
+            <summary>When <see langword="true"/>, data cells in this column are rendered in bold</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.IsHidden">
+            <summary>When <see langword="true"/> the column is hidden from the rendered workbook</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.AggregateType">
+            <summary>
+            Aggregate function applied in the totals row when
+            <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.IncludeAggregateRow"/> is <see langword="true"/>.
+            Default: <see cref="F:Acontplus.Reports.Enums.ExcelAggregateType.None"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader">
+            <summary>
+            Defines a merged band header cell rendered above the normal column header row in a
+            ClosedXML (advanced Excel) worksheet. Equivalent to the RDLC <c>ColSpan</c> idiom
+            used in reports like Kardex (Entradas / Salidas / Saldo grouped headers).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader.Title">
+            <summary>Display text written into the merged band cell</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader.StartColumnIndex">
+            <summary>
+            1-based index of the first column covered by this group header.
+            Corresponds to the position in the visible column list, not the DataTable.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader.EndColumnIndex">
+            <summary>
+            1-based index of the last column covered by this group header (inclusive).
+            Span = <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader.EndColumnIndex"/> − <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelGroupHeader.StartColumnIndex"/> + 1.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle">
+            <summary>
+            Styling applied to the header row of an advanced Excel worksheet.
+            Colours are expressed as 6-character HTML hex strings without the leading <c>#</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.BackgroundColor">
+            <summary>
+            Cell background colour as a 6-char HTML hex string (default: <c>"4472C4"</c> — Microsoft Blue).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.FontColor">
+            <summary>
+            Font colour as a 6-char HTML hex string (default: <c>"FFFFFF"</c> — White).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.FontSize">
+            <summary>Font size in points (default: <c>11</c>)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.Bold">
+            <summary>Bold header text (default: <see langword="true"/>)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.HorizontalAlignment">
+            <summary>Horizontal alignment of header cells (default: <see cref="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.Center"/>)</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.CorporateBlue">
+            <summary>Returns a deep-blue corporate header style (default)</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.DarkGreen">
+            <summary>Returns a dark-green header style</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.DarkGrey">
+            <summary>Returns a charcoal/dark-grey header style</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.LightBlue">
+            <summary>Returns a subtle light-blue header suitable for pastel themes</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.Title">
+            <summary>
+            Returns a large-font title style (white background, dark text, centered, not bold).
+            Used for the optional <c>ReportTitle</c> / <c>ReportSubTitle</c> rows.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.GroupHeader">
+            <summary>
+            Returns a mid-blue group-header band style.
+            Used for the optional <c>GroupHeaders</c> span row above individual column headers.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.AdvancedExcelReportRequest">
+            <summary>
+            Request model for advanced, richly formatted Excel workbook generation via ClosedXML.
+            Supports multi-sheet workbooks with full corporate styling, freeze panes, auto-filter,
+            aggregate formula rows, and workbook-level metadata.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.FileDownloadName">
+            <summary>
+            Desired file name for the download (extension <c>.xlsx</c> is appended automatically if omitted).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.Author">
+            <summary>Author name stored in workbook document properties</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.Subject">
+            <summary>Subject stored in workbook document properties</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.Company">
+            <summary>Company name stored in workbook document properties</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.Keywords">
+            <summary>Keywords stored in workbook document properties</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelReportRequest.Worksheets">
+            <summary>One or more worksheet definitions that make up the workbook</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition">
+            <summary>
+            Defines a single worksheet within an advanced ClosedXML workbook.
+            Supports rich header styling, freeze panes, auto-filter, alternating row shading,
+            aggregate totals rows, and per-column formatting.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.Name">
+            <summary>Worksheet tab name shown in Excel</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.Data">
+            <summary>Source data to write into this worksheet</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.Columns">
+            <summary>
+            Per-column rich formatting descriptors.
+            When <see langword="null"/>, all visible DataTable columns are exported with default styles.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.HeaderStyle">
+            <summary>
+            Header row style.
+            <see langword="null"/> uses <see cref="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.CorporateBlue"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.AutoFilter">
+            <summary>Enable Excel AutoFilter drop-downs on the header row (default: <see langword="true"/>)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.FreezeHeaderRow">
+            <summary>Freeze the header row so it stays visible while scrolling (default: <see langword="true"/>)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.AutoFitColumns">
+            <summary>
+            Auto-fit column widths to their content after data is written (default: <see langword="true"/>).
+            Explicit <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.Width"/> values override auto-fit.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.IncludeAggregateRow">
+            <summary>
+            Render an aggregate totals row below the data using per-column
+            <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.AggregateType"/> values (default: <see langword="false"/>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.AlternatingRowShading">
+            <summary>
+            Apply alternating row background shading for readability (default: <see langword="true"/>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.AlternatingRowColor">
+            <summary>
+            Alternating row background colour as a 6-char HTML hex string
+            (default: <c>"DCE6F1"</c> — light blue tint).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.WrapText">
+            <summary>
+            Enable text wrapping for all data cells in this worksheet (default: <see langword="false"/>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportTitle">
+            <summary>
+            Optional report title written as a single merged row above the column header row.
+            When set, the header row shifts down by one (or two if <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportSubTitle"/> is also set).
+            Equivalent to the RDLC <c>tituloReporte</c> text box rendered above the Tablix.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportSubTitle">
+            <summary>
+            Optional subtitle written in the row immediately below <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportTitle"/>.
+            Only effective when <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportTitle"/> is also set.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.TitleStyle">
+            <summary>
+            Style applied to the <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.ReportTitle"/> merged cell.
+            Defaults to a 14pt bold dark header when <see langword="null"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.GroupHeaders">
+            <summary>
+            Column band (group) headers rendered as a merged row above the normal column headers.
+            Replicates RDLC <c>ColSpan</c> grouped headers (e.g. Kardex Entradas / Salidas / Saldo bands).
+            Each entry specifies a title and the start/end 1-based column indices it spans.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.GroupHeaderStyle">
+            <summary>
+            Style applied to group band header cells.
+            Defaults to a lighter variant of <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.HeaderStyle"/> when <see langword="null"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.ExcelColumnDefinition">
+            <summary>
+            Column descriptor for simple Excel generation (MiniExcel).
+            Controls header override, number formatting, and visibility.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.ColumnName">
+            <summary>Exact column name as it appears in the source <see cref="T:System.Data.DataTable"/></summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.Header">
+            <summary>
+            Display header label written to the first row.
+            Defaults to <see cref="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.ColumnName"/> when not specified.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.Format">
+            <summary>
+            Optional .NET composite format string applied when projecting the value
+            (e.g. <c>"N2"</c>, <c>"C2"</c>, <c>"yyyy-MM-dd"</c>).
+            Note: MiniExcel renders cells as plain values; for rich in-cell formatting use
+            <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition.NumberFormat"/> with ClosedXML.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.IsHidden">
+            <summary>When <see langword="true"/> the column is excluded from the output</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.ExcelReportRequest">
+            <summary>
+            Request model for high-performance, stream-based Excel workbook generation via MiniExcel.
+            Supports single and multi-sheet workbooks from <see cref="T:System.Data.DataTable"/> or POCO sources.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelReportRequest.FileDownloadName">
+            <summary>
+            Desired file name for the download (extension <c>.xlsx</c> is appended automatically if omitted).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelReportRequest.Worksheets">
+            <summary>One or more worksheet definitions that make up the workbook</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.ExcelWorksheetDefinition">
+            <summary>
+            Defines a single worksheet within a simple MiniExcel workbook.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelWorksheetDefinition.Name">
+            <summary>Worksheet tab name shown in Excel</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelWorksheetDefinition.Data">
+            <summary>Source data to write into this worksheet</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelWorksheetDefinition.Columns">
+            <summary>
+            Optional column descriptors for header overrides, format hints, and column visibility.
+            When <see langword="null"/>, all columns are exported using their original DataTable names.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ExcelWorksheetDefinition.IncludeHeader">
+            <summary>When <see langword="true"/> a header row is rendered (default: <see langword="true"/>)</summary>
         </member>
         <member name="T:Acontplus.Reports.Dtos.QuestPdfColorTheme">
             <summary>
@@ -303,6 +612,18 @@
         <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.WatermarkText">
             <summary>Watermark text rendered diagonally behind content</summary>
         </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.WatermarkFontSize">
+            <summary>
+            Font size of the watermark text in points (default: 80).
+            Reduce for narrow pages or increase for landscape Tabloid reports.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.WatermarkColor">
+            <summary>
+            Hex color of the watermark text (default: <c>#EEEEEE</c> — near-white).
+            Use a very light grey so overlaid data content remains legible.
+            </summary>
+        </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.LicenseType">
             <summary>QuestPDF license type: Community or Professional/Enterprise (default: Community)</summary>
         </member>
@@ -339,6 +660,133 @@
         </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.FontSize">
             <summary>Font size for header/footer text (default: 8)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoBytes">
+            <summary>
+            In-memory logo bytes (PNG/JPEG/GIF).
+            Takes priority over <see cref="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoPath"/> when set.
+            Equivalent to the RDLC <c>Source=Database</c> / <c>Parameters!logo.Value</c> pattern.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoMimeType">
+            <summary>
+            MIME type of <see cref="P:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions.LogoBytes"/> (e.g. <c>"image/png"</c>).
+            Optional — QuestPDF auto-detects the image format from the stream.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader">
+            <summary>
+            First-class SRI Ecuador invoice / voucher header block for QuestPDF rendering.
+            Produces the standard two-panel layout used by all SRI electronic documents:
+            left panel (logo + company info) and right panel (bordered SRI authorization box),
+            followed by a buyer information row.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LogoBytes">
+            <summary>
+            In-memory logo bytes (PNG/JPEG). Takes priority over <see cref="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LogoPath"/>.
+            Equivalent to the RDLC <c>Parameters!logo.Value</c> (byte[]) source.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LogoPath">
+            <summary>Filesystem path to the logo image file. Used when <see cref="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LogoBytes"/> is null.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LogoMaxHeight">
+            <summary>Maximum logo height in points (default: 50)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.CompanyName">
+            <summary>Legal company name (Razón Social) — rendered bold</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.TradeName">
+            <summary>Trade / commercial name (Nombre Comercial)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.CompanyAddress">
+            <summary>Main establishment address (Dirección Matriz)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.BranchAddress">
+            <summary>Branch / establishment address (Dirección Sucursal) — shown when non-empty</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.CompanyPhone">
+            <summary>Phone number(s)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.CompanyEmail">
+            <summary>Email address of the entity</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.CompanyActivity">
+            <summary>Economic activity description</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.ContribuyenteEspecial">
+            <summary>Contribuyente Especial number — shown when non-empty</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.ObligadoContabilidad">
+            <summary>Obligado a llevar Contabilidad: "SÍ" / "NO"</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.ContribuyenteRimpe">
+            <summary>Contribuyente Régimen RIMPE — shown when non-empty</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.AgenteRetencion">
+            <summary>Agente de Retención (resolution number) — shown when non-empty</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.Ruc">
+            <summary>RUC of the emitter</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.DocumentType">
+            <summary>Document type label, e.g. "FACTURA", "NOTA DE CRÉDITO", "RETENCIÓN"</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.DocumentNumber">
+            <summary>Sequential document number, e.g. "001-001-000000001"</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.AuthorizationNumber">
+            <summary>SRI authorization number (Número de Autorización)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.AuthorizationDate">
+            <summary>Authorization date/time (Fecha y Hora de Autorización)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.AccessKey">
+            <summary>
+            49-character SRI access key (Clave de Acceso).
+            Rendered as small text; associated barcode is a separate <see cref="T:Acontplus.Reports.Dtos.QuestPdfSection"/>
+            with <see cref="F:Acontplus.Reports.Enums.QuestPdfSectionType.Barcode"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.Environment">
+            <summary>Processing environment: "PRODUCCIÓN" or "PRUEBAS"</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.EmissionType">
+            <summary>Emission type: "EMISIÓN NORMAL" (default)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.BuyerName">
+            <summary>Buyer's legal name (Razón Social / Nombres Completos del Comprador)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.BuyerIdentification">
+            <summary>Buyer's tax/ID number (Identificación)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.BuyerAddress">
+            <summary>Buyer's address</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.EmissionDate">
+            <summary>Document emission date</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.DeliveryReference">
+            <summary>Referenced delivery note (Guía de Remisión) — shown when non-empty</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.ExtraFields">
+            <summary>
+            Additional key-value pairs appended to the buyer block.
+            Useful for custom fields (e.g. order number, payment terms).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.LeftPanelRatio">
+            <summary>Relative width of the company info (left) panel (default: 6)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.RightPanelRatio">
+            <summary>Relative width of the SRI authorization (right) panel (default: 4)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.AuthBoxBorderColor">
+            <summary>Border color of the SRI authorization box (default: "#252525")</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfInvoiceHeader.FontSize">
+            <summary>Font size used throughout the invoice header (default: 8)</summary>
         </member>
         <member name="T:Acontplus.Reports.Dtos.QuestPdfReportRequest">
             <summary>
@@ -414,6 +862,101 @@
             The parameter is the container passed by QuestPDF.
             </summary>
         </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ImageBytes">
+            <summary>Raw image bytes (PNG/JPEG) rendered in an <see cref="F:Acontplus.Reports.Enums.QuestPdfSectionType.Image"/> section</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ImageMaxHeight">
+            <summary>Maximum image height in points (default: 80). Set to 0 for no restriction.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ImageMaxWidth">
+            <summary>Maximum image width in points (default: 160). Set to 0 for no restriction.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ImageAlignment">
+            <summary>Horizontal alignment of the rendered image (default: Center)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeText">
+            <summary>
+            Text to encode into a barcode or QR code. Used when
+            <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeBytes"/> is not provided. For SRI access keys pass the
+            49-character clave de acceso string.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeBytes">
+            <summary>
+            Pre-generated barcode image bytes. Takes priority over <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeText"/>
+            auto-generation. Use this when the barcode was already produced by
+            <c>RdlcReportService.AddReportParameters</c> and you want to reuse it.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeType">
+            <summary>Barcode visual style: Code128 (1D) or QrCode (2D) (default: Code128)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeHeight">
+            <summary>Maximum barcode image height in points (default: 50)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeWidth">
+            <summary>Maximum barcode image width in points (default: 120). Set to 0 for no restriction.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.BarcodeAlignment">
+            <summary>Horizontal alignment of the barcode image (default: Left)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ShowBarcodeCaption">
+            <summary>When true, the encoded text is rendered as a caption below the barcode image</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.MasterKeyColumn">
+            <summary>
+            Column name in <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.Data"/> (master table) whose value is used to
+            filter <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailData"/> rows for each master row.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailKeyColumn">
+            <summary>
+            Column name in <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailData"/> that must match the master key value.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailData">
+            <summary>Source DataTable for the detail (child) rows in a MasterDetail section</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailColumns">
+            <summary>
+            Column descriptors for the detail sub-table.
+            When empty, all DataTable columns are auto-generated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.DetailSectionTitle">
+            <summary>Optional heading displayed above each master row's detail sub-table</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.ShowDetailTotalsRow">
+            <summary>Render a totals row at the bottom of each detail sub-table (default: false)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.LeftContentType">
+            <summary>
+            The content type to render in the LEFT column of a TwoColumn layout.
+            Defaults to <see cref="F:Acontplus.Reports.Enums.QuestPdfSectionType.DataTable"/>.
+            The left column uses this section's own data (<see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.Data"/>, <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.TextBlocks"/>, etc.).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.RightSection">
+            <summary>
+            Content section rendered in the RIGHT column of a TwoColumn layout.
+            Set <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.Type"/> on this instance to control its render mode.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.LeftColumnRatio">
+            <summary>Relative width weight of the left column (default: 1)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.RightColumnRatio">
+            <summary>Relative width weight of the right column (default: 1)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.TwoColumnGap">
+            <summary>Gap between left and right columns in points (default: 8)</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.InvoiceHeader">
+            <summary>
+            SRI Ecuador invoice / voucher header definition.
+            Required when <see cref="P:Acontplus.Reports.Dtos.QuestPdfSection.Type"/> is <see cref="F:Acontplus.Reports.Enums.QuestPdfSectionType.InvoiceHeader"/>.
+            </summary>
+        </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfSection.PaddingBottom">
             <summary>Spacing in points added below this section (default: 12)</summary>
         </member>
@@ -452,6 +995,21 @@
         <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.IsBold">
             <summary>Optional CSS-style font weight: "bold" renders the cell text bold</summary>
         </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.IsGroupHeader">
+            <summary>
+            When <see langword="true"/> this descriptor defines a group (band) header cell
+            rendered in a separate row <em>above</em> the normal column header row.
+            Group headers are used to replicate RDLC <c>ColSpan</c> grouped headers
+            (e.g. Kardex Entradas / Salidas / Saldo bands).
+            Group header entries do not correspond to DataTable columns.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.ColumnSpan">
+            <summary>
+            Number of data columns this header cell spans (default: 1).
+            Only meaningful when <see cref="P:Acontplus.Reports.Dtos.QuestPdfTableColumn.IsGroupHeader"/> is <see langword="true"/>.
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Dtos.QuestPdfTextBlock">
             <summary>
             A block of formatted text rendered in a text-type section
@@ -474,6 +1032,45 @@
         </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.PaddingBottom">
             <summary>Spacing in points added below this block</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.ExcelHorizontalAlignment">
+            <summary>Horizontal cell alignment for Excel output</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.General">
+            <summary>General alignment (Excel default – numbers right, text left)</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.Left">
+            <summary>Left-aligned text</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.Center">
+            <summary>Centred text</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelHorizontalAlignment.Right">
+            <summary>Right-aligned text (typical for numeric columns)</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.ExcelAggregateType">
+            <summary>Aggregate function rendered in the totals row of an Excel worksheet</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.None">
+            <summary>No aggregate (default)</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Sum">
+            <summary>SUM formula</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Average">
+            <summary>AVERAGE formula</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Count">
+            <summary>COUNT formula (counts numeric cells)</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.CountA">
+            <summary>COUNTA formula (counts non-empty cells)</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Min">
+            <summary>MIN formula</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Max">
+            <summary>MAX formula</summary>
         </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfPageSize">
             <summary>
@@ -510,10 +1107,36 @@
         <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.Custom">
             <summary>Render a custom composed element via delegate</summary>
         </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.Image">
+            <summary>Render a byte[] image in-line</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.Barcode">
+            <summary>Auto-generate a barcode or QR code from text and render it as an image</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.MasterDetail">
+            <summary>Render a master DataTable with a filtered detail sub-table per row (master-detail)</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.TwoColumn">
+            <summary>Render two child sections side by side in two columns</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.InvoiceHeader">
+            <summary>Render a first-class SRI Ecuador invoice / voucher header block</summary>
+        </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfAggregateType">
             <summary>
             Horizontal cell alignment for numeric totals row
             </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.QuestPdfBarcodeType">
+            <summary>
+            Visual style of barcode/QR code generated in a <see cref="F:Acontplus.Reports.Enums.QuestPdfSectionType.Barcode"/> section
+            </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfBarcodeType.Code128">
+            <summary>1D linear barcode (Code 128) — default; used for SRI 49-char claves de acceso</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfBarcodeType.QrCode">
+            <summary>2D QR code</summary>
         </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportGenerationException">
             <summary>
@@ -577,6 +1200,130 @@
             Registers only the QuestPDF dynamic PDF generation service without the RDLC stack.
             Use this when you need QuestPDF exclusively.
             </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddMiniExcelReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers only the MiniExcel service for high-performance bulk Excel exports.
+            Use this when you need lightweight Excel generation without the full RDLC/QuestPDF stack.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddMiniExcelReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Registers only the MiniExcel service with custom configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddClosedXmlReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers only the ClosedXML service for advanced, richly formatted Excel workbooks.
+            Use this when you need corporate styling, formulas, and freeze panes without the full stack.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Extensions.ServiceCollectionExtensions.AddClosedXmlReportService(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Registers only the ClosedXML service with custom configuration.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Interfaces.IClosedXmlReportService">
+            <summary>
+            Advanced, richly formatted Excel report service powered by ClosedXML.
+            Supports corporate header styling, freeze panes, AutoFilter, alternating row shading,
+            aggregate/formula totals rows, multi-sheet workbooks, and workbook metadata.
+            </summary>
+            <remarks>
+            <para>
+            <strong>When to use ClosedXML:</strong> invoices, financial statements, management dashboards,
+            any report where presentation and in-cell formulas matter, or when the consumer edits the file.
+            </para>
+            <para>
+            For raw bulk data exports with minimal overhead use <see cref="T:Acontplus.Reports.Interfaces.IMiniExcelReportService"/> instead.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IClosedXmlReportService.GenerateAsync(Acontplus.Reports.Dtos.AdvancedExcelReportRequest,System.Threading.CancellationToken)">
+            <summary>
+            Generates a fully formatted Excel workbook (.xlsx) from an
+            <see cref="T:Acontplus.Reports.Dtos.AdvancedExcelReportRequest"/>.
+            </summary>
+            <param name="request">
+            Workbook definition including worksheets, header styles, column formatting, and metadata.
+            </param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes and MIME metadata.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition},System.String,System.Boolean,System.Boolean,Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle,System.Threading.CancellationToken)">
+            <summary>
+            Convenience shortcut that wraps a single <see cref="T:System.Data.DataTable"/>
+            into a formatted single-sheet workbook.
+            </summary>
+            <param name="fileDownloadName">Desired download file name (extension appended if absent).</param>
+            <param name="data">Source data table.</param>
+            <param name="columns">
+            Optional per-column rich formatting descriptors.
+            <see langword="null"/> exports all columns with default styles.
+            </param>
+            <param name="worksheetName">Sheet tab name (default: <c>"Sheet1"</c>).</param>
+            <param name="autoFilter">Enable AutoFilter on the header row (default: <see langword="true"/>).</param>
+            <param name="freezeHeaderRow">Freeze the header row (default: <see langword="true"/>).</param>
+            <param name="headerStyle">
+            Header row style override.
+            <see langword="null"/> uses <see cref="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.CorporateBlue"/>.
+            </param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes.</returns>
+        </member>
+        <member name="T:Acontplus.Reports.Interfaces.IMiniExcelReportService">
+            <summary>
+            High-performance, stream-based Excel report service powered by MiniExcel.
+            Designed for large-dataset exports with minimal memory overhead — data is streamed directly
+            to the output without loading the entire workbook into memory.
+            </summary>
+            <remarks>
+            <para>
+            <strong>When to use MiniExcel:</strong> bulk data exports, large DataTable results, POCO collections,
+            API-driven CSV/Excel downloads where speed and memory efficiency matter more than rich formatting.
+            </para>
+            <para>
+            For richly formatted workbooks with corporate styles, freeze panes, formulas, and aggregates use
+            <see cref="T:Acontplus.Reports.Interfaces.IClosedXmlReportService"/> instead.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IMiniExcelReportService.GenerateAsync(Acontplus.Reports.Dtos.ExcelReportRequest,System.Threading.CancellationToken)">
+            <summary>
+            Generates an Excel workbook (.xlsx) from a fully configured <see cref="T:Acontplus.Reports.Dtos.ExcelReportRequest"/>.
+            Supports both single-sheet and multi-sheet workbooks.
+            </summary>
+            <param name="request">Workbook definition including one or more worksheet sources.</param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes and MIME metadata.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IMiniExcelReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.ExcelColumnDefinition},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Convenience shortcut that wraps a single <see cref="T:System.Data.DataTable"/>
+            into a one-sheet workbook.
+            </summary>
+            <param name="fileDownloadName">Desired download file name (extension appended if absent).</param>
+            <param name="data">Source data table.</param>
+            <param name="columns">
+            Optional column descriptors for header overrides, format hints, and visibility.
+            <see langword="null"/> exports all columns with their original names.
+            </param>
+            <param name="worksheetName">Sheet tab name (default: <c>"Sheet1"</c>).</param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Interfaces.IMiniExcelReportService.GenerateFromObjectsAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Exports a strongly-typed collection to a single-sheet workbook using MiniExcel's native
+            POCO serialisation. Column headers are derived from public property names unless decorated
+            with <c>MiniExcelLibs.Attributes.ExcelColumnNameAttribute</c>.
+            </summary>
+            <typeparam name="T">POCO type whose public properties become columns.</typeparam>
+            <param name="fileDownloadName">Desired download file name.</param>
+            <param name="data">Data collection to export.</param>
+            <param name="worksheetName">Sheet tab name (default: <c>"Sheet1"</c>).</param>
+            <param name="cancellationToken">Token to cancel the operation.</param>
+            <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes.</returns>
         </member>
         <member name="T:Acontplus.Reports.Interfaces.IQuestPdfReportService">
             <summary>
@@ -642,6 +1389,33 @@
             Legacy synchronous method - prefer using GetReportAsync for better performance
             </summary>
         </member>
+        <member name="T:Acontplus.Reports.Services.ClosedXmlReportService">
+            <summary>
+            Advanced, richly formatted Excel generation service using ClosedXML.
+            Supports corporate header styling, freeze panes, AutoFilter, alternating row shading,
+            aggregate formula totals rows, multi-sheet workbooks, and workbook metadata.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Reports.Services.ClosedXmlReportService},Microsoft.Extensions.Options.IOptions{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Initialises a new <see cref="T:Acontplus.Reports.Services.ClosedXmlReportService"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.GenerateAsync(Acontplus.Reports.Dtos.AdvancedExcelReportRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition},System.String,System.Boolean,System.Boolean,Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.BuildEffectiveColumns(System.Data.DataTable,System.Collections.Generic.List{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition})">
+            <summary>
+            Merges explicit <see cref="T:Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition"/> overrides with the DataTable
+            column order. DataTable columns not covered by the list use default settings.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.Dispose">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Reports.Services.MemoryStreamPool">
             <summary>
             Thread-safe object pool for MemoryStream instances to reduce GC pressure
@@ -656,6 +1430,37 @@
             <summary>
             MemoryStream wrapper that returns rented arrays to the pool when disposed
             </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Services.MiniExcelReportService">
+            <summary>
+            High-performance, stream-based Excel generation service using MiniExcel.
+            Data is streamed directly to the output buffer — no in-memory DOM — making it ideal
+            for large dataset exports.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Reports.Services.MiniExcelReportService},Microsoft.Extensions.Options.IOptions{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Initialises a new <see cref="T:Acontplus.Reports.Services.MiniExcelReportService"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.GenerateAsync(Acontplus.Reports.Dtos.ExcelReportRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.ExcelColumnDefinition},System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.GenerateFromObjectsAsync``1(System.String,System.Collections.Generic.IEnumerable{``0},System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.MapWorksheetToRows(Acontplus.Reports.Dtos.ExcelWorksheetDefinition)">
+            <summary>
+            Projects a <see cref="T:Acontplus.Reports.Dtos.ExcelWorksheetDefinition"/> to a row-per-record sequence of
+            <see cref="T:System.Collections.Generic.IDictionary`2"/>. Hidden columns are excluded and header labels
+            are applied from <see cref="P:Acontplus.Reports.Dtos.ExcelColumnDefinition.Header"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.MiniExcelReportService.Dispose">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Reports.Services.QuestPdfReportService">
             <summary>

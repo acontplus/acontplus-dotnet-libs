@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A high-performance .NET library for RDLC report generation and direct printing with advanced features for enterprise applications. Optimized for high concurrency, large reports, thermal printers, and production workloads.
+A high-performance .NET library for enterprise report generation. Covers RDLC reports, QuestPDF code-first PDF documents, **MiniExcel** streaming Excel exports, and **ClosedXML** richly-formatted Excel workbooks — all with async APIs, concurrency control, timeout protection, and full DI integration.
 
 ## 🚀 Features
 
@@ -15,6 +15,8 @@ A high-performance .NET library for RDLC report generation and direct printing w
 - ✅ **Async/Await Support** - Fully asynchronous API for better scalability
 - ✅ **RDLC Report Generation** - Support for PDF, Excel, Word, HTML5, Image exports
 - ✅ **QuestPDF Dynamic PDF** - Fluent code-first PDF generation without design-time files
+- ✅ **MiniExcel Streaming Excel** - Ultra-fast, low-memory bulk data exports (DataTable / POCO)
+- ✅ **ClosedXML Advanced Excel** - Richly formatted workbooks: corporate styles, freeze panes, AutoFilter, formula aggregates
 - ✅ **Direct Printing** - Print reports directly to thermal/receipt printers
 - ✅ **High Concurrency** - Built-in concurrency limiting and thread-safe operations
 - ✅ **Memory Optimization** - Stream pooling and efficient memory management for large reports
@@ -34,6 +36,28 @@ A high-performance .NET library for RDLC report generation and direct printing w
 - Cancellation token support for graceful shutdowns
 - Separate semaphore controls for report generation and printing
 
+---
+
+## 🖥️ Platform Compatibility
+
+Different services in this library have different platform requirements. Always check this table before choosing a service in a cross-platform deployment (Linux containers, cloud, macOS CI).
+
+| Service         | Interface                 | Windows | Linux | macOS | Notes                                                                                                                                                                |
+| --------------- | ------------------------- | :-----: | :---: | :---: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RDLC generation | `IRdlcReportService`      |   ✅    |  ❌   |  ❌   | **Windows only.** Depends on `ReportViewerCore.NETCore` which requires GDI+ / `System.Drawing.Common`. Does not work on Linux or macOS regardless of `libgdiplus`.   |
+| RDLC printing   | `IRdlcPrinterService`     |   ✅    |  ❌   |  ❌   | **Windows 6.1+ only.** Registered automatically when `OperatingSystem.IsWindowsVersionAtLeast(6,1)` returns `true`; injecting it on other OSes will fail at runtime. |
+| QuestPDF PDF    | `IQuestPdfReportService`  |   ✅    |  ✅   |  ✅   | Fully cross-platform. No native dependencies. Preferred choice for PDF in containerized / cloud environments. Requires a valid QuestPDF license (Community is free). |
+| MiniExcel       | `IMiniExcelReportService` |   ✅    |  ✅   |  ✅   | Fully cross-platform. Pure managed code; no GDI+ or COM dependencies.                                                                                                |
+| ClosedXML       | `IClosedXmlReportService` |   ✅    |  ✅   |  ✅   | Fully cross-platform. Pure managed code; no GDI+ or COM dependencies.                                                                                                |
+
+### Linux / Docker / macOS
+
+> **Both RDLC services are Windows-only.** `IRdlcReportService` depends on `ReportViewerCore.NETCore` which does not run on Linux or macOS — `libgdiplus` is **not** sufficient to make it work. `IRdlcPrinterService` additionally requires Windows 6.1+ at the OS level.
+>
+> **Recommendation for containers and cross-platform deployments:** use `IQuestPdfReportService` for PDF, `IMiniExcelReportService` / `IClosedXmlReportService` for Excel. Never reference either RDLC service on non-Windows hosts.
+
+---
+
 ## 📦 Installation
 
 ### NuGet Package Manager
@@ -52,9 +76,43 @@ dotnet add package Acontplus.Reports
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Reports" Version="1.6.0" />
+  <PackageReference Include="Acontplus.Reports" Version="1.7.0" />
 </ItemGroup>
 ```
+
+---
+
+## 🔀 Service Selection Guide
+
+Use this table to pick the right service for each use-case before writing any code.
+
+| Requirement                        | Recommended service                          | Reason                                                                        |
+| ---------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| PDF from existing `.rdlc` template | `IRdlcReportService`                         | Template-driven; **Windows only** — does not run on Linux or macOS            |
+| PDF via code (no template file)    | `IQuestPdfReportService`                     | Code-first, cross-platform, fluent composition                                |
+| PDF in Linux / Docker              | `IQuestPdfReportService`                     | **Only cross-platform PDF engine** — no GDI+ required                         |
+| PDF for thermal/receipt printer    | `IRdlcPrinterService` + `IRdlcReportService` | Direct Windows printing; Windows 6.1+ only                                    |
+| Bulk data download (CSV/Excel)     | `IMiniExcelReportService`                    | Streaming — constant memory regardless of row count; fastest for large tables |
+| Large DataTable API export         | `IMiniExcelReportService`                    | Minimal allocations; no in-memory DOM                                         |
+| POCO collection export             | `IMiniExcelReportService`                    | Native generic serialisation via `GenerateFromObjectsAsync<T>`                |
+| Formatted report for end users     | `IClosedXmlReportService`                    | Corporate styles, freeze panes, AutoFilter, formula totals                    |
+| Invoice / statement / dashboard    | `IClosedXmlReportService`                    | Rich formatting; users can open and edit the resulting workbook               |
+| Multi-sheet analytical workbook    | Both work; prefer `IClosedXmlReportService`  | ClosedXML adds per-sheet styles and formula rows; MiniExcel for raw data only |
+| Cross-platform Excel in containers | Either Excel service                         | Both are fully cross-platform; no native dependencies                         |
+
+### Quick decision diagram
+
+```
+Do you need PDF?
+├─ Yes — Do you have an .rdlc template?
+│   ├─ Yes, Windows only → IRdlcReportService
+│   └─ No, or cross-platform → IQuestPdfReportService  ← preferred
+└─ No — Do you need Excel?
+    ├─ Bulk / large data / POCO collection → IMiniExcelReportService
+    └─ Formatted report / corporate styles / formulas → IClosedXmlReportService
+```
+
+---
 
 ## 🎯 Quick Start
 
@@ -121,6 +179,10 @@ Ensure your RDLC files are included in your project:
 ## 📖 Comprehensive Usage Guide
 
 ### Report Generation Service
+
+> **Platform: Windows only ✅ / Linux ❌ / macOS ❌ / Docker ❌.**
+> `IRdlcReportService` depends on `ReportViewerCore.NETCore` (GDI+) and does not run on Linux or macOS.
+> For cross-platform PDF generation use `IQuestPdfReportService` instead.
 
 The `IRdlcReportService` provides methods for generating reports in various formats.
 
@@ -281,6 +343,8 @@ public class InvoiceController : ControllerBase
 ```
 
 ### Printer Service
+
+> **Platform: Windows 6.1+ only.** `IRdlcPrinterService` is only registered when `OperatingSystem.IsWindowsVersionAtLeast(6, 1)` returns `true`. Do **not** inject or resolve this service on Linux or macOS — it will not be available in the DI container.
 
 The `IRdlcPrinterService` enables direct printing to thermal printers, receipt printers, or standard printers.
 
@@ -461,7 +525,9 @@ public async Task<Dictionary<string, byte[]>> GenerateMultiFormatReport(
 
 ## 🎨 QuestPDF Dynamic PDF Generation
 
-`IQuestPdfReportService` provides code-first, fluent PDF generation via **QuestPDF 2026.x** — no RDLC templates, no design-time files. Reports are programmatically composed from typed request objects and rendered on any platform (.NET 10 / Linux / Windows / macOS).
+> **Platform:** Windows ✅ · Linux ✅ · macOS ✅ · Docker ✅ — **fully cross-platform, no native dependencies.**
+
+`IQuestPdfReportService` provides code-first, fluent PDF generation via **QuestPDF 2026.x** — no RDLC templates, no design-time files. Reports are programmatically composed from typed request objects and rendered on any platform (.NET 10 / Linux / Windows / macOS). This is the **recommended PDF engine** for containerized and cloud-native workloads.
 
 ### QuestPDF License
 
@@ -694,16 +760,27 @@ var receipt = await _pdf.GenerateAsync(request, ct);
 
 #### `QuestPdfDocumentSettings`
 
-| Property          | Default                                  | Description                                           |
-| ----------------- | ---------------------------------------- | ----------------------------------------------------- |
-| `PageSize`        | `A4`                                     | Page size preset                                      |
-| `Orientation`     | `Portrait`                               | Portrait or Landscape                                 |
-| `FontFamily`      | `"Helvetica"`                            | Default font family                                   |
-| `FontSize`        | `9f`                                     | Default body font size (pt)                           |
-| `ShowPageNumbers` | `true`                                   | Auto page number footer                               |
-| `ShowTimestamp`   | `false`                                  | Show UTC timestamp in footer                          |
-| `LicenseType`     | `Community`                              | QuestPDF license tier                                 |
-| `ColorTheme`      | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
+| Property            | Default                                  | Description                                           |
+| ------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `PageSize`          | `A4`                                     | Page size preset                                      |
+| `Orientation`       | `Portrait`                               | Portrait or Landscape                                 |
+| `FontFamily`        | `"Helvetica"`                            | Default font family                                   |
+| `FontSize`          | `9f`                                     | Default body font size (pt)                           |
+| `ShowPageNumbers`   | `true`                                   | Auto page number footer                               |
+| `ShowTimestamp`     | `false`                                  | Show UTC timestamp in footer                          |
+| `ShowWatermark`     | `false`                                  | Enable diagonal watermark overlay                     |
+| `WatermarkText`     | `null`                                   | Watermark text (requires `ShowWatermark = true`)      |
+| `WatermarkFontSize` | `80f`                                    | **New v1.8.0.** Watermark font size in points         |
+| `WatermarkColor`    | `"#EEEEEE"`                              | **New v1.8.0.** Watermark text colour (HTML hex)      |
+| `LicenseType`       | `Community`                              | QuestPDF license tier                                 |
+| `ColorTheme`        | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
+
+#### `QuestPdfHeaderFooterOptions` — new v1.8.0 logo properties
+
+| Property       | Default | Description                                                                                                                                        |
+| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LogoBytes`    | `null`  | **New v1.8.0.** Logo image bytes — bypasses the file system entirely. Takes priority over `LogoPath`. Ideal when the logo is stored in a database. |
+| `LogoMimeType` | `null`  | MIME type hint for `LogoBytes` (e.g. `"image/png"`).                                                                                               |
 
 #### Color Themes
 
@@ -766,25 +843,117 @@ ColorTheme = new QuestPdfColorTheme
 
 #### `QuestPdfTableColumn`
 
-| Property        | Default  | Description                                        |
-| --------------- | -------- | -------------------------------------------------- |
-| `ColumnName`    | required | DataTable column name                              |
-| `Header`        | `null`   | Display label (uses ColumnName if null)            |
-| `RelativeWidth` | `null`   | Proportional width (auto-split if null)            |
-| `Alignment`     | `Left`   | Cell text alignment                                |
-| `Format`        | `null`   | .NET format string: `"C2"`, `"N0"`, `"yyyy-MM-dd"` |
-| `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`              |
-| `IsBold`        | `false`  | Bold cell text                                     |
-| `IsHidden`      | `false`  | Exclude from output                                |
+| Property        | Default  | Description                                                                                                 |
+| --------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `ColumnName`    | required | DataTable column name (ignored when `IsGroupHeader = true`)                                                 |
+| `Header`        | `null`   | Display label (uses ColumnName if null)                                                                     |
+| `RelativeWidth` | `null`   | Proportional width (auto-split if null)                                                                     |
+| `Alignment`     | `Left`   | Cell text alignment                                                                                         |
+| `Format`        | `null`   | .NET format string: `"C2"`, `"N0"`, `"yyyy-MM-dd"`                                                          |
+| `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`                                                                       |
+| `IsBold`        | `false`  | Bold cell text                                                                                              |
+| `IsHidden`      | `false`  | Exclude from output                                                                                         |
+| `IsGroupHeader` | `false`  | **New v1.8.0.** Renders as a band/group header row spanning `ColumnSpan` columns. No `ColumnName` required. |
+| `ColumnSpan`    | `1`      | **New v1.8.0.** Number of data columns this band header spans (used only when `IsGroupHeader = true`).      |
+
+> **Grouped-header layout (Kardex-style):** Mix normal `QuestPdfTableColumn` entries with group-header descriptors (`IsGroupHeader = true, ColumnSpan = N`). Group descriptors appear as a coloured band row _above_ the normal header row, spanning the stated number of data columns left-to-right in the order they are declared.
 
 #### `QuestPdfSection` types
 
-| `Type`            | Required properties | Description                                    |
-| ----------------- | ------------------- | ---------------------------------------------- |
-| `DataTable`       | `Data`              | Renders a `DataTable` as a themed grid         |
-| `Text`            | `TextBlocks`        | Renders a list of formatted text blocks        |
-| `KeyValueSummary` | `KeyValues`         | Renders a two-column label/value panel         |
-| `Custom`          | `CustomComposer`    | Full control via `Action<IContainer>` delegate |
+| `Type`            | Required properties                                        | Description                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DataTable`       | `Data`                                                     | Renders a `DataTable` as a themed grid                                                                                                      |
+| `Text`            | `TextBlocks`                                               | Renders a list of formatted text blocks                                                                                                     |
+| `KeyValueSummary` | `KeyValues`                                                | Renders a two-column label/value panel                                                                                                      |
+| `Custom`          | `CustomComposer`                                           | Full control via `Action<IContainer>` delegate                                                                                              |
+| `Image`           | `ImageBytes`                                               | **New v1.8.0.** Renders a raw image (`byte[]`) with optional max width/height and alignment.                                                |
+| `Barcode`         | `BarcodeText` or `BarcodeBytes`                            | **New v1.8.0.** Generates a Code-128 or QR code image via `Acontplus.Barcode`.                                                              |
+| `MasterDetail`    | `Data`, `DetailData`, `MasterKeyColumn`, `DetailKeyColumn` | **New v1.8.0.** Master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern).                                |
+| `TwoColumn`       | `LeftContentType`, `RightSection`                          | **New v1.8.0.** Side-by-side columns; left renders the parent section using `LeftContentType`, right renders an independent `RightSection`. |
+| `InvoiceHeader`   | `InvoiceHeader`                                            | **New v1.8.0.** SRI Ecuador–style invoice header: company block (left) + SRI auth box (right) + buyer band (bottom).                        |
+
+##### `QuestPdfSection` — new v1.8.0 property groups
+
+**Image properties** (`Type = Image`)
+
+| Property         | Default | Description                              |
+| ---------------- | ------- | ---------------------------------------- |
+| `ImageBytes`     | `null`  | Raw image bytes                          |
+| `ImageMaxHeight` | `80f`   | Maximum height in points                 |
+| `ImageMaxWidth`  | `160f`  | Maximum width in points (`0` = no limit) |
+| `ImageAlignment` | `Left`  | Cell alignment                           |
+
+**Barcode properties** (`Type = Barcode`)
+
+| Property             | Default   | Description                                                    |
+| -------------------- | --------- | -------------------------------------------------------------- |
+| `BarcodeText`        | `null`    | Source text — barcode is generated at render time              |
+| `BarcodeBytes`       | `null`    | Pre-rendered barcode image (takes priority over `BarcodeText`) |
+| `BarcodeType`        | `Code128` | `QuestPdfBarcodeType.Code128` or `QrCode`                      |
+| `BarcodeWidth`       | `120f`    | Rendered width in points                                       |
+| `BarcodeHeight`      | `50f`     | Rendered height in points                                      |
+| `BarcodeAlignment`   | `Center`  | Alignment inside the container                                 |
+| `ShowBarcodeCaption` | `false`   | Include human-readable text label below the barcode            |
+
+**MasterDetail properties** (`Type = MasterDetail`)
+
+| Property              | Default | Description                                   |
+| --------------------- | ------- | --------------------------------------------- |
+| `MasterKeyColumn`     | `null`  | Column in `Data` used as join key             |
+| `DetailKeyColumn`     | `null`  | Column in `DetailData` used as join key       |
+| `DetailData`          | `null`  | DataTable containing the detail rows          |
+| `DetailColumns`       | `null`  | Column definitions for the detail sub-table   |
+| `DetailSectionTitle`  | `null`  | Optional heading above each detail sub-table  |
+| `ShowDetailTotalsRow` | `false` | Show aggregate totals on the detail sub-table |
+
+**TwoColumn properties** (`Type = TwoColumn`)
+
+| Property           | Default     | Description                                                                                     |
+| ------------------ | ----------- | ----------------------------------------------------------------------------------------------- |
+| `LeftContentType`  | `DataTable` | Section type to render in the left column (uses the parent section's data/keyvalues/textblocks) |
+| `RightSection`     | `null`      | Fully independent `QuestPdfSection` rendered in the right column                                |
+| `LeftColumnRatio`  | `1`         | Proportional width of the left column                                                           |
+| `RightColumnRatio` | `1`         | Proportional width of the right column                                                          |
+| `TwoColumnGap`     | `8f`        | Gap in points between the two columns                                                           |
+
+#### `QuestPdfInvoiceHeader` (new v1.8.0)
+
+Used by `Type = InvoiceHeader` — models the standard SRI Ecuador electronic invoice header layout.
+
+| Property                | Default     | Description                                                          |
+| ----------------------- | ----------- | -------------------------------------------------------------------- |
+| `LogoBytes`             | `null`      | Company logo from database / memory (takes priority over `LogoPath`) |
+| `LogoPath`              | `null`      | Company logo from file system                                        |
+| `LogoMaxHeight`         | `50f`       | Maximum logo height in points                                        |
+| `CompanyName`           | `null`      | Legal company name                                                   |
+| `TradeName`             | `null`      | Commercial name                                                      |
+| `CompanyAddress`        | `null`      | Registered address                                                   |
+| `BranchAddress`         | `null`      | Branch / establishment address                                       |
+| `CompanyPhone`          | `null`      | Contact phone                                                        |
+| `CompanyEmail`          | `null`      | Contact e-mail                                                       |
+| `CompanyActivity`       | `null`      | Commercial activity                                                  |
+| `ContribuyenteEspecial` | `null`      | SRI special contributor number                                       |
+| `ObligadoContabilidad`  | `null`      | `"SI"` / `"NO"`                                                      |
+| `ContribuyenteRimpe`    | `null`      | RIMPE regime label                                                   |
+| `AgenteRetencion`       | `null`      | Retention agent resolution                                           |
+| `Ruc`                   | `null`      | RUC (tax ID)                                                         |
+| `DocumentType`          | `null`      | Document type label e.g. `"FACTURA"`                                 |
+| `DocumentNumber`        | `null`      | Sequential number `001-001-000000042`                                |
+| `AuthorizationNumber`   | `null`      | SRI authorization number                                             |
+| `AuthorizationDate`     | `null`      | Authorization date/time string                                       |
+| `AccessKey`             | `null`      | 49-character SRI access key                                          |
+| `Environment`           | `null`      | `"PRODUCCIÓN"` / `"PRUEBAS"`                                         |
+| `EmissionType`          | `null`      | `"EMISIÓN NORMAL"`                                                   |
+| `BuyerName`             | `null`      | Buyer legal name                                                     |
+| `BuyerIdentification`   | `null`      | Buyer RUC / CI                                                       |
+| `BuyerAddress`          | `null`      | Buyer address                                                        |
+| `EmissionDate`          | `null`      | Emission date string                                                 |
+| `DeliveryReference`     | `null`      | Dispatch / remission guide number                                    |
+| `ExtraFields`           | `{}`        | Additional buyer-block key-value pairs                               |
+| `LeftPanelRatio`        | `6`         | Proportional width of company block                                  |
+| `RightPanelRatio`       | `4`         | Proportional width of SRI auth box                                   |
+| `AuthBoxBorderColor`    | `"#d61672"` | Border colour of the SRI auth box                                    |
+| `FontSize`              | `8f`        | Base font size in points                                             |
 
 #### Page Sizes
 
@@ -801,7 +970,323 @@ ColorTheme = new QuestPdfColorTheme
 
 ---
 
-## 📚 Advanced Configuration
+## � Excel Report Generation
+
+The library ships two complementary Excel engines. Both are **fully cross-platform** (Windows ✅ · Linux ✅ · macOS ✅ · Docker ✅) with no GDI+ or COM dependencies. Choose based on your requirements:
+
+| Feature            | `IMiniExcelReportService`                               | `IClosedXmlReportService`                           |
+| ------------------ | ------------------------------------------------------- | --------------------------------------------------- |
+| Engine             | [MiniExcel](https://github.com/mini-software/MiniExcel) | [ClosedXML](https://github.com/ClosedXML/ClosedXML) |
+| Platform           | ✅ Cross-platform                                       | ✅ Cross-platform                                   |
+| Memory model       | Streaming (no DOM)                                      | In-memory workbook                                  |
+| Best for           | Bulk data, large tables, APIs                           | Reports, invoices, dashboards                       |
+| Corporate styles   | ❌                                                      | ✅                                                  |
+| Freeze panes       | ❌                                                      | ✅                                                  |
+| AutoFilter         | ❌                                                      | ✅                                                  |
+| Aggregate formulas | ❌                                                      | ✅                                                  |
+| Alternating rows   | ❌                                                      | ✅                                                  |
+| POCO collections   | ✅                                                      | ❌                                                  |
+| Multi-sheet        | ✅                                                      | ✅                                                  |
+
+> Both services share the same `AddReportServices()` registration and `ReportOptions` timeout/concurrency settings.
+
+---
+
+### Registration (standalone)
+
+```csharp
+// MiniExcel only
+builder.Services.AddMiniExcelReportService(builder.Configuration);
+
+// ClosedXML only
+builder.Services.AddClosedXmlReportService(builder.Configuration);
+
+// Or both + full stack (RDLC + QuestPDF + MiniExcel + ClosedXML)
+builder.Services.AddReportServices(builder.Configuration);
+```
+
+---
+
+### MiniExcel — Quick Start
+
+Best for bulk data exports where speed and low memory consumption matter.
+
+```csharp
+using Acontplus.Reports.Interfaces;
+using Acontplus.Reports.Dtos;
+
+[ApiController]
+[Route("api/export")]
+public class ExportController : ControllerBase
+{
+    private readonly IMiniExcelReportService _excel;
+
+    public ExportController(IMiniExcelReportService excel) => _excel = excel;
+
+    // Quick single-table export
+    [HttpGet("simple")]
+    public async Task<IActionResult> ExportSimple(CancellationToken ct)
+    {
+        DataTable salesData = FetchSalesFromDb();
+
+        var response = await _excel.GenerateFromDataTableAsync(
+            fileDownloadName: "sales-report",
+            data: salesData,
+            columns:
+            [
+                new ExcelColumnDefinition { ColumnName = "OrderId",   Header = "Order #" },
+                new ExcelColumnDefinition { ColumnName = "Amount",    Header = "Total",  Format = "N2" },
+                new ExcelColumnDefinition { ColumnName = "OrderDate", Header = "Date",   Format = "yyyy-MM-dd" },
+                new ExcelColumnDefinition { ColumnName = "Internal",  IsHidden = true }
+            ],
+            worksheetName: "Sales",
+            cancellationToken: ct);
+
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+
+    // POCO collection export (uses MiniExcel native serialisation)
+    [HttpGet("products")]
+    public async Task<IActionResult> ExportProducts(CancellationToken ct)
+    {
+        var products = await _productRepo.GetAllAsync(ct);
+
+        var response = await _excel.GenerateFromObjectsAsync(
+            fileDownloadName: "products",
+            data: products,
+            worksheetName: "Products",
+            cancellationToken: ct);
+
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+
+    // Multi-sheet workbook
+    [HttpGet("multi-sheet")]
+    public async Task<IActionResult> ExportMultiSheet(CancellationToken ct)
+    {
+        var request = new ExcelReportRequest
+        {
+            FileDownloadName = "monthly-summary",
+            Worksheets =
+            [
+                new ExcelWorksheetDefinition { Name = "Revenue", Data = FetchRevenue() },
+                new ExcelWorksheetDefinition { Name = "Expenses", Data = FetchExpenses() },
+                new ExcelWorksheetDefinition { Name = "Summary",  Data = FetchSummary() }
+            ]
+        };
+
+        var response = await _excel.GenerateAsync(request, ct);
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+}
+```
+
+---
+
+### ClosedXML — Quick Start
+
+Best for presentation-quality reports with corporate branding, formulas, and user-editable output.
+
+```csharp
+using Acontplus.Reports.Interfaces;
+using Acontplus.Reports.Dtos;
+using Acontplus.Reports.Enums;
+
+[ApiController]
+[Route("api/reports")]
+public class ReportController : ControllerBase
+{
+    private readonly IClosedXmlReportService _excel;
+
+    public ReportController(IClosedXmlReportService excel) => _excel = excel;
+
+    // Quick formatted export with corporate style
+    [HttpGet("financial")]
+    public async Task<IActionResult> FinancialReport(CancellationToken ct)
+    {
+        DataTable data = FetchFinancialData();
+
+        var response = await _excel.GenerateFromDataTableAsync(
+            fileDownloadName: "financial-report",
+            data: data,
+            columns:
+            [
+                new AdvancedExcelColumnDefinition
+                {
+                    ColumnName = "Period",
+                    Header     = "Period",
+                    Width      = 15,
+                    Alignment  = ExcelHorizontalAlignment.Center
+                },
+                new AdvancedExcelColumnDefinition
+                {
+                    ColumnName    = "Revenue",
+                    Header        = "Revenue (USD)",
+                    NumberFormat  = "$#,##0.00",
+                    Alignment     = ExcelHorizontalAlignment.Right,
+                    AggregateType = ExcelAggregateType.Sum
+                },
+                new AdvancedExcelColumnDefinition
+                {
+                    ColumnName    = "Expenses",
+                    Header        = "Expenses (USD)",
+                    NumberFormat  = "$#,##0.00",
+                    Alignment     = ExcelHorizontalAlignment.Right,
+                    AggregateType = ExcelAggregateType.Sum
+                }
+            ],
+            headerStyle: AdvancedExcelHeaderStyle.CorporateBlue(),
+            cancellationToken: ct);
+
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+
+    // Full multi-sheet workbook with customised styles and aggregates
+    [HttpGet("annual-report")]
+    public async Task<IActionResult> AnnualReport(CancellationToken ct)
+    {
+        var request = new AdvancedExcelReportRequest
+        {
+            FileDownloadName = "annual-report-2025",
+            Author           = "Finance Team",
+            Company          = "Acontplus Corporation",
+            Subject          = "Annual Financial Report",
+            Worksheets =
+            [
+                new AdvancedExcelWorksheetDefinition
+                {
+                    Name               = "P&L Summary",
+                    Data               = FetchProfitLoss(),
+                    AutoFilter         = true,
+                    FreezeHeaderRow    = true,
+                    AlternatingRowShading = true,
+                    AlternatingRowColor   = "EBF3FB",
+                    IncludeAggregateRow   = true,
+                    HeaderStyle           = AdvancedExcelHeaderStyle.DarkGreen(),
+                    Columns =
+                    [
+                        new() { ColumnName = "Category", Header = "Category",    Width = 25 },
+                        new() { ColumnName = "Q1",        NumberFormat = "#,##0", AggregateType = ExcelAggregateType.Sum, Alignment = ExcelHorizontalAlignment.Right },
+                        new() { ColumnName = "Q2",        NumberFormat = "#,##0", AggregateType = ExcelAggregateType.Sum, Alignment = ExcelHorizontalAlignment.Right },
+                        new() { ColumnName = "Q3",        NumberFormat = "#,##0", AggregateType = ExcelAggregateType.Sum, Alignment = ExcelHorizontalAlignment.Right },
+                        new() { ColumnName = "Q4",        NumberFormat = "#,##0", AggregateType = ExcelAggregateType.Sum, Alignment = ExcelHorizontalAlignment.Right }
+                    ]
+                },
+                new AdvancedExcelWorksheetDefinition
+                {
+                    Name   = "Balance Sheet",
+                    Data   = FetchBalanceSheet(),
+                    HeaderStyle = AdvancedExcelHeaderStyle.DarkGrey()
+                }
+            ]
+        };
+
+        var response = await _excel.GenerateAsync(request, ct);
+        return File(response.FileContents, response.ContentType, response.FileDownloadName);
+    }
+}
+```
+
+---
+
+### Excel DTO Reference
+
+#### `ExcelColumnDefinition` (MiniExcel)
+
+| Property     | Type      | Default      | Description                                                       |
+| ------------ | --------- | ------------ | ----------------------------------------------------------------- |
+| `ColumnName` | `string`  | _(required)_ | Source DataTable column name                                      |
+| `Header`     | `string?` | `null`       | Override header label                                             |
+| `Format`     | `string?` | `null`       | .NET format string applied to value (e.g. `"N2"`, `"yyyy-MM-dd"`) |
+| `IsHidden`   | `bool`    | `false`      | Exclude column from output                                        |
+
+#### `AdvancedExcelColumnDefinition` (ClosedXML)
+
+| Property        | Type                       | Default      | Description                             |
+| --------------- | -------------------------- | ------------ | --------------------------------------- |
+| `ColumnName`    | `string`                   | _(required)_ | Source DataTable column name            |
+| `Header`        | `string?`                  | `null`       | Override header label                   |
+| `Width`         | `double?`                  | `null`       | Column width in chars (null = auto-fit) |
+| `NumberFormat`  | `string?`                  | `null`       | Excel format code e.g. `"$#,##0.00"`    |
+| `Alignment`     | `ExcelHorizontalAlignment` | `General`    | Cell horizontal alignment               |
+| `IsBold`        | `bool`                     | `false`      | Bold data cells                         |
+| `IsHidden`      | `bool`                     | `false`      | Hide column                             |
+| `AggregateType` | `ExcelAggregateType`       | `None`       | Totals row formula                      |
+
+#### `AdvancedExcelHeaderStyle` presets
+
+```csharp
+AdvancedExcelHeaderStyle.CorporateBlue()  // default — dark blue bg, white text
+AdvancedExcelHeaderStyle.DarkGreen()      // forest green bg, white text
+AdvancedExcelHeaderStyle.DarkGrey()       // charcoal bg, white text
+AdvancedExcelHeaderStyle.LightBlue()      // pastel blue bg, navy text
+AdvancedExcelHeaderStyle.Title()          // NEW v1.8.0 — white bg, dark-navy text, 14pt; used for ReportTitle / ReportSubTitle rows
+AdvancedExcelHeaderStyle.GroupHeader()    // NEW v1.8.0 — mid-blue bg, white text, 10pt; used for GroupHeaders band row
+
+// Or full customisation
+new AdvancedExcelHeaderStyle
+{
+    BackgroundColor    = "FF5733",
+    FontColor          = "FFFFFF",
+    Bold               = true,
+    FontSize           = 12,
+    HorizontalAlignment = ExcelHorizontalAlignment.Left
+};
+```
+
+#### `AdvancedExcelWorksheetDefinition` — new v1.8.0 properties
+
+| Property           | Type                              | Default                | Description                                                                |
+| ------------------ | --------------------------------- | ---------------------- | -------------------------------------------------------------------------- |
+| `ReportTitle`      | `string?`                         | `null`                 | Optional merged title row rendered above all header rows.                  |
+| `ReportSubTitle`   | `string?`                         | `null`                 | Optional merged subtitle row rendered directly below the title.            |
+| `TitleStyle`       | `AdvancedExcelHeaderStyle?`       | `null → Title()`       | Style applied to title and subtitle rows.                                  |
+| `GroupHeaders`     | `List<AdvancedExcelGroupHeader>?` | `null`                 | Band-header descriptors that span one or more data columns (Kardex-style). |
+| `GroupHeaderStyle` | `AdvancedExcelHeaderStyle?`       | `null → GroupHeader()` | Style applied to the group-header band row.                                |
+
+#### `AdvancedExcelGroupHeader` (new v1.8.0)
+
+| Property           | Type              | Description                                        |
+| ------------------ | ----------------- | -------------------------------------------------- |
+| `Title`            | required `string` | Label displayed in the merged band cell.           |
+| `StartColumnIndex` | required `int`    | First column (1-based, inclusive) the band covers. |
+| `EndColumnIndex`   | required `int`    | Last column (1-based, inclusive) the band covers.  |
+
+> **Row order with title/subtitle/group headers:**
+> `ReportTitle` row → `ReportSubTitle` row → `GroupHeaders` row → Column header row → Data rows → Aggregate totals row.
+> `FreezeRows` and `SetAutoFilter` are automatically applied to the column header row, regardless of how many rows precede it.
+
+##### ClosedXML Kardex example
+
+```csharp
+new AdvancedExcelWorksheetDefinition
+{
+    Name            = "Kardex",
+    Data            = kardexTable,
+    ReportTitle     = "KARDEX — PRD-007: SSD 1TB NVMe",
+    ReportSubTitle  = "Período: Enero 2026  |  Método: Promedio Ponderado",
+    TitleStyle      = AdvancedExcelHeaderStyle.Title(),
+    GroupHeaders    =
+    [
+        new AdvancedExcelGroupHeader { Title = "ENTRADAS", StartColumnIndex = 4, EndColumnIndex = 6 },
+        new AdvancedExcelGroupHeader { Title = "SALIDAS",  StartColumnIndex = 7, EndColumnIndex = 9 },
+        new AdvancedExcelGroupHeader { Title = "SALDO",    StartColumnIndex = 10, EndColumnIndex = 12 }
+    ],
+    GroupHeaderStyle  = AdvancedExcelHeaderStyle.GroupHeader(),
+    AutoFilter        = true,
+    FreezeHeaderRow   = true,
+    IncludeAggregateRow = true,
+    Columns = [ /* 12 column definitions */ ]
+}
+```
+
+#### `ExcelAggregateType` values
+
+`None` · `Sum` · `Average` · `Count` · `CountA` · `Min` · `Max`
+
+---
+
+## �📚 Advanced Configuration
 
 ### Configuration Options Reference
 
@@ -1137,3 +1622,50 @@ This project is licensed under the MIT License - see the [LICENSE](../../LICENSE
 ---
 
 **Built with ❤️ for the .NET community**
+
+---
+
+## 📋 Changelog
+
+### v1.8.0
+
+- **New** `QuestPdfSectionType.InvoiceHeader` — SRI Ecuador–style invoice header section (`QuestPdfInvoiceHeader` DTO): company block (left), SRI auth box with border (right), buyer band (bottom)
+- **New** `QuestPdfSectionType.Image` — raw `byte[]` image section with configurable max dimensions and alignment
+- **New** `QuestPdfSectionType.Barcode` — Code-128 / QR code section generated from text via `Acontplus.Barcode` (`QuestPdfBarcodeType` enum)
+- **New** `QuestPdfSectionType.MasterDetail` — master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern)
+- **New** `QuestPdfSectionType.TwoColumn` — side-by-side layout with independent left/right content, configurable column ratios and gap
+- **New** `QuestPdfTableColumn.IsGroupHeader` / `ColumnSpan` — grouped / band header rows in DataTable (Kardex pattern: Entradas | Salidas | Saldo)
+- **New** `QuestPdfHeaderFooterOptions.LogoBytes` + `LogoMimeType` — logo from `byte[]` instead of file path (database-sourced logos)
+- **New** `QuestPdfDocumentSettings.WatermarkFontSize` + `WatermarkColor` — configurable watermark appearance
+- **New** `AdvancedExcelWorksheetDefinition.ReportTitle`, `ReportSubTitle`, `TitleStyle`, `GroupHeaders`, `GroupHeaderStyle` — title, subtitle and band-header rows above column headers (ClosedXML)
+- **New** `AdvancedExcelGroupHeader` DTO — describes a merge-span band header (`Title`, `StartColumnIndex`, `EndColumnIndex`)
+- **New** `AdvancedExcelHeaderStyle.Title()` and `GroupHeader()` presets
+- **Demo** — six new endpoints in `ReportsEndpoints.cs`: `sri-invoice`, `barcode`, `master-detail`, `kardex`, `two-column`, `closedxml/grouped-report`
+
+### v1.7.0
+
+- **New** `IMiniExcelReportService` / `MiniExcelReportService` — high-performance streaming Excel exports (MiniExcel 1.42.0)
+  - `GenerateAsync(ExcelReportRequest)` — single and multi-sheet workbooks from DataTable sources
+  - `GenerateFromDataTableAsync(...)` — convenience single-table shortcut with column visibility, header overrides, and format hints
+  - `GenerateFromObjectsAsync<T>(...)` — strongly-typed POCO collection export using native MiniExcel serialisation
+- **New** `IClosedXmlReportService` / `ClosedXmlReportService` — richly formatted Excel workbooks (ClosedXML 0.105.0)
+  - `GenerateAsync(AdvancedExcelReportRequest)` — full multi-sheet workbooks with metadata
+  - `GenerateFromDataTableAsync(...)` — convenience shortcut with per-column formatting and header style
+  - Corporate header styles (CorporateBlue, DarkGreen, DarkGrey, LightBlue)
+  - Freeze panes, AutoFilter, alternating row shading, aggregate formula totals rows
+- **New** DTOs: `ExcelColumnDefinition`, `ExcelWorksheetDefinition`, `ExcelReportRequest`
+- **New** DTOs: `AdvancedExcelColumnDefinition`, `AdvancedExcelHeaderStyle`, `AdvancedExcelWorksheetDefinition`, `AdvancedExcelReportRequest`
+- **New** Enums: `ExcelHorizontalAlignment`, `ExcelAggregateType`
+- **New** DI extensions: `AddMiniExcelReportService()`, `AddClosedXmlReportService()`
+- `AddReportServices()` now registers all four services (RDLC + QuestPDF + MiniExcel + ClosedXML)
+
+### v1.6.0
+
+- Added `IQuestPdfReportService` / `QuestPdfReportService` — QuestPDF dynamic PDF generation with fluent composition, multi-section layouts, typed DataTable tables, key-value panels, aggregate totals, full theming, watermarks, and page-number footers
+
+### v1.5.x
+
+- RDLC report generation performance improvements
+- Concurrency control and timeout protection
+- Report definition caching
+- Direct printing support for thermal printers
