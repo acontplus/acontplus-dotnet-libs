@@ -615,5 +615,284 @@ public static class ReportsEndpoints
                 return Results.Problem("Print test failed", statusCode: 500);
             }
         });
+
+        // ── MiniExcel endpoints ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Demonstrates MiniExcel streaming bulk export from a DataTable (single sheet).
+        /// Low memory overhead — ideal for large datasets.
+        /// </summary>
+        group.MapGet("/miniexcel/customers", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var excel = httpContext.RequestServices.GetRequiredService<IMiniExcelReportService>();
+            try
+            {
+                logger.LogInformation("Generating MiniExcel customer list export");
+
+                var customers = BuildSampleCustomersTable();
+
+                var response = await excel.GenerateFromDataTableAsync(
+                    fileDownloadName: "customers-export",
+                    data: customers,
+                    columns:
+                    [
+                        new ExcelColumnDefinition { ColumnName = "CustomerId",     Header = "ID" },
+                        new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = "Customer" },
+                        new ExcelColumnDefinition { ColumnName = "Email",          Header = "E-mail" },
+                        new ExcelColumnDefinition { ColumnName = "Phone",          Header = "Phone" },
+                        new ExcelColumnDefinition { ColumnName = "City",           Header = "City" },
+                        new ExcelColumnDefinition { ColumnName = "TotalPurchases", Header = "Total Purchases", Format = "N2" },
+                        new ExcelColumnDefinition { ColumnName = "Status",         Header = "Status" },
+                        new ExcelColumnDefinition { ColumnName = "RegisteredAt",   Header = "Registered",      Format = "yyyy-MM-dd" }
+                    ],
+                    worksheetName: "Customers",
+                    cancellationToken: cancellationToken);
+
+                logger.LogInformation("MiniExcel customer export generated ({Size:N0} bytes)", response.FileContents.Length);
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating MiniExcel customer export");
+                return Results.Problem("Failed to generate Excel export", statusCode: 500);
+            }
+        })
+        .WithName("GetCustomersMiniExcel")
+        .WithDescription("Exports customer list as a streaming Excel workbook via MiniExcel (low memory)");
+
+        /// <summary>
+        /// Demonstrates MiniExcel multi-sheet workbook: Customers + Orders in one file.
+        /// </summary>
+        group.MapGet("/miniexcel/multi-sheet", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var excel = httpContext.RequestServices.GetRequiredService<IMiniExcelReportService>();
+            try
+            {
+                logger.LogInformation("Generating MiniExcel multi-sheet workbook");
+
+                var request = new ExcelReportRequest
+                {
+                    FileDownloadName = "business-summary",
+                    Worksheets =
+                    [
+                        new ExcelWorksheetDefinition
+                        {
+                            Name    = "Customers",
+                            Data    = BuildSampleCustomersTable(),
+                            Columns =
+                            [
+                                new ExcelColumnDefinition { ColumnName = "CustomerId",     Header = "ID" },
+                                new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = "Customer" },
+                                new ExcelColumnDefinition { ColumnName = "City",           Header = "City" },
+                                new ExcelColumnDefinition { ColumnName = "TotalPurchases", Header = "Purchases", Format = "N2" },
+                                new ExcelColumnDefinition { ColumnName = "Status",         Header = "Status" }
+                            ]
+                        },
+                        new ExcelWorksheetDefinition
+                        {
+                            Name    = "Orders",
+                            Data    = BuildSampleOrdersTable(),
+                            Columns =
+                            [
+                                new ExcelColumnDefinition { ColumnName = "OrderId",    Header = "Order #" },
+                                new ExcelColumnDefinition { ColumnName = "Customer",   Header = "Customer" },
+                                new ExcelColumnDefinition { ColumnName = "OrderDate",  Header = "Date",   Format = "yyyy-MM-dd" },
+                                new ExcelColumnDefinition { ColumnName = "Amount",     Header = "Amount", Format = "N2" },
+                                new ExcelColumnDefinition { ColumnName = "Status",     Header = "Status" }
+                            ]
+                        }
+                    ]
+                };
+
+                var response = await excel.GenerateAsync(request, cancellationToken);
+
+                logger.LogInformation("MiniExcel multi-sheet workbook generated ({Size:N0} bytes)", response.FileContents.Length);
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating MiniExcel multi-sheet workbook");
+                return Results.Problem("Failed to generate multi-sheet workbook", statusCode: 500);
+            }
+        })
+        .WithName("GetMultiSheetMiniExcel")
+        .WithDescription("Exports a multi-sheet Excel workbook (Customers + Orders) via MiniExcel");
+
+        // ── ClosedXML endpoints ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Demonstrates ClosedXML richly formatted single-sheet report: corporate styles,
+        /// freeze pane, AutoFilter, alternating rows, and a SUM totals row.
+        /// </summary>
+        group.MapGet("/closedxml/sales", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var excel = httpContext.RequestServices.GetRequiredService<IClosedXmlReportService>();
+            try
+            {
+                logger.LogInformation("Generating ClosedXML formatted sales report");
+
+                var response = await excel.GenerateFromDataTableAsync(
+                    fileDownloadName: "sales-report",
+                    data: BuildSampleOrdersTable(),
+                    columns:
+                    [
+                        new AdvancedExcelColumnDefinition { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
+                        new AdvancedExcelColumnDefinition { ColumnName = "Customer",  Header = "Customer", Width = 28 },
+                        new AdvancedExcelColumnDefinition { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd", Alignment = ExcelHorizontalAlignment.Center },
+                        new AdvancedExcelColumnDefinition { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",  Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
+                        new AdvancedExcelColumnDefinition { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
+                    ],
+                    autoFilter: true,
+                    freezeHeaderRow: true,
+                    headerStyle: AdvancedExcelHeaderStyle.CorporateBlue(),
+                    cancellationToken: cancellationToken);
+
+                logger.LogInformation("ClosedXML sales report generated ({Size:N0} bytes)", response.FileContents.Length);
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating ClosedXML sales report");
+                return Results.Problem("Failed to generate formatted Excel report", statusCode: 500);
+            }
+        })
+        .WithName("GetSalesClosedXml")
+        .WithDescription("Exports a richly formatted sales report via ClosedXML with corporate styles and SUM totals");
+
+        /// <summary>
+        /// Demonstrates ClosedXML full multi-sheet annual report workbook with workbook metadata,
+        /// multiple header styles, aggregate rows, and alternating shading per sheet.
+        /// </summary>
+        group.MapGet("/closedxml/annual-report", async (
+            Microsoft.Extensions.Logging.ILogger<object> logger,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var excel = httpContext.RequestServices.GetRequiredService<IClosedXmlReportService>();
+            try
+            {
+                logger.LogInformation("Generating ClosedXML annual report workbook");
+
+                var request = new AdvancedExcelReportRequest
+                {
+                    FileDownloadName = $"annual-report-{DateTime.UtcNow.Year}",
+                    Author = "Acontplus ERP",
+                    Company = "Acontplus Demo",
+                    Subject = "Annual Business Report",
+                    Keywords = "sales,customers,orders",
+                    Worksheets =
+                    [
+                        new AdvancedExcelWorksheetDefinition
+                        {
+                            Name                 = "Sales Summary",
+                            Data                 = BuildSampleOrdersTable(),
+                            AutoFilter           = true,
+                            FreezeHeaderRow      = true,
+                            AlternatingRowShading = true,
+                            AlternatingRowColor   = "EBF3FB",
+                            IncludeAggregateRow   = true,
+                            HeaderStyle           = AdvancedExcelHeaderStyle.CorporateBlue(),
+                            Columns              =
+                            [
+                                new() { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
+                                new() { ColumnName = "Customer",  Header = "Customer", Width = 28 },
+                                new() { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd",  Alignment = ExcelHorizontalAlignment.Center },
+                                new() { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",   Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
+                                new() { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
+                            ]
+                        },
+                        new AdvancedExcelWorksheetDefinition
+                        {
+                            Name                 = "Customers",
+                            Data                 = BuildSampleCustomersTable(),
+                            AutoFilter           = true,
+                            FreezeHeaderRow      = true,
+                            AlternatingRowShading = true,
+                            AlternatingRowColor   = "E9F5E9",
+                            IncludeAggregateRow   = true,
+                            HeaderStyle           = AdvancedExcelHeaderStyle.DarkGreen(),
+                            Columns              =
+                            [
+                                new() { ColumnName = "CustomerId",     Header = "ID",         Width = 8,   Alignment = ExcelHorizontalAlignment.Center },
+                                new() { ColumnName = "CustomerName",   Header = "Customer",   Width = 28 },
+                                new() { ColumnName = "Email",          Header = "E-mail",     Width = 30 },
+                                new() { ColumnName = "City",           Header = "City",       Width = 16 },
+                                new() { ColumnName = "TotalPurchases", Header = "Purchases",  Width = 14,  NumberFormat = "$#,##0.00", Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
+                                new() { ColumnName = "Status",         Header = "Status",     Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
+                                new() { ColumnName = "Phone",          IsHidden = true }
+                            ]
+                        }
+                    ]
+                };
+
+                var response = await excel.GenerateAsync(request, cancellationToken);
+
+                logger.LogInformation("ClosedXML annual report generated ({Size:N0} bytes)", response.FileContents.Length);
+                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating ClosedXML annual report");
+                return Results.Problem("Failed to generate annual report workbook", statusCode: 500);
+            }
+        })
+        .WithName("GetAnnualReportClosedXml")
+        .WithDescription("Exports a multi-sheet annual report workbook via ClosedXML with full corporate styling");
+    }
+
+    // ── Sample data helpers ───────────────────────────────────────────────────
+
+    private static DataTable BuildSampleCustomersTable()
+    {
+        var t = new DataTable("Customers");
+        t.Columns.Add("CustomerId", typeof(int));
+        t.Columns.Add("CustomerName", typeof(string));
+        t.Columns.Add("Email", typeof(string));
+        t.Columns.Add("Phone", typeof(string));
+        t.Columns.Add("City", typeof(string));
+        t.Columns.Add("TotalPurchases", typeof(decimal));
+        t.Columns.Add("Status", typeof(string));
+        t.Columns.Add("RegisteredAt", typeof(DateTime));
+
+        t.Rows.Add(1, "ABC Corporation", "contact@abc.com", "+1-555-0101", "New York", 15000.50m, "Active", new DateTime(2022, 3, 15));
+        t.Rows.Add(2, "XYZ Industries", "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, "Active", new DateTime(2021, 7, 22));
+        t.Rows.Add(3, "Tech Solutions LLC", "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, "Active", new DateTime(2023, 1, 10));
+        t.Rows.Add(4, "Global Trading Co", "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, "Premium", new DateTime(2020, 11, 5));
+        t.Rows.Add(5, "Smart Systems Inc", "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, "Active", new DateTime(2022, 8, 30));
+        t.Rows.Add(6, "Future Enterprises", "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive", new DateTime(2021, 4, 18));
+        t.Rows.Add(7, "Digital Dynamics", "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, "Active", new DateTime(2023, 5, 2));
+        t.Rows.Add(8, "Innovative Partners", "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, "Premium", new DateTime(2019, 12, 14));
+
+        return t;
+    }
+
+    private static DataTable BuildSampleOrdersTable()
+    {
+        var t = new DataTable("Orders");
+        t.Columns.Add("OrderId", typeof(string));
+        t.Columns.Add("Customer", typeof(string));
+        t.Columns.Add("OrderDate", typeof(DateTime));
+        t.Columns.Add("Amount", typeof(decimal));
+        t.Columns.Add("Status", typeof(string));
+
+        t.Rows.Add("ORD-2026-001", "ABC Corporation", new DateTime(2026, 1, 5), 1500.00m, "Delivered");
+        t.Rows.Add("ORD-2026-002", "XYZ Industries", new DateTime(2026, 1, 12), 3200.50m, "Delivered");
+        t.Rows.Add("ORD-2026-003", "Tech Solutions LLC", new DateTime(2026, 1, 20), 850.00m, "Delivered");
+        t.Rows.Add("ORD-2026-004", "Global Trading Co", new DateTime(2026, 2, 3), 7500.00m, "In Transit");
+        t.Rows.Add("ORD-2026-005", "Smart Systems Inc", new DateTime(2026, 2, 14), 2100.75m, "Delivered");
+        t.Rows.Add("ORD-2026-006", "Future Enterprises", new DateTime(2026, 2, 18), 450.00m, "Cancelled");
+        t.Rows.Add("ORD-2026-007", "Digital Dynamics", new DateTime(2026, 2, 25), 4800.00m, "In Transit");
+        t.Rows.Add("ORD-2026-008", "Innovative Partners", new DateTime(2026, 3, 1), 9200.00m, "Processing");
+
+        return t;
     }
 }
