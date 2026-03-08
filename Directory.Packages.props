@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Acontplus.Analytics" Version="1.0.0" />
-    <PackageVersion Include="Acontplus.Barcode" Version="1.1.3" />
+    <PackageVersion Include="Acontplus.Barcode" Version="1.2.1" />
     <PackageVersion Include="Acontplus.Core" Version="2.2.0" />
     <PackageVersion Include="Acontplus.Persistence.Common" Version="2.0.10" />
     <PackageVersion Include="Acontplus.Utilities" Version="2.0.7" />

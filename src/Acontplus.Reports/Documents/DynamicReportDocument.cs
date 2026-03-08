@@ -1,9 +1,8 @@
-using System.Globalization;
-using System.Security;
-using Acontplus.Utilities.Security.Helpers;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Globalization;
+using System.Security;
 using ZXing;
 
 namespace Acontplus.Reports.Documents;
