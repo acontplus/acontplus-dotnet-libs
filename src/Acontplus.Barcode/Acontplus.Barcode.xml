@@ -4,5 +4,113 @@
         <name>Acontplus.Barcode</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Barcode.Extensions.BarcodeServiceCollectionExtensions">
+            <summary>
+            Extension methods for registering barcode services in the dependency injection container.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Barcode.Extensions.BarcodeServiceCollectionExtensions.AddBarcode(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers <see cref="T:Acontplus.Barcode.Interfaces.IBarcodeService"/> as a singleton in the service collection.
+            </summary>
+            <param name="services">The service collection to add the service to.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="T:Acontplus.Barcode.Interfaces.IBarcodeService">
+            <summary>
+            Defines a contract for generating barcode and QR code images.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Barcode.Interfaces.IBarcodeService.Create(Acontplus.Barcode.Models.BarcodeConfig)">
+            <summary>
+            Generates a barcode image as a byte array based on the supplied configuration.
+            </summary>
+            <param name="config">The <see cref="T:Acontplus.Barcode.Models.BarcodeConfig"/> that controls format, size, colors, and encoding options.</param>
+            <returns>The raw bytes of the encoded image.</returns>
+            <exception cref="T:System.ArgumentException">Thrown when <see cref="P:Acontplus.Barcode.Models.BarcodeConfig.Text"/> is null or empty.</exception>
+        </member>
+        <member name="T:Acontplus.Barcode.Models.BarcodeConfig">
+            <summary>
+            Configuration options for barcode generation.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Text">
+            <summary>
+            The text or data to encode into the barcode.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Format">
+            <summary>
+            The barcode format to generate. Defaults to <see cref="F:ZXing.BarcodeFormat.CODE_128"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Width">
+            <summary>
+            Width of the generated barcode image in pixels. Defaults to 300.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Height">
+            <summary>
+            Height of the generated barcode image in pixels. Defaults to 100.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.IncludeLabel">
+            <summary>
+            Whether to render a human-readable text label beneath the barcode. Defaults to <see langword="false"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Margin">
+            <summary>
+            Quiet zone (margin) in pixels around the barcode. Defaults to 10.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.OutputFormat">
+            <summary>
+            Output image encoding format. Defaults to <see cref="F:SkiaSharp.SKEncodedImageFormat.Png"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.Quality">
+            <summary>
+            Image quality for lossy formats such as JPEG (0–100). Defaults to 100.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.ForegroundColor">
+            <summary>
+            Foreground (bar/module) color. Defaults to <see cref="F:SkiaSharp.SKColors.Black"/> when <see langword="null"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.BackgroundColor">
+            <summary>
+            Background color. Defaults to <see cref="F:SkiaSharp.SKColors.White"/> when <see langword="null"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Barcode.Models.BarcodeConfig.AdditionalOptions">
+            <summary>
+            Additional format-specific encoding options (e.g. QR error correction level).
+            Width, Height, Margin, and PureBarcode are always applied from the top-level properties
+            and will override any values set here.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Barcode.Services.BarcodeService">
+            <summary>
+            Default implementation of <see cref="T:Acontplus.Barcode.Interfaces.IBarcodeService"/> backed by <see cref="T:Acontplus.Barcode.Utils.BarcodeGen"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Barcode.Services.BarcodeService.Create(Acontplus.Barcode.Models.BarcodeConfig)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Acontplus.Barcode.Utils.BarcodeGen">
+            <summary>
+            Provides static utility methods for generating barcodes and QR codes.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Barcode.Utils.BarcodeGen.Create(Acontplus.Barcode.Models.BarcodeConfig)">
+            <summary>
+            Generates a barcode image as a byte array based on the supplied configuration.
+            </summary>
+            <param name="config">The <see cref="T:Acontplus.Barcode.Models.BarcodeConfig"/> that controls format, size, colors, and encoding options.</param>
+            <returns>The raw bytes of the encoded image in the format specified by <see cref="P:Acontplus.Barcode.Models.BarcodeConfig.OutputFormat"/>.</returns>
+            <exception cref="T:System.ArgumentException">Thrown when <see cref="P:Acontplus.Barcode.Models.BarcodeConfig.Text"/> is null or empty.</exception>
+        </member>
     </members>
 </doc>
