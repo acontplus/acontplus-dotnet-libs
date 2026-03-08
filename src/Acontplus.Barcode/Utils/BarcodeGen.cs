@@ -16,7 +16,7 @@ public static class BarcodeGen
     public static byte[] Create(BarcodeConfig config)
     {
         if (string.IsNullOrEmpty(config.Text))
-            throw new ArgumentException("Text cannot be null or empty", nameof(config));
+            throw new ArgumentException("Text cannot be null or empty", $"{nameof(config)}.{nameof(config.Text)}");
 
         // Clone additional options so the caller's instance is never mutated, then apply
         // top-level size/margin settings which always take precedence.
