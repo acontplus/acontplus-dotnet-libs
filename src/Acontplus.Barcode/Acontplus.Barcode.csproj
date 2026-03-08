@@ -6,18 +6,23 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Acontplus.Barcode</PackageId>
-    <Version>1.1.3</Version>
+    <Version>1.2.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced barcode generation library with ZXing.Net integration. Supports QR codes, 1D/2D barcodes, custom styling, and high-performance image generation using SkiaSharp for cross-platform applications.</Description>
-    <PackageTags>dotnet;dotnet10;barcode;qr-code;zxing;skia;image-generation;cross-platform;1d-barcode;2d-barcode;qr;code128;code39;ean;upc;pdf417;datamatrix</PackageTags>
+    <Description>Advanced barcode generation library with ZXing.Net integration. Supports QR codes,
+      1D/2D barcodes, custom styling, and high-performance image generation using SkiaSharp for
+      cross-platform applications.</Description>
+    <PackageTags>
+      dotnet;dotnet10;barcode;qr-code;zxing;skia;image-generation;cross-platform;1d-barcode;2d-barcode;qr;code128;code39;ean;upc;pdf417;datamatrix</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with ZXing.Net integration, SkiaSharp rendering, support for multiple barcode formats (QR, Code128, Code39, EAN, UPC, PDF417, DataMatrix), custom styling options, and high-performance cross-platform image generation.</PackageReleaseNotes>
+    <PackageReleaseNotes>Enhanced with ZXing.Net integration, SkiaSharp rendering, support for
+      multiple barcode formats (QR, Code128, Code39, EAN, UPC, PDF417, DataMatrix), custom styling
+      options, and high-performance cross-platform image generation.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -27,6 +32,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
     <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="ZXing.Net" />

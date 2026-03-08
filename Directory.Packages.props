@@ -67,7 +67,7 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.MSSqlServer" Version="9.0.3" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.116.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.4" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.4" />
     <PackageVersion Include="System.Drawing.Common" Version="10.0.3" />
