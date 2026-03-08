@@ -46,6 +46,8 @@ public static class BarcodeGen
         };
 
         using var barcodeBitmap = writer.Write(config.Text);
+        if (barcodeBitmap is null)
+            throw new ArgumentException("Failed to generate barcode. The text may be invalid for the specified format.", nameof(config));
         using var image = SKImage.FromBitmap(barcodeBitmap);
         using var data = image.Encode(config.OutputFormat, config.Quality);
         using var memoryStream = new MemoryStream();
