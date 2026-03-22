@@ -9,6 +9,7 @@ A comprehensive .NET library for electronic invoicing and digital document handl
 ## 🚀 Features
 
 ### 📋 Complete SRI Document Type Support
+
 All 6 electronic document types according to SRI Ficha Técnica v2.32:
 
 - ✅ **Factura (01)** - Invoice with embedded XSD schemas (v1.0.0, v1.1.0, v2.0.0, v2.1.0)
@@ -26,9 +27,7 @@ All 6 electronic document types according to SRI Ficha Técnica v2.32:
 - **SRI Web Services**: Full integration with SRI authentication and submission endpoints
 - **Document Conversion**: XML to HTML/PDF rendering for all document types
 - **ATS Support**: Anexo Transaccional Simplificado (ATS) generation and parsing
-- **Identity Validation**: Ecuadorian ID card (cédula) and RUC validation with digit verification
-- **CAPTCHA Handling**: Automated CAPTCHA processing for SRI web interactions
-- **Token Management**: Secure token-based authentication with automatic renewal
+- **Identity Validation**: Ecuadorian ID card (cédula) and RUC format/checksum verification
 - **Reimbursement Support**: Complete reimbursement (reembolsos) handling
 - **Payment Methods**: Multi-payment method support with installment tracking
 - **Additional Info**: Flexible additional information fields (up to 15 custom fields)
@@ -36,16 +35,19 @@ All 6 electronic document types according to SRI Ficha Técnica v2.32:
 ## 📦 Installation
 
 ### NuGet Package Manager
+
 ```bash
 Install-Package Acontplus.Billing
 ```
 
 ### .NET CLI
+
 ```bash
 dotnet add package Acontplus.Billing
 ```
 
 ### PackageReference
+
 ```xml
 <ItemGroup>
   <PackageReference Include="Acontplus.Billing" Version="1.2.0" />
@@ -55,16 +57,17 @@ dotnet add package Acontplus.Billing
 ## 🎯 Quick Start
 
 ### 1. Register Services
+
 ```csharp
-// In Startup.cs or Program.cs
-// Services are registered manually or through your DI container
-// Example:
-services.AddSingleton<ICedulaService, CedulaService>();
-services.AddSingleton<IRucService, RucService>();
+// In Program.cs - register Billing services
+services.AddSingleton<IWebServiceSri, WebServiceSri>();
+services.AddSingleton<IDocumentConverter, DocumentConverter>();
+services.AddSingleton<IElectronicDocumentService, ElectronicDocumentService>();
 // Add other services as needed
 ```
 
 ### 2. Configuration in appsettings.json
+
 ```json
 {
   "Billing": {
@@ -89,41 +92,41 @@ services.AddSingleton<IRucService, RucService>();
 
 ### 3. Usage Examples
 
-#### Validate Ecuadorian ID Card
-```csharp
-public class IdentityValidator
-{
-    private readonly ICedulaService _cedulaService;
-    public IdentityValidator(ICedulaService cedulaService) => _cedulaService = cedulaService;
-    public bool ValidateIdentity(string cedula) => _cedulaService.ValidateCedula(cedula);
-}
-```
+#### Parse an SRI-Authorized XML Document
 
-#### Generate Electronic Invoice XML
 ```csharp
-public class InvoiceGenerator
+public class DocumentParser
 {
-    private readonly IXmlService _xmlService;
-    public InvoiceGenerator(IXmlService xmlService) => _xmlService = xmlService;
-    public string GenerateInvoice(ComprobanteElectronico comprobante) => _xmlService.GenerateInvoiceXml(comprobante);
-}
-```
+    private readonly IElectronicDocumentService _documentService;
+    public DocumentParser(IElectronicDocumentService documentService) => _documentService = documentService;
 
-#### Send Document to SRI
-```csharp
-public class DocumentSender
-{
-    private readonly ISriWebService _sriService;
-    public DocumentSender(ISriWebService sriService) => _sriService = sriService;
-    public async Task<ResponseSri> SendDocumentAsync(string xmlContent, string username, string password)
+    public ComprobanteElectronico? Parse(string xmlContent)
     {
-        var token = await _sriService.AuthenticateAsync(username, password);
-        return await _sriService.SendDocumentAsync(xmlContent, token);
+        var xmlDoc = new XmlDocument();
+        xmlDoc.LoadXml(xmlContent);
+        return _documentService.TryParseDocument(xmlDoc, out var comprobante, out _) ? comprobante : null;
     }
 }
 ```
 
+#### Send Document to SRI
+
+```csharp
+public class DocumentSender
+{
+    private readonly IWebServiceSri _sriService;
+    public DocumentSender(IWebServiceSri sriService) => _sriService = sriService;
+
+    public async Task<ResponseSri> ReceiveAsync(string xmlSigned, string receptionUrl)
+        => await _sriService.ReceptionAsync(xmlSigned, receptionUrl);
+
+    public async Task<ResponseSri> AuthorizeAsync(string claveAcceso, string authorizationUrl)
+        => await _sriService.AuthorizationAsync(claveAcceso, authorizationUrl);
+}
+```
+
 #### Convert XML to HTML for Display
+
 ```csharp
 public class DocumentRenderer
 {
@@ -136,6 +139,7 @@ public class DocumentRenderer
 ## 📚 API Documentation
 
 ### Document Type Constants
+
 ```csharp
 using Acontplus.Billing.Constants;
 
@@ -156,8 +160,7 @@ bool isValid = DocumentTypes.IsValidDocumentCode("01"); // true
 
 ### Core Services
 
-- **`ICedulaService`, `IRucService`** - Ecuadorian ID and RUC validation with checksum verification
-- **`IWebServiceSri`** - SRI web service authentication and document submission
+- **`IWebServiceSri`** - SRI SOAP web service: document reception, authorization, and XML retrieval
 - **`IDocumentConverter`** - XML to HTML/PDF conversion for all document types
 - **`IXmlDocumentParser`** - Parse SRI-authorized XML documents
 - **`IAtsXmlService`** - Generate ATS (Anexo Transaccional Simplificado) XML
@@ -167,6 +170,7 @@ bool isValid = DocumentTypes.IsValidDocumentCode("01"); // true
 ### Document Models
 
 All document types include complete model classes:
+
 - **`ComprobanteElectronico`** - Base electronic document container
 - **`InfoFactura`** - Invoice information
 - **`InfoLiquidacionCompra`** - Purchase settlement information
@@ -182,6 +186,7 @@ All document types include complete model classes:
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/acontplus/acontplus-dotnet-libs.git
 cd acontplus-dotnet-libs

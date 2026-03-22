@@ -5,18 +5,23 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Acontplus.Billing</PackageId>
-    <Version>1.1.11</Version>
+    <Version>1.1.12</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Complete library for electronic invoicing and SRI integration in Ecuador. Includes models, services, XML validation, SRI web service support, and embedded XSD schemas for compliance.</Description>
-    <PackageTags>dotnet;dotnet10;facturacion;sri;ecuador;electronic-invoicing;xml;validation;token;captcha;integration;compliance;xsd-schemas</PackageTags>
+    <Description>Complete library for electronic invoicing and SRI integration in Ecuador. Includes
+      models, services, XML validation, SRI web service support, and embedded XSD schemas for
+      compliance.</Description>
+    <PackageTags>
+      dotnet;dotnet10;facturacion;sri;ecuador;electronic-invoicing;xml;validation;integration;compliance;xsd-schemas</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with cutting-edge C# features, comprehensive SRI integration, embedded XSD schemas, XML validation, token management, and enterprise-grade electronic invoicing capabilities for Ecuadorian compliance.</PackageReleaseNotes>
+    <PackageReleaseNotes>Enhanced with cutting-edge C# features, comprehensive SRI integration,
+      embedded XSD schemas, XML validation, and enterprise-grade electronic
+      invoicing capabilities for Ecuadorian compliance.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

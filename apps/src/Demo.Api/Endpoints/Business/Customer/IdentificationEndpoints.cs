@@ -17,7 +17,6 @@ public static class IdentificationEndpoints
 
     private static async Task<IResult> GetByIdCard(
         string idCard,
-        bool sriOnly,
         [FromServices] ICustomerService customerService,
         [FromServices] ILogger<Program> logger,
         [FromServices] IHttpContextAccessor httpContextAccessor)
@@ -27,8 +26,7 @@ public static class IdentificationEndpoints
             .Request.Headers["X-Correlation-Id"].FirstOrDefault();
 
         // Use the extension method directly
-        return await customerService.GetByIdCardAsync(idCard, sriOnly)
+        return await customerService.GetByIdCardAsync(idCard)
             .ToGetMinimalApiResultAsync(correlationId);
     }
 }
-
