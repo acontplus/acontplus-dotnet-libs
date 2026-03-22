@@ -13,9 +13,9 @@
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.1" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.18" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.19" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.2" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.3.20" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.19.1" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.3" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
     <PackageVersion Include="Dapper" Version="2.1.72" />
@@ -23,12 +23,12 @@
     <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
     <PackageVersion Include="Humanizer" Version="3.0.1" />
     <PackageVersion Include="MailKit" Version="4.15.1" />
-    <PackageVersion Include="Mapster" Version="7.4.0" />
+    <PackageVersion Include="Mapster" Version="10.0.3" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
@@ -49,13 +49,13 @@
     <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
     <PackageVersion Include="Polly" Version="8.6.6" />
-    <PackageVersion Include="QuestPDF" Version="2026.2.3" />
+    <PackageVersion Include="QuestPDF" Version="2026.2.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.0.0" />
     <PackageVersion Include="ReportViewerCore.NETCore" Version="15.1.33" />
-    <PackageVersion Include="Scriban" Version="6.5.8" />
+    <PackageVersion Include="Scriban" Version="7.0.0" />
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <PackageVersion Include="Serilog" Version="4.3.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />

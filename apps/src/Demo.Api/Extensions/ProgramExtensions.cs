@@ -114,10 +114,6 @@ public static class ProgramExtensions
         services.AddScoped<IAdoRepository, AdoRepository>();
         services.AddScoped<IAtsXmlService, AtsXmlService>();
         services.AddScoped<IWebServiceSri, WebServiceSri>();
-        services.AddScoped<IRucService, RucService>();
-        services.AddScoped<ICookieService, CookieService>();
-        services.AddScoped<ICaptchaService, CaptchaService>();
-        services.AddScoped<ICedulaService, CedulaService>();
         services.AddScoped<IXmlSriFileService, XmlSriFileService>();
         services.AddScoped<IMailKitService, AmazonSesService>();
         services.AddTransient<ISqlExceptionTranslator, SqlExceptionTranslator>();
