@@ -76,7 +76,7 @@ dotnet add package Acontplus.Reports
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Reports" Version="1.7.0" />
+  <PackageReference Include="Acontplus.Reports" Version="x.x.x" />
 </ItemGroup>
 ```
 
@@ -1587,43 +1587,6 @@ public class ReportServiceTests
 }
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](../../CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-dotnet test
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community**
-
----
 
 ## 📋 Changelog
 

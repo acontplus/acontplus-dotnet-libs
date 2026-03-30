@@ -48,17 +48,17 @@
 
 ### NuGet Package Manager
 ```bash
-Install-Package Acontplus.S3Application -Version 2.0.0
+Install-Package Acontplus.S3Application
 ```
 
 ### .NET CLI
 ```bash
-dotnet add package Acontplus.S3Application --version 2.0.0
+dotnet add package Acontplus.S3Application
 ```
 
 ### PackageReference
 ```xml
-<PackageReference Include="Acontplus.S3Application" Version="2.0.0" />
+<PackageReference Include="Acontplus.S3Application" Version="x.x.x" />
 ```
 
 ---
@@ -426,23 +426,3 @@ _logger.LogWarning("S3 operation retry {RetryCount}/{MaxRetries} after {Delay}. 
 _logger.LogError("S3 error uploading {Key}: {ErrorCode} - {Message}",
     "uploads/file.pdf", "AccessDenied", "Insufficient permissions");
 ```
-
----
-
-## 🤝 Contributing
-Contributions are welcome! Please open an issue or submit a pull request.
-
----
-
-## 📄 License
-MIT License. See [LICENSE](../LICENSE) for details.
-
----
-
-## 👤 Author
-[Ivan Paz](https://linktr.ee/iferpaz7)
-
----
-
-## 🏢 Company
-[Acontplus](https://www.acontplus.com)

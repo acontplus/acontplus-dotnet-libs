@@ -40,7 +40,7 @@ dotnet add package Acontplus.Barcode
 
 ### PackageReference
 ```xml
-<PackageReference Include="Acontplus.Barcode" Version="1.1.4" />
+<PackageReference Include="Acontplus.Barcode" Version="x.x.x" />
 ```
 
 ## 🎯 Quick Start
@@ -326,37 +326,3 @@ Register with `services.AddBarcode()` — the default implementation delegates t
 - **SkiaSharp.NativeAssets.Linux** - Native assets for Linux containers
 - **System.Drawing.Common** - Cross-platform image support
 - **Microsoft.Extensions.DependencyInjection.Abstractions** - DI registration helpers
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community using cutting-edge .NET features**

@@ -22,23 +22,22 @@
 - 📦 **Bulk sending** with batching (SES: 50 recipients/batch)
 - 🧵 **Thread-safe** concurrent operations
 - 📨 **Attachments** support (PDF, images, documents)
-- 🌐 **WhatsApp and push** notification support (planned)
 
 ## 📦 Installation
 
 ### NuGet Package Manager
 ```bash
-Install-Package Acontplus.Notifications -Version 1.5.0
+Install-Package Acontplus.Notifications
 ```
 
 ### .NET CLI
 ```bash
-dotnet add package Acontplus.Notifications --version 1.5.0
+dotnet add package Acontplus.Notifications
 ```
 
 ### PackageReference
 ```xml
-<PackageReference Include="Acontplus.Notifications" Version="1.5.0" />
+<PackageReference Include="Acontplus.Notifications" Version="x.x.x" />
 ```
 
 ## 🎯 Quick Start
@@ -298,37 +297,3 @@ public class EmailModel
     public string? Password { get; set; }
 }
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community**

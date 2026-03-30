@@ -28,7 +28,7 @@ A comprehensive .NET service library providing business-grade patterns, security
 - **Distributed Tracing**: Correlation IDs and trace IDs for request tracking
 - **Multi-tenancy Support**: Tenant ID tracking across requests
 
-📖 **[Complete Exception Handling Guide](Middleware/ApiExceptionMiddleware.README.md)**
+> See `ApiExceptionMiddleware.cs` for implementation details and inline documentation.
 
 ### 🔒 Security & Compliance
 
@@ -72,8 +72,8 @@ Install-Package Acontplus.Infrastructure
 ### PackageReference
 
 ```xml
-<PackageReference Include="Acontplus.Services" Version="1.5.0" />
-<PackageReference Include="Acontplus.Infrastructure" Version="1.0.0" />
+<PackageReference Include="Acontplus.Services" Version="x.x.x" />
+<PackageReference Include="Acontplus.Infrastructure" Version="x.x.x" />
 ```
 
 ## 🎯 Quick Start
@@ -1408,20 +1408,6 @@ public class SecureController : ControllerBase
 - `RequestContextMiddleware` - Request context extraction
 - `CspNonceMiddleware` - CSP nonce generation
 - `ApiExceptionMiddleware` - Global exception handling
-
-## 🤝 Contributing
-
-When adding new features:
-
-1. Follow the established patterns (Services, Filters, Policies)
-2. Add comprehensive logging
-3. Include functional health checks for new services
-4. Update this documentation with configuration examples
-5. Add unit tests for new functionality
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
 
 ## 📋 Package Comparison
 

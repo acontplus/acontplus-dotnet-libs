@@ -180,20 +180,5 @@ Uses `IApiVersionDescriptionProvider` (cached singleton). Safe for controller-on
 | `ConfigureOptions<ConfigureSwaggerOptions>` | Creates one Swagger doc per discovered version using `appsettings.json` metadata |
 | `AddSwaggerGen(...)`                        | Swagger generator with JWT Bearer auth and auto XML comments                     |
 
----
-
-## 📄 License & Info
-
-- **License:** [MIT](../LICENSE)
-- **Authors:** Ivan Paz
-- **Company:** [Acontplus](https://www.acontplus.com)
-- **Repository:** [github.com/acontplus/acontplus-dotnet-libs](https://github.com/acontplus/acontplus-dotnet-libs)
-- **Contact:** [proyectos@acontplus.com](mailto:proyectos@acontplus.com)
-
----
-
-**Built with ❤️ for the .NET community**
-
----
 
 © 2025 Acontplus All rights reserved.
