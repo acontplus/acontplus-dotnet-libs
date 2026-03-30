@@ -49,7 +49,7 @@ Install-Package Acontplus.Analytics
 ### PackageReference
 
 ```xml
-<PackageReference Include="Acontplus.Analytics" Version="1.0.0" />
+<PackageReference Include="Acontplus.Analytics" Version="x.x.x" />
 ```
 
 ## 🎯 Quick Start
@@ -551,25 +551,3 @@ public class TransactionDashboardDto : BaseDashboardStatsDto
     public decimal ApprovalRate { get; set; }
 }
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [Contributing Guidelines](../../CONTRIBUTING.md).
-
-## 📧 Support
-
-- **Email**: proyectos@acontplus.com
-- **Issues**: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- **Documentation**: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** – [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** – Software Solutions, Ecuador
-
----
-
-**Built with ❤️ for data-driven business applications**

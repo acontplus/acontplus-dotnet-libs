@@ -27,8 +27,7 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
     - **Asynchronous** background processing with `System.Threading.Channels`
     - Implementation in `Acontplus.Infrastructure` with ~1M events/sec throughput
     - Perfect for notifications, analytics, microservices integration
-  - *See [Event Systems Comparison](../../docs/EVENT_SYSTEMS_COMPARISON.md) for choosing the right one*
-  - *See [Event Bus Guide](../../docs/EVENT_BUS_GUIDE.md) for complete documentation*
+  - *Use `IDomainEventDispatcher` for transactional domain events, `IEventBus` for async cross-cutting events*
 - **📢 Success Message Support** - Enhanced Result type with optional success messages
   - New `SuccessMessage` property on `Result<T, TError>`
   - `Result<T, TError>.Success(value, successMessage)` overload
@@ -803,9 +802,8 @@ For distributed scenarios, drop-in replacements available:
 
 #### **📚 Complete Documentation**
 
-- **[Event Bus Guide](../../docs/EVENT_BUS_GUIDE.md)** - Complete usage guide with CQRS examples
-- **[Quick Reference](../../docs/EVENT_BUS_QUICK_REFERENCE.md)** - 30-second setup guide
-- **[Demo.Api Example](../../apps/src/Demo.Api/Features/Orders/)** - Full CQRS implementation
+- See `Acontplus.Infrastructure` README for full event bus setup and CQRS examples
+- Demo.Api samples are available under `apps/src/Demo.Api/Endpoints/`
 
 ### 🔥 **Advanced JSON Extensions**
 
@@ -909,40 +907,7 @@ public static class ApiResponseHelpers
 ## 📖 Documentation
 
 For detailed implementation guides and best practices, see:
-- [Domain Error & Result Usage Guide](docs/DomainError-Result-Usage-Guide.md)
-- [API Integration Examples](docs/api-integration-examples.md)
-- [Performance Best Practices](docs/performance-guide.md)
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community using the latest .NET features**
+- Each library's own README for usage examples
+- `Acontplus.Persistence.Common` for repository and filtering patterns
+- `Acontplus.Infrastructure` for event bus and caching guides
+- `docs/` folder for architecture and upgrade guides

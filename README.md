@@ -20,16 +20,19 @@ This repository contains multiple libraries and sample applications, each in its
 
 - **Acontplus.Core**: Foundational DDD components, error handling, specification pattern, DTOs, and C# features for business apps.
 - **Acontplus.Billing**: Electronic invoicing and SRI (Ecuadorian Tax Authority) integration. Models, XML, validation, and web service support for Ecuadorian digital documents.
-- **Acontplus.Notifications**: Advanced notification system supporting email (MailKit, Amazon SES), WhatsApp, push, templates, and queueing.
-- **Acontplus.Reports**: RDLC report generation, export (PDF/Excel), and template management for .NET apps.
+- **Acontplus.Notifications**: Advanced notification system supporting email (MailKit, Amazon SES), templates, and queueing.
+- **Acontplus.Reports**: Enterprise report generation: RDLC (Windows), QuestPDF code-first PDF, MiniExcel streaming Excel, and ClosedXML richly-formatted Excel workbooks.
 - **Acontplus.Analytics**: Comprehensive analytics and statistics library with domain-agnostic metrics, trends, and business intelligence capabilities.
-- **Acontplus.Persistence.SqlServer**: SQL Server persistence with ADO.NET and EF Core, repository/unit-of-work patterns, and advanced error handling.
-- **Acontplus.Services**: API services, authentication, claims, JWT, middleware, and configuration for robust APIs.
+- **Acontplus.Persistence.Common**: Persistence abstractions, generic repository pattern, context factory, and connection string providers for multi-provider support.
+- **Acontplus.Persistence.SqlServer**: SQL Server persistence with ADO.NET, Dapper, and EF Core, repository/unit-of-work patterns, and advanced error handling.
+- **Acontplus.Persistence.PostgreSQL**: PostgreSQL persistence with ADO.NET, Dapper, and EF Core, including COPY-based bulk inserts and JSON/JSONB support.
+- **Acontplus.Infrastructure**: Caching (in-memory and Redis), resilience patterns (circuit breaker, retry), rate limiting, health checks, response compression, and event bus.
+- **Acontplus.Services**: JWT authentication, security headers, authorization policies, device detection, exception handling, and ASP.NET Core middleware.
 - **Acontplus.Utilities**: Cross-cutting utilities with consolidated domain-to-API conversion extensions: encryption, IO, text, time, comprehensive API helpers, and clean architectural separation.
 - **Acontplus.ApiDocumentation**: Standardized API versioning and OpenAPI/Swagger documentation for .NET APIs.
-- **Acontplus.Logging**: Advanced logging with Serilog, supporting local, S3, and database sinks, with rich configuration.
+- **Acontplus.Logging**: Advanced logging with Serilog, supporting console, file, SQL Server, and Elasticsearch sinks, with rich configuration.
 - **Acontplus.Barcode**: Barcode and QR code generation utilities for .NET applications.
-- **Acontplus.S3Application**: Simple, strongly-typed AWS S3 storage operations with async CRUD support.
+- **Acontplus.S3Application**: Production-ready AWS S3 storage operations with connection pooling, resilience, and async CRUD support.
 
 > **🏗️ Architecture Note**: The libraries follow clean architecture principles with clear separation between domain logic (`Acontplus.Core`) and API conversion logic (`Acontplus.Utilities`), enabling maintainable and testable code.
 
@@ -69,7 +72,7 @@ This repository contains multiple libraries and sample applications, each in its
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get involved.
+We welcome contributions from the community! Open an issue or submit a pull request on [GitHub](https://github.com/acontplus/acontplus-dotnet-libs).
 
 ---
 
@@ -88,7 +91,3 @@ We welcome contributions from the community! Please see our [Contributing Guidel
 ## 🏢 Company
 
 **[Acontplus](https://www.acontplus.com)** – Software solutions, Ecuador
-
----
-
-**Built with ❤️ for the .NET community and Ecuadorian businesses.**

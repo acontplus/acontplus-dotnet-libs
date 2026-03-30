@@ -86,7 +86,7 @@ dotnet add package Acontplus.Infrastructure
 ### PackageReference
 
 ```xml
-<PackageReference Include="Acontplus.Infrastructure" Version="1.0.0" />
+<PackageReference Include="Acontplus.Infrastructure" Version="x.x.x" />
 ```
 
 ## 🎯 Quick Start
@@ -1117,25 +1117,3 @@ Acontplus.Infrastructure/
 - **Microsoft.Extensions.Caching.StackExchangeRedis**: Redis provider
 - **Microsoft.Extensions.Http.Resilience**: HTTP resilience
 - **.NET Rate Limiting**: Built-in ASP.NET Core rate limiting middleware
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [Contributing Guidelines](../../CONTRIBUTING.md).
-
-## 📧 Support
-
-- **Email**: proyectos@acontplus.com
-- **Issues**: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- **Documentation**: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** – [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** – Software Solutions, Ecuador
-
----
-
-**Built with ❤️ for enterprise-grade .NET applications**

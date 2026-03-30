@@ -37,8 +37,8 @@ dotnet add package Acontplus.Persistence.PostgreSQL
 ### PackageReference
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Persistence.PostgreSQL" Version="1.0.10" />
-  <PackageReference Include="Acontplus.Persistence.Common" Version="1.1.13" />
+  <PackageReference Include="Acontplus.Persistence.PostgreSQL" Version="x.x.x" />
+  <PackageReference Include="Acontplus.Persistence.Common" Version="x.x.x" />
 </ItemGroup>
 ```
 
@@ -487,37 +487,3 @@ services.Configure<PaginationMetadataOptions>(options =>
 - ✅ Maximum performance is critical
 - ✅ PostgreSQL functions with complex logic
 - ✅ Direct COPY command usage
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community**

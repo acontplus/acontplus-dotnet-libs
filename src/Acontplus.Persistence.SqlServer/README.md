@@ -41,8 +41,8 @@ dotnet add package Acontplus.Persistence.SqlServer
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Persistence.SqlServer" Version="1.5.12" />
-  <PackageReference Include="Acontplus.Persistence.Common" Version="1.1.13" />
+  <PackageReference Include="Acontplus.Persistence.SqlServer" Version="x.x.x" />
+  <PackageReference Include="Acontplus.Persistence.Common" Version="x.x.x" />
 </ItemGroup>
 ```
 
@@ -503,38 +503,3 @@ services.Configure<PaginationMetadataOptions>(options =>
 - ✅ Memory-efficient streaming (millions of rows)
 - ✅ Maximum performance is critical
 - ✅ Stored procedures with complex logic
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community**

@@ -396,7 +396,3 @@ Existing code works without modification. Add configuration only when customizat
 - [Polly Documentation](https://github.com/App-vNext/Polly)
 - [SQL Server Transient Errors](https://learn.microsoft.com/en-us/azure/azure-sql/database/troubleshoot-common-errors-issues)
 - [PostgreSQL Error Codes](https://www.postgresql.org/docs/current/errcodes-appendix.html)
-
----
-
-**Built with ❤️ for resilient .NET applications**

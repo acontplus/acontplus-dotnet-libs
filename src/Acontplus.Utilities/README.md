@@ -73,7 +73,7 @@ dotnet add package Acontplus.Utilities
 ### PackageReference
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Utilities" Version="1.3.7" />
+  <PackageReference Include="Acontplus.Utilities" Version="x.x.x" />
 </ItemGroup>
 ```
 
@@ -543,37 +543,3 @@ byte[] decompressed = CompressionUtils.DecompressGZip(compressed);
 - `DataConverters` - DataTable/DataSet JSON conversion
 - `JsonHelper` - JSON validation and manipulation
 - `ObjectMapper` - Object-to-object mapping utilities
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-```bash
-git clone https://github.com/acontplus/acontplus-dotnet-libs.git
-cd acontplus-dotnet-libs
-dotnet restore
-dotnet build
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: proyectos@acontplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/acontplus/acontplus-dotnet-libs/issues)
-- 📖 Documentation: [Wiki](https://github.com/acontplus/acontplus-dotnet-libs/wiki)
-
-## 👨‍💻 Author
-
-**Ivan Paz** - [@iferpaz7](https://linktr.ee/iferpaz7)
-
-## 🏢 Company
-
-**[Acontplus](https://www.acontplus.com)** - Software solutions
-
----
-
-**Built with ❤️ for the .NET community**
