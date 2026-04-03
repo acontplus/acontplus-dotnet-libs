@@ -119,22 +119,26 @@ public async Task<Customer> GetCustomerAsync(int id)
 ```
 
 **Automatic Response:**
+
 ```json
 {
   "success": false,
   "code": "404",
   "message": "Customer not found",
-  "errors": [{
-    "code": "CUSTOMER_NOT_FOUND",
-    "message": "Customer not found",
-    "category": "business",
-    "severity": "warning"
-  }],
+  "errors": [
+    {
+      "code": "CUSTOMER_NOT_FOUND",
+      "message": "Customer not found",
+      "category": "business",
+      "severity": "warning"
+    }
+  ],
   "correlationId": "abc-123"
 }
 ```
 
 **Or Use Result Pattern:**
+
 ```csharp
 public async Task<Result<Customer, DomainError>> GetCustomerAsync(int id)
 {
@@ -509,22 +513,26 @@ app.Run();
 ### What's in Acontplus.Services
 
 ✅ **Application Services**
+
 - `IRequestContextService` - Request context management and correlation
 - `ISecurityHeaderService` - HTTP security headers and CSP management
 - `IDeviceDetectionService` - Device type detection and capabilities
 - `ILookupService` - Cached lookup/reference data management (NEW!)
 
 ✅ **Action Filters**
+
 - `ValidationActionFilter` - Model validation
 - `RequestLoggingActionFilter` - Request/response logging
 - `SecurityHeaderActionFilter` - Security header injection
 
 ✅ **Authorization Policies**
+
 - `RequireClientIdPolicy` - Client ID validation
 - `TenantIsolationPolicy` - Multi-tenant isolation
 - `DeviceTypePolicy` - Device-aware authorization
 
 ✅ **Middleware**
+
 - `RequestContextMiddleware` - Request context extraction
 - `CspNonceMiddleware` - CSP nonce generation
 - `ApiExceptionMiddleware` - Global exception handling
@@ -534,15 +542,18 @@ app.Run();
 > **Note**: These services require `Acontplus.Infrastructure` package
 
 ✅ **Infrastructure Services** (from Acontplus.Infrastructure)
+
 - `ICacheService` - Caching (in-memory and Redis)
 - `ICircuitBreakerService` - Circuit breaker patterns
 - `RetryPolicyService` - Retry policies
 - `ResilientHttpClientFactory` - Resilient HTTP clients
 
 ✅ **Middleware** (from Acontplus.Infrastructure)
+
 - `RateLimitingMiddleware` - Rate limiting
 
 ✅ **Health Checks** (from Acontplus.Infrastructure)
+
 - `CacheHealthCheck` - Cache service health
 - `CircuitBreakerHealthCheck` - Circuit breaker health
 
@@ -571,12 +582,19 @@ public class LookupsController : ControllerBase
         [FromQuery] string? module = null,
         [FromQuery] string? context = null)
     {
+        var userRoleId = User.GetClaimValue<int>("userRoleId");
+        var userId = User.GetClaimValue<int>("userId");
+        var companyId = User.GetClaimValue<int>("companyId");
+
         var filterRequest = new FilterRequest
         {
             Filters = new Dictionary<string, object>
             {
                 ["module"] = module ?? "default",
-                ["context"] = context ?? "general"
+                ["context"] = context ?? "general",
+                ["userRoleId"] = userRoleId,
+                ["userId"] = userId,
+                ["companyId"] = companyId
             }
         };
 
@@ -604,6 +622,7 @@ public class LookupsController : ControllerBase
 ```
 
 **Features:**
+
 - ✅ Automatic caching (30-minute TTL)
 - ✅ Works with SQL Server and PostgreSQL
 - ✅ Flexible SQL query mapping (all nullable properties)
@@ -612,6 +631,7 @@ public class LookupsController : ControllerBase
 - ✅ Cache refresh on demand
 
 **SQL Stored Procedure Example:**
+
 ```sql
 CREATE PROCEDURE [YourSchema].[GetLookups]
     @Module NVARCHAR(100) = NULL,
@@ -630,6 +650,7 @@ END
 ```
 
 **Response Format:**
+
 ```json
 {
   "status": "Success",
@@ -689,6 +710,7 @@ Acontplus.Infrastructure/
 **Location**: `Acontplus.Services` Package
 
 **Rationale**:
+
 - ✅ **Database Agnostic**: Works with both PostgreSQL and SQL Server through `IUnitOfWork` abstraction
 - ✅ **Reusable**: Available to all APIs via NuGet package
 - ✅ **Proper Layer**: Application-level service, not infrastructure or persistence specific
@@ -869,12 +891,20 @@ public class LookupsController : ControllerBase
         [FromQuery] string? context = null,
         CancellationToken cancellationToken = default)
     {
+        // Build filter request with identity context for cache isolation
+        var userRoleId = User.GetClaimValue<int>("userRoleId");
+        var userId = User.GetClaimValue<int>("userId");
+        var companyId = User.GetClaimValue<int>("companyId");
+
         var filterRequest = new FilterRequest
         {
             Filters = new Dictionary<string, object>
             {
                 ["module"] = module ?? "default",
-                ["context"] = context ?? "general"
+                ["context"] = context ?? "general",
+                ["userRoleId"] = userRoleId,
+                ["userId"] = userId,
+                ["companyId"] = companyId
             }
         };
 
@@ -899,12 +929,19 @@ public class LookupsController : ControllerBase
         [FromQuery] string? context = null,
         CancellationToken cancellationToken = default)
     {
+        var userRoleId = User.GetClaimValue<int>("userRoleId");
+        var userId = User.GetClaimValue<int>("userId");
+        var companyId = User.GetClaimValue<int>("companyId");
+
         var filterRequest = new FilterRequest
         {
             Filters = new Dictionary<string, object>
             {
                 ["module"] = module ?? "default",
-                ["context"] = context ?? "general"
+                ["context"] = context ?? "general",
+                ["userRoleId"] = userRoleId,
+                ["userId"] = userId,
+                ["companyId"] = companyId
             }
         };
 
@@ -943,18 +980,18 @@ public record LookupItem
 
 Your stored procedure MUST return these columns:
 
-| Column | Type | Required | Description |
-|--------|------|----------|-------------|
-| `TableName` | string | ✅ Yes | Groups results (e.g., "Countries", "States") |
-| `Id` | int? | No | Unique identifier |
-| `Code` | string? | No | Short code (e.g., "US", "CA") |
-| `Value` | string? | No | Display text |
-| `DisplayOrder` | int? | No | Sort order |
-| `ParentId` | int? | No | For hierarchical data |
-| `IsDefault` | bool? | No | Default selection |
-| `IsActive` | bool? | No | Active/inactive flag |
-| `Description` | string? | No | Tooltip or help text |
-| `Metadata` | string? | No | JSON string for custom data |
+| Column         | Type    | Required | Description                                  |
+| -------------- | ------- | -------- | -------------------------------------------- |
+| `TableName`    | string  | ✅ Yes   | Groups results (e.g., "Countries", "States") |
+| `Id`           | int?    | No       | Unique identifier                            |
+| `Code`         | string? | No       | Short code (e.g., "US", "CA")                |
+| `Value`        | string? | No       | Display text                                 |
+| `DisplayOrder` | int?    | No       | Sort order                                   |
+| `ParentId`     | int?    | No       | For hierarchical data                        |
+| `IsDefault`    | bool?   | No       | Default selection                            |
+| `IsActive`     | bool?   | No       | Active/inactive flag                         |
+| `Description`  | string? | No       | Tooltip or help text                         |
+| `Metadata`     | string? | No       | JSON string for custom data                  |
 
 ### Response Format
 
@@ -1008,27 +1045,34 @@ Your stored procedure MUST return these columns:
 
 #### Cache Key Format
 
-**Format:** `lookups:{storedProcedure}:{module}:{context}`
+**Format:** `lookups:{storedProcedure}:{module}:{context}:{userRoleId}:{userId}:{companyId}`
 
 **Examples:**
-- `lookups:restaurant.getlookups:restaurant:general`
-- `lookups:inventory.getlookups:warehouse:default`
-- `lookups:hr.getlookups:employees:active`
+
+- `lookups:restaurant.getlookups:restaurant:general:5:10:1`
+- `lookups:inventory.getlookups:warehouse:default:3:8:1`
+- `lookups:hr.getlookups:employees:active:default:default:2`
+
+> **Note:** When `userRoleId`, `userId`, or `companyId` filters are not provided, the segment defaults to `"default"`. This ensures each user/role/company combination gets its own isolated cache entry, preventing cache poisoning across tenants.
 
 **Benefits:**
-- Unique per API and context
+
+- Unique per API, context, and user/role/company
 - Easy to invalidate specific lookups
-- Supports multi-tenant scenarios
+- Supports multi-tenant scenarios with per-user cache isolation
+- Prevents cache poisoning between different roles or companies
 
 #### Cache Configuration
 
 ##### In-Memory Cache (Single Server)
+
 ```csharp
 builder.Services.AddMemoryCache();
 builder.Services.AddMemoryCacheService();
 ```
 
 ##### Distributed Cache (Multi-Server)
+
 ```csharp
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -1048,16 +1092,19 @@ builder.Services.AddDistributedCacheService();
 ### Performance Considerations
 
 #### Caching Performance
+
 - **Cache hit:** < 1ms response time
 - **Cache miss:** SP execution time + mapping time
 - **Cache expiration:** 30 minutes default
 
 #### Database Performance
+
 - **Query Type:** Stored procedures (optimized)
 - **Connection:** Reuses existing `IUnitOfWork` connection
 - **Result Mapping:** Efficient DataTable → LINQ projection
 
 #### Scalability
+
 - **In-Memory Cache:** Good for single-server deployments
 - **Distributed Cache:** Required for multi-server/load-balanced scenarios
 - **Cache Warming:** First request per key hits database
@@ -1067,12 +1114,14 @@ builder.Services.AddDistributedCacheService();
 **Strategy:** Return `Result<T, DomainError>` pattern
 
 **Benefits:**
+
 - ✅ Type-safe error handling
 - ✅ No exceptions for business logic errors
 - ✅ Consistent with Acontplus patterns
 - ✅ Easy to map to HTTP responses
 
 **Error Codes:**
+
 - `LOOKUPS_GET_ERROR` - Error retrieving lookups
 - `LOOKUPS_REFRESH_ERROR` - Error refreshing cache
 - `LOOKUPS_EMPTY` - No data returned from query
@@ -1115,37 +1164,45 @@ builder.Services.AddDistributedCacheService();
 ### Security Considerations
 
 #### SQL Injection
+
 - ✅ Uses parameterized stored procedures
 - ✅ Filter values are passed as parameters
 - ✅ No dynamic SQL construction
 
 #### Data Access
+
 - ✅ Respects existing `IUnitOfWork` security
 - ✅ No elevation of privileges
 - ✅ Uses application's database context
 
 #### Cache Poisoning
+
 - ✅ Cache keys are deterministic
-- ✅ No user input in cache keys (normalized)
+- ✅ Cache keys include `userRoleId`, `userId`, and `companyId` for tenant isolation
+- ✅ All segments are normalized (trimmed, lowercased, or defaulted)
 - ✅ Cache expiration prevents stale data
 
 ### Troubleshooting
 
 #### Cache not working
+
 - Verify `ICacheService` is registered
 - Check logs for cache errors
 - Ensure Redis is running (if using distributed cache)
 
 #### Missing columns
+
 - Check stored procedure returns all required columns
 - Verify column names match exactly (case-sensitive in PostgreSQL)
 
 #### Slow performance
+
 - Add indexes to lookup tables
 - Check stored procedure execution plan
 - Consider cache warming on startup
 
 #### Memory issues
+
 - Use distributed cache instead of in-memory
 - Reduce cache TTL
 - Limit lookup data size
@@ -1411,22 +1468,23 @@ public class SecureController : ControllerBase
 
 ## 📋 Package Comparison
 
-| Feature | Acontplus.Services | Acontplus.Infrastructure |
-|---------|-------------------|-------------------------|
-| Request Context | ✅ | ❌ |
-| Security Headers | ✅ | ❌ |
-| Device Detection | ✅ | ❌ |
-| JWT Authentication | ✅ | ❌ |
-| Authorization Policies | ✅ | ❌ |
-| Caching | ❌ | ✅ |
-| Circuit Breaker | ❌ | ✅ |
-| Retry Policies | ❌ | ✅ |
-| HTTP Client Factory | ❌ | ✅ |
-| Rate Limiting | ❌ | ✅ |
+| Feature                | Acontplus.Services | Acontplus.Infrastructure |
+| ---------------------- | ------------------ | ------------------------ |
+| Request Context        | ✅                 | ❌                       |
+| Security Headers       | ✅                 | ❌                       |
+| Device Detection       | ✅                 | ❌                       |
+| JWT Authentication     | ✅                 | ❌                       |
+| Authorization Policies | ✅                 | ❌                       |
+| Caching                | ❌                 | ✅                       |
+| Circuit Breaker        | ❌                 | ✅                       |
+| Retry Policies         | ❌                 | ✅                       |
+| HTTP Client Factory    | ❌                 | ✅                       |
+| Rate Limiting          | ❌                 | ✅                       |
 
 ## 🎯 Best Practices
 
 ### ✅ Do's
+
 - Use `AddApplicationServices()` for application-level concerns
 - Use `AddInfrastructureServices()` for infrastructure concerns
 - **NEW**: Let DomainExceptions bubble up for simpler code
@@ -1437,6 +1495,7 @@ public class SecureController : ControllerBase
 - Use correlation IDs for request tracking across services
 
 ### ❌ Don'ts
+
 - Don't disable security headers in production
 - Don't use weak JWT security keys (minimum 32 characters)
 - Don't expose internal errors in API responses
