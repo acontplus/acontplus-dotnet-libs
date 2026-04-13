@@ -5,21 +5,29 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Acontplus.Notifications</PackageId>
-    <Version>1.5.12</Version>
+    <Version>1.6.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Comprehensive library for email notification services. Includes email via MailKit
-      (SMTP) and Amazon SES, Scriban templating with caching, rate limiting, connection pooling,
-      bulk sending, and enterprise-ready delivery patterns for cloud-native applications.</Description>
+    <Description>Comprehensive library for multi-channel notification services. Includes email via
+      MailKit
+      (SMTP) and Amazon SES, WhatsApp Cloud API (Meta Graph API v23.0) with text, templates, media,
+      interactive messages, reactions, webhook validation and multi-tenant support, Scriban
+      templating
+      with caching, rate limiting, connection pooling, bulk sending, and enterprise-ready delivery
+      patterns for cloud-native .NET 10 applications.</Description>
     <PackageTags>
-      dotnet;dotnet10;notifications;mailkit;email;ses;templates;scriban;amazon-ses;smtp;enterprise;cloud-native;template-caching;rate-limiting</PackageTags>
+      dotnet;dotnet10;notifications;mailkit;email;ses;whatsapp;whatsapp-cloud-api;meta;templates;scriban;amazon-ses;smtp;enterprise;cloud-native;template-caching;rate-limiting;multi-tenant</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v1.5.0: Added template caching with IMemoryCache (30min sliding expiration)
+    <PackageReleaseNotes>v1.6.0: WhatsApp Cloud API (Meta Graph API v23.0) — text, templates (full
+      component support), media (image/document/audio/video/sticker), location, interactive messages
+      (buttons/list/CTA), reactions, read receipts, media upload, HMAC-SHA256 webhook validation,
+      and multi-tenant named accounts.
+      v1.5.0: Added template caching with IMemoryCache (30min sliding expiration)
       for improved performance on high-frequency templates. Reduces I/O operations and speeds up
       email rendering. Backward compatible - optional IMemoryCache injection in AmazonSesService
       constructor.</PackageReleaseNotes>
@@ -36,6 +44,9 @@
     <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Scriban" />
   </ItemGroup>

@@ -1,6 +1,5 @@
 // Global using directives
 
-global using Acontplus.Billing.Interfaces.Services;
 global using Acontplus.Core.Abstractions.Persistence;
 global using Acontplus.Core.Constants;
 global using Acontplus.Core.Domain.Common.Results;

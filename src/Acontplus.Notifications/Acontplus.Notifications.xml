@@ -4,5 +4,687 @@
         <name>Acontplus.Notifications</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService">
+            <summary>
+            WhatsApp Cloud API service for sending messages via Meta's Graph API.
+            Supports text, templates, media (image/document/audio/video/sticker),
+            interactive messages (buttons/list/CTA), reactions, read receipts and webhook validation.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendTextAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest,System.Threading.CancellationToken)">
+            <summary>
+            Sends a plain text message.
+            Requires an active 24-hour conversation window with the recipient.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendTemplateAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest,System.Threading.CancellationToken)">
+            <summary>
+            Sends a pre-approved message template.
+            Works at any time — no 24-hour window required.
+            Supports header (text/image/document/video), body params, and button params.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendMediaAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest,System.Threading.CancellationToken)">
+            <summary>
+            Sends a media message (image, document, audio, video or sticker).
+            Provide either <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaUrl"/> or <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaId"/>.
+            Requires an active 24-hour window unless combined with a template.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.UploadMediaAsync(Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload,Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials,System.Threading.CancellationToken)">
+            <summary>
+            Uploads a media file to the WhatsApp Media API and returns a reusable media ID.
+            Use the returned ID in <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaId"/> or template parameters.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendLocationAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest,System.Threading.CancellationToken)">
+            <summary>Sends a location pin message.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendInteractiveAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest,System.Threading.CancellationToken)">
+            <summary>
+            Sends an interactive message:
+            quick-reply buttons, scrollable list menu, or call-to-action URL button.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.SendReactionAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest,System.Threading.CancellationToken)">
+            <summary>
+            Sends an emoji reaction to a received message.
+            Pass an empty <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest.Emoji"/> to remove an existing reaction.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.MarkAsReadAsync(System.String,Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials,System.Threading.CancellationToken)">
+            <summary>
+            Marks a received message as read (shows double blue ticks to the sender).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService.ValidateWebhookSignature(System.String,System.String,System.String)">
+            <summary>
+            Validates the <c>X-Hub-Signature-256</c> header from an incoming Meta webhook request.
+            Uses HMAC-SHA256 with the configured <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.AppSecret"/>.
+            </summary>
+            <param name="xHubSignature256">Value of the X-Hub-Signature-256 header (format: "sha256=...").</param>
+            <param name="rawRequestBody">Raw UTF-8 request body string.</param>
+            <param name="appSecret">
+            Optional override for the app secret. When null, uses <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.AppSecret"/>.
+            </param>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Extensions.WhatsAppServiceExtensions">
+            <summary>
+            Extension methods for registering the WhatsApp Cloud API notification service.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Extensions.WhatsAppServiceExtensions.AddWhatsAppService(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+             <summary>
+             Adds <see cref="T:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService"/> to the DI container, binding configuration
+             from the <c>"WhatsApp"</c> section of <paramref name="configuration"/>.
+             </summary>
+             <remarks>
+             Minimal appsettings.json:
+             <code>
+             {
+               "WhatsApp": {
+                 "PhoneNumberId": "1234567890",
+                 "AccessToken": "EAAxxxx...",
+                 "ApiVersion": "v23.0",
+                 "TimeoutSeconds": 30,
+                 "DefaultCountryCode": "593"
+               }
+             }
+             </code>
+            
+             Multi-tenant appsettings.json:
+             <code>
+             {
+               "WhatsApp": {
+                 "Accounts": {
+                   "company-a": { "PhoneNumberId": "...", "AccessToken": "..." },
+                   "company-b": { "PhoneNumberId": "...", "AccessToken": "..." }
+                 }
+               }
+             }
+             </code>
+             Then pass <c>Credentials = WhatsAppCredentials.FromAccount("company-a")</c> in your request.
+             </remarks>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Extensions.WhatsAppServiceExtensions.AddWhatsAppService(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions})">
+            <summary>
+            Adds <see cref="T:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService"/> to the DI container using an inline configuration action.
+            </summary>
+            <example>
+            <code>
+            services.AddWhatsAppService(opts =>
+            {
+                opts.PhoneNumberId = "1234567890";
+                opts.AccessToken   = "EAAxxxx...";
+                opts.ApiVersion    = "v23.0";
+            });
+            </code>
+            </example>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials">
+            <summary>
+            Per-request credential override for multi-tenant scenarios.
+            When set on any send request, these credentials take precedence
+            over the default configuration in <see cref="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.AccountName">
+            <summary>
+            References a named account from <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.Accounts"/>.
+            When set, the named account's credentials are used and other fields are ignored.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.PhoneNumberId">
+            <summary>
+            WhatsApp Business phone number ID (inline override).
+            Both <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.PhoneNumberId"/> and <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.AccessToken"/> must be set together.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.AccessToken">
+            <summary>Meta Graph API access token (inline override).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.BusinessAccountId">
+            <summary>Optional inline WhatsApp Business Account ID.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.FromAccount(System.String)">
+            <summary>
+            Creates credentials that reference a named account from <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.Accounts"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.Inline(System.String,System.String)">
+            <summary>Creates inline credentials without requiring appsettings configuration.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions">
+            <summary>
+            Configuration for the WhatsApp Cloud API service.
+            Bind from the <c>"WhatsApp"</c> section of your appsettings.json via
+            <c>services.AddWhatsAppService(configuration)</c>.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.SectionName">
+            <summary>The appsettings section name.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.PhoneNumberId">
+            <summary>
+            Default WhatsApp Business phone number ID.
+            Obtain from Meta Business Manager → WhatsApp → API Setup.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.AccessToken">
+            <summary>
+            Default Meta Graph API access token (permanent system-user token recommended).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.BusinessAccountId">
+            <summary>Optional: default WhatsApp Business Account ID (WABA ID).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.AppSecret">
+            <summary>
+            App secret used for webhook signature validation (X-Hub-Signature-256).
+            Found in Meta App Dashboard → Settings → Basic → App Secret.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.Accounts">
+            <summary>
+            Named accounts for multi-tenant scenarios.
+            Each entry maps an account key to its credentials.
+            Pass the key via <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials.AccountName"/> in any request.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.ApiVersion">
+            <summary>
+            Meta Graph API version. Default: <c>v23.0</c> (current stable, April 2026).
+            Change to a newer version as Meta releases updates.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.BaseUrl">
+            <summary>Base URL for the Meta Graph API. Default: <c>https://graph.facebook.com</c>.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.TimeoutSeconds">
+            <summary>
+            HTTP request timeout in seconds for individual API calls. Default: 30.
+            The resilience handler's total timeout may be higher due to retries.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.DefaultCountryCode">
+            <summary>
+            Default country dialing code used when normalizing phone numbers that start with "0"
+            (e.g., <c>"593"</c> for Ecuador maps 09xxxxxxxx → 593 9xxxxxxxx).
+            Leave null to skip automatic prefix expansion.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppAccountOptions">
+            <summary>Credentials for a named WhatsApp Business account in multi-tenant setups.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppAccountOptions.PhoneNumberId">
+            <summary>WhatsApp Business phone number ID for this account.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppAccountOptions.AccessToken">
+            <summary>Meta Graph API access token for this account.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppAccountOptions.BusinessAccountId">
+            <summary>Optional WhatsApp Business Account ID (WABA ID).</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppBaseRequest">
+            <summary>Base record shared by all WhatsApp send request types.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppBaseRequest.To">
+            <summary>
+            Recipient phone number. Accepts E.164 format (<c>+5930991234567</c>),
+            digits-only (<c>5930991234567</c>), or local format with leading zero (<c>0991234567</c>)
+            when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.DefaultCountryCode"/> is configured.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppBaseRequest.Credentials">
+            <summary>
+            Optional per-request credential override.
+            When null, the default credentials from <see cref="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions"/> are used.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest">
+            <summary>
+            Sends a plain text message to the recipient.
+            The recipient must have initiated contact within the last 24 hours.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest.Body">
+            <summary>Message body text (max 4 096 characters).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest.PreviewUrl">
+            <summary>
+            When <c>true</c>, Meta renders a URL preview card for links found in <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest.Body"/>.
+            Default: <c>false</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest.ContextMessageId">
+            <summary>
+            Set to the <c>wamid.*</c> of a received message to reply in a thread.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest">
+            <summary>
+            Sends a pre-approved WhatsApp message template.
+            Templates bypass the 24-hour rule and can be sent to opted-in users at any time.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest.TemplateName">
+            <summary>Exact name of the approved template as shown in WhatsApp Business Manager.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest.LanguageCode">
+            <summary>
+            Language + locale code (e.g. <c>"en_US"</c>, <c>"es_EC"</c>).
+            Must match the language approved for the template.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest.Components">
+            <summary>
+            Optional component parameter overrides (header, body, buttons).
+            Use <see cref="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent"/> factory helpers to build components.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest.ContextMessageId">
+            <summary>Set to the <c>wamid.*</c> of a received message to reply in a thread.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent">
+            <summary>A parameterized component within a template (header, body, or button).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Type">
+            <summary>Component type: <c>"header"</c>, <c>"body"</c>, or <c>"button"</c>.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Parameters">
+            <summary>Parameters for this component (text, image, document, video, etc.).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.SubType">
+            <summary>
+            Button sub-type: <c>"url"</c> or <c>"quick_reply"</c>.
+            Required only when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Type"/> is <c>"button"</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Index">
+            <summary>
+            Zero-based index of the button within the template.
+            Required only when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Type"/> is <c>"button"</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.Body(System.String[])">
+            <summary>Creates a body component with text parameters.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.HeaderText(System.String)">
+            <summary>Creates a header component with a single text value.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.HeaderImage(System.String,System.Boolean)">
+            <summary>Creates a header component with an image (by URL or media ID).</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.HeaderDocument(System.String,System.String,System.Boolean)">
+            <summary>Creates a header component with a document (by URL or media ID).</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.HeaderVideo(System.String,System.Boolean)">
+            <summary>Creates a header component with a video (by URL or media ID).</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.QuickReplyButton(System.Int32,System.String)">
+            <summary>Creates a quick-reply button component.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateComponent.UrlButton(System.Int32,System.String)">
+            <summary>Creates a URL button component with a dynamic URL suffix.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter">
+            <summary>A single parameter within a template component.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.Type">
+            <summary>
+            Parameter type: <c>"text"</c>, <c>"image"</c>, <c>"document"</c>,
+            <c>"video"</c>, <c>"payload"</c>, <c>"currency"</c>, <c>"date_time"</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.Text">
+            <summary>Text value for <c>"text"</c> or button <c>"payload"</c> types.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.Image">
+            <summary>Image media object for <c>"image"</c> type.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.Document">
+            <summary>Document media object for <c>"document"</c> type.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.Video">
+            <summary>Video media object for <c>"video"</c> type.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.FromText(System.String)">
+            <summary>Creates a text parameter.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.FromImage(System.String,System.Boolean)">
+            <summary>Creates an image parameter (URL or pre-uploaded media ID).</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.FromDocument(System.String,System.String,System.Boolean)">
+            <summary>Creates a document parameter (URL or pre-uploaded media ID).</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppTemplateParameter.FromVideo(System.String,System.Boolean)">
+            <summary>Creates a video parameter (URL or pre-uploaded media ID).</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaObject">
+            <summary>
+            A reference to a media asset — either by publicly accessible URL or by WhatsApp media ID.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaObject.Id">
+            <summary>Pre-uploaded WhatsApp Media ID (returned by <c>IWhatsAppService.UploadMediaAsync</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaObject.Link">
+            <summary>Publicly accessible HTTPS URL for the media file.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaObject.Filename">
+            <summary>Filename shown to the recipient. Applicable to documents only.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaObject.Caption">
+            <summary>Optional caption text. Applicable to image, video, and document messages.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType">
+            <summary>Identifies the type of media to be sent in a WhatsApp media message.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType.Image">
+            <summary>JPEG, PNG image (max 5 MB). Supports captions.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType.Document">
+            <summary>PDF, DOCX, XLSX, etc. (max 100 MB). Supports captions and filename.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType.Audio">
+            <summary>AAC, MP3, OGG audio (max 16 MB). No captions.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType.Video">
+            <summary>MP4, 3GPP video (max 16 MB). Supports captions.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaType.Sticker">
+            <summary>WebP sticker (max 100 KB static / 500 KB animated). No captions.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest">
+            <summary>
+            Sends a media message to the recipient.
+            Requires an active 24-hour conversation window. For outbound-initiated media,
+            use a template with a media header instead.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaType">
+            <summary>Type of media to send.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaUrl">
+            <summary>
+            Publicly accessible HTTPS URL of the media file.
+            Provide either <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaUrl"/> or <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaId"/>, not both.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaId">
+            <summary>
+            Pre-uploaded WhatsApp Media ID (from <c>IWhatsAppService.UploadMediaAsync</c>).
+            Provide either <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaUrl"/> or <see cref="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.MediaId"/>, not both.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.Caption">
+            <summary>Optional caption. Supported for image, video, and document. Not for audio or sticker.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.Filename">
+            <summary>Filename shown to the recipient. Only applicable to documents.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest.ContextMessageId">
+            <summary>Set to the <c>wamid.*</c> of a received message to reply in a thread.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload">
+            <summary>
+            Encapsulates a file for upload to the WhatsApp Media API.
+            Uses <see cref="T:System.IO.Stream"/> instead of <c>IFormFile</c> to remain independent of ASP.NET Core.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload.FileStream">
+            <summary>
+            The file data stream. The service does NOT dispose this stream —
+            the caller is responsible for disposing it after the call completes.
+            Pass this to <c>IWhatsAppService.UploadMediaAsync</c> to get a reusable media ID.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload.FileName">
+            <summary>Original file name including extension (e.g., <c>"invoice.pdf"</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload.ContentType">
+            <summary>MIME content type (e.g., <c>"application/pdf"</c>, <c>"image/jpeg"</c>).</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest">
+            <summary>Sends a map location pin to the recipient.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest.Latitude">
+            <summary>Decimal latitude of the location.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest.Longitude">
+            <summary>Decimal longitude of the location.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest.Name">
+            <summary>Optional location name displayed above the map.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest.Address">
+            <summary>Optional formatted address displayed below the location name.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType">
+            <summary>Specifies the layout type of an interactive message.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.Button">
+            <summary>Up to 3 quick-reply buttons.</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.List">
+            <summary>Scrollable list with sections and rows (up to 10 rows total).</summary>
+        </member>
+        <member name="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.CtaUrl">
+            <summary>Single call-to-action button that opens a URL.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest">
+            <summary>Sends an interactive message with buttons, a list menu, or a CTA URL button.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.InteractiveType">
+            <summary>Type of interactive layout to render.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.BodyText">
+            <summary>Main message body text shown to the recipient.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.HeaderText">
+            <summary>Optional header text (plain text; image/document/video headers not supported here).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.FooterText">
+            <summary>Optional footer text displayed below the action area (max 60 chars).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.ReplyButtons">
+            <summary>
+            Quick-reply buttons (1–3) for <see cref="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.Button"/>.
+            Button IDs are returned in the webhook payload when tapped.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.ListButtonLabel">
+            <summary>
+            Label for the list-open button (max 20 chars).
+            Used for <see cref="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.List"/>. Defaults to <c>"Options"</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.ListSections">
+            <summary>
+            Sections containing selectable rows.
+            Used for <see cref="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.List"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.CtaDisplayText">
+            <summary>
+            Button display text for <see cref="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.CtaUrl"/> (e.g., "Open portal").
+            Defaults to <c>"Open"</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.CtaUrl">
+            <summary>
+            Full URL opened when the CTA button is tapped.
+            Used for <see cref="F:Acontplus.Notifications.WhatsApp.Models.WhatsAppInteractiveType.CtaUrl"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest.ContextMessageId">
+            <summary>Set to the <c>wamid.*</c> of a received message to reply in a thread.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppReplyButton">
+            <summary>A quick-reply button in an interactive button message.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppReplyButton.Id">
+            <summary>
+            Unique button identifier returned by the webhook when the user taps this button.
+            Max 256 chars.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppReplyButton.Title">
+            <summary>Button display label (max 20 chars).</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppListSection">
+            <summary>A section within an interactive list message.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppListSection.Title">
+            <summary>Optional section heading shown above its rows.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppListSection.Rows">
+            <summary>The selectable rows within this section.</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppListRow">
+            <summary>A selectable row within a list section.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppListRow.Id">
+            <summary>
+            Unique row identifier returned by the webhook when selected.
+            Max 200 chars.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppListRow.Title">
+            <summary>Row title (max 24 chars).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppListRow.Description">
+            <summary>Optional secondary description text (max 72 chars).</summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest">
+            <summary>Sends an emoji reaction to a specific received message.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest.MessageId">
+            <summary>The <c>wamid.*</c> message ID to react to.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest.Emoji">
+            <summary>
+            The emoji character to react with (e.g., <c>"👍"</c>).
+            Pass an empty string <c>""</c> to remove an existing reaction.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult">
+            <summary>
+            Result of a WhatsApp Cloud API send or status operation.
+            Check <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.IsSuccess"/> before accessing <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.MessageId"/>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.IsSuccess">
+            <summary>Whether the API call succeeded.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.MessageId">
+            <summary>
+            The WhatsApp message ID (<c>wamid.*</c>) assigned by Meta.
+            Only populated when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.IsSuccess"/> is <c>true</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.RecipientWaId">
+            <summary>
+            The recipient's WhatsApp ID (normalized phone number) as confirmed by Meta.
+            Only populated when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.IsSuccess"/> is <c>true</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.Error">
+            <summary>Error details when <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.IsSuccess"/> is <c>false</c>.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.Success(System.String,System.String)">
+            <summary>Creates a successful result.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.Failure(System.Int32,System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>Creates a failure result from error components.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.Failure(Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError)">
+            <summary>Creates a failure result from a structured error object.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppResult.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError">
+            <summary>Structured error returned by the Meta Graph API or the service itself.</summary>
+            <param name="Code">Meta error code (negative values are library-internal codes).</param>
+            <param name="Message">Error message string.</param>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.#ctor(System.Int32,System.String)">
+            <summary>Structured error returned by the Meta Graph API or the service itself.</summary>
+            <param name="Code">Meta error code (negative values are library-internal codes).</param>
+            <param name="Message">Error message string.</param>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.Code">
+            <summary>Meta error code (negative values are library-internal codes).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.Message">
+            <summary>Error message string.</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.Type">
+            <summary>Error type string from Meta (e.g., <c>"OAuthException"</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.ErrorSubcode">
+            <summary>Error subcode for finer classification (see Meta error code reference).</summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.FbtraceId">
+            <summary>
+            Facebook trace ID — include this when filing a Meta Developer Support ticket.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppApiError.UserMessage">
+            <summary>
+            User-facing error title from Meta (can be displayed to end-users).
+            Sourced from <c>error_user_title</c> in the Graph API response.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.WhatsApp.Services.WhatsAppService">
+            <summary>
+            WhatsApp Cloud API service implementation targeting Meta Graph API v23.0.
+            Registered as a singleton; uses <see cref="T:System.Net.Http.IHttpClientFactory"/> for thread-safe,
+            lifecycle-managed HTTP connections with built-in resilience (retry + circuit breaker).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.#ctor(System.Net.Http.IHttpClientFactory,Microsoft.Extensions.Logging.ILogger{Acontplus.Notifications.WhatsApp.Services.WhatsAppService},Microsoft.Extensions.Options.IOptions{Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions})">
+            <summary>Creates a new <see cref="T:Acontplus.Notifications.WhatsApp.Services.WhatsAppService"/> instance.</summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendTextAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendTemplateAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTemplateRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendMediaAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppMediaRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.UploadMediaAsync(Acontplus.Notifications.WhatsApp.Models.WhatsAppMediaUpload,Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendLocationAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppLocationRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendInteractiveAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppInteractiveRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendReactionAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppReactionRequest,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.MarkAsReadAsync(System.String,Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.ValidateWebhookSignature(System.String,System.String,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.ResolveCredentials(Acontplus.Notifications.WhatsApp.Models.WhatsAppCredentials)">
+            <summary>
+            Resolves effective credentials following priority order:
+            per-request named account → per-request inline → default from options.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.NormalizePhone(System.String)">
+            <summary>
+            Normalizes a phone number to digits-only, applying <see cref="P:Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions.DefaultCountryCode"/>
+            when the number starts with a leading zero (e.g., Ecuadorian 09xxxxxxxx → 593 9xxxxxxxx).
+            </summary>
+        </member>
     </members>
 </doc>
