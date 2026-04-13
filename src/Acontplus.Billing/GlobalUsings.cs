@@ -1,17 +1,13 @@
 global using Acontplus.Barcode.Models;
 global using Acontplus.Barcode.Utils;
-global using Acontplus.Core.Domain.Common.Results;
 global using Acontplus.Core.Domain.Enums;
 global using Acontplus.Core.Extensions;
 global using Acontplus.Core.Validation;
 global using Acontplus.Utilities.Format;
 global using Microsoft.AspNetCore.Http;
-global using Microsoft.Extensions.DependencyInjection;
 global using System.Data;
 global using System.Net;
-global using System.Net.Http.Headers;
 global using System.Reflection;
 global using System.Text;
-global using System.Web;
 global using System.Xml;
 global using Formatting = System.Xml.Formatting;
