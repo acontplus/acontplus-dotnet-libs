@@ -1,4 +1,5 @@
 using Acontplus.Core.Domain.Common.Events;
+using Acontplus.Notifications.WhatsApp.Extensions;
 using Acontplus.Persistence.Common.Configuration;
 using Acontplus.S3Application.Extensions;
 using Asp.Versioning;
@@ -54,6 +55,13 @@ public static class ProgramExtensions
         // ========================================
         // Optional: Enable template caching for better performance
         services.AddMemoryCache();
+
+        // ========================================
+        // WHATSAPP CLOUD API SERVICE (v1.6.0)
+        // ========================================
+        // Reads from appsettings "WhatsApp" section.
+        // See appsettings.Example.json for full configuration reference.
+        services.AddWhatsAppService(configuration);
 
         return services;
     }
@@ -247,6 +255,13 @@ public static class ProgramExtensions
             .MapToApiVersion(2, 0)
             .WithTags("Storage & Notifications Demo");
         storageGroup.MapStorageAndNotificationsEndpoints();
+
+        // WhatsApp Cloud API demo — v2 only
+        var whatsAppGroup = app.MapGroup("/api/demo/whatsapp")
+            .WithApiVersionSet(apiVersionSet)
+            .MapToApiVersion(2, 0)
+            .WithTags("WhatsApp Cloud API Demo");
+        whatsAppGroup.MapWhatsAppDemoEndpoints();
 
         // ── Available in both V1 and V2 ───────────────────────────────────────────
         allVersions.MapAllEndpoints();
