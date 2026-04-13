@@ -389,7 +389,13 @@ public sealed class WhatsAppService : IWhatsAppService
 
             if (response.IsSuccessStatusCode && apiResponse?.messages?.Count > 0)
             {
-                var msgId = apiResponse.messages[0].id!;
+                var msgId = apiResponse.messages[0].id;
+                if (string.IsNullOrEmpty(msgId))
+                {
+                    _logger.LogError("WhatsApp: API returned null or empty message ID");
+                    return WhatsAppResult.Failure(-3, "API returned invalid message ID");
+                }
+                
                 var waId = apiResponse.contacts?.FirstOrDefault()?.wa_id;
 
                 _logger.LogInformation(
