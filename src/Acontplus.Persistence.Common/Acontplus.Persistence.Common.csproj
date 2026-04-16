@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.Common</PackageId>
-    <Version>2.0.11</Version>
+    <Version>2.0.12</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
