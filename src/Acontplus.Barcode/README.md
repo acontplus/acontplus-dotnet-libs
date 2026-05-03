@@ -325,4 +325,4 @@ Register with `services.AddBarcode()` — the default implementation delegates t
 - **ZXing.Net.Bindings.SkiaSharp** - SkiaSharp renderer for ZXing
 - **SkiaSharp.NativeAssets.Linux** - Native assets for Linux containers
 - **System.Drawing.Common** - Cross-platform image support
-- **Microsoft.Extensions.DependencyInjection.Abstractions** - DI registration helpers
+- **Microsoft.Extensions.DependencyInjection.Abstractions** - DI registration helpers (host-agnostic; does not require ASP.NET Core)

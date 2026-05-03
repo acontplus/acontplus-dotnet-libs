@@ -8,7 +8,7 @@
 
 ## 🚀 Features
 
-### v1.6.0 — WhatsApp Cloud API (Meta Graph API v23.0)
+### WhatsApp Cloud API (Meta Graph API v23.0)
 - 💬 **Text messages** — plain text with URL preview, in-thread replies
 - 📋 **Templates** — body/header params, image/video/document headers, quick-reply & URL buttons
 - 🖼️ **Media** — image, document, audio, video, sticker (URL or pre-uploaded ID)
@@ -20,11 +20,6 @@
 - 🔐 **Webhook validation** — HMAC-SHA256 signature verification (X-Hub-Signature-256)
 - 🏢 **Multi-tenant** — default account + named accounts per company + per-request inline override
 - 🔄 **Built-in resilience** — 3 retries, exponential back-off, circuit breaker, per-attempt timeout
-
-### v1.5.0 — Email Performance & Caching
-- ⚡ **Template Caching** — 50× faster template loading (30-min memory cache, sliding expiration)
-- 📊 **99% less I/O** — cached templates eliminate repeated disk reads
-- 🔄 **Backward compatible** — optional `IMemoryCache` injection
 
 ### Core Email Capabilities
 - 📧 **Email** via MailKit (SMTP) and Amazon SES (HTTP v2)
@@ -43,7 +38,7 @@ dotnet add package Acontplus.Notifications
 ```
 
 ```xml
-<PackageReference Include="Acontplus.Notifications" Version="1.6.0" />
+<PackageReference Include="Acontplus.Notifications" Version="1.6.2" />
 ```
 
 ---

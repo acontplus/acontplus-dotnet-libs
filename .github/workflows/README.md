@@ -43,33 +43,6 @@ Este directorio contiene workflows automatizados para CI/CD del monorepo Acontpl
 
 ---
 
-### 🚀 **pr-cascade-publish.yml** ⭐ NUEVO
-**Publicación automática al mergear PRs de cascade**
-
-- ✅ Detecta merges de branches `cascade-update/*`
-- ✅ Publica automáticamente a NuGet.org
-- ✅ Ejecuta tests finales
-- ✅ Crea GitHub Release
-- ✅ Notificaciones de éxito/fallo
-
-**Trigger**: Automático al mergear PR
-
----
-
-### 📦 **nuget-publish.yml** ⚠️ LEGACY
-**Publicación individual de paquetes (Solo manual)**
-
-- ⚠️ **DESACTIVADO automáticamente** para evitar conflictos con smart-publish
-- ✅ Solo para uso manual en emergencias
-- ✅ Publicación paralela de múltiples paquetes
-- ✅ Soporte para publicación forzada
-
-**Trigger**: ~~Push a `main`~~ Solo Manual (workflow_dispatch)
-
-**Nota**: Este workflow ha sido reemplazado por `smart-publish.yml` para operación normal. Se mantiene como fallback para casos de emergencia.
-
----
-
 ### ✅ **version-check.yml**
 **Verificación de versiones publicadas**
 
@@ -149,12 +122,6 @@ Este directorio contiene workflows automatizados para CI/CD del monorepo Acontpl
 
 📖 **Documentación completa**: [CASCADE_PUBLISH_GUIDE.md](../../docs/CASCADE_PUBLISH_GUIDE.md)
 
-### **Publicación Individual**
-
-1. Actualizar versión en `.csproj` manualmente
-2. Commit y push a `main`
-3. `nuget-publish.yml` detecta y publica
-
 ---
 
 ## 🔒 Prevención de Conflictos
@@ -163,12 +130,9 @@ Los workflows están configurados para **evitar publicaciones duplicadas**:
 
 ### Mecanismos de Protección
 
-1. **Concurrency Control**: smart-publish y pr-cascade-publish usan el mismo grupo de concurrencia
+1. **Concurrency Control**: smart-publish y cascade-publish usan grupos de concurrencia separados
 2. **Branch Detection**: smart-publish se salta automáticamente branches `cascade-update/*`
-3. **Trigger Selectivo**: nuget-publish desactivado automáticamente (solo manual)
-4. **Eligibility Check**: Verificación explícita antes de ejecutar
-
-**Documentación completa**: [WORKFLOWS_CONFLICT_RESOLUTION.md](../../docs/WORKFLOWS_CONFLICT_RESOLUTION.md)
+3. **Eligibility Check**: Verificación explícita antes de ejecutar
 
 ---
 

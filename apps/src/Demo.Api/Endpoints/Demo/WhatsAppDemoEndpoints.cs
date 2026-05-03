@@ -1,6 +1,3 @@
-using Acontplus.Notifications.WhatsApp.Abstractions;
-using Acontplus.Notifications.WhatsApp.Models;
-
 namespace Demo.Api.Endpoints.Demo;
 
 /// <summary>

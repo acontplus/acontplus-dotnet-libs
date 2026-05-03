@@ -6,6 +6,8 @@
 
 **Production-ready AWS S3 storage library** with enterprise-grade scalability, resilience, and performance optimizations. Built for high-throughput cloud-native applications.
 
+> Full version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ---
 
 ## 📑 Table of Contents
@@ -25,7 +27,7 @@
 
 ## 🚀 Features
 
-### v2.0.0 - Scalability & Resilience
+### Scalability & Resilience
 - ⚡ **Connection Pooling**: Reuses S3 clients per credentials/region (25x faster)
 - 🔄 **Polly Retry Policy**: Automatic exponential backoff for transient failures
 - 🚦 **Rate Limiting**: Prevents AWS throttling (configurable requests/second)
@@ -304,7 +306,7 @@ if (response.StatusCode == 200)
 
 ## 🚀 Performance
 
-### v2.0.0 Performance Improvements
+### Performance Improvements
 
 | Metric | v1.x | v2.0.0 | Improvement |
 |--------|------|--------|-------------|
@@ -364,17 +366,14 @@ services.AddS3Storage(configuration);
 - Rate limiting prevents throttling errors
 - Detailed logging for diagnostics
 
-See [UPGRADE_GUIDE_v2.0.0.md](../../docs/UPGRADE_GUIDE_v2.0.0.md) for complete migration instructions.
-
 ---
 
 ## 📚 Dependencies
 - .NET 10+
-- [AWSSDK.Core](https://www.nuget.org/packages/AWSSDK.Core) 4.0.3.6+
-- [AWSSDK.S3](https://www.nuget.org/packages/AWSSDK.S3) 4.0.15+
-- [Polly](https://www.nuget.org/packages/Polly) 8.6.5+ (NEW in v2.0)
-- Microsoft.Extensions.Logging.Abstractions
-- Microsoft.Extensions.Options
+- [AWSSDK.Core](https://www.nuget.org/packages/AWSSDK.Core) 4.0.6+
+- [AWSSDK.S3](https://www.nuget.org/packages/AWSSDK.S3) 4.0.22+
+- [Polly](https://www.nuget.org/packages/Polly) 8.6.5+
+- `Microsoft.AspNetCore.App` framework (included transitively — requires ASP.NET Core host)
 
 ---
 

@@ -265,11 +265,6 @@
             NOTE: For infrastructure services (caching, resilience, HTTP clients), use Acontplus.Infrastructure package.
             </summary>
         </member>
-        <member name="M:Acontplus.Services.Extensions.ServiceExtensions.AddMonitoringServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
-            <summary>
-            Add monitoring and telemetry services.
-            </summary>
-        </member>
         <member name="M:Acontplus.Services.Extensions.ServiceExtensions.AddDeviceDetection(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
             Add device detection service.

@@ -804,5 +804,5 @@ public class BaseRepository<TEntity> : IRepository<TEntity> where TEntity : clas
 
 - **.NET 10+** - Advanced .NET framework
 - **Entity Framework Core** - ORM and data access
-- **Microsoft.Extensions.Configuration** - Configuration management
+- **Microsoft.Extensions.Configuration.Abstractions** - Configuration abstractions (host-agnostic; does not require ASP.NET Core)
 - **Acontplus.Core** - Core abstractions and patterns

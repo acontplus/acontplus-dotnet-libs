@@ -63,35 +63,35 @@ This guide will help you configure GitHub Actions for automated NuGet package pu
 
 ### Automatic Workflow Triggers
 
-✅ **On Push to Main**:
-- Detects which packages have new versions
-- Builds and tests all packages
-- Publishes changed packages to NuGet.org
-- Creates a GitHub release with download links
+✅ **On PR Merge to Main** (primary publishing path — `smart-publish.yml`):
+- Analyzes package dependency graph automatically
+- If package has no dependents → publishes directly to NuGet.org and creates a GitHub release
+- If package has dependents → opens a GitHub issue recommending `cascade-publish.yml`
 
-✅ **On Pull Requests**:
+✅ **On Pull Requests** (`build-test.yml`):
 - Builds and validates the code
 - Checks version format
 - Generates package files (but doesn't publish)
 
-✅ **Daily at 9 AM UTC**:
+✅ **Daily at 9 AM UTC** (`version-check.yml`):
 - Compares local vs published versions
 - Creates summary report
 - Opens GitHub issue if unpublished versions exist
 
 ### Manual Controls
 
-You can manually trigger workflows:
+You can manually trigger workflows from **Actions** tab:
 
-1. **Publish NuGet Packages**: Publish specific packages or force-publish existing versions
-2. **Build and Test**: Run full build and validation
-3. **Version Check**: Generate version comparison report
+1. **Cascade Publish**: Publish a root package and all its dependents in topological order
+2. **Build and Test**: Run full build and validation on any branch
+3. **Version Check**: Generate version comparison report on demand
 
 ## Workflow Files
 
 | File | Purpose | Trigger |
-|------|---------|---------|
-| `nuget-publish.yml` | Publishes packages to NuGet.org | Push to main, manual |
+|------|---------|----------|
+| `smart-publish.yml` | Primary: auto-detects strategy on PR merge | PR merge to main |
+| `cascade-publish.yml` | Manual cascade publishing with dependency ordering | Manual |
 | `build-test.yml` | Validates build and tests | All branches, PRs |
 | `version-check.yml` | Monitors version status | Daily, manual |
 
@@ -107,37 +107,34 @@ You can manually trigger workflows:
 git add src/Acontplus.Core/Acontplus.Core.csproj
 git commit -m "feat(core): add new feature xyz"
 
-# 3. Push to trigger auto-publish
-git push origin main
+# 3. Create a PR and merge to main
+ # smart-publish.yml triggers automatically on merge
 
-# 4. Monitor in GitHub Actions tab
+ # 4. Monitor in GitHub Actions tab
 ```
 
 ### Publishing Multiple Packages
 
 ```bash
-# 1. Upgrade multiple packages
-.\upgrade-version.ps1 -PackageName Acontplus.Core -BumpType minor
-.\upgrade-version.ps1 -PackageName Acontplus.Utilities -BumpType patch
+ # 1. Upgrade multiple packages
+ .\upgrade-version.ps1 -PackageName Acontplus.Core -BumpType minor
+ .\upgrade-version.ps1 -PackageName Acontplus.Utilities -BumpType patch
 
-# 2. Commit all changes
-git add src/**/*.csproj
-git commit -m "chore(build): bump multiple package versions"
+ # 2. Commit all changes, create PR
+ git add src/**/*.csproj
+ git commit -m "chore(build): bump multiple package versions"
 
-# 3. Push once (all will publish in parallel)
-git push origin main
+ # 3. Merge PR — smart-publish.yml handles the rest
 ```
 
-### Emergency Republish
+### Cascade Publish (packages with dependents)
 
-If you need to republish an existing version (use sparingly):
+When smart-publish detects a package has dependents it will open a GitHub issue recommending cascade:
 
-1. Go to **Actions** → **Publish NuGet Packages** → **Run workflow**
-2. Enter package name: `Acontplus.Core`
-3. Check **Force** checkbox
-4. Click **"Run workflow"**
-
-⚠️ **Warning**: NuGet.org usually doesn't allow overwriting versions. Force publish should only be used for truly exceptional circumstances.
+1. Go to **Actions** → **Cascade Publish NuGet Packages** → **Run workflow**
+2. Enter root package name, bump type, and cascade bump type
+3. Let it create a PR with all dependent version bumps
+4. Review and merge the PR
 
 ## Monitoring
 
@@ -218,7 +215,7 @@ If you need to republish an existing version (use sparingly):
 
 ### Custom Package Sources
 
-To publish to private feeds, modify `nuget-publish.yml`:
+To publish to private feeds, add a step to `smart-publish.yml` or `cascade-publish.yml`:
 
 ```yaml
 - name: Publish to private feed

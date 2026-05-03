@@ -1,5 +1,3 @@
-global using System;
-global using System.Data;
 global using Acontplus.ApiDocumentation;
 global using Acontplus.Barcode.Models;
 global using Acontplus.Barcode.Utils;
@@ -54,3 +52,5 @@ global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.DependencyInjection;
 global using Serilog;
+global using System;
+global using System.Data;

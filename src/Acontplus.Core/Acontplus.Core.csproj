@@ -3,26 +3,56 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Core</PackageId>
-    <Version>2.2.0</Version>
+    <Version>2.2.1</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced foundational library with cutting-edge C# features and 17 global business enums for multi-application standardization. Includes domain-driven design patterns, comprehensive error handling with HTTP mapping, specification pattern interfaces, functional result types, JSON utilities, validation helpers, and enterprise-ready abstractions. Features ready-to-use enums for business status, priorities, document types, demographics, currencies, payment methods, user roles, industries, company sizes, event types, and internationalization. Built with collection expressions, required properties, record structs, and source generation for optimal performance. Clean architecture with no persistence dependencies.</Description>
-    <PackageTags>dotnet;dotnet10;domain-driven-design;ddd;enterprise;abstractions;entities;dtos;enums;global-enums;business-enums;models;validations;specification-pattern;error-handling;functional-programming;result-pattern;json-utilities;validation-helpers;repository-interfaces;unit-of-work;pagination;api-responses;domain-events;audit-trail;http-mapping;modern-csharp;collection-expressions;required-properties;record-structs;source-generation;aot-compatible;internationalization;multi-application;standardization;clean-architecture</PackageTags>
+    <Description>Advanced foundational library with cutting-edge C# features and 17 global business
+      enums for multi-application standardization. Includes domain-driven design patterns,
+      comprehensive error handling with HTTP mapping, specification pattern interfaces, functional
+      result types, JSON utilities, validation helpers, and enterprise-ready abstractions. Features
+      ready-to-use enums for business status, priorities, document types, demographics, currencies,
+      payment methods, user roles, industries, company sizes, event types, and internationalization.
+      Built with collection expressions, required properties, record structs, and source generation
+      for optimal performance. Clean architecture with no persistence dependencies.</Description>
+    <PackageTags>
+      dotnet;dotnet10;domain-driven-design;ddd;enterprise;abstractions;entities;dtos;enums;global-enums;business-enums;models;validations;specification-pattern;error-handling;functional-programming;result-pattern;json-utilities;validation-helpers;repository-interfaces;unit-of-work;pagination;api-responses;domain-events;audit-trail;http-mapping;modern-csharp;collection-expressions;required-properties;record-structs;source-generation;aot-compatible;internationalization;multi-application;standardization;clean-architecture</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with cutting-edge C# features and 17 comprehensive global business enums for multi-application standardization. New enums include BusinessStatus, Priority, DocumentType, Gender, MaritalStatus, Title, Currency, PaymentMethod, UserRole, Language, TimeZone, CommunicationChannel, AddressType, ContentType, Industry, CompanySize, and EventType - all globally available and fully documented. Includes comprehensive error handling with HTTP status code mapping, functional result patterns, domain event system, specification pattern interfaces, advanced pagination with search and filtering, powerful JSON utilities with multiple serialization options, XML validation helpers, and enterprise-ready abstractions. Clean architecture with no persistence dependencies - repository implementations are provided in separate persistence packages. Optimized for AOT compilation and contemporary C# development patterns.</PackageReleaseNotes>
+    <PackageReleaseNotes>Enhanced with cutting-edge C# features and 17 comprehensive global business
+      enums for multi-application standardization. New enums include BusinessStatus, Priority,
+      DocumentType, Gender, MaritalStatus, Title, Currency, PaymentMethod, UserRole, Language,
+      TimeZone, CommunicationChannel, AddressType, ContentType, Industry, CompanySize, and EventType
+      - all globally available and fully documented. Includes comprehensive error handling with HTTP
+      status code mapping, functional result patterns, domain event system, specification pattern
+      interfaces, advanced pagination with search and filtering, powerful JSON utilities with
+      multiple serialization options, XML validation helpers, and enterprise-ready abstractions.
+      Clean architecture with no persistence dependencies - repository implementations are provided
+      in separate persistence packages. Optimized for AOT compilation and contemporary C#
+      development patterns.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Resources\Images\icon.png" Pack="true" PackagePath="\" />

@@ -48,7 +48,6 @@ A comprehensive .NET service library providing business-grade patterns, security
 
 - **Request Logging**: Structured logging with performance metrics
 - **Health Checks**: Comprehensive health monitoring for application services
-- **Application Insights**: Optional integration for telemetry and monitoring
 
 ## 📦 Installation
 
@@ -396,11 +395,6 @@ Complete setup for enterprise applications with all features enabled.
 ```csharp
 // Program.cs for enterprise applications
 var builder = WebApplication.CreateBuilder(args);
-
-// Configure logging
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddApplicationInsights();
 
 // Add all Acontplus services
 builder.Services.AddApplicationServices(builder.Configuration);

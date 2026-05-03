@@ -7,21 +7,38 @@
     <Version>2.1.6</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced library for SQL Server persistence with Entity Framework Core integration. Includes repositories, context management, ADO.NET support, advanced error handling, and enterprise-ready data access patterns for SQL Server databases.</Description>
-    <PackageTags>dotnet;dotnet10;database;ado-net;data-access;sql-server;orm;micro-orm;query;crud;efcore;repository;entity-framework;sql;microsoft-sql</PackageTags>
+    <Description>Advanced library for SQL Server persistence with Entity Framework Core integration.
+      Includes repositories, context management, ADO.NET support, advanced error handling, and
+      enterprise-ready data access patterns for SQL Server databases.</Description>
+    <PackageTags>
+      dotnet;dotnet10;database;ado-net;data-access;sql-server;orm;micro-orm;query;crud;efcore;repository;entity-framework;sql;microsoft-sql</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary repository patterns, Entity Framework Core integration, ADO.NET support, advanced error handling, connection resilience with Polly, and enterprise-ready SQL Server data access patterns.</PackageReleaseNotes>
+    <PackageReleaseNotes>Enhanced with contemporary repository patterns, Entity Framework Core
+      integration, ADO.NET support, advanced error handling, connection resilience with Polly, and
+      enterprise-ready SQL Server data access patterns.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Acontplus.Persistence.Common" />

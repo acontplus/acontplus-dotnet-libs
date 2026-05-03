@@ -3,26 +3,43 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Utilities</PackageId>
     <Version>2.0.7</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Comprehensive utilities library with cross-cutting concerns and general-purpose tools. Includes encryption, IO operations, text processing, time utilities, API helpers, JSON utilities, and security features for enterprise applications.</Description>
-    <PackageTags>dotnet;dotnet10;utilities;format;io;security;text;time;api;helpers;encryption;json;bcrypt;cross-cutting;enterprise</PackageTags>
+    <Description>Comprehensive utilities library with cross-cutting concerns and general-purpose
+      tools. Includes encryption, IO operations, text processing, time utilities, API helpers, JSON
+      utilities, and security features for enterprise applications.</Description>
+    <PackageTags>
+      dotnet;dotnet10;utilities;format;io;security;text;time;api;helpers;encryption;json;bcrypt;cross-cutting;enterprise</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Fixed compilation errors in ResultApiExtensions, updated README to remove incorrect barcode generation claims, enhanced documentation with correct feature descriptions and better examples.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed compilation errors in ResultApiExtensions, updated README to remove
+      incorrect barcode generation claims, enhanced documentation with correct feature descriptions
+      and better examples.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
