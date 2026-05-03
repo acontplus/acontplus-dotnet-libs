@@ -22,20 +22,24 @@ Use this checklist to ensure your GitHub Actions for NuGet publishing is properl
 
 ### 3. Code Configuration
 
-- [ ] All package projects have `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`
+- [ ] All package projects have `<GeneratePackageOnBuild>false</GeneratePackageOnBuild>` (packing is explicit via `dotnet pack`)
 - [ ] All package projects have valid `<Version>X.Y.Z</Version>`
+- [ ] All package projects have `<AssemblyVersion>` matching the major version (e.g., `2.0.0.0` for v2.x.x packages)
+- [ ] All package projects have SourceLink enabled (`IncludeSymbols`, `SymbolPackageFormat>snupkg`, `PublishRepositoryUrl`, `EmbedUntrackedSources`)
+- [ ] All package projects have `<ContinuousIntegrationBuild>` conditioned on `$(CI)` / `$(TF_BUILD)`
 - [ ] All package projects have `<PackageId>` matching package name
-- [ ] Package metadata is complete (Authors, Description, Tags, etc.)
+- [ ] Package metadata is complete (`Authors`, `Company`, `Product`, `Description`, `PackageTags`, `PackageProjectUrl`, etc.)
 - [ ] README.md files exist in package directories (if included in package)
 - [ ] Package icons exist (if specified in .csproj)
 
 ### 4. Workflow Files
 
-- [ ] `.github/workflows/nuget-publish.yml` exists
-- [ ] `.github/workflows/build-test.yml` exists
-- [ ] `.github/workflows/version-check.yml` exists
+- [ ] `.github/workflows/smart-publish.yml` exists (primary — triggered on PR merge)
+- [ ] `.github/workflows/cascade-publish.yml` exists (manual cascade publishing)
+- [ ] `.github/workflows/build-test.yml` exists (CI — all branches and PRs)
+- [ ] `.github/workflows/version-check.yml` exists (daily version monitoring)
 - [ ] Workflow files are valid YAML (no syntax errors)
-- [ ] Workflow permissions are appropriate
+- [ ] Workflow permissions are appropriate (`contents: write`, `pull-requests: write`, `issues: write` on publish workflows)
 
 ## First-Time Testing Checklist
 

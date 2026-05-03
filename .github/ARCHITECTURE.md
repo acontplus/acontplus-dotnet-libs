@@ -2,7 +2,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         AUTOMATED PUBLISHING FLOW                            │
+│              AUTOMATED PUBLISHING FLOW (smart-publish.yml)                  │
 └─────────────────────────────────────────────────────────────────────────────┘
 
     Developer Actions                GitHub Actions                NuGet.org
@@ -18,83 +18,39 @@
          │
          ▼
 ┌──────────────────┐
-│ 2. Commit Change │
+│ 2. Commit + PR   │
 │ git commit -m    │
 │ "feat: xyz"      │
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
-│ 3. Push to Main  │              ┌─────────────────────┐
-│ git push origin  │──────────────▶│  TRIGGER DETECTED   │
-│ main             │              │  Push to main with  │
-└──────────────────┘              │  .csproj changes    │
+│ 3. Merge PR to   │              ┌─────────────────────┐
+│    main          │──────────────▶│  TRIGGER DETECTED   │
+└──────────────────┘              │  PR merged to main  │
+                                  │  with .csproj change│
                                   └──────────┬──────────┘
                                             │
                                             ▼
                                   ┌─────────────────────┐
-                                  │ JOB 1: DETECT       │
+                                  │ ANALYZE CHANGES     │
                                   │ ─────────────────   │
                                   │ • Scan all .csproj  │
-                                  │ • Compare versions  │◀─┐
-                                  │   with NuGet.org    │  │
-                                  │ • Identify new      │  │
-                                  │   versions          │  │
-                                  └──────────┬──────────┘  │
-                                            │              │
-                                            ▼              │
-                                  ┌─────────────────────┐  │
-                                  │ Found Changes?      │  │
-                                  │ Yes: Acontplus.Core │  │
-                                  │      v2.1.0         │  │
-                                  └──────────┬──────────┘  │
-                                            │              │
-                                            ▼              │
-                                  ┌─────────────────────┐  │
-                                  │ JOB 2: BUILD        │  │
-                                  │ ─────────────────   │  │
-                                  │ • Restore deps      │  │
-                                  │ • Build solution    │  │
-                                  │ • Run tests         │  │
-                                  │ • Pack .nupkg       │  │
-                                  └──────────┬──────────┘  │
-                                            │              │
-                                            ▼              │
-                                  ┌─────────────────────┐  │
-                                  │ JOB 3: PUBLISH      │  │
-                                  │ ─────────────────   │  │
-                                  │ • Validate package  │  │
-                                  │ • Push to NuGet.org │──┼──┐
-                                  │ • Upload artifacts  │  │  │
-                                  └──────────┬──────────┘  │  │
-                                            │              │  │
-                                            ▼              │  │
-                                  ┌─────────────────────┐  │  │
-                                  │ JOB 4: RELEASE      │  │  │
-                                  │ ─────────────────   │  │  │
-                                  │ • Create GitHub tag │  │  │
-                                  │ • Generate notes    │  │  │
-                                  │ • Attach .nupkg     │  │  │
-                                  └──────────┬──────────┘  │  │
-                                            │              │  │
-                                            ▼              │  │
-                                  ┌─────────────────────┐  │  │
-                                  │ ✅ SUCCESS          │  │  │
-                                  │ Package Published!  │  │  │
-                                  └─────────────────────┘  │  │
-                                                          │  │
-                                                          ▼  │
-         ┌────────────────────────────────────────────────────┘
-         │
-         ▼
-    ┌─────────────────┐
-    │ NuGet.org       │
-    │ ─────────────   │
-    │ Package indexed │
-    │ Available via:  │
-    │ dotnet add      │
-    │ package         │
-    └─────────────────┘
+                                  │ • Compare NuGet.org │
+                                  │ • Build dep graph   │
+                                  └──────────┬──────────┘
+                                            │
+                          ┌─────────────────┴─────────────────┐
+                          │       Has dependents?              │
+                          └────┬──────────────────────┬────────┘
+                          NO   │                      │  YES
+                               ▼                      ▼
+                    ┌──────────────────┐   ┌──────────────────┐
+                    │ BUILD & TEST     │   │ OPEN ISSUE       │
+                    │ PUBLISH directly │   │ recommend        │
+                    │ to NuGet.org     │   │ cascade-         │
+                    │ CREATE RELEASE   │   │ publish.yml      │
+                    └──────────────────┘   └──────────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -169,36 +125,6 @@ For each .csproj file:
             ┌─────────────┐
             │ PUBLISH     │
             └─────────────┘
-
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         MANUAL WORKFLOW TRIGGERS                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-GitHub UI
-   │
-   ▼
-┌──────────────────────────────┐
-│ Actions → Publish NuGet      │
-│ Run workflow ▼               │
-│ ┌──────────────────────────┐ │
-│ │ Packages: [optional]     │ │
-│ │ Force: [ ]               │ │
-│ │                          │ │
-│ │ [Run workflow]           │ │
-│ └──────────────────────────┘ │
-└────────────┬─────────────────┘
-             │
-             ▼
-     ┌───────────────────┐
-     │ Specify packages? │
-     └────┬─────────┬────┘
-          │ Yes     │ No
-          ▼         ▼
-    ┌─────────┐  ┌─────────────┐
-    │ Publish │  │ Auto-detect │
-    │ specific│  │ all changed │
-    └─────────┘  └─────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -293,9 +219,8 @@ Result: A ✅, B ❌, C ✅ (Partial success)
 - Automatic issue creation
 
 ### 🎛️ Control
-- Manual workflow triggers
-- Force publish option
-- Selective package publishing
+- Manual cascade publishing via `cascade-publish.yml`
+- Selective package publishing with dependency ordering
 
 ## Workflow States
 
