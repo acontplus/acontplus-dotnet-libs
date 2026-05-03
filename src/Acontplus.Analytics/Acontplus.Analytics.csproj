@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>Analytics and statistics library for AcontPlus applications providing comprehensive metrics, trends, and business intelligence capabilities across multiple domains.</Description>
+    <Description>Analytics and statistics library for AcontPlus applications providing comprehensive
+      metrics, trends, and business intelligence capabilities across multiple domains.</Description>
     <PackageId>Acontplus.Analytics</PackageId>
     <Version>1.0.8</Version>
     <Authors>Ivan Paz</Authors>
@@ -16,10 +17,26 @@
     <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>analytics;statistics;metrics;business-intelligence;dashboard;trends;kpi;reporting;acontplus</PackageTags>
+    <PackageTags>
+      analytics;statistics;metrics;business-intelligence;dashboard;trends;kpi;reporting;acontplus</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <LangVersion>latest</LangVersion>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,13 +44,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Images\icon.png">
+    <None Include="Images\icon.png">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
+    </None>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 

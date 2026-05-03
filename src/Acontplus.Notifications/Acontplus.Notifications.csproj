@@ -3,11 +3,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Notifications</PackageId>
     <Version>1.6.1</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
     <Description>Comprehensive library for multi-channel notification services. Includes email via
       MailKit
@@ -20,6 +21,7 @@
       dotnet;dotnet10;notifications;mailkit;email;ses;whatsapp;whatsapp-cloud-api;meta;templates;scriban;amazon-ses;smtp;enterprise;cloud-native;template-caching;rate-limiting;multi-tenant</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
@@ -37,16 +39,23 @@
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Acontplus.Utilities" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="AWSSDK.SimpleEmailV2" />
     <PackageReference Include="MailKit" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Scriban" />
   </ItemGroup>

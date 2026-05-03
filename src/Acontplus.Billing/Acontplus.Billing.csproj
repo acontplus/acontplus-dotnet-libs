@@ -3,11 +3,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Billing</PackageId>
     <Version>1.2.2</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
     <Description>Complete library for electronic invoicing and SRI integration in Ecuador. Includes
       models, services, XML validation, SRI web service support, and embedded XSD schemas for
@@ -16,6 +17,7 @@
       dotnet;dotnet10;facturacion;sri;ecuador;electronic-invoicing;xml;validation;integration;compliance;xsd-schemas</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
@@ -28,6 +30,16 @@
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Schemas\comprobanteRetencion_V1.0.0.xsd" />
@@ -54,9 +66,9 @@
     <EmbeddedResource Include="Resources\Schemas\NotaCredito_V1.1.0.xsd" />
   </ItemGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Acontplus.Barcode" />
     <PackageReference Include="Acontplus.Utilities" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
   <ItemGroup>
     <None Update="README.md">

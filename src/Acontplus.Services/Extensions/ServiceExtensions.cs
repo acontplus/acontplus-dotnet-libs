@@ -7,23 +7,6 @@ namespace Acontplus.Services.Extensions;
 public static class ServiceExtensions
 {
     /// <summary>
-    /// Add monitoring and telemetry services.
-    /// </summary>
-    public static IServiceCollection AddMonitoringServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        // Add application insights if configured
-        var connectionString = configuration["ApplicationInsights:ConnectionString"];
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            services.AddApplicationInsightsTelemetry();
-        }
-
-        return services;
-    }
-
-    /// <summary>
     /// Add device detection service.
     /// </summary>
     public static IServiceCollection AddDeviceDetection(this IServiceCollection services)

@@ -7,21 +7,38 @@
     <Version>2.0.12</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced persistence abstractions and infrastructure. Includes generic repository patterns, context factory, connection string providers, and multi-provider support for SQL Server, PostgreSQL, and other databases with enterprise-ready abstractions.</Description>
-    <PackageTags>dotnet;dotnet10;persistence;database;abstractions;repository;efcore;multi-provider;entity-framework;connection-string;context-factory;enterprise;infrastructure;sql-server;postgresql</PackageTags>
+    <Description>Advanced persistence abstractions and infrastructure. Includes generic repository
+      patterns, context factory, connection string providers, and multi-provider support for SQL
+      Server, PostgreSQL, and other databases with enterprise-ready abstractions.</Description>
+    <PackageTags>
+      dotnet;dotnet10;persistence;database;abstractions;repository;efcore;multi-provider;entity-framework;connection-string;context-factory;enterprise;infrastructure;sql-server;postgresql</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary repository patterns, multi-provider support, connection string management, context factory patterns, and enterprise-ready abstractions for SQL Server, PostgreSQL, and other database providers.</PackageReleaseNotes>
+    <PackageReleaseNotes>Enhanced with contemporary repository patterns, multi-provider support,
+      connection string management, context factory patterns, and enterprise-ready abstractions for
+      SQL Server, PostgreSQL, and other database providers.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Resources\Images\icon.png" Pack="true" PackagePath="\" />

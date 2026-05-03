@@ -8,6 +8,18 @@
 
 A high-performance .NET library for enterprise report generation. Covers RDLC reports, QuestPDF code-first PDF documents, **MiniExcel** streaming Excel exports, and **ClosedXML** richly-formatted Excel workbooks — all with async APIs, concurrency control, timeout protection, and full DI integration.
 
+## 🚀 What's New (Latest Version)
+
+- **QuestPDF `InvoiceHeader` section** — SRI Ecuador-style invoice layout (company block + SRI auth box + buyer band)
+- **QuestPDF `Image` and `Barcode` sections** — raw byte array images and Code-128/QR codes via `Acontplus.Barcode`
+- **QuestPDF `MasterDetail` and `TwoColumn` sections** — EstadoCuenta pattern and side-by-side layouts
+- **QuestPDF grouped table headers** — `IsGroupHeader` / `ColumnSpan` for Kardex-style band headers
+- **QuestPDF logo from bytes** — `LogoBytes` + `LogoMimeType` for database-sourced logos
+- **ClosedXML grouped report headers** — `ReportTitle`, `ReportSubTitle`, `GroupHeaders`, `GroupHeaderStyle`
+- **ClosedXML `AdvancedExcelGroupHeader` DTO** — merge-span band headers above column headers
+
+> Full version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ## 🚀 Features
 
 ### Core Capabilities
@@ -1586,49 +1598,3 @@ public class ReportServiceTests
     }
 }
 ```
-
-
-## 📋 Changelog
-
-### v1.8.0
-
-- **New** `QuestPdfSectionType.InvoiceHeader` — SRI Ecuador–style invoice header section (`QuestPdfInvoiceHeader` DTO): company block (left), SRI auth box with border (right), buyer band (bottom)
-- **New** `QuestPdfSectionType.Image` — raw `byte[]` image section with configurable max dimensions and alignment
-- **New** `QuestPdfSectionType.Barcode` — Code-128 / QR code section generated from text via `Acontplus.Barcode` (`QuestPdfBarcodeType` enum)
-- **New** `QuestPdfSectionType.MasterDetail` — master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern)
-- **New** `QuestPdfSectionType.TwoColumn` — side-by-side layout with independent left/right content, configurable column ratios and gap
-- **New** `QuestPdfTableColumn.IsGroupHeader` / `ColumnSpan` — grouped / band header rows in DataTable (Kardex pattern: Entradas | Salidas | Saldo)
-- **New** `QuestPdfHeaderFooterOptions.LogoBytes` + `LogoMimeType` — logo from `byte[]` instead of file path (database-sourced logos)
-- **New** `QuestPdfDocumentSettings.WatermarkFontSize` + `WatermarkColor` — configurable watermark appearance
-- **New** `AdvancedExcelWorksheetDefinition.ReportTitle`, `ReportSubTitle`, `TitleStyle`, `GroupHeaders`, `GroupHeaderStyle` — title, subtitle and band-header rows above column headers (ClosedXML)
-- **New** `AdvancedExcelGroupHeader` DTO — describes a merge-span band header (`Title`, `StartColumnIndex`, `EndColumnIndex`)
-- **New** `AdvancedExcelHeaderStyle.Title()` and `GroupHeader()` presets
-- **Demo** — six new endpoints in `ReportsEndpoints.cs`: `sri-invoice`, `barcode`, `master-detail`, `kardex`, `two-column`, `closedxml/grouped-report`
-
-### v1.7.0
-
-- **New** `IMiniExcelReportService` / `MiniExcelReportService` — high-performance streaming Excel exports (MiniExcel 1.42.0)
-  - `GenerateAsync(ExcelReportRequest)` — single and multi-sheet workbooks from DataTable sources
-  - `GenerateFromDataTableAsync(...)` — convenience single-table shortcut with column visibility, header overrides, and format hints
-  - `GenerateFromObjectsAsync<T>(...)` — strongly-typed POCO collection export using native MiniExcel serialisation
-- **New** `IClosedXmlReportService` / `ClosedXmlReportService` — richly formatted Excel workbooks (ClosedXML 0.105.0)
-  - `GenerateAsync(AdvancedExcelReportRequest)` — full multi-sheet workbooks with metadata
-  - `GenerateFromDataTableAsync(...)` — convenience shortcut with per-column formatting and header style
-  - Corporate header styles (CorporateBlue, DarkGreen, DarkGrey, LightBlue)
-  - Freeze panes, AutoFilter, alternating row shading, aggregate formula totals rows
-- **New** DTOs: `ExcelColumnDefinition`, `ExcelWorksheetDefinition`, `ExcelReportRequest`
-- **New** DTOs: `AdvancedExcelColumnDefinition`, `AdvancedExcelHeaderStyle`, `AdvancedExcelWorksheetDefinition`, `AdvancedExcelReportRequest`
-- **New** Enums: `ExcelHorizontalAlignment`, `ExcelAggregateType`
-- **New** DI extensions: `AddMiniExcelReportService()`, `AddClosedXmlReportService()`
-- `AddReportServices()` now registers all four services (RDLC + QuestPDF + MiniExcel + ClosedXML)
-
-### v1.6.0
-
-- Added `IQuestPdfReportService` / `QuestPdfReportService` — QuestPDF dynamic PDF generation with fluent composition, multi-section layouts, typed DataTable tables, key-value panels, aggregate totals, full theming, watermarks, and page-number footers
-
-### v1.5.x
-
-- RDLC report generation performance improvements
-- Concurrency control and timeout protection
-- Report definition caching
-- Direct printing support for thermal printers

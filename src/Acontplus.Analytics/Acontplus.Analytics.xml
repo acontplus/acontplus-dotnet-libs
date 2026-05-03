@@ -1,0 +1,546 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Acontplus.Analytics</name>
+    </assembly>
+    <members>
+        <member name="T:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto">
+            <summary>
+            Base aggregated statistics DTO - Time-series data for trend analysis
+            </summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Period">
+            <summary>Time period for this data point</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.PeriodLabel">
+            <summary>Human-readable period label</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.GroupBy">
+            <summary>Grouping interval (hour/day/week/month/quarter/year)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Metric">
+            <summary>Metric being measured</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Category">
+            <summary>Primary category/dimension</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.SubCategory">
+            <summary>Secondary category/sub-dimension</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Value">
+            <summary>Primary aggregated value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.MinValue">
+            <summary>Minimum value in period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.MaxValue">
+            <summary>Maximum value in period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.AvgValue">
+            <summary>Average value in period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Count">
+            <summary>Count of data points</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Sum">
+            <summary>Sum of all values</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.PreviousPeriodValue">
+            <summary>Value from equivalent previous period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.ChangePercent">
+            <summary>Percentage change from previous period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.ChangeAbsolute">
+            <summary>Absolute change from previous period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Trend">
+            <summary>Trend direction (up/down/stable)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Percentile25">
+            <summary>25th percentile value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Percentile50">
+            <summary>50th percentile/median value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Percentile75">
+            <summary>75th percentile value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.StandardDeviation">
+            <summary>Standard deviation</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Variance">
+            <summary>Variance</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseAggregatedStatsDto.Labels">
+            <summary>Localization metadata for chart labels and UI display (e.g., Spanish, English)</summary>
+        </member>
+        <member name="T:Acontplus.Analytics.Dtos.BaseDashboardStatsDto">
+            <summary>
+            Base dashboard statistics DTO - Common metrics applicable across all business domains
+            </summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TotalTransactions">
+            <summary>Total number of transactions/orders/operations in period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.CompletedTransactions">
+            <summary>Successfully completed transactions</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.CancelledTransactions">
+            <summary>Cancelled/rejected transactions</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.ActiveTransactions">
+            <summary>Active/pending transactions</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.CompletionRate">
+            <summary>Completion rate as percentage (0-100)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.AverageTransactionValue">
+            <summary>Average value per transaction</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TotalRevenue">
+            <summary>Total gross revenue/sales</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.NetRevenue">
+            <summary>Net revenue after deductions</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TotalTax">
+            <summary>Total tax amount</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TotalDiscounts">
+            <summary>Total discounts given</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.GrowthRate">
+            <summary>Revenue growth rate compared to previous period (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.RevenuePerEntity">
+            <summary>Revenue per customer/client</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TotalItemsProcessed">
+            <summary>Total items/products/services processed</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.AverageItemsPerTransaction">
+            <summary>Average items per transaction</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TopItem">
+            <summary>Top performing item/product/service name</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TopItemQuantity">
+            <summary>Quantity of top performing item</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TopRevenueItem">
+            <summary>Top revenue generating item</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TopRevenueItemTotal">
+            <summary>Revenue from top item</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.UniqueEntities">
+            <summary>Unique entities served/processed</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.NewEntities">
+            <summary>New entities in this period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.ReturningEntities">
+            <summary>Returning/repeat entities</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.EntityRetentionRate">
+            <summary>Entity retention rate (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.RevenueChangePercent">
+            <summary>Revenue change vs previous period (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.TransactionChangePercent">
+            <summary>Transaction count change vs previous period (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.EntityChangePercent">
+            <summary>Entity count change vs previous period (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.CashPayments">
+            <summary>Cash payments total</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.CardPayments">
+            <summary>Card/electronic payments total</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.OtherPayments">
+            <summary>Other payment methods total</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.AverageDiscountPercent">
+            <summary>Average discount percentage applied</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseDashboardStatsDto.Labels">
+            <summary>Localization metadata for chart labels and UI display (e.g., Spanish, English)</summary>
+        </member>
+        <member name="T:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto">
+            <summary>
+            Base real-time statistics DTO - Live operational metrics for any business
+            </summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.ActiveOperations">
+            <summary>Active/pending operations right now</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.OperationsLast5Min">
+            <summary>Operations in the last 5 minutes</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.OperationsLast15Min">
+            <summary>Operations in the last 15 minutes</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.OperationsThisHour">
+            <summary>Operations in the current hour</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.CurrentHourRevenue">
+            <summary>Revenue in the current hour</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.TodayRevenue">
+            <summary>Total revenue today</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.AverageTicketSize">
+            <summary>Average transaction/ticket size</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.ItemsInQueue">
+            <summary>Items in queue/pending</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.ItemsInProcess">
+            <summary>Items being processed</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.ItemsCompleted">
+            <summary>Items completed/ready</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.AverageProcessingTime">
+            <summary>Average processing time in minutes</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.OldestPendingMinutes">
+            <summary>Oldest pending item/operation age in minutes</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.DelayedOperations">
+            <summary>Delayed/overdue operations count</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.OperationsPerHour">
+            <summary>Operations per hour rate</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.RevenuePerHour">
+            <summary>Revenue per hour rate</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.CurrentLoadStatus">
+            <summary>Current load status (Slow/Normal/Busy/Peak)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.CriticalAlerts">
+            <summary>Critical alerts count</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.WarningAlerts">
+            <summary>Warning alerts count</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.TotalCapacity">
+            <summary>Total capacity/resources available</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.UsedCapacity">
+            <summary>Currently utilized capacity</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.AvailableCapacity">
+            <summary>Available capacity</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.CapacityUtilizationRate">
+            <summary>Capacity utilization rate (%)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseRealTimeStatsDto.Labels">
+            <summary>Localization metadata for chart labels and UI display (e.g., Spanish, English)</summary>
+        </member>
+        <member name="T:Acontplus.Analytics.Dtos.BaseTrendDto">
+            <summary>
+            Base trend analysis DTO - Comprehensive time-series with forecasting support
+            </summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Date">
+            <summary>Date/time of this data point</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.DateLabel">
+            <summary>Formatted date label for display</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.DayOfWeek">
+            <summary>Day of week (1=Sunday, 7=Saturday)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Hour">
+            <summary>Hour of day (0-23)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.IsWeekend">
+            <summary>Is weekend day</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.IsHoliday">
+            <summary>Is holiday/special day</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Metric">
+            <summary>Metric being tracked</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Value">
+            <summary>Actual observed value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Target">
+            <summary>Target/goal value for this period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Forecast">
+            <summary>Forecasted/predicted value</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.MovingAverage7">
+            <summary>7-period moving average</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.MovingAverage30">
+            <summary>30-period moving average</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.MovingAverage90">
+            <summary>90-period moving average</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.ChangePercent">
+            <summary>Change percentage from previous period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.ChangeAbsolute">
+            <summary>Absolute change from previous period</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.TrendDirection">
+            <summary>Trend direction (up/down/stable)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Volatility">
+            <summary>Volatility/variance metric</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.SamePeriodLastWeek">
+            <summary>Value from same period last week</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.SamePeriodLastMonth">
+            <summary>Value from same period last month</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.SamePeriodLastYear">
+            <summary>Value from same period last year</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.PeriodAverage">
+            <summary>Average for this period across history</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.PercentOfPeriodAvg">
+            <summary>Percentage of period average</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Label">
+            <summary>Custom label/tag for this data point</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Category">
+            <summary>Category/segment</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.IsAnomaly">
+            <summary>Is this an anomaly/outlier</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.AnomalyScore">
+            <summary>Anomaly score (0-1, higher = more anomalous)</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Notes">
+            <summary>Additional notes or context</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Metadata">
+            <summary>Additional metadata as key-value pairs</summary>
+        </member>
+        <member name="P:Acontplus.Analytics.Dtos.BaseTrendDto.Labels">
+            <summary>Localization metadata for chart labels and UI display (e.g., Spanish, English)</summary>
+        </member>
+        <member name="T:Acontplus.Analytics.Extensions.ServiceCollectionExtensions">
+            <summary>
+            Extension methods for registering analytics services
+            </summary>
+        </member>
+        <member name="M:Acontplus.Analytics.Extensions.ServiceCollectionExtensions.AddStatisticsService``4(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String,System.String,System.String)">
+            <summary>
+            Adds a statistics service with custom stored procedure names
+            </summary>
+            <typeparam name="TDashboard">Dashboard DTO type</typeparam>
+            <typeparam name="TRealTime">Real-time DTO type</typeparam>
+            <typeparam name="TAggregated">Aggregated DTO type</typeparam>
+            <typeparam name="TTrend">Trend DTO type</typeparam>
+            <param name="services">Service collection</param>
+            <param name="dashboardSpName">Dashboard stored procedure name</param>
+            <param name="realTimeSpName">Real-time stored procedure name</param>
+            <param name="aggregatedSpName">Aggregated stored procedure name</param>
+            <param name="trendsSpName">Trends stored procedure name</param>
+            <returns>Service collection for chaining</returns>
+        </member>
+        <member name="M:Acontplus.Analytics.Extensions.ServiceCollectionExtensions.AddStatisticsService``4(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String)">
+            <summary>
+            Adds a statistics service with module-based stored procedure naming convention
+            </summary>
+            <typeparam name="TDashboard">Dashboard DTO type</typeparam>
+            <typeparam name="TRealTime">Real-time DTO type</typeparam>
+            <typeparam name="TAggregated">Aggregated DTO type</typeparam>
+            <typeparam name="TTrend">Trend DTO type</typeparam>
+            <param name="services">Service collection</param>
+            <param name="moduleName">Module name prefix (e.g., "Restaurant.Statistics")</param>
+            <returns>Service collection for chaining</returns>
+            <example>
+            services.AddStatisticsService&lt;DashboardDto, RealTimeDto, AggregatedDto, TrendDto&gt;("Restaurant.Statistics");
+            // Creates SPs: Restaurant.StatisticsGetDashboard, Restaurant.StatisticsGetRealTime, etc.
+            </example>
+        </member>
+        <member name="T:Acontplus.Analytics.Interfaces.IStatisticsService`4">
+            <summary>
+            Generic statistics service interface - Implement this in any service for consistent analytics
+            </summary>
+            <typeparam name="TDashboard">Dashboard statistics DTO (can extend BaseDashboardStatsDto)</typeparam>
+            <typeparam name="TRealTime">Real-time statistics DTO (can extend BaseRealTimeStatsDto)</typeparam>
+            <typeparam name="TAggregated">Aggregated statistics DTO (can extend BaseAggregatedStatsDto)</typeparam>
+            <typeparam name="TTrend">Trend analysis DTO (can extend BaseTrendDto)</typeparam>
+        </member>
+        <member name="M:Acontplus.Analytics.Interfaces.IStatisticsService`4.GetDashboardStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get comprehensive dashboard statistics for a date range
+            </summary>
+            <param name="filterRequest">Filter parameters (startDate, endDate, etc.)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Dashboard statistics or error</returns>
+        </member>
+        <member name="M:Acontplus.Analytics.Interfaces.IStatisticsService`4.GetRealTimeStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get real-time operational statistics
+            </summary>
+            <param name="filterRequest">Optional filter parameters</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Real-time statistics or error</returns>
+        </member>
+        <member name="M:Acontplus.Analytics.Interfaces.IStatisticsService`4.GetAggregatedStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get aggregated statistics grouped by time period
+            </summary>
+            <param name="filterRequest">Filter parameters (startDate, endDate, groupBy, metricType, etc.)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of aggregated statistics or error</returns>
+        </member>
+        <member name="M:Acontplus.Analytics.Interfaces.IStatisticsService`4.GetTrendsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get trend analysis (metric specified in FilterRequest.Filters JSON as 'Metric' property)
+            </summary>
+            <param name="filterRequest">Filter parameters including Metric in Filters JSON</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of trend data points or error</returns>
+        </member>
+        <member name="T:Acontplus.Analytics.Models.StatsSqlTemplates">
+            <summary>
+            SQL template fragments for building reusable statistics stored procedures
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.DateRangeParams">
+            <summary>
+            Common date range parameters with defaults
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.DateRangeDefaults">
+            <summary>
+            Default date range initialization (last 30 days if not provided)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.PreviousPeriodCalc">
+            <summary>
+            Calculate previous period dates for comparison
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.AggregationParams">
+            <summary>
+            Common filter params for aggregated stats
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.GroupByCase">
+            <summary>
+            Grouping CASE statement for time periods
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.PeriodLabelFormat">
+            <summary>
+            Period label formatting
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.MovingAverage7">
+            <summary>
+            Moving average calculation (7-period)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.MovingAverage30">
+            <summary>
+            Moving average calculation (30-period)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.LagPreviousPeriod">
+            <summary>
+            Lag function for previous period comparison
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.LagLastWeek">
+            <summary>
+            Lag function for same period last week
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.LagLastMonth">
+            <summary>
+            Lag function for same period last month
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.PercentChange">
+            <summary>
+            Percentage change calculation
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.TrendDirection">
+            <summary>
+            Trend direction classification
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.AnomalyDetection">
+            <summary>
+            Anomaly detection (simple threshold-based)
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.IsWeekend">
+            <summary>
+            Weekend/weekday classification
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.RealTimeRanges">
+            <summary>
+            Real-time time range calculations
+            </summary>
+        </member>
+        <member name="F:Acontplus.Analytics.Models.StatsSqlTemplates.CommonFieldMappings">
+            <summary>
+            Common field mappings guide
+            </summary>
+        </member>
+        <member name="T:Acontplus.Analytics.Services.StatisticsService`4">
+            <summary>
+            Generic statistics service implementation with dynamic stored procedure support
+            </summary>
+            <typeparam name="TDashboard">Dashboard statistics DTO type</typeparam>
+            <typeparam name="TRealTime">Real-time statistics DTO type</typeparam>
+            <typeparam name="TAggregated">Aggregated statistics DTO type</typeparam>
+            <typeparam name="TTrend">Trend analysis DTO type</typeparam>
+        </member>
+        <member name="M:Acontplus.Analytics.Services.StatisticsService`4.#ctor(Acontplus.Core.Abstractions.Persistence.IAdoRepository,System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the StatisticsService
+            </summary>
+            <param name="adoRepository">ADO repository for database operations</param>
+            <param name="dashboardSpName">Stored procedure name for dashboard stats</param>
+            <param name="realTimeSpName">Stored procedure name for real-time stats</param>
+            <param name="aggregatedSpName">Stored procedure name for aggregated stats</param>
+            <param name="trendsSpName">Stored procedure name for trend stats</param>
+        </member>
+        <member name="M:Acontplus.Analytics.Services.StatisticsService`4.GetDashboardStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get comprehensive dashboard statistics for a date range
+            </summary>
+        </member>
+        <member name="M:Acontplus.Analytics.Services.StatisticsService`4.GetRealTimeStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get real-time operational statistics
+            </summary>
+        </member>
+        <member name="M:Acontplus.Analytics.Services.StatisticsService`4.GetAggregatedStatsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get aggregated statistics grouped by time period
+            </summary>
+        </member>
+        <member name="M:Acontplus.Analytics.Services.StatisticsService`4.GetTrendsAsync(Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <summary>
+            Get trend analysis data
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -7,21 +7,39 @@
     <Version>2.1.13</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Comprehensive library for ASP.NET Core application services: JWT authentication, user context management, exception handling, security headers, authorization policies, and enterprise-ready service patterns. For infrastructure services (caching, resilience), use Acontplus.Infrastructure.</Description>
-    <PackageTags>dotnet;dotnet10;services;authentication;claims;api;jwt;configuration;security-headers;user-context;exception-handling;aspnetcore;enterprise;authorization;middleware</PackageTags>
+    <Description>Comprehensive library for ASP.NET Core application services: JWT authentication,
+      user context management, exception handling, security headers, authorization policies, and
+      enterprise-ready service patterns. For infrastructure services (caching, resilience), use
+      Acontplus.Infrastructure.</Description>
+    <PackageTags>
+      dotnet;dotnet10;services;authentication;claims;api;jwt;configuration;security-headers;user-context;exception-handling;aspnetcore;enterprise;authorization;middleware</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v2.0.0: Major refactoring - Separated infrastructure concerns to Acontplus.Infrastructure. Focused on application-level services: JWT authentication, context management, security headers, authorization policies, and ASP.NET Core middleware.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.0: Major refactoring - Separated infrastructure concerns to
+      Acontplus.Infrastructure. Focused on application-level services: JWT authentication, context
+      management, security headers, authorization policies, and ASP.NET Core middleware.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="README.md" />
@@ -36,12 +54,13 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Acontplus.Core" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
   </ItemGroup>
 </Project>
