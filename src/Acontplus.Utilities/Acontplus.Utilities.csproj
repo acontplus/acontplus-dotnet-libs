@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Utilities</PackageId>
-    <Version>2.0.7</Version>
+    <Version>2.0.8</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
