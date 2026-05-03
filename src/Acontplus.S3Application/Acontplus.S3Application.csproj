@@ -3,26 +3,45 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.S3Application</PackageId>
-    <Version>2.0.12</Version>
+    <Version>2.0.13</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
+    <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced library for AWS S3 storage operations and cloud file management. Provides async CRUD operations, strongly-typed S3 object handling, presigned URLs, bucket management, and enterprise-ready cloud storage patterns for cloud-native applications.</Description>
-    <PackageTags>dotnet;dotnet10;aws;s3;storage;files;upload;download;presigned-url;enterprise;async;cloud;integration;bucket-management;cloud-native</PackageTags>
+    <Description>Advanced library for AWS S3 storage operations and cloud file management. Provides
+      async CRUD operations, strongly-typed S3 object handling, presigned URLs, bucket management,
+      and enterprise-ready cloud storage patterns for cloud-native applications.</Description>
+    <PackageTags>
+      dotnet;dotnet10;aws;s3;storage;files;upload;download;presigned-url;enterprise;async;cloud;integration;bucket-management;cloud-native</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>BREAKING CHANGE v2.0.0: Major scalability improvements with connection pooling, Polly retry policies with exponential backoff, rate limiting (100 req/s default), configurable resilience options, proper IDisposable implementation, structured logging, and thread-safe operations. Requires IOptions&lt;S3StorageOptions&gt; and ILogger&lt;S3StorageService&gt; in DI. Use AddS3Storage() extension for registration.</PackageReleaseNotes>
+    <PackageReleaseNotes>BREAKING CHANGE v2.0.0: Major scalability improvements with connection
+      pooling, Polly retry policies with exponential backoff, rate limiting (100 req/s default),
+      configurable resilience options, proper IDisposable implementation, structured logging, and
+      thread-safe operations. Requires IOptions&lt;S3StorageOptions&gt; and
+      ILogger&lt;S3StorageService&gt; in DI. Use AddS3Storage() extension for registration.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+
+    <!-- SourceLink configuration for enterprise-grade debugging -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Images\icon.png" Pack="true" PackagePath="\" />
