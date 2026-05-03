@@ -62,10 +62,37 @@ This repository contains multiple libraries and sample applications, each in its
 
 ---
 
+## 📦 Package Dependency Order (Cascade Update Strategy)
+
+When updating versions, always follow this order — from base packages to dependents:
+
+| Level    | Package                            | Depends on             |
+| -------- | ---------------------------------- | ---------------------- |
+| 1 — Base | `Acontplus.Core`                   | _(none)_               |
+| 1 — Base | `Acontplus.Barcode`                | _(none)_               |
+| 1 — Base | `Acontplus.Logging`                | _(none)_               |
+| 1 — Base | `Acontplus.ApiDocumentation`       | _(none)_               |
+| 1 — Base | `Acontplus.S3Application`          | _(none)_               |
+| 2        | `Acontplus.Utilities`              | `Core`                 |
+| 2        | `Acontplus.Infrastructure`         | `Core`                 |
+| 2        | `Acontplus.Services`               | `Core`                 |
+| 2        | `Acontplus.Persistence.Common`     | `Core`                 |
+| 3        | `Acontplus.Analytics`              | `Utilities`            |
+| 3        | `Acontplus.Notifications`          | `Utilities`            |
+| 3        | `Acontplus.Billing`                | `Utilities`, `Barcode` |
+| 3        | `Acontplus.Persistence.SqlServer`  | `Persistence.Common`   |
+| 3        | `Acontplus.Persistence.PostgreSQL` | `Persistence.Common`   |
+| 4 — Top  | `Acontplus.Reports`                | `Utilities`, `Barcode` |
+
+> For automated cascade publishing via GitHub Actions, see the [Cascade Publish Guide](docs/CASCADE_PUBLISH_GUIDE.md).
+
+---
+
 ## 📚 Documentation
 
 - Each library includes a detailed README and XML API docs.
 - Centralized documentation and guides: [Documentation Home](docs/wiki/Home.md)
+- **Cascade version update strategy**: [CASCADE_PUBLISH_GUIDE.md](docs/CASCADE_PUBLISH_GUIDE.md)
 - For Ecuadorian electronic invoicing, see `Acontplus.Billing` and its [README](src/Acontplus.Billing/README.md).
 
 ---

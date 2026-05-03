@@ -5,6 +5,7 @@ Welcome to the documentation wiki for the Acontplus .NET Libraries solution. Her
 ## 📚 Wiki Navigation
 
 ### Package Documentation (READMEs)
+
 - [Acontplus.Core](../../src/Acontplus.Core/README.md)
 - [Acontplus.Infrastructure](../../src/Acontplus.Infrastructure/README.md)
 - [Acontplus.Services](../../src/Acontplus.Services/README.md)
@@ -19,6 +20,35 @@ Welcome to the documentation wiki for the Acontplus .NET Libraries solution. Her
 - [Acontplus.Logging](../../src/Acontplus.Logging/README.md)
 - [Acontplus.Barcode](../../src/Acontplus.Barcode/README.md)
 - [Acontplus.S3Application](../../src/Acontplus.S3Application/README.md)
+
+## 🔄 Version Update Strategy (Cascade Order)
+
+When bumping versions, always update packages from base to dependents. Never update a dependent before its dependency is published.
+
+```
+Level 1 (no internal deps):
+  Core, Barcode, Logging, ApiDocumentation, S3Application
+
+Level 2 (depend on Level 1):
+  Utilities → Core
+  Infrastructure → Core
+  Services → Core
+  Persistence.Common → Core
+
+Level 3 (depend on Level 2):
+  Analytics → Utilities
+  Notifications → Utilities
+  Billing → Utilities + Barcode
+  Persistence.SqlServer → Persistence.Common
+  Persistence.PostgreSQL → Persistence.Common
+
+Level 4 (depend on Level 3):
+  Reports → Utilities + Barcode
+```
+
+📖 Full automation guide: [CASCADE_PUBLISH_GUIDE.md](../CASCADE_PUBLISH_GUIDE.md)
+
+---
 
 ## 🏢 About Acontplus
 
