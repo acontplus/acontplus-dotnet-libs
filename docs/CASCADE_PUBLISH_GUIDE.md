@@ -248,21 +248,25 @@ Dry Run: true ✅
 
 ```yaml
 # .github/workflows needs:
-NUGET_API_KEY  # To publish on NuGet.org
-GITHUB_TOKEN   # Automatic, no configuration required
+NUGET_USER   # Your NuGet.org profile username (policy creator, not org owner)
+GITHUB_TOKEN # Automatic, no configuration required
 ```
 
-### Configure NUGET_API_KEY
+> **Note**: `NUGET_API_KEY` is no longer required. Authentication uses NuGet Trusted Publishing (OIDC) — a short-lived key is issued automatically at publish time.
 
-1. Go to [NuGet.org API Keys](https://www.nuget.org/account/apikeys)
-2. Create new API Key:
-   - **Name**: `GitHub Actions - Acontplus`
-   - **Glob Pattern**: `Acontplus.*`
-   - **Select Scopes**: ✅ Push, ✅ Push new packages
-3. Copy the key
-4. GitHub Repo → Settings → Secrets → Actions → New secret
-   - Name: `NUGET_API_KEY`
-   - Value: `<paste key>`
+### Configure Trusted Publishing
+
+1. Go to [nuget.org → Account → Trusted Publishing](https://www.nuget.org/account/trustedpublishers)
+2. Add a new policy:
+   - **Policy Name**: e.g. `acontplus-github-nuget-publish`
+   - **Package Owner**: `acontplus`
+   - **Repository Owner**: `acontplus`
+   - **Repository**: `acontplus-dotnet-libs`
+   - **Workflow File**: `smart-publish.yml` _(filename only, not the full path)_
+   - **Environment**: `production`
+3. GitHub Repo → Settings → Secrets → Actions → New secret
+   - Name: `NUGET_USER`
+   - Value: your NuGet.org profile username (the account used to create the policy above)
 
 ---
 

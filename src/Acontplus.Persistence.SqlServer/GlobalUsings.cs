@@ -1,3 +1,8 @@
+global using System.Collections.Concurrent;
+global using System.Data;
+global using System.Data.Common;
+global using System.Linq.Expressions;
+global using Acontplus.Core.Abstractions.Context;
 global using Acontplus.Core.Abstractions.Persistence;
 global using Acontplus.Core.Constants;
 global using Acontplus.Core.Domain.Common.Entities;
@@ -17,7 +22,3 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
 global using Polly;
 global using Polly.Retry;
-global using System.Collections.Concurrent;
-global using System.Data;
-global using System.Data.Common;
-global using System.Linq.Expressions;

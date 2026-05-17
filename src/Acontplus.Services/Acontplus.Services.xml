@@ -466,6 +466,28 @@
             Implementation of device detection service for identifying device types and capabilities.
             </summary>
         </member>
+        <member name="T:Acontplus.Services.Services.Implementations.HttpAuditContext">
+            <summary>
+            Resolves audit identity from the current HTTP request context and JWT claims.
+            Register as <c>Scoped</c> so each request gets a fresh snapshot of the caller's identity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserId">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserName">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserRoleId">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.IsMobile">
+            <inheritdoc />
+            <remarks>
+            Relies on <c>IsMobileRequest</c> being set in <c>HttpContext.Items</c> by the device-detection
+            middleware that is registered via <c>AddApplicationServices()</c>.
+            </remarks>
+        </member>
         <member name="T:Acontplus.Services.Services.Implementations.LookupService">
             <summary>
             Service for managing and caching lookup data from database queries.
