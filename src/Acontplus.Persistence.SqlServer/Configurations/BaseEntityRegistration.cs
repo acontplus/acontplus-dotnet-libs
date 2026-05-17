@@ -3,6 +3,9 @@ using System.Reflection;
 
 namespace Acontplus.Persistence.SqlServer.Configurations;
 
+/// <summary>
+/// Provides methods for registering EF Core entity types with the SQL Server model builder.
+/// </summary>
 public static class BaseEntityRegistration
 {
     /// <summary>

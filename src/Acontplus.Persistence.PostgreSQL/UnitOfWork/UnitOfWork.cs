@@ -2,6 +2,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Acontplus.Persistence.PostgreSQL.UnitOfWork;
 
+/// <summary>
+/// Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+/// </summary>
+/// <typeparam name="TContext">The EF Core database context type.</typeparam>
 public sealed class UnitOfWork<TContext> : IUnitOfWork
     where TContext : DbContext
 {
@@ -14,6 +18,12 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
     private IDbContextTransaction? _efTransaction;
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new <see cref="UnitOfWork{TContext}"/>.
+    /// </summary>
+    /// <param name="context">The EF Core database context.</param>
+    /// <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
+    /// <param name="logger">Optional logger instance.</param>
     public UnitOfWork(
         TContext context,
         IAdoRepository adoRepository,
@@ -24,14 +34,19 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         _logger = logger;
     }
 
+    /// <inheritdoc/>
     public DbTransaction? CurrentDbTransaction => _efTransaction?.GetDbTransaction();
+    /// <inheritdoc/>
     public DbConnection CurrentDbConnection => _context.Database.GetDbConnection();
+    /// <inheritdoc/>
     public IAdoRepository AdoRepository => _adoRepository;
+    /// <inheritdoc/>
     public bool HasActiveTransaction => _efTransaction is not null;
 
     // Explicit interface implementation to handle nullability
     DbTransaction IUnitOfWork.CurrentDbTransaction => CurrentDbTransaction!;
 
+    /// <inheritdoc/>
     public IRepository<TEntity> GetRepository<TEntity>()
         where TEntity : class
     {
@@ -42,6 +57,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
             this);
     }
 
+    /// <inheritdoc/>
     public async Task<ITransaction> BeginTransactionAsync(
         IsolationLevel isolationLevel = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
@@ -74,6 +90,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         }
     }
 
+    /// <inheritdoc/>
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -106,12 +123,14 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         _efTransaction = null;
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore();

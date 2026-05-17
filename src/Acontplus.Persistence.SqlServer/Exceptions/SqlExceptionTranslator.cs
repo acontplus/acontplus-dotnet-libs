@@ -1,7 +1,15 @@
 namespace Acontplus.Persistence.SqlServer.Exceptions;
 
+/// <summary>
+/// Translates SQL Server exceptions into domain exceptions.
+/// </summary>
 public class SqlExceptionTranslator : ISqlExceptionTranslator
 {
+    /// <summary>
+    /// Determines whether the exception represents a transient SQL Server error.
+    /// </summary>
+    /// <param name="ex">The exception to evaluate.</param>
+    /// <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
     public bool IsTransient(Exception ex)
     {
         if (ex == null)
@@ -20,6 +28,11 @@ public class SqlExceptionTranslator : ISqlExceptionTranslator
         return innerSqlException != null && SqlServerExceptionHandler.IsTransientException(innerSqlException);
     }
 
+    /// <summary>
+    /// Translates an exception into a <see cref="DomainException"/>.
+    /// </summary>
+    /// <param name="ex">The exception to translate.</param>
+    /// <returns>A <see cref="DomainException"/> representing the error.</returns>
     public DomainException Translate(Exception ex)
     {
         if (ex == null)

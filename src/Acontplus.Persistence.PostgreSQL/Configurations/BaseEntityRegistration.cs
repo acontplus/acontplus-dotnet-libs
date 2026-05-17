@@ -2,6 +2,9 @@ using System.Reflection;
 
 namespace Acontplus.Persistence.PostgreSQL.Configurations;
 
+/// <summary>
+/// Provides methods for registering EF Core entity types with the PostgreSQL model builder.
+/// </summary>
 public static class BaseEntityRegistration
 {
     /// <summary>

@@ -1,7 +1,15 @@
 namespace Acontplus.Persistence.PostgreSQL.Exceptions;
 
+/// <summary>
+/// Translates PostgreSQL exceptions into domain exceptions.
+/// </summary>
 public class PostgresExceptionTranslator : ISqlExceptionTranslator
 {
+    /// <summary>
+    /// Determines whether the exception represents a transient PostgreSQL error.
+    /// </summary>
+    /// <param name="ex">The exception to evaluate.</param>
+    /// <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
     public bool IsTransient(Exception ex)
     {
         if (ex == null) return false;
@@ -17,6 +25,11 @@ public class PostgresExceptionTranslator : ISqlExceptionTranslator
         return innerNpgsqlException != null && PostgresExceptionHandler.IsTransientException(innerNpgsqlException);
     }
 
+    /// <summary>
+    /// Translates an exception into a <see cref="DomainException"/>.
+    /// </summary>
+    /// <param name="ex">The exception to translate.</param>
+    /// <returns>A <see cref="DomainException"/> representing the error.</returns>
     public DomainException Translate(Exception ex)
     {
         if (ex == null)

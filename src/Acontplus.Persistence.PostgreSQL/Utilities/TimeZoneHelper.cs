@@ -1,5 +1,8 @@
 namespace Acontplus.Persistence.PostgreSQL.Utilities;
 
+/// <summary>
+/// Provides time zone conversion utilities for Ecuador and server local time.
+/// </summary>
 public static class TimeZoneHelper
 {
     // Zona horaria de Ecuador (ECT - Ecuador Time)
@@ -18,11 +21,21 @@ public static class TimeZoneHelper
             : TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, EcuadorTimeZone);
     }
 
+    /// <summary>
+    /// Converts a nullable UTC <see cref="DateTime"/> to Ecuador time, returning <c>null</c> if the input is <c>null</c>.
+    /// </summary>
+    /// <param name="utcDateTime">The nullable UTC date and time.</param>
+    /// <returns>The Ecuador local date and time, or <c>null</c>.</returns>
     public static DateTime? ToEcuadorTime(this DateTime? utcDateTime)
     {
         return utcDateTime?.ToEcuadorTime();
     }
 
+    /// <summary>
+    /// Converts a UTC <see cref="DateTime"/> to the server's local time zone.
+    /// </summary>
+    /// <param name="utcDateTime">The UTC date and time to convert.</param>
+    /// <returns>The date and time in the server's local time zone.</returns>
     public static DateTime ToServerTime(this DateTime utcDateTime)
     {
         return utcDateTime.Kind != DateTimeKind.Utc

@@ -1,16 +1,31 @@
 namespace Acontplus.Persistence.PostgreSQL.Context;
 
+/// <summary>
+/// Base context class for Entity Framework Core database contexts with support for domain events, auditing, and soft deletes.
+/// </summary>
+/// <param name="options">The options to be used by the DbContext.</param>
 public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 {
     private readonly IDomainEventDispatcher? _eventDispatcher;
     private readonly IAuditContext? _auditContext;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseContext"/> class with domain event dispatcher.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="eventDispatcher">The domain event dispatcher for handling domain events.</param>
     protected BaseContext(DbContextOptions options, IDomainEventDispatcher eventDispatcher)
         : this(options)
     {
         _eventDispatcher = eventDispatcher;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseContext"/> class with domain event dispatcher and audit context.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="eventDispatcher">The domain event dispatcher for handling domain events.</param>
+    /// <param name="auditContext">The audit context for tracking user information.</param>
     protected BaseContext(
         DbContextOptions options,
         IDomainEventDispatcher eventDispatcher,
@@ -20,12 +35,22 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         _auditContext = auditContext;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseContext"/> class with audit context.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="auditContext">The audit context for tracking user information.</param>
     protected BaseContext(DbContextOptions options, IAuditContext auditContext)
         : this(options)
     {
         _auditContext = auditContext;
     }
 
+    /// <summary>
+    /// Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes asynchronously.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await DispatchDomainEventsAsync();
@@ -37,6 +62,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         return result;
     }
 
+    /// <summary>
+    /// Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes synchronously.
+    /// </summary>
+    /// <returns>The number of state entries written to the database.</returns>
     public override int SaveChanges()
     {
         DispatchDomainEventsAsync().GetAwaiter().GetResult();
@@ -136,6 +165,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Configures the model by applying global soft-delete filters and date-time conversions.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder used to construct the model for the context.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -160,6 +193,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         }
     }
 
+    /// <summary>
+    /// Applies UTC-aware value converters to all <see cref="DateTime"/> and <see cref="Nullable{T}"/> DateTime properties.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
     protected virtual void ConfigureDateTimeProperties(ModelBuilder builder)
     {
         foreach (var entityType in builder.Model.GetEntityTypes())

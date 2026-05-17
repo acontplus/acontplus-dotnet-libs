@@ -8,6 +8,10 @@ namespace Acontplus.Persistence.SqlServer.Configurations;
 public class SimpleEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
     where TEntity : class
 {
+    /// <summary>
+    /// Configures the primary key and identity column for the simple entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {
         // Configure the primary key - assumes Id property exists

@@ -1,23 +1,43 @@
 namespace Acontplus.Persistence.SqlServer.Context;
 
+/// <summary>
+/// Options that control SQL Server-specific model builder behaviour.
+/// </summary>
 public class SqlServerModelBuilderOptions
 {
+    /// <summary>Gets or sets a value indicating whether decimal precision/scale conversion is applied. Defaults to <c>true</c>.</summary>
     public bool EnableDecimalConversion { get; set; } = true;
+    /// <summary>Gets or sets a value indicating whether string properties are mapped as non-Unicode. Defaults to <c>true</c>.</summary>
     public bool EnableNonUnicodeStrings { get; set; } = true;
 }
 
+/// <summary>
+/// Base EF Core database context for SQL Server with support for domain events, auditing, and soft deletes.
+/// </summary>
+/// <param name="options">The options to be used by the DbContext.</param>
 public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 {
     private readonly IDomainEventDispatcher? _eventDispatcher;
     private readonly SqlServerModelBuilderOptions _sqlServerOptions = new();
     private readonly IAuditContext? _auditContext;
 
+    /// <summary>
+    /// Initializes a new instance with a domain event dispatcher.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="eventDispatcher">The domain event dispatcher.</param>
     protected BaseContext(DbContextOptions options, IDomainEventDispatcher eventDispatcher)
         : this(options)
     {
         _eventDispatcher = eventDispatcher;
     }
 
+    /// <summary>
+    /// Initializes a new instance with a domain event dispatcher and audit context.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="eventDispatcher">The domain event dispatcher.</param>
+    /// <param name="auditContext">The audit context for tracking user information.</param>
     protected BaseContext(
         DbContextOptions options,
         IDomainEventDispatcher eventDispatcher,
@@ -27,12 +47,22 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         _auditContext = auditContext;
     }
 
+    /// <summary>
+    /// Initializes a new instance with an audit context.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="auditContext">The audit context for tracking user information.</param>
     protected BaseContext(DbContextOptions options, IAuditContext auditContext)
         : this(options)
     {
         _auditContext = auditContext;
     }
 
+    /// <summary>
+    /// Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes asynchronously.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The number of state entries written to the database.</returns>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await DispatchDomainEventsAsync();
@@ -44,6 +74,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         return result;
     }
 
+    /// <summary>
+    /// Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes synchronously.
+    /// </summary>
+    /// <returns>The number of state entries written to the database.</returns>
     public override int SaveChanges()
     {
         DispatchDomainEventsAsync().GetAwaiter().GetResult();
@@ -145,6 +179,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Configures the model by applying global soft-delete filters, date-time conversions, and SQL Server-specific settings.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder used to construct the model for the context.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -174,6 +212,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         }
     }
 
+    /// <summary>
+    /// Applies UTC-aware value converters to all <see cref="DateTime"/> and nullable DateTime properties.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
     protected virtual void ConfigureDateTimeProperties(ModelBuilder builder)
     {
         foreach (var entityType in builder.Model.GetEntityTypes())
@@ -209,6 +251,10 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         }
     }
 
+    /// <summary>
+    /// Applies SQL Server-specific model configurations such as decimal precision and non-Unicode string mappings.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
     protected virtual void ApplySqlServerConfigurations(ModelBuilder builder)
     {
         if (_sqlServerOptions.EnableDecimalConversion)

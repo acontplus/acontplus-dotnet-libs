@@ -34,6 +34,11 @@
             <param name="parameterName">The name of the parameter to retrieve.</param>
             <returns>The value of the specified parameter.</returns>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration">
+            <summary>
+            Provides methods for registering EF Core entity types with the SQL Server model builder.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.GetPrimaryKeyType(System.Type)">
             <summary>
                 Gets the primary key type for an entity that inherits from BaseEntity
@@ -70,9 +75,68 @@
                 Registers entities with specific custom configurations.
             </summary>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1">
+            <summary>
+            Base EF Core entity type configuration for auditable SQL Server entities.
+            </summary>
+            <typeparam name="TEntity">The entity type to configure.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Applies base configuration including keys, timestamps, status fields, user tracking, and indexes.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigurePrimaryKey(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key and value generation strategy.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigureTimestamps(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures timestamp columns for creation, update, and deletion tracking.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigureStatusFields(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures soft-delete and activity status columns.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigureExternalUserTracking(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures external user-tracking columns (<c>CreatedBy</c>, <c>UpdatedBy</c>, <c>DeletedBy</c>).
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigureSoftDeleteAndIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Applies the global soft-delete query filter and configures database indexes.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityTypeConfiguration`1.ConfigureIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures database indexes for common query patterns.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
         <member name="T:Acontplus.Persistence.SqlServer.Configurations.EntityTypeConfiguration`1">
             <summary>
                 Base configuration for non-auditable entities.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.EntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key for the entity.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration">
+            <summary>
+            Provides methods for registering simple (non-auditable) EF Core entity types with the SQL Server model builder.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.GetPrimaryKeyType(System.Type)">
@@ -121,6 +185,93 @@
                 Base configuration for simple entities that don't inherit from BaseEntity.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key and identity column for the simple entity.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Context.SqlServerModelBuilderOptions">
+            <summary>
+            Options that control SQL Server-specific model builder behaviour.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.Context.SqlServerModelBuilderOptions.EnableDecimalConversion">
+            <summary>Gets or sets a value indicating whether decimal precision/scale conversion is applied. Defaults to <c>true</c>.</summary>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.Context.SqlServerModelBuilderOptions.EnableNonUnicodeStrings">
+            <summary>Gets or sets a value indicating whether string properties are mapped as non-Unicode. Defaults to <c>true</c>.</summary>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Context.BaseContext">
+            <summary>
+            Base EF Core database context for SQL Server with support for domain events, auditing, and soft deletes.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
+            <summary>
+            Base EF Core database context for SQL Server with support for domain events, auditing, and soft deletes.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher)">
+            <summary>
+            Initializes a new instance with a domain event dispatcher.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="eventDispatcher">The domain event dispatcher.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher,Acontplus.Core.Abstractions.Context.IAuditContext)">
+            <summary>
+            Initializes a new instance with a domain event dispatcher and audit context.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="eventDispatcher">The domain event dispatcher.</param>
+            <param name="auditContext">The audit context for tracking user information.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Abstractions.Context.IAuditContext)">
+            <summary>
+            Initializes a new instance with an audit context.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="auditContext">The audit context for tracking user information.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.SaveChangesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes asynchronously.
+            </summary>
+            <param name="cancellationToken">A token to cancel the operation.</param>
+            <returns>The number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.SaveChanges">
+            <summary>
+            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes synchronously.
+            </summary>
+            <returns>The number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the model by applying global soft-delete filters, date-time conversions, and SQL Server-specific settings.
+            </summary>
+            <param name="modelBuilder">The model builder used to construct the model for the context.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.ConfigureDateTimeProperties(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Applies UTC-aware value converters to all <see cref="T:System.DateTime"/> and nullable DateTime properties.
+            </summary>
+            <param name="builder">The model builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.ApplySqlServerConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Applies SQL Server-specific model configurations such as decimal precision and non-Unicode string mappings.
+            </summary>
+            <param name="builder">The model builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions">
+            <summary>
+            Extension methods for registering SQL Server persistence services with the DI container.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions.EnsureResilienceOptionsRegistered(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
             Ensures PersistenceResilienceOptions is registered with default values.
@@ -159,10 +310,57 @@
             <param name="serviceKey">Optional key to register the service with (for keyed DI).</param>
             <returns>The updated IServiceCollection.</returns>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Exceptions.SqlExceptionTranslator">
+            <summary>
+            Translates SQL Server exceptions into domain exceptions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlExceptionTranslator.IsTransient(System.Exception)">
+            <summary>
+            Determines whether the exception represents a transient SQL Server error.
+            </summary>
+            <param name="ex">The exception to evaluate.</param>
+            <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlExceptionTranslator.Translate(System.Exception)">
+            <summary>
+            Translates an exception into a <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/>.
+            </summary>
+            <param name="ex">The exception to translate.</param>
+            <returns>A <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> representing the error.</returns>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlExceptionTranslator.FindSqlException(System.Exception)">
             <summary>
                 Recursively searches for SqlException in the exception chain
             </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Exceptions.SqlServerExceptionHandler">
+            <summary>
+            Handles SQL Server exceptions by mapping them to domain error types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlServerExceptionHandler.IsTransientException(Microsoft.Data.SqlClient.SqlException)">
+            <summary>
+            Determines whether the exception represents a transient SQL Server error that can be retried.
+            </summary>
+            <param name="ex">The SQL exception to evaluate.</param>
+            <returns><c>true</c> if the error is transient.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlServerExceptionHandler.MapSqlException(Microsoft.Data.SqlClient.SqlException)">
+            <summary>
+            Maps a <see cref="T:Microsoft.Data.SqlClient.SqlException"/> to a <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo"/> domain error descriptor.
+            </summary>
+            <param name="ex">The SQL exception to map.</param>
+            <returns>A <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo"/> describing the domain error.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Exceptions.SqlServerExceptionHandler.HandleSqlException(Microsoft.Data.SqlClient.SqlException,Microsoft.Extensions.Logging.ILogger,System.String,System.String)">
+            <summary>
+            Logs and throws a <see cref="T:Microsoft.Data.SqlClient.SqlException"/> as a <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlDomainException"/>.
+            </summary>
+            <param name="ex">The SQL exception to handle.</param>
+            <param name="logger">The logger to write the error details to.</param>
+            <param name="operation">A description of the operation that failed.</param>
+            <param name="caller">The name of the calling member (auto-populated).</param>
         </member>
         <member name="T:Acontplus.Persistence.SqlServer.Exceptions.UnitOfWorkException">
             <summary>
@@ -191,10 +389,35 @@
                 (Nothing in Visual Basic) if no inner exception is specified.
             </param>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Mapping.DataTableNameMapper">
+            <summary>
+            Provides utilities for assigning table names in a <see cref="T:System.Data.DataSet"/> from a stored procedure output parameter.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Mapping.DataTableNameMapper.ProcessTableNames(Microsoft.Data.SqlClient.SqlCommand,System.Data.DataSet)">
+            <summary>
+            Assigns table names from the <c>@tableNames</c> command parameter to the corresponding tables in the <see cref="T:System.Data.DataSet"/>.
+            </summary>
+            <param name="cmd">The SQL command containing the <c>@tableNames</c> parameter.</param>
+            <param name="ds">The data set whose tables will be renamed.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Mapping.DbDataReaderMapper">
+            <summary>
+            Provides extension methods for mapping <see cref="T:System.Data.Common.DbDataReader"/> results to strongly-typed objects.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Mapping.DbDataReaderMapper.ToListAsync``1(System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
             <summary>
                 Maps a DbDataReader to a List of entities of type T with support for records and init-only properties
             </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Mapping.DbDataReaderMapper.ToList``1(System.Data.Common.DbDataReader)">
+            <summary>
+            Synchronously maps all rows from the data reader to a list of <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The target type to map each row to.</typeparam>
+            <param name="reader">The data reader positioned before the first row.</param>
+            <returns>A list of mapped <typeparamref name="T"/> instances.</returns>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Mapping.DbDataReaderMapper.MapToObject``1(Microsoft.Data.SqlClient.SqlDataReader)">
             <summary>
@@ -506,6 +729,74 @@
             </code>
             </remarks>
         </member>
+        <member name="T:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1">
+            <summary>
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+            </summary>
+            <typeparam name="TContext">The EF Core database context type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.#ctor(`0,Acontplus.Core.Abstractions.Persistence.IAdoRepository,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork{`0}})">
+            <summary>
+            Initializes a new <see cref="T:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1"/>.
+            </summary>
+            <param name="context">The EF Core database context.</param>
+            <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.CurrentDbTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.CurrentDbConnection">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.AdoRepository">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.HasActiveTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.GetRepository``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.SaveChangesAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.UnitOfWork.UnitOfWork`1.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Utilities.DiagnosticConfig">
+            <summary>
+            Provides OpenTelemetry diagnostic configuration for the SQL Server repository layer.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.SqlServer.Utilities.DiagnosticConfig.ActivitySource">
+            <summary>
+            The <see cref="F:Acontplus.Persistence.SqlServer.Utilities.DiagnosticConfig.ActivitySource"/> used to create diagnostic tracing activities.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Utilities.SqlStringParam">
+            <summary>
+            Provides utilities for sanitizing SQL string parameters to prevent SQL injection.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Utilities.SqlStringParam.Sanitize(System.String)">
+            <summary>
+            Removes common SQL injection patterns from the input string by replacing them with spaces.
+            </summary>
+            <param name="input">The raw input string to sanitize.</param>
+            <returns>The sanitized string with dangerous patterns replaced by spaces.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper">
+            <summary>
+            Provides time zone conversion utilities for Ecuador and server local time.
+            </summary>
+        </member>
         <member name="P:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper.NowInEcuador">
             <summary>
                 Obtener la hora actual en Ecuador
@@ -520,6 +811,20 @@
             <summary>
                 OPCIÓN 1 (RECOMENDADA): Convertir UTC a zona horaria específica
             </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper.ToEcuadorTime(System.Nullable{System.DateTime})">
+            <summary>
+            Converts a nullable UTC <see cref="T:System.DateTime"/> to Ecuador time, returning <c>null</c> if the input is <c>null</c>.
+            </summary>
+            <param name="utcDateTime">The nullable UTC date and time.</param>
+            <returns>The Ecuador local date and time, or <c>null</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper.ToServerTime(System.DateTime)">
+            <summary>
+            Converts a UTC <see cref="T:System.DateTime"/> to the server's local time zone.
+            </summary>
+            <param name="utcDateTime">The UTC date and time to convert.</param>
+            <returns>The date and time in the server's local time zone.</returns>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Utilities.TimeZoneHelper.FromEcuadorTimeToUtc(System.DateTime)">
             <summary>

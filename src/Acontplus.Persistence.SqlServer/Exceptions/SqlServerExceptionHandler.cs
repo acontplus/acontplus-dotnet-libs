@@ -3,6 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace Acontplus.Persistence.SqlServer.Exceptions;
 
+/// <summary>
+/// Handles SQL Server exceptions by mapping them to domain error types.
+/// </summary>
 public static class SqlServerExceptionHandler
 {
     private static readonly ImmutableDictionary<int, SqlErrorInfo> ErrorMappings = new Dictionary<int, SqlErrorInfo>
@@ -46,12 +49,22 @@ public static class SqlServerExceptionHandler
             "Memory resources temporarily unavailable")
     }.ToImmutableDictionary();
 
+    /// <summary>
+    /// Determines whether the exception represents a transient SQL Server error that can be retried.
+    /// </summary>
+    /// <param name="ex">The SQL exception to evaluate.</param>
+    /// <returns><c>true</c> if the error is transient.</returns>
     public static bool IsTransientException(SqlException ex)
     {
         // Special case for transient authentication errors
         return (ex.Number == 18456 && ex.Class == 14) || ErrorRanges.TransientErrors.Contains(ex.Number);
     }
 
+    /// <summary>
+    /// Maps a <see cref="SqlException"/> to a <see cref="SqlErrorInfo"/> domain error descriptor.
+    /// </summary>
+    /// <param name="ex">The SQL exception to map.</param>
+    /// <returns>A <see cref="SqlErrorInfo"/> describing the domain error.</returns>
     public static SqlErrorInfo MapSqlException(SqlException ex)
     {
         if (ErrorMappings.TryGetValue(ex.Number, out var errorInfo))
@@ -120,6 +133,13 @@ public static class SqlServerExceptionHandler
             ex);
     }
 
+    /// <summary>
+    /// Logs and throws a <see cref="SqlException"/> as a <see cref="SqlDomainException"/>.
+    /// </summary>
+    /// <param name="ex">The SQL exception to handle.</param>
+    /// <param name="logger">The logger to write the error details to.</param>
+    /// <param name="operation">A description of the operation that failed.</param>
+    /// <param name="caller">The name of the calling member (auto-populated).</param>
     public static void HandleSqlException(
         SqlException ex,
         ILogger logger,
