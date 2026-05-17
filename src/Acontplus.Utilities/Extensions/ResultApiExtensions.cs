@@ -1,5 +1,5 @@
-using Acontplus.Core.Domain.Enums;
 using System.Collections.Immutable;
+using Acontplus.Core.Domain.Enums;
 
 namespace Acontplus.Utilities.Extensions;
 
@@ -957,7 +957,7 @@ public static class ResultApiExtensions
         string? correlationId)
     {
         // Add pagination metadata to the result
-        var metadata = pagedResult.Metadata ?? new Dictionary<string, object>();
+        var metadata = new Dictionary<string, object>(pagedResult.Metadata ?? new Dictionary<string, object>());
         metadata = metadata.WithPagination(
             pagedResult.PageIndex,
             pagedResult.PageSize,
@@ -991,7 +991,7 @@ public static class ResultApiExtensions
         string? correlationId)
     {
         // Add pagination metadata to the result
-        var metadata = pagedResult.Metadata ?? new Dictionary<string, object>();
+        var metadata = new Dictionary<string, object>(pagedResult.Metadata ?? new Dictionary<string, object>());
         metadata = metadata.WithPagination(
             pagedResult.PageIndex,
             pagedResult.PageSize,

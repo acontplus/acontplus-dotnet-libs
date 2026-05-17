@@ -1,5 +1,5 @@
-using Acontplus.Core.Validation;
 using System.Globalization;
+using Acontplus.Core.Validation;
 
 namespace Acontplus.Services.Services.Implementations;
 
@@ -86,7 +86,7 @@ public class LookupService : ILookupService
             options: new CommandOptionsDto { WithTableNames = false },
             cancellationToken: cancellationToken);
 
-        if (DataValidation.DataSetIsNull(dataSet, removeEmptyDt: true))
+        if (DataValidation.DataSetIsNull(dataSet, removeEmptyTables: true))
         {
             return Result<IDictionary<string, IEnumerable<LookupItem>>, DomainError>.Failure(
                 DomainError.NotFound("LOOKUPS_EMPTY", "The lookup query returned no data sets."));
@@ -165,4 +165,3 @@ public class LookupService : ILookupService
         };
     }
 }
-

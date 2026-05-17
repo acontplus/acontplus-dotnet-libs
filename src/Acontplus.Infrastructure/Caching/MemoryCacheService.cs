@@ -192,6 +192,21 @@ public sealed class MemoryCacheService : ICacheService
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default) =>
         Task.FromResult(Exists(key));
 
+    public void RemoveByPrefix(string prefix)
+    {
+        var keysToRemove = _locks.Keys
+            .Where(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        foreach (var key in keysToRemove)
+            Remove(key);
+    }
+
+    public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
+    {
+        RemoveByPrefix(prefix);
+        return Task.CompletedTask;
+    }
+
     public CacheStatistics GetStatistics()
     {
         var totalRequests = _hits + _misses;
@@ -208,4 +223,7 @@ public sealed class MemoryCacheService : ICacheService
             LastCleanup = null
         };
     }
+
+    public Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default) =>
+        Task.FromResult<CacheStatistics?>(GetStatistics());
 }

@@ -199,6 +199,18 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    public void RemoveByPrefix(string prefix)
+    {
+        _logger.LogWarning(
+            "RemoveByPrefix is not supported for distributed cache. Use Redis-specific clients for pattern-based removal.");
+    }
+
+    public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
+    {
+        RemoveByPrefix(prefix);
+        return Task.CompletedTask;
+    }
+
     public CacheStatistics GetStatistics()
     {
         // Note: Distributed cache providers (Redis, etc.) don't expose detailed statistics
@@ -213,4 +225,7 @@ public class DistributedCacheService : ICacheService
             LastCleanup = null // Not available through IDistributedCache
         };
     }
+
+    public Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default) =>
+        Task.FromResult<CacheStatistics?>(GetStatistics());
 }
