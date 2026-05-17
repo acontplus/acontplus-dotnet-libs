@@ -299,6 +299,13 @@ public class MailKitService : IMailKitService, IDisposable
                 {
                     foreach (var formFile in email.Files)
                     {
+                        // Skip files with missing FileName or Content
+                        if (string.IsNullOrEmpty(formFile.FileName) || formFile.Content == null)
+                        {
+                            _logger.LogWarning("Skipping attachment with missing FileName or Content");
+                            continue;
+                        }
+
                         var extension = Path.GetExtension(formFile.FileName)?.ToLowerInvariant();
                         switch (extension)
                         {

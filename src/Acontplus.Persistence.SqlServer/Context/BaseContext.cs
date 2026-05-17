@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Persistence.SqlServer.Context;
+namespace Acontplus.Persistence.SqlServer.Context;
 
 public class SqlServerModelBuilderOptions
 {
@@ -10,11 +10,27 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 {
     private readonly IDomainEventDispatcher? _eventDispatcher;
     private readonly SqlServerModelBuilderOptions _sqlServerOptions = new();
+    private readonly IAuditContext? _auditContext;
 
     protected BaseContext(DbContextOptions options, IDomainEventDispatcher eventDispatcher)
         : this(options)
     {
         _eventDispatcher = eventDispatcher;
+    }
+
+    protected BaseContext(
+        DbContextOptions options,
+        IDomainEventDispatcher eventDispatcher,
+        IAuditContext auditContext)
+        : this(options, eventDispatcher)
+    {
+        _auditContext = auditContext;
+    }
+
+    protected BaseContext(DbContextOptions options, IAuditContext auditContext)
+        : this(options)
+    {
+        _auditContext = auditContext;
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -62,9 +78,8 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
         }
     }
 
-    private async Task UpdateAuditFieldsAsync()
+    private Task UpdateAuditFieldsAsync()
     {
-        // Only process entities that implement BaseEntity
         var entries = ChangeTracker.Entries()
             .Where(e => e.Entity is BaseEntity &&
                         (e.State == EntityState.Added || e.State == EntityState.Modified))
@@ -72,53 +87,62 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
         foreach (var entry in entries)
         {
-            var auditable = (BaseEntity)entry.Entity;
-            // Use reflection or pattern matching to set audit fields if needed
-            // (Assume BaseEntity for full audit support)
+            var entity = (BaseEntity)entry.Entity;
+
             if (entry.State == EntityState.Added)
             {
-                var createdAtProp = entry.Entity.GetType().GetProperty("CreatedAt");
-                createdAtProp?.SetValue(entry.Entity, DateTime.UtcNow);
+                entity.CreatedAt = DateTime.UtcNow;
+                entity.CreatedByUserId = _auditContext?.UserId;
+                entity.CreatedBy = _auditContext?.UserName;
+                entity.IsMobileRequest = _auditContext?.IsMobile ?? entity.IsMobileRequest;
             }
             else
             {
-                var updatedAtProp = entry.Entity.GetType().GetProperty("UpdatedAt");
-                updatedAtProp?.SetValue(entry.Entity, DateTime.UtcNow);
+                entity.UpdatedAt = DateTime.UtcNow;
+                entity.UpdatedByUserId = _auditContext?.UserId;
+                entity.UpdatedBy = _auditContext?.UserName;
             }
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task HandleSoftDeletesAsync()
+    private Task HandleSoftDeletesAsync()
     {
-        // Only process entities that implement BaseEntity
         var entries = ChangeTracker.Entries()
             .Where(e => e.Entity is BaseEntity &&
                         (e.State == EntityState.Deleted ||
-                         e.Property("IsDeleted").IsModified))
+                         e.Property(nameof(BaseEntity.IsDeleted)).IsModified))
             .ToList();
 
         foreach (var entry in entries)
         {
-            var auditable = (BaseEntity)entry.Entity;
-            if (entry.State == EntityState.Deleted || auditable.IsDeleted)
+            var entity = (BaseEntity)entry.Entity;
+
+            if (entry.State == EntityState.Deleted || entity.IsDeleted)
             {
+                // Convert hard-delete into a soft-delete
                 entry.State = EntityState.Modified;
-                auditable.IsDeleted = true;
-                var deletedAtProp = entry.Entity.GetType().GetProperty("DeletedAt");
-                deletedAtProp?.SetValue(entry.Entity, DateTime.UtcNow);
-                var isActiveProp = entry.Entity.GetType().GetProperty("IsActive");
-                isActiveProp?.SetValue(entry.Entity, false);
+                entity.IsDeleted = true;
+                entity.IsActive = false;
+                entity.DeletedAt = DateTime.UtcNow;
+                entity.DeletedByUserId = _auditContext?.UserId;
+                entity.DeletedBy = _auditContext?.UserName;
             }
-            else if (!auditable.IsDeleted &&
-                     entry.Entity.GetType().GetProperty("DeletedAt")?.GetValue(entry.Entity) != null)
+            else if (!entity.IsDeleted && entity.DeletedAt is not null)
             {
-                entry.Entity.GetType().GetProperty("DeletedAt")?.SetValue(entry.Entity, null);
-                var deletedByUserIdProp = entry.Entity.GetType().GetProperty("DeletedByUserId");
-                deletedByUserIdProp?.SetValue(entry.Entity, null);
-                var isActiveProp = entry.Entity.GetType().GetProperty("IsActive");
-                isActiveProp?.SetValue(entry.Entity, true);
+                // Restore from soft-delete — clear all deletion stamps
+                entity.DeletedAt = null;
+                entity.DeletedByUserId = null;
+                entity.DeletedBy = null;
+                entity.IsActive = true;
+                entity.UpdatedAt = DateTime.UtcNow;
+                entity.UpdatedByUserId = _auditContext?.UserId;
+                entity.UpdatedBy = _auditContext?.UserName;
             }
         }
+
+        return Task.CompletedTask;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

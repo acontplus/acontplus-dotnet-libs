@@ -253,8 +253,11 @@ trigger-cascade:
 
 The workflow works automatically. No additional setup required beyond:
 
-- ✅ `NUGET_API_KEY` configured in GitHub Secrets
+- ✅ `NUGET_USER` configured in GitHub Secrets (your NuGet.org profile username — the account that created the Trusted Publishing policy)
 - ✅ `GITHUB_TOKEN` (automatic)
+- ✅ NuGet Trusted Publishing policy configured on nuget.org (no long-lived API key needed)
+
+> **Note**: `NUGET_API_KEY` is no longer used. Authentication is handled via NuGet Trusted Publishing (OIDC). A short-lived API key is issued automatically at publish time.
 
 ### Disable Smart Publish (Optional)
 
@@ -354,6 +357,3 @@ Based on your current moNorepo:
 ---
 
 **Last updated**: Diciembre 2025
-
-
-
