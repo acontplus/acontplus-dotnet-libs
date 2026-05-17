@@ -4,6 +4,32 @@
         <name>Acontplus.Core</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Core.Abstractions.Context.IAuditContext">
+            <summary>
+            Provides the current user's identity information for automatic audit field population.
+            Resolved per-request from claims and injected into the persistence layer.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Context.IAuditContext.UserId">
+            <summary>
+            Gets the numeric identifier of the current user, or <c>null</c> if not authenticated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Context.IAuditContext.UserName">
+            <summary>
+            Gets the username of the current user, or <c>null</c> if not authenticated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Context.IAuditContext.UserRoleId">
+            <summary>
+            Gets the role identifier of the current user, or <c>null</c> if the claim is absent.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Context.IAuditContext.IsMobile">
+            <summary>
+            Gets a value indicating whether the current request originated from a mobile device.
+            </summary>
+        </member>
         <member name="T:Acontplus.Core.Abstractions.Context.IUserContext">
             <summary>
             Provides access to the current user's context information including identity and claims.

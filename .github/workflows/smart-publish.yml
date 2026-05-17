@@ -6,11 +6,11 @@ on:
     branches:
       - main
     paths:
-      - 'src/**/*.csproj'
-      - 'Directory.Packages.props'
+      - "src/**/*.csproj"
+      - "Directory.Packages.props"
 
 env:
-  DOTNET_VERSION: '10.0.x'
+  DOTNET_VERSION: "10.0.x"
   CONFIGURATION: Release
 
 permissions:
@@ -249,6 +249,10 @@ jobs:
     needs: [check-eligibility, analyze-changes]
     if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.changed-packages != '[]'
     runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write # Required for NuGet Trusted Publishing (OIDC)
+      contents: read
     strategy:
       matrix:
         package: ${{ fromJson(needs.analyze-changes.outputs.changed-packages) }}
@@ -309,12 +313,16 @@ jobs:
             --no-build \
             --output nupkgs
 
+      - name: Authenticate with NuGet.org (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish to NuGet.org
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           dotnet nuget push "nupkgs/*.nupkg" \
-            --api-key $NUGET_API_KEY \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
 
