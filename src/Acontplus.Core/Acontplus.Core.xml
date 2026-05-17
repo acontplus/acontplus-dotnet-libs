@@ -3392,6 +3392,11 @@
             Represents a standardised response from a stored procedure.
             A Code of <c>"0"</c> indicates success; any other value is treated as an error.
             </summary>
+            <remarks>
+            For new stored procedures prefer the generic <see cref="T:Acontplus.Core.Dtos.Responses.SpResponse`1"/> which gives
+            full type safety and IntelliSense on the result payload.
+            Use <c>SpResponse&lt;dynamic&gt;</c> when the shape is not known at compile time.
+            </remarks>
         </member>
         <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.Code">
             <summary>Result code returned by the stored procedure. <c>"0"</c> means success.</summary>
@@ -3409,7 +3414,45 @@
             <summary>Human-readable message returned by the stored procedure.</summary>
         </member>
         <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.IsSuccess">
-            <summary>Returns <c>true</c> when <see cref="P:Acontplus.Core.Dtos.Responses.SpResponse.Code"/> is <c>"0"</c> (success).</summary>
+            <summary>
+            Returns <c>true</c> when the stored procedure signals success.
+            Accepts <c>"0"</c> (standard) and <c>"1"</c> (legacy) as success codes.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.SpResponse`1">
+             <summary>
+             Strongly-typed stored procedure response.
+             </summary>
+             <typeparam name="T">
+             The type of the result payload. Use a concrete DTO for full compile-time safety,
+             or pass <c>dynamic</c> when the shape is not known at compile time.
+             </typeparam>
+             <example>
+             <code>
+             // Fully typed — IntelliSense + compile-time safety
+             SpResponse&lt;UserDto&gt; response = await repo.ExecuteSpAsync&lt;UserDto&gt;("GetUser");
+             var name = response.Result?.Name;
+            
+             // Dynamic — same flexibility as the non-generic SpResponse
+             SpResponse&lt;dynamic&gt; response = await repo.ExecuteSpAsync&lt;dynamic&gt;("GetUser");
+             var name = response.Result.Name;
+             </code>
+             </example>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse`1.Code">
+            <summary>Result code returned by the stored procedure. <c>"0"</c> means success.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse`1.Result">
+            <summary>Typed result payload returned by the stored procedure.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse`1.Message">
+            <summary>Human-readable message returned by the stored procedure.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse`1.IsSuccess">
+            <summary>
+            Returns <c>true</c> when <see cref="P:Acontplus.Core.Dtos.Responses.SpResponse`1.Code"/> is <c>"0"</c> (success).
+            New stored procedures should always return <c>"0"</c> — legacy <c>"1"</c> is not accepted here.
+            </summary>
         </member>
         <member name="T:Acontplus.Core.Enums.AddressType">
             <summary>
