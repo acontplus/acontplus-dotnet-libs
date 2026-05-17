@@ -281,7 +281,7 @@ public class WebServiceSri : IWebServiceSri
             using var streamReader = new StreamReader(streamResponse);
             responseSri.XmlSri = await streamReader.ReadToEndAsync();
 
-            if (DataValidation.IsXml(responseSri.XmlSri))
+            if (DataValidation.IsValidXml(responseSri.XmlSri))
             {
                 //OBTIENE DATO DEL XML RESPONSE
                 var xdoc = new XmlDocument();
