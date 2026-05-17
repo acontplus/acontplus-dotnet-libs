@@ -4,5 +4,555 @@
         <name>Acontplus.Logging</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Logging.CustomTimeZoneEnricher">
+            <summary>
+            Enriches log events with timestamps converted to a specific time zone.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.CustomTimeZoneEnricher.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Logging.CustomTimeZoneEnricher"/> class.
+            </summary>
+            <param name="timeZoneId">The time zone identifier to use for timestamp conversion.</param>
+        </member>
+        <member name="M:Acontplus.Logging.CustomTimeZoneEnricher.Enrich(Serilog.Events.LogEvent,Serilog.Core.ILogEventPropertyFactory)">
+            <summary>
+            Enriches the log event with a custom timestamp property converted to the configured time zone.
+            </summary>
+            <param name="logEvent">The log event to enrich.</param>
+            <param name="propertyFactory">The factory used to create the property.</param>
+        </member>
+        <member name="T:Acontplus.Logging.LoggingOptions">
+            <summary>
+            Configuration options for logging functionality.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.EnableLocalFile">
+            <summary>
+            Gets or sets a value indicating whether local file logging is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.Buffered">
+            <summary>
+            Gets or sets a value indicating whether buffered writing is enabled for file logging.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.Shared">
+            <summary>
+            Gets or sets a value indicating whether shared file access is enabled. Can be set to true when Buffered is false.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.LocalFilePath">
+            <summary>
+            Gets or sets the local file path for log files.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.RollingInterval">
+            <summary>
+            Gets or sets the rolling interval for log files (e.g., Day, Hour).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.RetainedFileCountLimit">
+            <summary>
+            Gets or sets the maximum number of retained log files. Null indicates no limit.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.FileSizeLimitBytes">
+            <summary>
+            Gets or sets the maximum file size in bytes before rolling. Null indicates no limit.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.Formatter">
+            <summary>
+            Gets or sets the log formatter type (Plain or Json).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.OutputTemplate">
+            <summary>
+            Gets or sets the output template for log messages.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.EnableDatabaseLogging">
+            <summary>
+            Gets or sets a value indicating whether database logging is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.DatabaseConnectionString">
+            <summary>
+            Gets or sets the database connection string for logging.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.EnableElasticsearchLogging">
+            <summary>
+            Gets or sets a value indicating whether Elasticsearch logging is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.ElasticsearchUrl">
+            <summary>
+            Gets or sets the Elasticsearch URL.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.ElasticsearchIndexFormat">
+            <summary>
+            Gets or sets the index format for Elasticsearch logs.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.ElasticsearchUsername">
+            <summary>
+            Gets or sets the username for Elasticsearch authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.ElasticsearchPassword">
+            <summary>
+            Gets or sets the password for Elasticsearch authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.LoggingOptions.TimeZoneId">
+            <summary>
+            Gets or sets the time zone ID for logging timestamps. Default is UTC.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Logging.OpenTelemetryOptions">
+            <summary>
+            Configuration options for OpenTelemetry observability (tracing, metrics, and logging).
+            OTLP export is configured once at root via <see cref="P:Acontplus.Logging.OpenTelemetryOptions.EnableOtlpExporter"/>, <see cref="P:Acontplus.Logging.OpenTelemetryOptions.OtlpEndpoint"/>,
+            and <see cref="P:Acontplus.Logging.OpenTelemetryOptions.OtlpProtocol"/>. When no Dynatrace exporter is active, a single
+            <c>UseOtlpExporter</c> call covers all three signals. Sub-sections (<see cref="P:Acontplus.Logging.OpenTelemetryOptions.Tracing"/>,
+            <see cref="P:Acontplus.Logging.OpenTelemetryOptions.Metrics"/>) control instrumentation and per-backend exporters only.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.Enabled">
+            <summary>
+            Gets or sets a value indicating whether OpenTelemetry is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.ServiceName">
+            <summary>
+            Gets or sets the service name for telemetry identification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.ServiceVersion">
+            <summary>
+            Gets or sets the service version for telemetry identification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.ServiceNamespace">
+            <summary>
+            Gets or sets the service namespace for logical grouping.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.OtlpEndpoint">
+            <summary>
+            Gets or sets the OTLP endpoint URL for all signals (traces, metrics, and logs).
+            Examples: <c>http://localhost:4317</c> (gRPC) or <c>http://localhost:4318</c> (HTTP/protobuf).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.OtlpProtocol">
+            <summary>
+            Gets or sets the OTLP transport protocol for all signals.
+            Accepted values: <c>grpc</c> (default) or <c>http</c>.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.EnableOtlpExporter">
+            <summary>
+            Gets or sets a value indicating whether to enable OTLP export for all signals (traces, metrics, and logs).
+            When Dynatrace is not configured, <c>UseOtlpExporter</c> is used — one call covering all signals.
+            When Dynatrace is configured, per-signal AddOtlpExporter is used instead (they cannot coexist).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.Tracing">
+            <summary>
+            Gets or sets tracing configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.Metrics">
+            <summary>
+            Gets or sets metrics configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OpenTelemetryOptions.Logging">
+            <summary>
+            Gets or sets logging configuration for OpenTelemetry.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Logging.TracingOptions">
+            <summary>
+            Configuration options for distributed tracing.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.Enabled">
+            <summary>
+            Gets or sets a value indicating whether tracing is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.EnableAspNetCoreInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether ASP.NET Core instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.EnableHttpClientInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether HTTP client instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.EnableSqlClientInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether SQL Client instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.EnableConsoleExporter">
+            <summary>
+            Gets or sets a value indicating whether console exporter is enabled (for development).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.EnableDynatraceExporter">
+            <summary>
+            Gets or sets a value indicating whether Dynatrace exporter is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.DynatraceEndpoint">
+            <summary>
+            Gets or sets the Dynatrace OTLP endpoint URL (e.g., https://{your-environment-id}.live.dynatrace.com/api/v2/otlp/v1/traces).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.DynatraceApiToken">
+            <summary>
+            Gets or sets the Dynatrace API token for authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.TracingOptions.AdditionalSources">
+            <summary>
+            Gets or sets additional activity sources to include in tracing.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Logging.MetricsOptions">
+            <summary>
+            Configuration options for metrics collection.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.Enabled">
+            <summary>
+            Gets or sets a value indicating whether metrics are enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.EnableAspNetCoreInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether ASP.NET Core instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.EnableHttpClientInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether HTTP client instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.EnableRuntimeInstrumentation">
+            <summary>
+            Gets or sets a value indicating whether runtime instrumentation is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.EnableConsoleExporter">
+            <summary>
+            Gets or sets a value indicating whether console exporter is enabled (for development).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.EnableDynatraceExporter">
+            <summary>
+            Gets or sets a value indicating whether Dynatrace exporter is enabled.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.DynatraceEndpoint">
+            <summary>
+            Gets or sets the Dynatrace OTLP endpoint URL (e.g., https://{your-environment-id}.live.dynatrace.com/api/v2/otlp/v1/metrics).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.DynatraceApiToken">
+            <summary>
+            Gets or sets the Dynatrace API token for authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.MetricsOptions.AdditionalMeters">
+            <summary>
+            Gets or sets additional meters to include in metrics collection.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Logging.OTelLoggingOptions">
+            <summary>
+            Configuration options for OpenTelemetry logging integration.
+            OTLP logging export is handled globally via <see cref="P:Acontplus.Logging.OpenTelemetryOptions.EnableOtlpExporter"/>.
+            Use this class only for Dynatrace-specific logging configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OTelLoggingOptions.EnableDynatraceExporter">
+            <summary>
+            Gets or sets a value indicating whether Dynatrace exporter is enabled for logs.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OTelLoggingOptions.DynatraceEndpoint">
+            <summary>
+            Gets or sets the Dynatrace OTLP endpoint URL (e.g., https://{your-environment-id}.live.dynatrace.com/api/v2/otlp/v1/logs).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Logging.OTelLoggingOptions.DynatraceApiToken">
+            <summary>
+            Gets or sets the Dynatrace API token for authentication.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Logging.TracingHelper">
+            <summary>
+            Example helper class demonstrating how to use ActivitySource for distributed tracing.
+            This class can be injected via DI and used throughout your application.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.TracingHelper.#ctor(System.Diagnostics.ActivitySource)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Logging.TracingHelper"/> class.
+            </summary>
+            <param name="activitySource">The activity source for creating traces.</param>
+        </member>
+        <member name="M:Acontplus.Logging.TracingHelper.StartActivity(System.String,System.Diagnostics.ActivityKind)">
+            <summary>
+            Creates a new activity (span) for tracing.
+            </summary>
+            <param name="name">The name of the activity/operation.</param>
+            <param name="kind">The kind of activity (default: Internal).</param>
+            <returns>The created activity, or null if tracing is disabled.</returns>
+            <example>
+            <code>
+            using var activity = _tracingHelper.StartActivity("ProcessOrder");
+            activity?.SetTag("order.id", orderId);
+            activity?.SetTag("customer.id", customerId);
+            try
+            {
+                // Process order logic
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
+            catch (Exception ex)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.RecordException(ex);
+                throw;
+            }
+            </code>
+            </example>
+        </member>
+        <member name="M:Acontplus.Logging.TracingHelper.AddTag(System.String,System.Object)">
+            <summary>
+            Adds a tag to the current activity if one is active.
+            </summary>
+            <param name="key">The tag key.</param>
+            <param name="value">The tag value.</param>
+        </member>
+        <member name="M:Acontplus.Logging.TracingHelper.RecordException(System.Exception)">
+            <summary>
+            Records an exception in the current activity.
+            </summary>
+            <param name="exception">The exception to record.</param>
+        </member>
+        <member name="M:Acontplus.Logging.TracingHelper.AddEvent(System.String)">
+            <summary>
+            Adds an event to the current activity.
+            </summary>
+            <param name="name">The event name.</param>
+        </member>
+        <member name="T:Acontplus.Logging.MetricsHelper">
+            <summary>
+            Example helper class demonstrating how to use Meter for custom metrics.
+            This class can be injected via DI and used throughout your application.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.MetricsHelper.#ctor(System.Diagnostics.Metrics.Meter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Logging.MetricsHelper"/> class.
+            </summary>
+            <param name="meter">The meter for creating metrics.</param>
+        </member>
+        <member name="M:Acontplus.Logging.MetricsHelper.CreateCounter``1(System.String,System.String,System.String)">
+             <summary>
+             Creates a counter metric for tracking counts.
+             </summary>
+             <typeparam name="T">The numeric type of the counter.</typeparam>
+             <param name="name">The metric name.</param>
+             <param name="unit">The unit of measurement (e.g., "requests", "errors").</param>
+             <param name="description">The metric description.</param>
+             <returns>A counter instrument.</returns>
+             <example>
+             <code>
+             private readonly Counter&lt;long&gt; _orderCounter;
+            
+             public OrderService(MetricsHelper metricsHelper)
+             {
+                 _orderCounter = metricsHelper.CreateCounter&lt;long&gt;("orders.processed", "orders", "Total orders processed");
+             }
+            
+             public void ProcessOrder(Order order)
+             {
+                 // Process order
+                 _orderCounter.Add(1, new KeyValuePair&lt;string, object?&gt;("status", "success"));
+             }
+             </code>
+             </example>
+        </member>
+        <member name="M:Acontplus.Logging.MetricsHelper.CreateHistogram``1(System.String,System.String,System.String)">
+             <summary>
+             Creates a histogram metric for tracking value distributions.
+             </summary>
+             <typeparam name="T">The numeric type of the histogram.</typeparam>
+             <param name="name">The metric name.</param>
+             <param name="unit">The unit of measurement (e.g., "ms", "bytes").</param>
+             <param name="description">The metric description.</param>
+             <returns>A histogram instrument.</returns>
+             <example>
+             <code>
+             private readonly Histogram&lt;double&gt; _requestDuration;
+            
+             public ApiController(MetricsHelper metricsHelper)
+             {
+                 _requestDuration = metricsHelper.CreateHistogram&lt;double&gt;("api.request.duration", "ms", "API request duration");
+             }
+            
+             public async Task&lt;IActionResult&gt; GetData()
+             {
+                 var stopwatch = Stopwatch.StartNew();
+                 var result = await _service.GetDataAsync();
+                 _requestDuration.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair&lt;string, object?&gt;("endpoint", "GetData"));
+                 return Ok(result);
+             }
+             </code>
+             </example>
+        </member>
+        <member name="M:Acontplus.Logging.MetricsHelper.CreateObservableGauge``1(System.String,System.Func{``0},System.String,System.String)">
+             <summary>
+             Creates an observable gauge for tracking current values.
+             </summary>
+             <typeparam name="T">The numeric type of the gauge.</typeparam>
+             <param name="name">The metric name.</param>
+             <param name="observeValue">The function to observe the current value.</param>
+             <param name="unit">The unit of measurement.</param>
+             <param name="description">The metric description.</param>
+             <returns>An observable gauge instrument.</returns>
+             <example>
+             <code>
+             private int _activeConnections = 0;
+            
+             public ConnectionManager(MetricsHelper metricsHelper)
+             {
+                 metricsHelper.CreateObservableGauge("connections.active", () => _activeConnections, "connections", "Active connections");
+             }
+             </code>
+             </example>
+        </member>
+        <member name="M:Acontplus.Logging.MetricsHelper.CreateUpDownCounter``1(System.String,System.String,System.String)">
+             <summary>
+             Creates an up-down counter for values that can increase or decrease.
+             </summary>
+             <typeparam name="T">The numeric type of the counter.</typeparam>
+             <param name="name">The metric name.</param>
+             <param name="unit">The unit of measurement.</param>
+             <param name="description">The metric description.</param>
+             <returns>An up-down counter instrument.</returns>
+             <example>
+             <code>
+             private readonly UpDownCounter&lt;int&gt; _queueSize;
+            
+             public QueueService(MetricsHelper metricsHelper)
+             {
+                 _queueSize = metricsHelper.CreateUpDownCounter&lt;int&gt;("queue.size", "items", "Queue size");
+             }
+            
+             public void Enqueue(Item item)
+             {
+                 _queue.Enqueue(item);
+                 _queueSize.Add(1);
+             }
+            
+             public Item Dequeue()
+             {
+                 var item = _queue.Dequeue();
+                 _queueSize.Add(-1);
+                 return item;
+             }
+             </code>
+             </example>
+        </member>
+        <member name="T:Acontplus.Logging.OpenTelemetryExtensions">
+            <summary>
+            Provides extension methods for configuring OpenTelemetry observability (tracing, metrics, and logging).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.AddAdvancedOpenTelemetry(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures OpenTelemetry tracing, metrics, and logging with the specified options.
+            </summary>
+            <param name="services">The service collection to configure.</param>
+            <param name="configuration">The application configuration.</param>
+            <returns>The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> for method chaining.</returns>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.ConfigureTracing(OpenTelemetry.Trace.TracerProviderBuilder,Acontplus.Logging.OpenTelemetryOptions,OpenTelemetry.Resources.ResourceBuilder,System.Boolean)">
+            <summary>
+            Configures distributed tracing with OpenTelemetry.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.ConfigureMetrics(OpenTelemetry.Metrics.MeterProviderBuilder,Acontplus.Logging.OpenTelemetryOptions,OpenTelemetry.Resources.ResourceBuilder,System.Boolean)">
+            <summary>
+            Configures metrics collection with OpenTelemetry.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.ConfigureLogging(OpenTelemetry.Logs.LoggerProviderBuilder,Acontplus.Logging.OpenTelemetryOptions)">
+            <summary>
+            Configures OpenTelemetry log export.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.GetServiceNameFromAssembly">
+            <summary>
+            Gets the service name from the entry assembly.
+            </summary>
+            <returns>The service name derived from the assembly name.</returns>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.GetServiceVersionFromAssembly">
+            <summary>
+            Gets the service version from the entry assembly.
+            </summary>
+            <returns>The service version from the assembly version.</returns>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.AddActivitySource(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String)">
+            <summary>
+            Registers an ActivitySource for distributed tracing in the application.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="sourceName">The name of the activity source (typically the service name).</param>
+            <param name="version">The version of the activity source.</param>
+            <returns>The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> for method chaining.</returns>
+        </member>
+        <member name="M:Acontplus.Logging.OpenTelemetryExtensions.AddMeter(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.String,System.String)">
+            <summary>
+            Registers a Meter for metrics collection in the application.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="meterName">The name of the meter (typically the service name).</param>
+            <param name="version">The version of the meter.</param>
+            <returns>The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> for method chaining.</returns>
+        </member>
+        <member name="T:Acontplus.Logging.SerilogExtensions">
+            <summary>
+            Provides extension methods for configuring advanced Serilog logging with multiple sinks including console, file, database, and Elasticsearch.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Logging.SerilogExtensions.ConfigureAdvancedLogger(Serilog.LoggerConfiguration,Microsoft.Extensions.Configuration.IConfiguration,System.String)">
+            <summary>
+            Configures the Serilog logger with advanced logging options including console, file, database, and Elasticsearch sinks.
+            </summary>
+            <param name="loggerConfiguration">The Serilog logger configuration to extend.</param>
+            <param name="configuration">The application configuration containing logging settings.</param>
+            <param name="environment">The current environment name (e.g., Development, Production).</param>
+            <returns>The configured <see cref="T:Serilog.LoggerConfiguration"/> instance.</returns>
+        </member>
+        <member name="M:Acontplus.Logging.SerilogExtensions.AddAdvancedLoggingOptions(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers the advanced logging options in the dependency injection container.
+            </summary>
+            <param name="services">The service collection to add the logging options to.</param>
+            <param name="configuration">The application configuration containing logging settings.</param>
+            <returns>The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> for method chaining.</returns>
+        </member>
     </members>
 </doc>

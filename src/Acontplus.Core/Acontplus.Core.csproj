@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Core</PackageId>
-    <Version>2.2.1</Version>
+    <Version>2.3.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -26,20 +26,18 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with cutting-edge C# features and 17 comprehensive global business
-      enums for multi-application standardization. New enums include BusinessStatus, Priority,
-      DocumentType, Gender, MaritalStatus, Title, Currency, PaymentMethod, UserRole, Language,
-      TimeZone, CommunicationChannel, AddressType, ContentType, Industry, CompanySize, and EventType
-      - all globally available and fully documented. Includes comprehensive error handling with HTTP
-      status code mapping, functional result patterns, domain event system, specification pattern
-      interfaces, advanced pagination with search and filtering, powerful JSON utilities with
-      multiple serialization options, XML validation helpers, and enterprise-ready abstractions.
-      Clean architecture with no persistence dependencies - repository implementations are provided
-      in separate persistence packages. Optimized for AOT compilation and contemporary C#
-      development patterns.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.3.0: Bug fixes for domain event parameter naming (EntityCreatedEvent,
+      EntityModifiedEvent,
+      EntityRestoredEvent). JsonExtensions options changed to static readonly fields for
+      System.Text.Json
+      caching. PagedResult converted to sealed record. New IHttpClientService abstraction.
+      ICacheService
+      extended with RemoveByPrefixAsync and GetStatisticsAsync. DataValidation completed with
+      IsValidEmail, IsValidUrl, IsValidPhoneNumber. SpResponse cleaned up (Payload deprecated,
+      IsSuccess simplified to Code == 0). Full XML documentation on all public members.
+      NoWarn 1591 suppression removed. Target framework: net10.0 only.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
@@ -59,8 +57,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Abstractions\Infrastructure\Http\" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,12 @@
 namespace Acontplus.Core.Extensions;
 
+/// <summary>Extension methods for <see cref="Enum"/> values.</summary>
 public static class EnumExtensions
 {
+    /// <summary>
+    /// Returns the <see cref="DescriptionAttribute"/> text for an enum value,
+    /// or the enum member name when no description is defined.
+    /// </summary>
     public static string DisplayName(this Enum value)
     {
         var type = value.GetType();

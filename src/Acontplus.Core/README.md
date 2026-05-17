@@ -6,68 +6,12 @@
 
 A cutting-edge .NET foundational library leveraging the latest C# language features and business patterns. Built with performance, type safety, and developer experience in mind. Focuses on pure domain logic with clean separation from API concerns.
 
-## 🚀 What's New (Latest Version)
+> **Changelog:** see [`CHANGELOG.md`](../../CHANGELOG.md) at the repository root for the full version history.
 
-- **�️ Dapper Repository Interface** - New `IDapperRepository` for lightweight micro-ORM data access
-  - Complete query methods: `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `QuerySingleOrDefaultAsync<T>`
-  - Execute methods: `ExecuteAsync`, `ExecuteScalarAsync<T>`
-  - Pagination support: `GetPagedAsync<T>`, `GetPagedFromStoredProcedureAsync<T>`
-  - Filtering support: `GetFilteredAsync<T>`, `GetFilteredFromStoredProcedureAsync<T>`
-  - Multiple result sets: `QueryMultipleAsync<T1, T2>`, `QueryMultipleAsync<T1, T2, T3>`
-  - Transaction coordination: `SetTransaction()`, `SetConnection()`, `ClearTransaction()`
-  - *Implementations provided in Acontplus.Persistence.SqlServer and Acontplus.Persistence.PostgreSQL*
-- **�📡 Two Event Systems** - Complete event-driven architecture support
-  - **Domain Event Dispatcher** (`IDomainEventDispatcher` + `IDomainEventHandler<T>`) for DDD domain events
-    - Generic entity events: `EntityCreatedEvent`, `EntityModifiedEvent`, `EntityDeletedEvent`, etc.
-    - **Synchronous** execution within same transaction/Unit of Work
-    - Perfect for domain invariants, audit logging, and transactional consistency
-    - Use when second insert depends on first insert's ID (within same transaction)
-  - **Application Event Bus** (`IEventPublisher` + `IEventSubscriber`) for cross-service communication
-    - Custom application events for business workflows
-    - **Asynchronous** background processing with `System.Threading.Channels`
-    - Implementation in `Acontplus.Infrastructure` with ~1M events/sec throughput
-    - Perfect for notifications, analytics, microservices integration
-  - *Use `IDomainEventDispatcher` for transactional domain events, `IEventBus` for async cross-cutting events*
-- **📢 Success Message Support** - Enhanced Result type with optional success messages
-  - New `SuccessMessage` property on `Result<T, TError>`
-  - `Result<T, TError>.Success(value, successMessage)` overload
-  - Success messages preserved through functional composition (Map, Bind, etc.)
-- **🔍 Advanced Query Operations** - Enhanced IRepository with complex query capabilities
-  - `GetQueryable()` for building custom queries with joins and projections
-  - `ExecuteQueryAsync<T>()` for executing custom query expressions
-  - `ExecuteQueryToListAsync<T>()` and `ExecutePagedQueryAsync<T>()` for complex result handling
-  - *See [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) for implementation details and examples*
-- **🔧 Filter Predicate Extensions** - New utilities for dynamic filtering
-  - `ToPredicate<T>()` converts filter dictionaries to LINQ expressions
-  - `CreatePredicate<T>()`, `CreateContainsPredicate<T>()`, `CreateRangePredicate<T>()` for specific filter types
-  - Support for string, enum, and boolean comparisons
-  - *See [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) for implementation details and examples*
-- **📄 Request Models** - Clean API contracts with semantic naming
-  - `FilterRequest` - Non-paginated filtering, sorting, and searching (for reports, exports, autocomplete)
-  - `PaginationRequest` - Paginated queries extending FilterRequest (for lists, tables, infinite scroll)
-  - Semantic naming without "Dto" suffix for frontend-facing API contracts
-  - Internal DTOs (like `CommandOptionsDto`) retain "Dto" suffix for infrastructure concerns
-- **📄 Enhanced Request Extensions** - Fluent APIs for request management
-  - **FilterRequestExtensions**: `WithSearch()`, `WithSort()`, `WithFilters()`, `WithFilter()` for building filter requests
-    - `GetFilterValue<T>()` - Type-safe filter value extraction with automatic conversion and default values
-    - `TryGetFilterValue<T>()` - Safe filter retrieval with out parameter pattern
-  - **PaginationExtensions**: `WithSearch()`, `WithSort()`, `WithFilters()` for building pagination requests
-  - `Create()`, `CreateWithSearch()`, `CreateWithSort()`, `CreateWithFilters()` factory methods
-  - `Validate()`, `NextPage()`, `PreviousPage()`, `ToPage()` for pagination navigation
-  - *See [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) for implementation details and examples*
-- **✨ Improved Separation of Concerns** - `DomainError`/`DomainErrors` no longer create `Result` instances directly
-  - Use `Result<T>.Failure(error)`, `Result<T, DomainErrors>.Failure(errors)` or extension helpers
-  - New helpers: `error.ToResult<T>()`, `errors.ToFailureResult<T>()`
-- **⚡ Enhanced Async Performance** - ValueTask and CancellationToken support
-  - `MapAsync/BindAsync/TapAsync/MatchAsync` now have `ValueTask` variants and CT overloads
-- **🛡️ Safer Default Handling** - Better default(Result) protection
-  - Default guard, `TryGetValue`, `TryGetError`, and `Deconstruct(out bool, out TValue?, out TError?)`
-- **🎯 Success-with-Warnings Helpers** - Enhanced warning pattern support
-  - `value.ToSuccessWithWarningsResult(warnings)`
+## 🚀 Features
 
-## 🚀 .NET 10 Features
+### 🎯 Language & Runtime Capabilities
 
-### 🎯 Latest C# Language Features
 - **Collection Expressions** - `[]` syntax for efficient collection initialization
 - **Primary Constructors** - Concise record and class definitions
 - **Required Properties** - Compile-time null safety with `required` keyword
@@ -78,6 +22,7 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
 - **Global Usings** - Clean namespace management with global using directives
 
 ### 🏗️ Architecture Patterns
+
 - **Domain-Driven Design (DDD)** - Complete DDD implementation with C# features
 - **Functional Result Pattern** - Railway-oriented programming with record structs
 - **Repository Pattern** - Comprehensive data access with bulk operations
@@ -87,6 +32,7 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
 - **Warnings System** - Success with warnings pattern for complex business operations
 
 ### 📊 Advanced Data Patterns
+
 - **Async Streaming** - `IAsyncEnumerable<T>` for memory-efficient processing
 - **Projections** - Expression-based data transfer for performance
 - **Bulk Operations** - High-performance batch processing interfaces
@@ -102,32 +48,39 @@ A cutting-edge .NET foundational library leveraging the latest C# language featu
 **17 comprehensive business enums** available globally across all applications - no more duplicate definitions!
 
 #### **🔄 Process & Status Management**
+
 - **`BusinessStatus`** - 13 lifecycle states (Draft → Active → Archived)
 - **`Priority`** - 5 priority levels (Low → Emergency)
 - **`DocumentType`** - 16 document types (Invoice, Contract, Report, etc.)
 - **`EventType`** - 19 event types (Authentication, CRUD operations, Workflow, etc.)
 
 #### **👤 Person & Demographics**
+
 - **`Gender`** - 5 inclusive options (Male, Female, NonBinary, Other, NotSpecified)
 - **`MaritalStatus`** - 8 relationship states (Single, Married, Divorced, etc.)
 - **`Title`** - 12 honorifics (Mr, Mrs, Dr, Prof, Sir, Dame, etc.)
 
 #### **🏢 Business & Organization**
+
 - **`Industry`** - 19 industry classifications (Technology, Healthcare, Finance, etc.)
 - **`CompanySize`** - 11 size categories (Startup → Multinational Corporation)
 
 #### **💰 Financial & Commerce**
+
 - **`Currency`** - 15 international currencies (USD, EUR + Latin American)
 - **`PaymentMethodType`** - 12 payment method types (Cash, Cards, DigitalWallet, BNPL, etc.)
 
 #### **🔐 Security & Access**
+
 - **`UserRoleType`** - 7 role levels (Guest → User → Employee → Manager → Administrator → SuperAdmin → ServiceAccount)
 
 #### **🌍 Internationalization**
+
 - **`Language`** - 20 languages (Major world languages + Latin American Spanish)
 - **`TimeZone`** - 16 time zones (UTC, regional + Latin American zones)
 
 #### **📱 Communication & Content**
+
 - **`CommunicationChannelType`** - 8 channel types (Email, SMS, Phone, Push, InstantMessaging, etc.)
 - **`AddressType`** - 12 address categories (Home, Work, Billing, Shipping, etc.)
 - **`ContentType`** - 20 media types (Text, Images, Videos, Documents, Archives)
@@ -178,24 +131,16 @@ Result<TValue, DomainErrors>
 SuccessWithWarnings<TValue>
 ```
 
-#### **✨ Current API - Create Results Properly**
+#### **✨ Current API — Create Results Properly**
 
 ```csharp
-```csharp
-// ✅ CURRENT: Single error using Result factory
+// ✅ CURRENT: Single error
 public static Result<User> GetUser(int id) =>
     id <= 0
         ? Result<User>.Failure(DomainError.Validation("INVALID_ID", "ID must be positive"))
         : Result<User>.Success(new User { Id = id });
 
-// ✅ CURRENT: Single error using Result factory (alternative)
-public static Result<User> GetUserAlt(int id) =>
-    id <= 0
-        ? Result<User>.Failure(DomainError.Validation("INVALID_ID", "ID must be positive"))
-        : Result<User>.Success(new User { Id = id });
-```
-
-// ✅ CURRENT: Multiple errors using Result factory
+// ✅ CURRENT: Multiple errors
 public static Result<User, DomainErrors> ValidateUser(CreateUserRequest request)
 {
     var errors = new List<DomainError>();
@@ -368,11 +313,13 @@ ErrorType.NotFound        → 404 Not Found
 ErrorType.Unauthorized    → 401 Unauthorized
 ErrorType.Forbidden       → 403 Forbidden
 ErrorType.Conflict        → 409 Conflict
+ErrorType.RateLimited     → 429 Too Many Requests
+ErrorType.RequestTimeout  → 408 Request Timeout   // client-side timeout
 ErrorType.Internal        → 500 Internal Server Error
 ErrorType.External        → 502 Bad Gateway
-ErrorType.RateLimited     → 429 Too Many Requests
-ErrorType.Timeout         → 408 Request Timeout
-// ... and more
+ErrorType.ServiceUnavailable → 503 Service Unavailable
+ErrorType.Timeout         → 504 Gateway Timeout   // upstream/external timeout
+// ... and more (full mapping in ErrorTypeExtensions.cs)
 ```
 
 #### **🎨 Real-World Usage Examples**
@@ -440,11 +387,11 @@ public async Task<Result<InvoiceDto>> GenerateInvoiceAsync(int orderId, Cancella
 
 #### **🔍 Advanced Repository Queries**
 
-*For detailed examples of advanced repository queries, complex joins, and custom projections, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation.*
+_For detailed examples of advanced repository queries, complex joins, and custom projections, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation._
 
 #### **🔧 Dynamic Filtering with Predicates**
 
-*For comprehensive examples of dynamic filtering, predicate creation, and filter utilities, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation.*
+_For comprehensive examples of dynamic filtering, predicate creation, and filter utilities, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation._
 
 #### **📄 Request Models for Clean APIs**
 
@@ -644,7 +591,7 @@ app.MapGet("/api/products",
 // GET /api/products?pageIndex=2&pageSize=20&sortBy=price&sortDirection=desc&searchTerm=laptop&filters[category]=electronics
 ```
 
-*For detailed repository implementation examples and advanced queries, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation.*
+_For detailed repository implementation examples and advanced queries, see the [Acontplus.Persistence.Common](../Acontplus.Persistence.Common/) documentation._
 
 #### **Current Best Practices**
 
@@ -684,32 +631,47 @@ return errors.Count > 0
 Comprehensive validation utilities for common business scenarios:
 
 ```csharp
-// Data Validation
+// ── DataValidation (static helpers) ─────────────────────────────────────────
 public static class DataValidation
 {
-    public static bool IsValidJson(string json);
-    public static bool IsValidXml(string xml);
-    public static bool IsValidEmail(string email);
-    public static bool IsValidUrl(string url);
-    public static bool IsValidPhoneNumber(string phoneNumber);
+    // String / format validators
+    public static bool IsValidEmail(string? email);
+    public static bool IsValidUrl(string? url);
+    public static bool IsValidPhoneNumber(string? phoneNumber);
+    public static bool IsValidJson(string? jsonString);
+    public static bool IsValidXml(string? xml);
+
+    // Sanitisation
+    public static string RemoveSpecialCharacters(string text);
+
+    // IP address
+    public static string ValidateIpAddress(string? ipAddress); // strips ::ffff: prefix, returns "0.0.0.0" on invalid
+
+    // ADO.NET / DataSet helpers
+    public static object ToDbNullOrDefault(this object? obj);
+    public static bool DataTableIsNull(DataTable? dt);
+    public static bool DataSetIsNull(DataSet? ds, bool removeEmptyTables = false);
 }
 
-// XML Validation with Schemas
+// ── XmlValidator (schema validation for SRI/XML documents) ─────────────────
 public static class XmlValidator
 {
-    public static IEnumerable<ValidationError> Validate(string xmlContent, string xsdSchema);
-    public static bool IsValid(string xmlContent, string xsdSchema);
-    public static ValidationResult ValidateWithDetails(string xmlContent, string xsdSchema);
+    // Validate an XmlDocument against an XSD schema stream
+    public static List<ValidationError> Validate(XmlDocument xmlDocument, Stream xsdStream);
+
+    // Export validation errors to a JSON file
+    public static void ExportErrorsToJson(List<ValidationError> errors, string outputFilePath);
+
+    // Clean/sanitise XML for SQL Server import
+    public static string CleanXmlForSqlServer(string xml);
 }
 
-// Usage Examples
-var validationResult = input switch
-{
-    { Length: 0 } => DomainError.Validation("EMPTY_INPUT", "Input cannot be empty").ToResult<ProcessedData>(),
-    { Length: > 100 } => DomainError.Validation("TOO_LONG", "Input too long").ToResult<ProcessedData>(),
-    _ when !DataValidation.IsValidEmail(input) => DomainError.Validation("INVALID_EMAIL", "Invalid email format").ToResult<ProcessedData>(),
-    _ => ProcessInput(input)
-};
+// Usage example
+if (!DataValidation.IsValidEmail(request.Email))
+    return DomainError.Validation("INVALID_EMAIL", "Invalid email format").ToResult<User>();
+
+if (!DataValidation.IsValidUrl(request.WebsiteUrl))
+    return DomainError.Validation("INVALID_URL", "Invalid website URL").ToResult<User>();
 ```
 
 ### 📡 **Event Bus Abstractions (NEW)**
@@ -791,12 +753,14 @@ public class OrderNotificationHandler : BackgroundService
 #### **📦 Implementation**
 
 The implementation is provided in **`Acontplus.Infrastructure`**:
+
 - `InMemoryEventBus` - High-performance channel-based implementation
 - Supports ~1M events/sec with multi-producer/multi-consumer channels
 - Thread-safe concurrent operations
 - Perfect for monoliths and single-instance apps
 
 For distributed scenarios, drop-in replacements available:
+
 - Azure Service Bus, RabbitMQ, Kafka (future)
 - Same interfaces, no code changes needed!
 
@@ -810,16 +774,16 @@ For distributed scenarios, drop-in replacements available:
 Business-optimized JSON handling with multiple serialization options:
 
 ```csharp
-// JSON Serialization Options
+// JSON Serialization Options (static readonly — reuse for performance)
 public static class JsonExtensions
 {
-    public static JsonSerializerOptions DefaultOptions { get; } // Production-optimized
-    public static JsonSerializerOptions PrettyOptions { get; }  // Development-friendly
-    public static JsonSerializerOptions StrictOptions { get; }  // API-strict validation
+    public static readonly JsonSerializerOptions DefaultOptions; // camelCase, null-ignoring, comment-tolerant
+    public static readonly JsonSerializerOptions PrettyOptions;  // same + WriteIndented = true
+    public static readonly JsonSerializerOptions StrictOptions;  // case-sensitive, no trailing commas
 }
 
 // Serialization Methods
-var json = myObject.SerializeOptimized(); // Uses DefaultOptions
+var json = myObject.SerializeOptimized();             // Uses DefaultOptions
 var prettyJson = myObject.SerializeOptimized(pretty: true); // Uses PrettyOptions
 
 // Deserialization with Error Handling
@@ -837,77 +801,115 @@ catch (JsonException ex)
 var obj = jsonString.DeserializeSafe<MyType>(fallback: new MyType());
 
 // Deep Cloning via JSON
-var clone = myObject.CloneDeep(); // Creates deep copy via JSON serialization
+var clone = myObject.CloneDeep(); // Creates deep copy via JSON round-trip
 ```
 
-### 🧩 **Powerful Extension Methods**
+> **Performance note:** `DefaultOptions`, `PrettyOptions`, and `StrictOptions` are `static readonly` fields.
+> `System.Text.Json` caches internal reflection/source-gen metadata per options instance — passing a new
+> instance on every call discards that cache. Always use these shared instances.
+
+### 🧩 **Extension Methods**
 
 #### **Result Extensions**
-```csharp
-public static class ResultExtensions
-{
-    // Success with warnings helpers
-    public static Result<SuccessWithWarnings<T>> ToSuccessWithWarningsResult<T>(this T value, DomainWarnings warnings);
-    public static Result<SuccessWithWarnings<T>> ToSuccessWithWarningsResult<T>(this T value, params DomainError[] warnings);
 
-    // Fluent factory methods for common error types
-    public static Result<T> ValidationError<T>(string code, string message, string? target = null);
-    public static Result<T> NotFoundError<T>(string code, string message, string? target = null);
-    public static Result<T> ConflictError<T>(string code, string message, string? target = null);
-    public static Result<T> UnauthorizedError<T>(string code, string message, string? target = null);
-}
+```csharp
+// Success-with-warnings helpers (extension on any value)
+value.ToSuccessWithWarningsResult(warnings);                    // DomainWarnings
+value.ToSuccessWithWarningsResult(warning1, warning2, ...);     // params DomainError[]
+
+// Error-to-Result shorthand (extension on DomainError)
+DomainError.NotFound("X", "Not found").ToResult<User>();        // → Result<User>
+
+// Failure from a list (extension on List<DomainError>)
+errors.ToFailureResult<Order>();                                // → Result<Order, DomainErrors>
 ```
 
-#### **Other Extension Methods**
-```csharp
-// Nullable Extensions
-public static class NullableExtensions
-{
-    public static bool IsNull<T>(this T? value) where T : class;
-    public static bool IsNotNull<T>(this T? value) where T : class;
-    public static T OrDefault<T>(this T? value, T defaultValue) where T : class;
-    public static T OrThrow<T>(this T? value, Exception exception) where T : class;
-}
+#### **Nullable Extensions**
 
-// Enum Extensions
-public static class EnumExtensions
-{
-    public static string DisplayName(this Enum value); // Gets Description attribute or ToString()
-}
+```csharp
+value.IsNull<T>()
+value.IsNotNull<T>()
+value.OrDefault<T>(fallback)
+value.OrThrow<T>(exception)
+value.OrThrow<T>(message)
 ```
 
-### 📚 Constants & Helpers
+#### **Enum Extensions**
 
-#### **API Metadata Keys**
 ```csharp
-public static class ApiMetadataKeys
-{
-    public const string Page = "page";
-    public const string PageSize = "pageSize";
-    public const string TotalItems = "totalItems";
-    public const string TotalPages = "totalPages";
-    public const string HasNextPage = "hasNextPage";
-    public const string HasPreviousPage = "hasPreviousPage";
-    public const string CorrelationId = "correlationId";
-    // ... and more
-}
+myEnum.DisplayName() // Returns [Description] attribute text, or ToString() as fallback
 ```
 
-#### **API Response Helpers**
+### 🌐 **HTTP Client Abstraction**
+
+Decouple outbound HTTP calls from `HttpClient` — enables retry policies, circuit-breakers, and unit-testing without touching call sites:
+
 ```csharp
-public static class ApiResponseHelpers
+// Located in Acontplus.Core.Abstractions.Infrastructure.Http
+public interface IHttpClientService
 {
-    public static ApiResponse<T> CreateSuccessResponse<T>(T data, string message);
-    public static ApiResponse<T> CreateErrorResponse<T>(string message, string errorCode);
-    public static ApiResponse<T> CreateValidationErrorResponse<T>(IEnumerable<ValidationError> errors);
-    public static ApiResponse<T> CreateNotFoundResponse<T>(string message);
+    Task<TResponse?> GetAsync<TResponse>(string url,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
+
+    Task<TResponse?> PostAsync<TRequest, TResponse>(string url, TRequest body,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
+
+    Task PostAsync<TRequest>(string url, TRequest body,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
+
+    Task<TResponse?> PutAsync<TRequest, TResponse>(string url, TRequest body,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
+
+    Task<TResponse?> PatchAsync<TRequest, TResponse>(string url, TRequest body,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
+
+    Task<bool> DeleteAsync(string url,
+        IReadOnlyDictionary<string, string>? headers = null, CancellationToken ct = default);
 }
+// Implementation provided in Acontplus.Infrastructure
+```
+
+### �️ **Cache Abstraction**
+
+```csharp
+// Located in Acontplus.Core.Abstractions.Infrastructure.Caching
+public interface ICacheService
+{
+    T? Get<T>(string key);
+    void Set<T>(string key, T value, TimeSpan? expiration = null);
+    void Remove(string key);
+    void RemoveByPrefix(string prefix);
+    bool TryGetValue<T>(string key, out T? value);
+    T GetOrCreate<T>(string key, Func<T> factory, TimeSpan? expiration = null);
+
+    Task<T?> GetAsync<T>(string key, CancellationToken ct = default);
+    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken ct = default);
+    Task RemoveAsync(string key, CancellationToken ct = default);
+    Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default);
+    Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null, CancellationToken ct = default);
+    Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default);
+}
+// Implementation provided in Acontplus.Infrastructure
+```
+
+### 📚 Constants
+
+```csharp
+// API response metadata keys
+ApiMetadataKeys.Page, .PageSize, .TotalItems, .TotalPages, .HasNextPage, .HasPreviousPage, .CorrelationId
+
+// Pagination metadata keys
+PaginationMetadataKeys.Skip, .Take, .TotalCount, .PageIndex, .PageSize
+
+// Debug / health-check keys
+DebugMetadataKeys.*, HealthCheckMetadataKeys.*
 ```
 
 ## 📖 Documentation
 
 For detailed implementation guides and best practices, see:
+
 - Each library's own README for usage examples
 - `Acontplus.Persistence.Common` for repository and filtering patterns
-- `Acontplus.Infrastructure` for event bus and caching guides
-- `docs/` folder for architecture and upgrade guides
+- `Acontplus.Infrastructure` for event bus and caching implementation guides
+- `apps/src/Demo.Api` for end-to-end usage examples

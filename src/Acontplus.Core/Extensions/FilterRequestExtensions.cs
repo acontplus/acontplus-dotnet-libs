@@ -1,124 +1,114 @@
 namespace Acontplus.Core.Extensions;
 
 /// <summary>
-/// Extension methods for FilterRequest to provide fluent API and helper functionality.
+/// Extension methods for <see cref="FilterRequest"/> (and its subtype <see cref="PaginationRequest"/>)
+/// providing fluent builders and type-safe filter value retrieval.
 /// </summary>
 public static class FilterRequestExtensions
 {
-    /// <summary>
-    /// Adds a search term to the filter request.
-    /// </summary>
-    /// <param name="filter">The filter object</param>
-    /// <param name="searchTerm">The search term to add</param>
-    /// <returns>A new FilterRequest with the search term</returns>
+    // ── Fluent builders ──────────────────────────────────────────────────────────
+
+    /// <summary>Returns a copy of <paramref name="filter"/> with the given search term.</summary>
     public static FilterRequest WithSearch(this FilterRequest filter, string searchTerm)
         => filter with { SearchTerm = searchTerm };
 
-    /// <summary>
-    /// Adds sorting criteria to the filter request.
-    /// </summary>
-    /// <param name="filter">The filter object</param>
-    /// <param name="sortBy">The field to sort by</param>
-    /// <param name="direction">The sort direction</param>
-    /// <returns>A new FilterRequest with sorting criteria</returns>
+    /// <summary>Returns a copy of <paramref name="filter"/> with the given sort field and direction.</summary>
     public static FilterRequest WithSort(this FilterRequest filter, string sortBy, SortDirection direction = SortDirection.Asc)
         => filter with { SortBy = sortBy, SortDirection = direction };
 
-    /// <summary>
-    /// Adds or merges filters with the existing filter request.
-    /// </summary>
-    /// <param name="filter">The filter object</param>
-    /// <param name="filters">The filters to add or merge</param>
-    /// <returns>A new FilterRequest with merged filters</returns>
+    /// <summary>Returns a copy of <paramref name="filter"/> with the provided filters merged in (existing keys are overwritten).</summary>
     public static FilterRequest WithFilters(this FilterRequest filter, IReadOnlyDictionary<string, object> filters)
     {
-        var existingFilters = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, object>();
+        var merged = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                     ?? new Dictionary<string, object>();
         foreach (var kvp in filters)
-        {
-            existingFilters[kvp.Key] = kvp.Value;
-        }
-        return filter with { Filters = existingFilters };
+            merged[kvp.Key] = kvp.Value;
+        return filter with { Filters = merged };
     }
 
-    /// <summary>
-    /// Adds a single filter to the filter request.
-    /// </summary>
-    /// <param name="filter">The filter object</param>
-    /// <param name="key">The filter key</param>
-    /// <param name="value">The filter value</param>
-    /// <returns>A new FilterRequest with the additional filter</returns>
+    /// <summary>Returns a copy of <paramref name="filter"/> with a single additional filter entry.</summary>
     public static FilterRequest WithFilter(this FilterRequest filter, string key, object value)
     {
-        var existingFilters = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, object>();
-        existingFilters[key] = value;
-        return filter with { Filters = existingFilters };
+        var merged = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+                     ?? new Dictionary<string, object>();
+        merged[key] = value;
+        return filter with { Filters = merged };
     }
 
+    // ── Value retrieval ──────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Gets a filter value by key with type safety and conversion support.
+    /// Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+    /// <para>
+    /// Conversion priority:
+    /// <list type="number">
+    ///   <item>Direct cast — fastest path when the stored value is already the right type.</item>
+    ///   <item><see cref="Convert.ChangeType(object, Type)"/> — handles all <see cref="IConvertible"/> types
+    ///         (int, bool, decimal, DateTime, …) and values stored as strings (query-string origin).</item>
+    ///   <item><see cref="TypeDescriptor"/> — handles enums, Guid, and other types with registered converters.</item>
+    /// </list>
+    /// Nullable value types (e.g. <c>int?</c>, <c>bool?</c>) are supported: the underlying type is
+    /// extracted automatically so <c>GetFilterValue&lt;int?&gt;("companyId")</c> works as expected.
+    /// </para>
     /// </summary>
-    /// <typeparam name="T">The expected type of the filter value</typeparam>
-    /// <param name="filter">The filter request</param>
-    /// <param name="key">The filter key to retrieve</param>
-    /// <param name="defaultValue">Default value if key not found or conversion fails</param>
-    /// <returns>The filter value converted to type T, or the default value</returns>
+    /// <typeparam name="T">Target type, including nullable value types.</typeparam>
+    /// <param name="filter">The filter request.</param>
+    /// <param name="key">The filter key to retrieve.</param>
+    /// <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+    /// <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
     public static T? GetFilterValue<T>(this FilterRequest filter, string key, T? defaultValue = default)
     {
-        if (filter.Filters == null || !filter.Filters.TryGetValue(key, out var value))
+        if (filter.Filters == null || !filter.Filters.TryGetValue(key, out var raw) || raw == null)
             return defaultValue;
 
+        // 1. Direct cast — no allocation, covers exact-type and already-boxed matches
+        if (raw is T typed)
+            return typed;
+
+        // 2. Unwrap nullable so conversion targets the underlying type (int? → int, etc.)
+        var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+        var stringValue = raw.ToString();
+
+        if (string.IsNullOrEmpty(stringValue))
+            return defaultValue;
+
+        // 3. Convert.ChangeType — fast for all IConvertible primitives and string-origin values
         try
         {
-            if (value is T typed)
-                return typed;
-
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            if (converter.CanConvertFrom(value.GetType()))
-                return (T?)converter.ConvertFrom(value);
-
-            return defaultValue;
+            return (T)Convert.ChangeType(stringValue, targetType);
         }
-        catch
+        catch { /* fall through */ }
+
+        // 4. TypeDescriptor — enums, Guid, custom type converters
+        try
         {
-            return defaultValue;
+            var converter = TypeDescriptor.GetConverter(targetType);
+            if (converter.CanConvertFrom(typeof(string)))
+                return (T?)converter.ConvertFromInvariantString(stringValue);
         }
+        catch { /* fall through */ }
+
+        return defaultValue;
     }
 
     /// <summary>
-    /// Tries to get a filter value by key with type safety and conversion support.
+    /// Tries to retrieve and convert a filter value by key.
+    /// Returns <c>true</c> when the key exists <em>and</em> the value converts successfully to
+    /// <typeparamref name="T"/>; <c>false</c> when the key is absent or conversion fails.
     /// </summary>
-    /// <typeparam name="T">The expected type of the filter value</typeparam>
-    /// <param name="filter">The filter request</param>
-    /// <param name="key">The filter key to retrieve</param>
-    /// <param name="value">The output value if found and successfully converted</param>
-    /// <returns>True if the value was found and successfully converted; otherwise, false</returns>
+    /// <typeparam name="T">Target type, including nullable value types.</typeparam>
+    /// <param name="filter">The filter request.</param>
+    /// <param name="key">The filter key to retrieve.</param>
+    /// <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
     public static bool TryGetFilterValue<T>(this FilterRequest filter, string key, out T? value)
     {
-        value = default;
-
-        if (filter.Filters == null || !filter.Filters.TryGetValue(key, out var rawValue))
-            return false;
-
-        try
+        if (filter.Filters == null || !filter.Filters.ContainsKey(key))
         {
-            if (rawValue is T typed)
-            {
-                value = typed;
-                return true;
-            }
-
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            if (converter.CanConvertFrom(rawValue.GetType()))
-            {
-                value = (T?)converter.ConvertFrom(rawValue);
-                return true;
-            }
-
+            value = default;
             return false;
         }
-        catch
-        {
-            return false;
-        }
+
+        value = GetFilterValue<T>(filter, key);
+        return value is not null;
     }
 }

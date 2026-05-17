@@ -3,14 +3,26 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Acontplus.Core.Validation;
 
+/// <summary>Represents a single error or warning produced during XML schema validation.</summary>
 public class ValidationError
 {
+    /// <summary>Human-readable description of the validation issue.</summary>
     public required string Message { get; set; }
+
+    /// <summary>Whether this is a warning or a hard error.</summary>
     public XmlSeverityType Severity { get; set; }
+
+    /// <summary>1-based line number in the source XML where the issue was detected.</summary>
     public int LineNumber { get; set; }
+
+    /// <summary>1-based character position on <see cref="LineNumber"/> where the issue was detected.</summary>
     public int LinePosition { get; set; }
 }
 
+/// <summary>
+/// Provides XML schema validation and sanitisation helpers for processing
+/// SRI electronic documents and other XML payloads.
+/// </summary>
 public static class XmlValidator
 {
     /// <summary>

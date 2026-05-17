@@ -8,12 +8,8 @@ namespace Acontplus.Utilities.Dtos;
 /// </summary>
 public sealed record PaginationQuery(
     int PageIndex = 1,
-    int PageSize = 10,
-    string? SortBy = null,
-    SortDirection? SortDirection = null,
-    string? SearchTerm = null,
-    IReadOnlyDictionary<string, object>? Filters = null
-)
+    int PageSize = 10
+) : FilterQuery()
 {
     /// <summary>
     /// Gets the number of items to skip for database queries.
@@ -26,19 +22,13 @@ public sealed record PaginationQuery(
     public int Take => PageSize;
 
     /// <summary>
-    /// Gets whether the query has no search criteria.
-    /// </summary>
-    public bool IsEmpty => string.IsNullOrWhiteSpace(SearchTerm) &&
-                          (Filters is null || !Filters.Any());
-
-    /// <summary>
     /// Binds query parameters from the HTTP context to create a PaginationQuery instance.
     /// This method enables automatic parameter binding in minimal APIs.
     /// </summary>
     /// <param name="context">The HTTP context containing query parameters</param>
     /// <param name="parameter">The parameter information (required by the binding contract)</param>
     /// <returns>A ValueTask containing the bound PaginationQuery or null</returns>
-    public static ValueTask<PaginationQuery?> BindAsync(HttpContext context, ParameterInfo parameter)
+    public static new ValueTask<PaginationQuery?> BindAsync(HttpContext context, ParameterInfo parameter)
     {
         const string pageIndexKey = "pageIndex";
         const string pageSizeKey = "pageSize";

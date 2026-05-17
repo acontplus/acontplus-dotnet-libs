@@ -5,10 +5,20 @@ using Serilog.Formatting.Display;
 
 namespace Acontplus.Logging;
 
+/// <summary>
+/// Provides extension methods for configuring advanced Serilog logging with multiple sinks including console, file, database, and Elasticsearch.
+/// </summary>
 public static class SerilogExtensions
 {
     private const string DefaultPlainTemplate = "{CustomTimestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
+    /// <summary>
+    /// Configures the Serilog logger with advanced logging options including console, file, database, and Elasticsearch sinks.
+    /// </summary>
+    /// <param name="loggerConfiguration">The Serilog logger configuration to extend.</param>
+    /// <param name="configuration">The application configuration containing logging settings.</param>
+    /// <param name="environment">The current environment name (e.g., Development, Production).</param>
+    /// <returns>The configured <see cref="LoggerConfiguration"/> instance.</returns>
     // This method will be called to CONFIGURE THE LOGGER ITSELF
     // It takes a LoggerConfiguration (which UseSerilog provides)
     public static LoggerConfiguration ConfigureAdvancedLogger(
@@ -52,6 +62,12 @@ public static class SerilogExtensions
         return loggerConfiguration; // Return the configured loggerConfiguration
     }
 
+    /// <summary>
+    /// Registers the advanced logging options in the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection to add the logging options to.</param>
+    /// <param name="configuration">The application configuration containing logging settings.</param>
+    /// <returns>The <see cref="IServiceCollection"/> for method chaining.</returns>
     // This method will be called to ADD YOUR LOGGING OPTIONS TO DI
     // It takes an IServiceCollection (which builder.Services is)
     public static IServiceCollection AddAdvancedLoggingOptions(this IServiceCollection services, IConfiguration configuration)

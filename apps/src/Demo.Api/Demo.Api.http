@@ -13,10 +13,13 @@
 ### ========================================
 
 ### Generate QR Code/Barcode
-GET {{baseUrl}}/api/barcode?text=HelloWorld&includeLabel=true
+GET {{baseUrl}}/barcode?text=HelloWorld&includeLabel=true
 
 ### Generate Sample Invoice Report
-GET {{baseUrl}}/api/report
+GET {{baseUrl}}/reports/sample-invoice
+
+### Generate Sample Customers Report
+GET {{baseUrl}}/reports/sample-customers?format=PDF
 
 ### ========================================
 ### 2. USUARIO (USER) CRUD OPERATIONS
@@ -24,6 +27,12 @@ GET {{baseUrl}}/api/report
 
 ### Get all users (paginated)
 GET {{baseUrl}}/api/usuario?pageIndex=1&pageSize=10
+
+### Get users - with search and sorting
+GET {{baseUrl}}/api/usuario?pageIndex=1&pageSize=10&searchTerm=ivan&sortBy=Email&sortDirection=Asc
+
+### Get users - with filters
+GET {{baseUrl}}/api/usuario?pageIndex=1&pageSize=10&filters[status]=Active&filters[role]=Admin
 
 ### Get user by ID
 @userId=1
@@ -54,10 +63,10 @@ DELETE {{baseUrl}}/api/usuario/{{userId}}
 ### 3. ADO REPOSITORY - ADVANCED QUERIES
 ### ========================================
 
-### Get users (legacy ADO)
-GET {{baseUrl}}/api/usuario/ado
+### Get users (legacy ADO stored procedure)
+GET {{baseUrl}}/api/usuario/legacy-ado
 
-### Get dynamic users
+### Get dynamic users (schema-less response)
 GET {{baseUrl}}/api/usuario/get-dynamic
 
 ### Get user count (scalar query)
@@ -66,17 +75,35 @@ GET {{baseUrl}}/api/usuario/count
 ### Check if username exists
 GET {{baseUrl}}/api/usuario/exists/admin
 
-### Get active users count
+### Get active users count (modified in last 6 months)
 GET {{baseUrl}}/api/usuario/active-count
 
-### Get paginated users (ADO)
-GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&searchTerm=test&sortBy=CreatedAt&sortDirection=Desc
+### Get paginated users (ADO) - basic
+GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10
 
-### Get paginated users with complex filters
-GET {{baseUrl}}/api/usuario/paged-complex?pageIndex=1&pageSize=20&sortBy=Email
+### Get paginated users (ADO) - with search and sorting
+GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&searchTerm=ivan&sortBy=CreatedAt&sortDirection=Desc
+
+### Get paginated users (ADO) - with filters[showDeleted, minAge, role]
+GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&filters[showDeleted]=false&filters[minAge]=18&filters[role]=Admin&filters[createdAfter]=2026-05-17
+
+### Get paginated users (ADO) - with createdAfter date filter
+GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&filters[createdAfter]=2026-01-01&filters[showDeleted]=false
+
+### Get paginated users (ADO) - full example
+GET {{baseUrl}}/api/usuario/paged-ado?pageIndex=1&pageSize=10&searchTerm=ivan&sortBy=CreatedAt&sortDirection=Desc&filters[showDeleted]=false&filters[minAge]=18&filters[role]=Admin&filters[createdAfter]=2026-01-01
+
+### Get paginated users with complex server-side filters (last 30 days, IsDeleted=false)
+GET {{baseUrl}}/api/usuario/paged-complex?pageIndex=1&pageSize=20&sortBy=Email&sortDirection=Asc
+
+### Get paginated users with complex filters - with search
+GET {{baseUrl}}/api/usuario/paged-complex?pageIndex=1&pageSize=20&searchTerm=ivan&sortBy=CreatedAt&sortDirection=Desc
 
 ### Get paginated users from stored procedure
 GET {{baseUrl}}/api/usuario/paged-sp?pageIndex=1&pageSize=15&sortBy=Username&sortDirection=Asc
+
+### Get paginated users from stored procedure - with search
+GET {{baseUrl}}/api/usuario/paged-sp?pageIndex=1&pageSize=15&searchTerm=admin&sortBy=Username&sortDirection=Asc
 
 ### Bulk insert users
 POST {{baseUrl}}/api/usuario/bulk
@@ -168,100 +195,29 @@ GET {{baseUrl}}/api/analytics/sales/aggregated?groupBy=month&language=en
 GET {{baseUrl}}/api/analytics/sales/trends?metric=revenue&language=en
 
 ### ========================================
-### 7. ADVANCED SERVICES USAGE
-### ========================================
-
-### Basic - Simple caching
-GET {{baseUrl}}/api/AdvancedUsage/basic/hello
-
-### Basic - Product retrieval with caching
-GET {{baseUrl}}/api/AdvancedUsage/basic/products/123
-
-### Intermediate - Device-aware content (mobile)
-GET {{baseUrl}}/api/AdvancedUsage/intermediate/content
-User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15
-
-### Intermediate - Health monitoring
-GET {{baseUrl}}/api/AdvancedUsage/intermediate/health
-
-### Intermediate - Cache performance stats
-GET {{baseUrl}}/api/AdvancedUsage/intermediate/cache-stats
-
-### Enterprise - Security status
-GET {{baseUrl}}/api/AdvancedUsage/enterprise/security-status
-
-### Enterprise - Multi-tenant dashboard
-GET {{baseUrl}}/api/AdvancedUsage/enterprise/dashboard
-Authorization: Bearer YOUR_TOKEN
-X-Client-ID: web-app
-X-Tenant-ID: premium-tenant-001
-
-### Enterprise - Audit logging
-POST {{baseUrl}}/api/AdvancedUsage/enterprise/audit
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN
-X-Client-ID: admin-portal
-X-Tenant-ID: premium-tenant-001
-
-{
-  "action": "user_login",
-  "resource": "authentication_service",
-  "metadata": {
-    "ipAddress": "192.168.1.100",
-    "success": true
-  }
-}
-
-### Advanced - Hybrid caching with fallback
-GET {{baseUrl}}/api/AdvancedUsage/advanced/hybrid-cache/weather-data
-
-### Advanced - Resilient operation
-GET {{baseUrl}}/api/AdvancedUsage/advanced/resilient/payment-processing
-
-### Advanced - Adaptive content (tablet)
-GET {{baseUrl}}/api/AdvancedUsage/advanced/adaptive-content/news-article-123
-User-Agent: Mozilla/5.0 (iPad; CPU OS 14_0 like Mac OS X) AppleWebKit/605.1.15
-
-### ========================================
-### 8. ENTERPRISE EXAMPLES
-### ========================================
-
-### Request context service
-GET {{baseUrl}}/api/EnterpriseExamples/context
-
-### Device detection
-GET {{baseUrl}}/api/EnterpriseExamples/device
-
-### Security headers
-GET {{baseUrl}}/api/EnterpriseExamples/security-headers
-
-### Test exception handling
-GET {{baseUrl}}/api/EnterpriseExamples/test-exception
-
-### ========================================
-### 9. CONFIGURATION TESTS
+### 7. CONFIGURATION TESTS
 ### ========================================
 
 ### Test all services
-GET {{baseUrl}}/api/ConfigurationTest/services
+GET {{baseUrl}}/configuration-test/services
 
 ### Test cache service
-GET {{baseUrl}}/api/ConfigurationTest/cache
+GET {{baseUrl}}/configuration-test/cache
 
 ### Test device detection
-GET {{baseUrl}}/api/ConfigurationTest/device
+GET {{baseUrl}}/configuration-test/device
 User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15
 
 ### Test security headers
-GET {{baseUrl}}/api/ConfigurationTest/security
+GET {{baseUrl}}/configuration-test/security
 
 ### Test request context
-GET {{baseUrl}}/api/ConfigurationTest/context
+GET {{baseUrl}}/configuration-test/context
 X-Client-ID: test-client
 X-Tenant-ID: test-tenant
 
 ### ========================================
-### 10. BILLING & CUSTOMER
+### 8. BILLING & CUSTOMER
 ### ========================================
 
 ### Get customer by ID card (SRI validation)
@@ -274,7 +230,7 @@ GET {{baseUrl}}/api/ats/download?fromDate=2025-03-01&toDate=2025-03-31
 ###
 
 ### ========================================
-### 11. ENCRYPTION (AES-256-GCM + BCrypt)
+### 9. ENCRYPTION (AES-256-GCM + BCrypt)
 ### ========================================
 
 ### 11a. Encrypt plaintext → AES-256-GCM (returns Base64: Salt+Nonce+Tag+Ciphertext)

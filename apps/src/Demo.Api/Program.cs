@@ -29,6 +29,10 @@ try
     //    This is where builder.Services (an IServiceCollection) is available.
     builder.Services.AddAdvancedLoggingOptions(builder.Configuration);
 
+    // 4. Configure OpenTelemetry (tracing + metrics)
+    //    ServiceName and ServiceVersion are auto-detected from assembly metadata
+    builder.Services.AddAdvancedOpenTelemetry(builder.Configuration);
+
     // Configure all services using organized extension methods
     builder.Services
         .AddAllDemoServices(builder.Configuration)
@@ -54,4 +58,3 @@ finally
     // Ensure all buffered logs are flushed on application shutdown
     Log.CloseAndFlush();
 }
-

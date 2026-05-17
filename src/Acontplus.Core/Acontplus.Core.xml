@@ -4,44 +4,144 @@
         <name>Acontplus.Core</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Core.Abstractions.Context.IUserContext">
+            <summary>
+            Provides access to the current user's context information including identity and claims.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Context.IUserContext.GetUserId">
+            <summary>
+            Gets the unique identifier of the current user.
+            </summary>
+            <returns>The user's unique identifier.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Context.IUserContext.GetClaimValue``1(System.String)">
+            <summary>
+            Gets the value of a specific claim for the current user.
+            </summary>
+            <typeparam name="T">The type to convert the claim value to.</typeparam>
+            <param name="claimName">The name of the claim to retrieve.</param>
+            <returns>The claim value converted to the specified type.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Context.IUserContext.GetUserName">
+            <summary>
+            Gets the username of the current user.
+            </summary>
+            <returns>The user's username.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Context.IUserContext.GetEmail">
+            <summary>
+            Gets the email address of the current user.
+            </summary>
+            <returns>The user's email address.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Context.IUserContext.GetRoleName">
+            <summary>
+            Gets the role name of the current user.
+            </summary>
+            <returns>The user's role name.</returns>
+        </member>
         <member name="T:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService">
             <summary>
             Interface for caching service supporting both in-memory and distributed caching.
             </summary>
         </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.Get``1(System.String)">
+            <summary>Gets an item from the cache by key. Returns <c>null</c> if the key does not exist.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.Set``1(System.String,``0,System.Nullable{System.TimeSpan})">
+            <summary>Sets an item in the cache with an optional expiration.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.Remove(System.String)">
+            <summary>Removes an item from the cache by key.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.RemoveByPrefix(System.String)">
+            <summary>Removes all cache entries whose keys start with the given prefix.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.TryGetValue``1(System.String,``0@)">
+            <summary>Tries to get an item from the cache, returning <c>true</c> if found.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.GetOrCreate``1(System.String,System.Func{``0},System.Nullable{System.TimeSpan})">
+            <summary>Gets an item from the cache, or creates and caches it using the factory if absent.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.GetAsync``1(System.String,System.Threading.CancellationToken)">
+            <summary>Asynchronously gets an item from the cache by key.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.SetAsync``1(System.String,``0,System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <summary>Asynchronously sets an item in the cache.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.RemoveAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Asynchronously removes an item from the cache by key.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.RemoveByPrefixAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Asynchronously removes all cache entries whose keys start with the given prefix.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.GetOrCreateAsync``1(System.String,System.Func{System.Threading.Tasks.Task{``0}},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <summary>Asynchronously gets or creates a cached item using the async factory if absent.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService.GetStatisticsAsync(System.Threading.CancellationToken)">
+            <summary>Returns current cache statistics if the underlying implementation supports them.</summary>
+        </member>
         <member name="T:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics">
             <summary>
-            Cache statistics information.
+            Cache statistics snapshot.
             </summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.TotalEntries">
-            <summary>
-            Total number of cache entries.
-            </summary>
+            <summary>Total number of cache entries currently held.</summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.TotalMemoryBytes">
-            <summary>
-            Total memory usage in bytes.
-            </summary>
+            <summary>Estimated memory usage in bytes.</summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.HitRatePercentage">
-            <summary>
-            Cache hit rate percentage.
-            </summary>
+            <summary>Cache hit rate as a percentage (0–100).</summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.MissRatePercentage">
-            <summary>
-            Cache miss rate percentage.
-            </summary>
+            <summary>Cache miss rate as a percentage (0–100).</summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.Evictions">
-            <summary>
-            Number of evictions.
-            </summary>
+            <summary>Total number of evictions since last reset.</summary>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Infrastructure.Caching.CacheStatistics.LastCleanup">
+            <summary>UTC timestamp of the last cache cleanup cycle.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService">
             <summary>
-            Last cleanup time.
+            Abstraction over outbound HTTP calls.
+            Decouples application code from <see cref="T:System.Net.Http.HttpClient"/> so that
+            implementations can plug in retry policies, circuit-breakers, or mocking without
+            changing the calling code.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.GetAsync``1(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a GET request and deserialises the JSON response body into <typeparamref name="TResponse"/>.
+            Returns <c>null</c> when the response body is empty or the status code is 204.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.PostAsync``2(System.String,``0,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a POST request with a JSON-serialised body and deserialises the response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.PostAsync``1(System.String,``0,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a POST request with a JSON-serialised body without expecting a typed response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.PutAsync``2(System.String,``0,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a PUT request with a JSON-serialised body and deserialises the response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.PatchAsync``2(System.String,``0,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a PATCH request with a JSON-serialised body and deserialises the response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Infrastructure.Http.IHttpClientService.DeleteAsync(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Sends a DELETE request. Returns <c>true</c> when the response indicates success.
             </summary>
         </member>
         <member name="T:Acontplus.Core.Abstractions.Infrastructure.Monitoring.IMetricsService">
@@ -327,6 +427,18 @@
             Clears the current transaction and connection.
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.IConnectionStringProvider">
+            <summary>
+            Provides access to connection strings for data persistence.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IConnectionStringProvider.GetConnectionString(System.String)">
+            <summary>
+            Gets the connection string for the specified connection name.
+            </summary>
+            <param name="name">The name of the connection.</param>
+            <returns>The connection string associated with the specified name.</returns>
+        </member>
         <member name="T:Acontplus.Core.Abstractions.Persistence.IDapperRepository">
             <summary>
             Dapper-based repository interface for simplified high-performance SQL operations.
@@ -436,6 +548,346 @@
             Clears the current transaction and connection.
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.IDistributedUnitOfWork">
+            <summary>
+            Represents a unit of work that supports distributed transactions across multiple databases or services.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IDistributedUnitOfWork.BeginDistributedTransactionAsync(System.Threading.CancellationToken)">
+            <summary>
+            Begins a new distributed transaction.
+            </summary>
+            <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the distributed transaction.</returns>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.IRepository`1">
+            <summary>
+            Generic repository interface for data access operations.
+            </summary>
+            <typeparam name="TEntity">The entity type</typeparam>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets an entity by its ID. Throws if not found.
+            </summary>
+            <param name="id">The entity ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The entity</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetByIdOrDefaultAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets an entity by its ID, or null if not found.
+            </summary>
+            <param name="id">The entity ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The entity or null</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetFirstOrDefaultAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets the first entity matching the predicate, or null if not found.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>The first matching entity or null</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetAllAsync(System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets all entities.
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>All entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Finds all entities matching the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>Matching entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindSingleOrDefaultAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Finds a single entity matching the predicate, or null if not found.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>The single matching entity or null</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindSingleAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Finds a single entity matching the predicate. Throws if not found or multiple found.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>The single matching entity</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindAsyncEnumerable(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Finds entities matching the predicate as an async enumerable stream.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>An async enumerable of matching entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean)">
+            <summary>
+            Gets a paged result of all entities.
+            </summary>
+            <param name="pagination">Pagination parameters</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="orderBy">Optional ordering expression</param>
+            <param name="orderByDescending">Whether to order descending</param>
+            <returns>Paged result</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets a paged result of entities matching the predicate.
+            </summary>
+            <param name="pagination">Pagination parameters</param>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="orderBy">Optional ordering expression</param>
+            <param name="orderByDescending">Whether to order descending</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>Paged result</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedProjectionAsync``1(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Gets a paged result of projected entities.
+            </summary>
+            <typeparam name="TProjection">The projection type</typeparam>
+            <param name="pagination">Pagination parameters</param>
+            <param name="projection">The projection expression</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="orderBy">Optional ordering expression</param>
+            <param name="orderByDescending">Whether to order descending</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Paged result of projections</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.ExistsAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Checks if any entity matches the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if any entity matches, otherwise false</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.CountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Counts entities matching the optional predicate.
+            </summary>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The count</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.LongCountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Counts entities matching the optional predicate as a long.
+            </summary>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The count as long</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetByIdsAsync(System.Collections.Generic.IEnumerable{System.Int32},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets entities by their IDs.
+            </summary>
+            <param name="ids">The entity IDs</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>The entities with matching IDs</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetMaxAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Gets the maximum value of a property.
+            </summary>
+            <typeparam name="TProperty">The property type</typeparam>
+            <param name="selector">The property selector</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The maximum value</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetMinAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Gets the minimum value of a property.
+            </summary>
+            <typeparam name="TProperty">The property type</typeparam>
+            <param name="selector">The property selector</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The minimum value</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetSumAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Decimal}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Gets the sum of a decimal property.
+            </summary>
+            <param name="selector">The property selector</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The sum</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetAverageAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Decimal}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Gets the average of a decimal property.
+            </summary>
+            <param name="selector">The property selector</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The average</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.AddAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Adds a new entity to the repository.
+            </summary>
+            <param name="entity">The entity to add</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The added entity</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.AddRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Adds multiple entities to the repository.
+            </summary>
+            <param name="entities">The entities to add</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.UpdateAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Updates an existing entity.
+            </summary>
+            <param name="entity">The entity to update</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The updated entity</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.UpdateRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Updates multiple entities.
+            </summary>
+            <param name="entities">The entities to update</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The updated entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.UpdatePropertiesAsync(`0,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Updates specific properties of an entity.
+            </summary>
+            <param name="entity">The entity to update</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="propertiesToUpdate">The properties to update</param>
+            <returns>The updated entity</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Deletes an entity from the repository.
+            </summary>
+            <param name="entity">The entity to delete</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Deletes an entity by its ID.
+            </summary>
+            <param name="id">The entity ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if the entity was deleted, otherwise false</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Deletes multiple entities.
+            </summary>
+            <param name="entities">The entities to delete</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Deletes entities matching the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities deleted</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkDeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Bulk deletes entities matching the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities deleted</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
+            <summary>
+            Bulk updates a specific property for entities matching the predicate.
+            </summary>
+            <typeparam name="TProperty">The property type</typeparam>
+            <param name="predicate">The filter predicate</param>
+            <param name="propertyExpression">The property to update</param>
+            <param name="newValue">The new value</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities updated</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Bulk inserts multiple entities.
+            </summary>
+            <param name="entities">The entities to insert</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities inserted</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,`0}},System.Threading.CancellationToken)">
+            <summary>
+            Bulk updates entities matching the predicate using an update expression.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="updateExpression">The update expression</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities updated</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <summary>
+            Finds entities using a specification.
+            </summary>
+            <param name="specification">The specification</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Matching entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetFirstOrDefaultWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <summary>
+            Gets the first entity matching a specification, or default if not found.
+            </summary>
+            <param name="specification">The specification</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The first matching entity or default</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <summary>
+            Gets a paged result using a specification.
+            </summary>
+            <param name="specification">The specification</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Paged result</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.FindProjectionWithSpecificationAsync``1(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Threading.CancellationToken)">
+            <summary>
+            Finds projected entities using a specification.
+            </summary>
+            <typeparam name="TProjection">The projection type</typeparam>
+            <param name="specification">The specification</param>
+            <param name="projection">The projection expression</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Projected entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.CountWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <summary>
+            Counts entities matching a specification.
+            </summary>
+            <param name="specification">The specification</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The count</returns>
+        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetQueryable(System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
             <summary>
             Gets a queryable for building complex queries with joins, custom projections, and advanced filtering.
@@ -475,6 +927,287 @@
             <param name="pagination">Pagination parameters</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>Paged query results</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetOrderedAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.ValueTuple{System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean}[])">
+            <summary>
+            Gets entities with custom ordering.
+            </summary>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="orderExpressions">Order expressions with direction</param>
+            <returns>Ordered entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.AggregateAsync``1(System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{`0},``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Executes an aggregate expression.
+            </summary>
+            <typeparam name="TResult">The result type</typeparam>
+            <param name="aggregateExpression">The aggregate expression</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The aggregate result</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetDistinctAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Gets distinct values of a property.
+            </summary>
+            <typeparam name="TProperty">The property type</typeparam>
+            <param name="propertySelector">The property selector</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Distinct property values</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetProjectionAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets projected entities.
+            </summary>
+            <typeparam name="TProjection">The projection type</typeparam>
+            <param name="projection">The projection expression</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>Projected entities</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetFirstProjectionOrDefaultAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Gets the first projected entity or default.
+            </summary>
+            <typeparam name="TProjection">The projection type</typeparam>
+            <param name="projection">The projection expression</param>
+            <param name="predicate">Optional filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="includeProperties">Navigation properties to include</param>
+            <returns>The first projected entity or default</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.ExecuteInTransactionAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation within a transaction and returns a result.
+            </summary>
+            <typeparam name="TResult">The result type</typeparam>
+            <param name="operation">The operation to execute</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The operation result</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.ExecuteInTransactionAsync(System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation within a transaction.
+            </summary>
+            <param name="operation">The operation to execute</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.ISpecification`1">
+            <summary>
+            Defines a specification pattern for querying entities with criteria, includes, ordering, and pagination.
+            </summary>
+            <typeparam name="T">The type of entity to query.</typeparam>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.Criteria">
+            <summary>
+            Gets the filter criteria expression for the query.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.Includes">
+            <summary>
+            Gets the list of navigation properties to include in the query.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.IncludeStrings">
+            <summary>
+            Gets the list of navigation property names to include in the query as strings.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.OrderByExpressions">
+            <summary>
+            Gets the list of order by expressions for sorting the query results.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.Pagination">
+            <summary>
+            Gets the pagination request containing page index and page size.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.IsPagingEnabled">
+            <summary>
+            Gets a value indicating whether paging is enabled for this specification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ISpecification`1.IsTrackingEnabled">
+            <summary>
+            Gets a value indicating whether change tracking is enabled for this specification.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1">
+            <summary>
+            Base implementation of the specification pattern for building queries with criteria, includes, ordering, and pagination.
+            </summary>
+            <typeparam name="T">The type of entity to query.</typeparam>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.Criteria">
+            <summary>
+            Gets the filter criteria expression for the query.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.Includes">
+            <summary>
+            Gets the list of navigation properties to include in the query.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.IncludeStrings">
+            <summary>
+            Gets the list of navigation property names to include in the query as strings.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.OrderByExpressions">
+            <summary>
+            Gets the list of order by expressions for sorting the query results.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.Pagination">
+            <summary>
+            Gets the pagination request containing page index and page size.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.IsPagingEnabled">
+            <summary>
+            Gets a value indicating whether paging is enabled for this specification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.IsTrackingEnabled">
+            <summary>
+            Gets a value indicating whether change tracking is enabled for this specification.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.#ctor(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1"/> class.
+            </summary>
+            <param name="criteria">Optional filter criteria expression. If null, all entities will match.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.AddInclude(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
+            <summary>
+            Adds a navigation property to be included in the query.
+            </summary>
+            <param name="includeExpression">The expression representing the navigation property to include.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.AddInclude(System.String)">
+            <summary>
+            Adds a navigation property to be included in the query using a string path.
+            </summary>
+            <param name="includeString">The string path to the navigation property to include.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.AddOrderBy(System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean)">
+            <summary>
+            Adds an order by expression to sort the query results.
+            </summary>
+            <param name="orderByExpression">The expression to use for sorting.</param>
+            <param name="isDescending">True to sort in descending order; otherwise, false for ascending order.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.ApplyPaging(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Applies pagination to the query.
+            </summary>
+            <param name="pagination">The pagination request containing page index and page size.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.ApplyTracking(System.Boolean)">
+            <summary>
+            Configures change tracking for the query.
+            </summary>
+            <param name="isTracking">True to enable change tracking; otherwise, false.</param>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.OrderByExpression`1">
+            <summary>
+            Represents an order by expression with sort direction for query sorting.
+            </summary>
+            <typeparam name="T">The type of entity to sort.</typeparam>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.OrderByExpression`1.Expression">
+            <summary>
+            Gets the expression to use for sorting.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.OrderByExpression`1.IsDescending">
+            <summary>
+            Gets a value indicating whether the sort order is descending.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.OrderByExpression`1.#ctor(System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Core.Abstractions.Persistence.OrderByExpression`1"/> class.
+            </summary>
+            <param name="expression">The expression to use for sorting.</param>
+            <param name="isDescending">True to sort in descending order; otherwise, false for ascending order.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="expression"/> is null.</exception>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.ITransaction">
+            <summary>
+            Represents a database transaction that can be committed or rolled back.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.ITransaction.CommitAsync(System.Threading.CancellationToken)">
+            <summary>
+            Commits the transaction asynchronously, persisting all changes made within the transaction.
+            </summary>
+            <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+            <returns>A task representing the asynchronous commit operation.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.ITransaction.RollbackAsync(System.Threading.CancellationToken)">
+            <summary>
+            Rolls back the transaction asynchronously, discarding all changes made within the transaction.
+            </summary>
+            <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+            <returns>A task representing the asynchronous rollback operation.</returns>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.ITransaction.IsCompleted">
+            <summary>
+            Gets a value indicating whether the transaction has been completed (either committed or rolled back).
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Abstractions.Persistence.IUnitOfWork">
+            <summary>
+            Defines a unit of work pattern for managing database operations and transactions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.GetRepository``1">
+            <summary>
+            Gets a repository instance for the specified entity type.
+            </summary>
+            <typeparam name="TEntity">The type of entity for the repository.</typeparam>
+            <returns>A repository instance for the specified entity type.</returns>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.AdoRepository">
+            <summary>
+            Gets the ADO repository for executing raw SQL queries and commands.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Saves all changes made in this unit of work to the database.
+            </summary>
+            <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+            <returns>A task that represents the asynchronous save operation. The task result contains the number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
+            <summary>
+            Begins a new database transaction with the specified isolation level.
+            </summary>
+            <param name="isolationLevel">The isolation level for the transaction.</param>
+            <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+            <returns>A task that represents the asynchronous operation. The task result contains the transaction instance.</returns>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.CurrentDbTransaction">
+            <summary>
+            Gets the current active database transaction, if any.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.CurrentDbConnection">
+            <summary>
+            Gets the current database connection.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Abstractions.Persistence.IUnitOfWork.HasActiveTransaction">
+            <summary>
+            Gets a value indicating whether there is an active transaction.
+            </summary>
         </member>
         <member name="T:Acontplus.Core.Abstractions.Services.IRequestContextService">
             <summary>
@@ -519,6 +1252,66 @@
         <member name="M:Acontplus.Core.Abstractions.Services.IRequestContextService.GetRequestContext">
             <summary>
             Gets all request context information as a dictionary.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Configuration.CacheSettings">
+            <summary>
+            Configuration settings for the application cache system.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Configuration.CacheSettings.SectionName">
+            <summary>
+            The configuration section name for cache settings.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheSettings.SizeLimitMb">
+            <summary>
+            Gets the maximum size limit of the cache in megabytes.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheSettings.CompactionPercentage">
+            <summary>
+            Gets the percentage of items to remove when the cache reaches its size limit.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheSettings.ExpirationScanFrequencyMinutes">
+            <summary>
+            Gets the frequency in minutes for scanning and removing expired cache items.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheSettings.DefaultExpirationMinutes">
+            <summary>
+            Gets the default expiration time in minutes for cached items.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheSettings.Profiles">
+            <summary>
+            Gets the predefined cache profile settings.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Configuration.CacheProfileSettings">
+            <summary>
+            Predefined cache expiration profiles for different cache duration scenarios.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheProfileSettings.ShortExpirationMinutes">
+            <summary>
+            Gets the expiration time in minutes for short-lived cache items.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheProfileSettings.MediumExpirationMinutes">
+            <summary>
+            Gets the expiration time in minutes for medium-lived cache items.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheProfileSettings.LongExpirationMinutes">
+            <summary>
+            Gets the expiration time in minutes for long-lived cache items.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Configuration.CacheProfileSettings.VeryLongExpirationMinutes">
+            <summary>
+            Gets the expiration time in minutes for very long-lived cache items.
             </summary>
         </member>
         <member name="T:Acontplus.Core.Configuration.PaginationMetadataOptions">
@@ -586,10 +1379,160 @@
             For pagination-specific metadata, see <see cref="T:Acontplus.Core.Constants.PaginationMetadataKeys"/>.
             </summary>
         </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.TraceId">
+            <summary>
+            Distributed trace identifier for the request.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.RequestId">
+            <summary>
+            Unique identifier for the individual request.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.CorrelationId">
+            <summary>
+            Correlation identifier for tracking related requests across services.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.ClientId">
+            <summary>
+            Identifier for the client making the request.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Issuer">
+            <summary>
+            Token issuer identifier.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.TenantId">
+            <summary>
+            Tenant identifier for multi-tenant applications.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.TimestampUtc">
+            <summary>
+            UTC timestamp of the response.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Version">
+            <summary>
+            API version used for the request.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Environment">
+            <summary>
+            Environment name (e.g., development, staging, production).
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Pagination">
+            <summary>
+            Container for pagination metadata in API responses.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.PageIndex">
+            <summary>
+            Zero-based index of the current page.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.PageSize">
+            <summary>
+            Number of items per page.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.TotalCount">
+            <summary>
+            Total number of items across all pages.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.TotalPages">
+            <summary>
+            Total number of pages available.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.HasNextPage">
+            <summary>
+            Indicates whether a next page is available.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.HasPreviousPage">
+            <summary>
+            Indicates whether a previous page is available.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Links">
+            <summary>
+            HATEOAS links for navigation.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Duration">
+            <summary>
+            Request processing duration in milliseconds.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.Deprecation">
+            <summary>
+            Deprecation notice for the API endpoint.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.ApiMetadataKeys.RateLimit">
+            <summary>
+            Rate limiting information for the client.
+            </summary>
+        </member>
         <member name="T:Acontplus.Core.Constants.DebugMetadataKeys">
             <summary>
             Metadata keys for debug/diagnostic information in error responses.
             These should only be included in Development environment or when explicitly enabled.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.Debug">
+            <summary>
+            Key for the debug information container.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.ExceptionType">
+            <summary>
+            Key for the exception type name.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.Message">
+            <summary>
+            Key for the exception message.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.StackTrace">
+            <summary>
+            Key for the exception stack trace.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.InnerException">
+            <summary>
+            Key for the inner exception details.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.ActivityId">
+            <summary>
+            Key for the activity ID associated with the request.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.Source">
+            <summary>
+            Key for the exception source.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.TargetSite">
+            <summary>
+            Key for the target site where the exception occurred.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.HelpLink">
+            <summary>
+            Key for the help link URL.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.DebugMetadataKeys.Data">
+            <summary>
+            Key for additional exception data.
             </summary>
         </member>
         <member name="T:Acontplus.Core.Constants.HealthCheckMetadataKeys">
@@ -597,11 +1540,496 @@
             Metadata keys for health check responses and diagnostics.
             </summary>
         </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.DefaultCircuit">
+            <summary>
+            Metadata key for the default circuit breaker state.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.ApiCircuit">
+            <summary>
+            Metadata key for the API circuit breaker state.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.DatabaseCircuit">
+            <summary>
+            Metadata key for the database circuit breaker state.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.ExternalCircuit">
+            <summary>
+            Metadata key for the external service circuit breaker state.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.AuthCircuit">
+            <summary>
+            Metadata key for the authentication circuit breaker state.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.LastCheckTime">
+            <summary>
+            Metadata key for the timestamp of the last health check.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.Status">
+            <summary>
+            Metadata key for the health check status.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.Description">
+            <summary>
+            Metadata key for the health check description.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.Duration">
+            <summary>
+            Metadata key for the health check duration in milliseconds.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.Exception">
+            <summary>
+            Metadata key for exception information from health checks.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.TotalMemory">
+            <summary>
+            Metadata key for total memory available.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.UsedMemory">
+            <summary>
+            Metadata key for used memory amount.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.FreeMemory">
+            <summary>
+            Metadata key for free memory amount.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.CpuUsage">
+            <summary>
+            Metadata key for CPU usage percentage.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.HealthCheckMetadataKeys.ThreadCount">
+            <summary>
+            Metadata key for active thread count.
+            </summary>
+        </member>
         <member name="T:Acontplus.Core.Constants.PaginationMetadataKeys">
             <summary>
             Metadata keys specifically for pagination-related information in PagedResult.
             Use these constants to ensure consistency across all paged query implementations.
             </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.HasFilters">
+            <summary>
+            Indicates whether any filters are applied to the query.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.HasSearch">
+            <summary>
+            Indicates whether a search term is applied to the query.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.SearchTerm">
+            <summary>
+            The search term used in the query.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.SortBy">
+            <summary>
+            The field or property name used for sorting.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.SortDirection">
+            <summary>
+            The direction of sorting (ascending or descending).
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.DefaultSort">
+            <summary>
+            Indicates whether the default sort is being used.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.QuerySource">
+            <summary>
+            The source type of the query (e.g., stored procedure, view). Use with caution as it may expose implementation details.
+            Recommended: Only include in Development/Staging environments, not Production.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.QueryDuration">
+            <summary>
+            The duration of the query execution in milliseconds.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.CountDuration">
+            <summary>
+            The duration of the count query execution in milliseconds.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.TotalDuration">
+            <summary>
+            The total duration of the operation in milliseconds.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.FilterCount">
+            <summary>
+            The number of filters applied to the query.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.AppliedFilters">
+            <summary>
+            Details of the filters applied to the query.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.IsPartialResult">
+            <summary>
+            Indicates whether the result set is partial or incomplete.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.ResultQuality">
+            <summary>
+            Indicates the quality level of the returned results.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.FromCache">
+            <summary>
+            Indicates whether the result was retrieved from cache.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Constants.PaginationMetadataKeys.CacheExpiry">
+            <summary>
+            The cache expiry time for the result.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Entities.BaseEntity">
+            <summary>
+            Base entity class that provides common functionality for all domain entities including audit fields and soft delete support.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.CreatedAt">
+            <summary>
+            Gets or sets the date and time when the entity was created.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.CreatedByUserId">
+            <summary>
+            Gets or sets the ID of the user who created the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.UpdatedAt">
+            <summary>
+            Gets or sets the date and time when the entity was last updated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.UpdatedByUserId">
+            <summary>
+            Gets or sets the ID of the user who last updated the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.IsActive">
+            <summary>
+            Gets or sets a value indicating whether the entity is active.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.IsDeleted">
+            <summary>
+            Gets or sets a value indicating whether the entity has been soft deleted.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.DeletedAt">
+            <summary>
+            Gets or sets the date and time when the entity was deleted.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.DeletedByUserId">
+            <summary>
+            Gets or sets the ID of the user who deleted the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.IsMobileRequest">
+            <summary>
+            Gets or sets a value indicating whether the request originated from a mobile device.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.CreatedBy">
+            <summary>
+            Gets or sets the name of the user who created the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.UpdatedBy">
+            <summary>
+            Gets or sets the name of the user who last updated the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.BaseEntity.DeletedBy">
+            <summary>
+            Gets or sets the name of the user who deleted the entity.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> class.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.#ctor(System.Int32,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> class with the specified creator information.
+            </summary>
+            <param name="createdByUserId">The ID of the user creating the entity.</param>
+            <param name="isMobileRequest">Indicates whether the request originated from a mobile device.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.MarkAsDeleted(System.Nullable{System.Int32})">
+            <summary>
+            Marks the entity as deleted (soft delete) and raises the appropriate domain event.
+            </summary>
+            <param name="deletedByUserId">The ID of the user deleting the entity.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.RestoreFromDeleted">
+            <summary>
+            Restores the entity from deleted state and raises the appropriate domain event.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.Deactivate">
+            <summary>
+            Deactivates the entity if it is currently active.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.Activate">
+            <summary>
+            Activates the entity if it is currently inactive.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.UpdateAuditFields(System.Nullable{System.Int32})">
+            <summary>
+            Updates the audit fields with the current timestamp and user information, and raises a domain event.
+            </summary>
+            <param name="updatedByUserId">The ID of the user updating the entity.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.BaseEntity.Create``1(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Creates a new instance of the specified entity type with the given parameters.
+            </summary>
+            <typeparam name="T">The type of entity to create.</typeparam>
+            <param name="id">The entity ID.</param>
+            <param name="createdByUserId">The ID of the user creating the entity.</param>
+            <param name="isMobileRequest">Indicates whether the request originated from a mobile device.</param>
+            <returns>A new instance of the specified entity type.</returns>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Entities.Entity`1">
+            <summary>
+            Base class for all entities with strongly-typed identifiers and domain event support.
+            </summary>
+            <typeparam name="TId">The type of the entity identifier.</typeparam>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.Entity`1.Id">
+            <summary>
+            Gets the unique identifier for this entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.Entity`1.DomainEvents">
+            <summary>
+            Gets the collection of domain events associated with this entity.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.AddDomainEvent(Acontplus.Core.Domain.Common.Events.IDomainEvent)">
+            <summary>
+            Adds a domain event to this entity.
+            </summary>
+            <param name="domainEvent">The domain event to add.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.ClearDomainEvents">
+            <summary>
+            Clears all domain events from this entity.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.Equals(System.Object)">
+            <summary>
+            Determines whether the specified object is equal to the current entity.
+            Two entities are considered equal if they have the same type and the same non-default identifier.
+            </summary>
+            <param name="obj">The object to compare with the current entity.</param>
+            <returns>true if the specified object is equal to the current entity; otherwise, false.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.op_Equality(Acontplus.Core.Domain.Common.Entities.Entity{`0},Acontplus.Core.Domain.Common.Entities.Entity{`0})">
+            <summary>
+            Determines whether two entities are equal.
+            </summary>
+            <param name="a">The first entity to compare.</param>
+            <param name="b">The second entity to compare.</param>
+            <returns>true if the entities are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.op_Inequality(Acontplus.Core.Domain.Common.Entities.Entity{`0},Acontplus.Core.Domain.Common.Entities.Entity{`0})">
+            <summary>
+            Determines whether two entities are not equal.
+            </summary>
+            <param name="a">The first entity to compare.</param>
+            <param name="b">The second entity to compare.</param>
+            <returns>true if the entities are not equal; otherwise, false.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.GetHashCode">
+            <summary>
+            Returns the hash code for this entity based on its type and identifier.
+            </summary>
+            <returns>A hash code for the current entity.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.Entity`1.Create``1(`0)">
+            <summary>
+            Creates a new instance of the specified entity type with the given identifier.
+            </summary>
+            <typeparam name="T">The type of entity to create.</typeparam>
+            <param name="id">The identifier for the new entity.</param>
+            <returns>A new instance of the specified entity type.</returns>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Entities.IAuditableEntity">
+            <summary>
+            Defines auditable properties for tracking entity creation, modification, and deletion.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.IsDeleted">
+            <summary>
+            Gets or sets a value indicating whether the entity is soft deleted.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.IsActive">
+            <summary>
+            Gets or sets a value indicating whether the entity is active.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.CreatedAt">
+            <summary>
+            Gets or sets the date and time when the entity was created.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.UpdatedAt">
+            <summary>
+            Gets or sets the date and time when the entity was last updated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.DeletedAt">
+            <summary>
+            Gets or sets the date and time when the entity was deleted.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.IsMobileRequest">
+            <summary>
+            Gets or sets a value indicating whether the request originated from a mobile device.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.CreatedBy">
+            <summary>
+            Gets or sets the identifier of the user who created the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.UpdatedBy">
+            <summary>
+            Gets or sets the identifier of the user who last updated the entity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IAuditableEntity.DeletedBy">
+            <summary>
+            Gets or sets the identifier of the user who deleted the entity.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Entities.IEntityWithDomainEvents">
+            <summary>
+            Represents an entity that can track domain events.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.IEntityWithDomainEvents.AddDomainEvent(Acontplus.Core.Domain.Common.Events.IDomainEvent)">
+            <summary>
+            Adds a domain event to the entity's event collection.
+            </summary>
+            <param name="domainEvent">The domain event to add.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Entities.IEntityWithDomainEvents.ClearDomainEvents">
+            <summary>
+            Clears all domain events from the entity's event collection.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Entities.IEntityWithDomainEvents.DomainEvents">
+            <summary>
+            Gets the collection of domain events associated with this entity.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.EntityCreatedEvent">
+            <summary>Raised when a domain entity is created.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.EntityCreatedEvent.#ctor(System.Int32,System.String,System.Nullable{System.Int32})">
+            <summary>Raised when a domain entity is created.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityCreatedEvent.OccurredOn">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent">
+            <summary>
+            Domain event that is raised when an entity is deleted.
+            </summary>
+            <param name="EntityId">The unique identifier of the deleted entity.</param>
+            <param name="EntityType">The type name of the deleted entity.</param>
+            <param name="DeletedByUserId">The identifier of the user who deleted the entity, if available.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent.#ctor(System.Int32,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Domain event that is raised when an entity is deleted.
+            </summary>
+            <param name="EntityId">The unique identifier of the deleted entity.</param>
+            <param name="EntityType">The type name of the deleted entity.</param>
+            <param name="DeletedByUserId">The identifier of the user who deleted the entity, if available.</param>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent.EntityId">
+            <summary>The unique identifier of the deleted entity.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent.EntityType">
+            <summary>The type name of the deleted entity.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent.DeletedByUserId">
+            <summary>The identifier of the user who deleted the entity, if available.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityDeletedEvent.OccurredOn">
+            <summary>
+            Gets the UTC date and time when the event occurred.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.EntityModifiedEvent">
+            <summary>Raised when a domain entity is modified.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.EntityModifiedEvent.#ctor(System.Int32,System.String,System.Nullable{System.Int32})">
+            <summary>Raised when a domain entity is modified.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityModifiedEvent.OccurredOn">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.EntityRestoredEvent">
+            <summary>Raised when a previously soft-deleted domain entity is restored.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.EntityRestoredEvent.#ctor(System.Int32,System.String,System.Nullable{System.Int32})">
+            <summary>Raised when a previously soft-deleted domain entity is restored.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.EntityRestoredEvent.OccurredOn">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.IDomainEvent">
+            <summary>
+            Represents a domain event that occurred within the domain.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Events.IDomainEvent.OccurredOn">
+            <summary>
+            Gets the date and time when the domain event occurred.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher">
+            <summary>
+            Defines a dispatcher for domain events.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher.Dispatch(Acontplus.Core.Domain.Common.Events.IDomainEvent)">
+            <summary>
+            Dispatches a domain event asynchronously.
+            </summary>
+            <param name="domainEvent">The domain event to dispatch.</param>
+            <returns>A task representing the asynchronous operation.</returns>
         </member>
         <member name="T:Acontplus.Core.Domain.Common.Events.IDomainEventHandler`1">
             <summary>
@@ -631,6 +2059,132 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>A task representing the asynchronous operation</returns>
         </member>
+        <member name="T:Acontplus.Core.Domain.Common.Results.DomainError">
+            <summary>Represents a domain error with type, code, message, and optional details.</summary>
+            <param name="Type">The error type categorizing the error.</param>
+            <param name="Code">A machine-readable error code.</param>
+            <param name="Message">A human-readable error message.</param>
+            <param name="Target">Optional field that caused the error.</param>
+            <param name="Details">Optional additional error details.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Represents a domain error with type, code, message, and optional details.</summary>
+            <param name="Type">The error type categorizing the error.</param>
+            <param name="Code">A machine-readable error code.</param>
+            <param name="Message">A human-readable error message.</param>
+            <param name="Target">Optional field that caused the error.</param>
+            <param name="Details">Optional additional error details.</param>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainError.Type">
+            <summary>The error type categorizing the error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainError.Code">
+            <summary>A machine-readable error code.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainError.Message">
+            <summary>A human-readable error message.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainError.Target">
+            <summary>Optional field that caused the error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainError.Details">
+            <summary>Optional additional error details.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.BadRequest(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.BadRequest"/> (HTTP 400).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Unauthorized(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Unauthorized"/> (HTTP 401).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Forbidden(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Forbidden"/> (HTTP 403).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.NotFound(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.NotFound"/> (HTTP 404).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.MethodNotAllowed(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.MethodNotAllowed"/> (HTTP 405).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.NotAcceptable(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.NotAcceptable"/> (HTTP 406).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Conflict(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Conflict"/> (HTTP 409).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Validation(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Validation"/> (HTTP 400).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.PayloadTooLarge(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.PayloadTooLarge"/> (HTTP 413).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.UriTooLong(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.UriTooLong"/> (HTTP 414).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.UnsupportedMediaType(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.UnsupportedMediaType"/> (HTTP 415).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.RangeNotSatisfiable(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.RangeNotSatisfiable"/> (HTTP 416).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.ExpectationFailed(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.ExpectationFailed"/> (HTTP 417).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.PreconditionFailed(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.PreconditionFailed"/> (HTTP 412).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.PreconditionRequired(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.PreconditionRequired"/> (HTTP 428).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.RequestHeadersTooLarge(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.RequestHeadersTooLarge"/> (HTTP 431).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.UnavailableForLegal(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.UnavailableForLegal"/> (HTTP 451).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.RateLimited(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.RateLimited"/> (HTTP 429).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Internal(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Internal"/> (HTTP 500).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.NotImplemented(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.NotImplemented"/> (HTTP 501).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.External(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.External"/> (HTTP 502).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.ServiceUnavailable(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.ServiceUnavailable"/> (HTTP 503).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.Timeout(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.Timeout"/> (HTTP 504).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.RequestTimeout(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.RequestTimeout"/> (HTTP 408).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.HttpVersionNotSupported(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.HttpVersionNotSupported"/> (HTTP 505).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.InsufficientStorage(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.InsufficientStorage"/> (HTTP 507).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.LoopDetected(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.LoopDetected"/> (HTTP 508).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.NotExtended(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.NotExtended"/> (HTTP 510).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.NetworkAuthRequired(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> for <see cref="F:Acontplus.Core.Domain.Enums.ErrorType.NetworkAuthRequired"/> (HTTP 511).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.ToApiError">
+            <summary>Converts this <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiError"/> for API responses.</summary>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiError"/> containing the error information with severity, category, and trace ID.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainError.GetHttpStatusCode">
+            <summary>Gets the HTTP status code corresponding to this error's type.</summary>
+            <returns>The <see cref="T:System.Net.HttpStatusCode"/> that represents this error type.</returns>
+        </member>
         <member name="T:Acontplus.Core.Domain.Common.Results.DomainErrors">
             <summary>
             Represents multiple domain errors that can occur during validation or complex operations.
@@ -646,6 +2200,72 @@
         <member name="P:Acontplus.Core.Domain.Common.Results.DomainErrors.Errors">
             <summary>Collection of individual domain errors.</summary>
         </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.FromSingle(Acontplus.Core.Domain.Common.Results.DomainError)">
+            <summary>
+            Creates a DomainErrors instance from a single domain error.
+            </summary>
+            <param name="error">The domain error to wrap.</param>
+            <returns>A DomainErrors instance containing the single error.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.Multiple(Acontplus.Core.Domain.Common.Results.DomainError[])">
+            <summary>
+            Creates a DomainErrors instance from multiple domain errors.
+            </summary>
+            <param name="errors">The domain errors to include.</param>
+            <returns>A DomainErrors instance containing the specified errors.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.Multiple(System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Creates a DomainErrors instance from a collection of domain errors.
+            </summary>
+            <param name="errors">The collection of domain errors to include.</param>
+            <returns>A DomainErrors instance containing the specified errors.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.op_Implicit(Acontplus.Core.Domain.Common.Results.DomainError)~Acontplus.Core.Domain.Common.Results.DomainErrors">
+            <summary>
+            Implicitly converts a single <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> to a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainErrors"/> instance.
+            </summary>
+            <param name="error">The domain error to convert.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.op_Implicit(Acontplus.Core.Domain.Common.Results.DomainError[])~Acontplus.Core.Domain.Common.Results.DomainErrors">
+            <summary>
+            Implicitly converts an array of <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> to a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainErrors"/> instance.
+            </summary>
+            <param name="errors">The array of domain errors to convert.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.op_Implicit(System.Collections.Generic.List{Acontplus.Core.Domain.Common.Results.DomainError})~Acontplus.Core.Domain.Common.Results.DomainErrors">
+            <summary>
+            Implicitly converts a list of <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> to a <see cref="T:Acontplus.Core.Domain.Common.Results.DomainErrors"/> instance.
+            </summary>
+            <param name="errors">The list of domain errors to convert.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.HasErrorsOfType(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>
+            Determines whether the collection contains any errors of the specified type.
+            </summary>
+            <param name="type">The error type to check for.</param>
+            <returns>True if at least one error of the specified type exists; otherwise, false.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.GetErrorsOfType(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>
+            Gets all errors of the specified type from the collection.
+            </summary>
+            <param name="type">The error type to filter by.</param>
+            <returns>An enumerable of errors matching the specified type.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.GetMostSevereErrorType">
+            <summary>
+            Gets the most severe error type from the collection based on predefined severity order.
+            Server errors (5xx) are considered more severe than client errors (4xx).
+            </summary>
+            <returns>The most severe error type, or the default value if no errors exist.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainErrors.GetAggregateErrorMessage">
+            <summary>
+            Creates an aggregate error message from all errors in the collection.
+            </summary>
+            <returns>A formatted string containing all error messages.</returns>
+        </member>
         <member name="T:Acontplus.Core.Domain.Common.Results.DomainWarnings">
             <summary>
             Represents warnings that don't prevent operation success but should be communicated.
@@ -660,6 +2280,70 @@
         </member>
         <member name="P:Acontplus.Core.Domain.Common.Results.DomainWarnings.Warnings">
             <summary>Collection of individual warnings.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.FromSingle(Acontplus.Core.Domain.Common.Results.DomainError)">
+            <summary>
+            Creates a DomainWarnings instance from a single warning.
+            </summary>
+            <param name="warning">The warning to wrap.</param>
+            <returns>A DomainWarnings instance containing the single warning.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.Multiple(Acontplus.Core.Domain.Common.Results.DomainError[])">
+            <summary>
+            Creates a DomainWarnings instance from multiple warnings.
+            </summary>
+            <param name="warnings">The warnings to include.</param>
+            <returns>A DomainWarnings instance containing the specified warnings.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.Multiple(System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Creates a DomainWarnings instance from a collection of warnings.
+            </summary>
+            <param name="warnings">The collection of warnings to include.</param>
+            <returns>A DomainWarnings instance containing the specified warnings.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.op_Implicit(Acontplus.Core.Domain.Common.Results.DomainError)~Acontplus.Core.Domain.Common.Results.DomainWarnings">
+            <summary>
+            Implicitly converts a DomainError to a DomainWarnings instance.
+            </summary>
+            <param name="warning">The warning to convert.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.op_Implicit(Acontplus.Core.Domain.Common.Results.DomainError[])~Acontplus.Core.Domain.Common.Results.DomainWarnings">
+            <summary>
+            Implicitly converts an array of DomainErrors to a DomainWarnings instance.
+            </summary>
+            <param name="warnings">The array of warnings to convert.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.op_Implicit(System.Collections.Generic.List{Acontplus.Core.Domain.Common.Results.DomainError})~Acontplus.Core.Domain.Common.Results.DomainWarnings">
+            <summary>
+            Implicitly converts a list of DomainErrors to a DomainWarnings instance.
+            </summary>
+            <param name="warnings">The list of warnings to convert.</param>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Common.Results.DomainWarnings.HasWarnings">
+            <summary>
+            Gets a value indicating whether there are any warnings.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.HasWarningsOfType(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>
+            Determines whether there are any warnings of the specified type.
+            </summary>
+            <param name="type">The error type to check for.</param>
+            <returns>true if there are warnings of the specified type; otherwise, false.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.GetWarningsOfType(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>
+            Gets all warnings of the specified type.
+            </summary>
+            <param name="type">The error type to filter by.</param>
+            <returns>A collection of warnings matching the specified type.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Results.DomainWarnings.GetAggregateWarningMessage">
+            <summary>
+            Gets an aggregate message containing all warnings.
+            </summary>
+            <returns>A formatted string containing all warning messages, or "No warnings" if there are none.</returns>
         </member>
         <member name="M:Acontplus.Core.Domain.Common.Results.Result`2.Map``1(System.Func{`0,``0})">
             <summary>
@@ -1025,6 +2709,318 @@
             </summary>
             <returns>String representation</returns>
         </member>
+        <member name="T:Acontplus.Core.Domain.Enums.DeviceType">
+            <summary>Represents the type of device that originated a request.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.DeviceType.Unknown">
+            <summary>Device type could not be determined.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.DeviceType.Mobile">
+            <summary>Smartphone or feature phone.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.DeviceType.Tablet">
+            <summary>Tablet device.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.DeviceType.Desktop">
+            <summary>Desktop or laptop computer.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.DeviceType.Web">
+            <summary>Browser-based web application or web-view.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Enums.ErrorType">
+            <summary>
+            Classifies the nature of a domain error and drives HTTP status code mapping.
+            Values are grouped into client errors (4xx) and server errors (5xx).
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Validation">
+            <summary>422 – Business rule or field-level validation failed.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.BadRequest">
+            <summary>400 – Malformed request syntax or invalid parameters.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.NotFound">
+            <summary>404 – Requested resource does not exist.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Conflict">
+            <summary>409 – State conflict (duplicate key, optimistic-concurrency, etc.).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Unauthorized">
+            <summary>401 – Request requires authentication.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Forbidden">
+            <summary>403 – Caller is authenticated but not authorised.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.MethodNotAllowed">
+            <summary>405 – HTTP method not allowed on this endpoint.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.NotAcceptable">
+            <summary>406 – Client's Accept header cannot be satisfied.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.PayloadTooLarge">
+            <summary>413 – Request payload exceeds the allowed size limit.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.UriTooLong">
+            <summary>414 – Request URI is too long.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.UnsupportedMediaType">
+            <summary>415 – Content-Type is not supported by this endpoint.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.RangeNotSatisfiable">
+            <summary>416 – Requested byte range is not satisfiable.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.ExpectationFailed">
+            <summary>417 – Expect header cannot be met.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.PreconditionFailed">
+            <summary>412 – Conditional request precondition failed.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.PreconditionRequired">
+            <summary>428 – Request must be conditional (precondition required).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.RequestHeadersTooLarge">
+            <summary>431 – One or more request header fields are too large.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.UnavailableForLegal">
+            <summary>451 – Resource unavailable for legal reasons.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.RateLimited">
+            <summary>429 – Client has sent too many requests in a given time window.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Internal">
+            <summary>500 – An unexpected server-side error occurred.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.NotImplemented">
+            <summary>501 – Feature or operation is not yet implemented.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.External">
+            <summary>502 – An upstream/external service returned an invalid response.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.ServiceUnavailable">
+            <summary>503 – Service is temporarily unavailable (maintenance, overload).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.Timeout">
+            <summary>504 – An upstream service timed out (gateway timeout).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.RequestTimeout">
+            <summary>408 – The client request timed out before the server could respond.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.HttpVersionNotSupported">
+            <summary>505 – HTTP version used in the request is not supported.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.InsufficientStorage">
+            <summary>507 – Server is out of storage for the operation.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.LoopDetected">
+            <summary>508 – Infinite loop detected while processing the request.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.NotExtended">
+            <summary>510 – Further extensions to the request are required.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ErrorType.NetworkAuthRequired">
+            <summary>511 – Network authentication is required.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Enums.ErrorTypeExtensions">
+            <summary>
+            Extension methods that enrich <see cref="T:Acontplus.Core.Domain.Enums.ErrorType"/> with HTTP-layer mappings
+            and diagnostic metadata (severity / category strings).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Enums.ErrorTypeExtensions.ToHttpStatusCode(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>Maps an <see cref="T:Acontplus.Core.Domain.Enums.ErrorType"/> to the corresponding <see cref="T:System.Net.HttpStatusCode"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Enums.ErrorTypeExtensions.ToSeverityString(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>Returns a lowercase severity string (<c>"warning"</c> or <c>"error"</c>) for use in API responses.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Enums.ErrorTypeExtensions.ToCategoryString(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>Returns a lowercase category string (e.g., <c>"validation"</c>, <c>"security"</c>) for grouping errors in API responses.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Enums.ErrorTypeExtensions.ToSeveritySpan(Acontplus.Core.Domain.Enums.ErrorType)">
+            <summary>
+            Returns a <see cref="T:System.ReadOnlySpan`1"/> severity string.
+            Prefer this over <see cref="M:Acontplus.Core.Domain.Enums.ErrorTypeExtensions.ToSeverityString(Acontplus.Core.Domain.Enums.ErrorType)"/> in hot paths to avoid string allocation.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Enums.ResponseStatus">
+            <summary>Represents the overall status of an API response envelope.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ResponseStatus.Success">
+            <summary>The operation completed successfully.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ResponseStatus.Error">
+            <summary>The operation failed due to an error.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.ResponseStatus.Warning">
+            <summary>The operation succeeded but produced one or more warnings.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Enums.SriDocument">
+            <summary>
+            Electronic document types defined by the Ecuadorian SRI (Servicio de Rentas Internas).
+            Integer values correspond to the official SRI document type codes.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.Factura">
+            <summary>Factura electrónica (code 01).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.Liquidacion">
+            <summary>Liquidación de compra de bienes y prestación de servicios (code 03).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.NotaCredito">
+            <summary>Nota de crédito (code 04).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.NotaDebito">
+            <summary>Nota de débito (code 05).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.GuiaRemision">
+            <summary>Guía de remisión (code 06).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Domain.Enums.SriDocument.Retencion">
+            <summary>Comprobante de retención (code 07).</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.ApiException">
+            <summary>
+            Base exception for HTTP-aware domain errors.
+            Carry an HTTP status code and an application-level error code so that
+            middleware can translate them into consistent API error responses.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Exceptions.ApiException.StatusCode">
+            <summary>The HTTP status code that should be returned to the client.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Exceptions.ApiException.ErrorCode">
+            <summary>Application-level error code (e.g., <c>"NOT_FOUND"</c>).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ApiException.#ctor(System.Net.HttpStatusCode,System.String,System.String)">
+            <summary>Initialises a new <see cref="T:Acontplus.Core.Domain.Exceptions.ApiException"/>.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.NotFoundException">
+            <summary>
+            Thrown when a requested resource cannot be found.
+            Maps to HTTP 404 Not Found.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.NotFoundException.#ctor(System.String,System.Object)">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.NotFoundException"/> for a named resource and its key.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.ConflictException">
+            <summary>
+            Thrown when an operation would produce a state conflict.
+            Maps to HTTP 409 Conflict.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ConflictException.#ctor(System.String,System.String)">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.ConflictException"/> for a named resource.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.ValidationException">
+            <summary>
+            Thrown when one or more input values fail validation rules.
+            Maps to HTTP 400 Bad Request.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Exceptions.ValidationException.Errors">
+            <summary>Field-level validation errors keyed by property name.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ValidationException.#ctor(System.Collections.Generic.IDictionary{System.String,System.String[]})">
+            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.ValidationException"/> with a dictionary of field errors.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.UnauthorizedException">
+            <summary>
+            Thrown when the caller is not authenticated.
+            Maps to HTTP 401 Unauthorized.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.UnauthorizedException.#ctor(System.String)">
+            <summary>Creates an <see cref="T:Acontplus.Core.Domain.Exceptions.UnauthorizedException"/> with a human-readable message.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.DomainException">
+            <summary>
+            Base class for all domain-specific exceptions in the application.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Exceptions.DomainException.ErrorType">
+            <summary>
+            Gets the type of error that occurred.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Domain.Exceptions.DomainException.ErrorCode">
+            <summary>
+            Gets the specific error code associated with this exception.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.DomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> class.
+            </summary>
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.GenericDomainException">
+            <summary>
+            General-purpose domain exception for cases that don't warrant a dedicated exception subclass.
+            Prefer creating a named subclass when the error has semantic meaning in the domain.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.GenericDomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Core.Domain.Exceptions.ISqlExceptionTranslator">
+            <summary>
+            Translates raw <see cref="T:System.Exception"/> objects thrown by a database driver into
+            well-typed <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> instances.
+            Implement this interface in each persistence package (SqlServer, PostgreSQL, etc.)
+            and register it with the DI container.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ISqlExceptionTranslator.IsTransient(System.Exception)">
+            <summary>Returns <c>true</c> when the exception is transient and the operation may be retried.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ISqlExceptionTranslator.Translate(System.Exception)">
+            <summary>Translates a raw database exception into a <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/>.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Common.FileModel">
+            <summary>Represents a file payload that can be transferred across application boundaries.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Common.FileModel.FileName">
+            <summary>Original file name including extension (e.g., <c>report.pdf</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Common.FileModel.ContentType">
+            <summary>MIME content type (e.g., <c>application/pdf</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Common.FileModel.Content">
+            <summary>Raw file content as a byte array.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Common.FileModel.Base64">
+            <summary>File content encoded as a Base64 string. Useful for JSON transport.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Requests.CommandOptionsDto">
+            <summary>
+            Configuration options for database command execution.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Requests.CommandOptionsDto.CommandTimeout">
+            <summary>
+            Gets or sets the command timeout in seconds. 
+            0 indicates no timeout. Null means use ADO.NET default (usually 30 seconds).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Requests.CommandOptionsDto.CommandType">
+            <summary>
+            Gets or sets how the command text is to be interpreted (StoredProcedure or Text).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Requests.CommandOptionsDto.WithTableNames">
+            <summary>
+            Gets or sets a value indicating whether to include table names in the result.
+            Specific to GetDataSetAsync.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Requests.CommandOptionsDto.TableNamesLength">
+            <summary>
+            Gets or sets the maximum length for table names.
+            </summary>
+        </member>
         <member name="P:Acontplus.Core.Dtos.Requests.CommandOptionsDto.UseJsonFilters">
             <summary>
             Controls filter parameter strategy:
@@ -1116,6 +3112,202 @@
             Number of items to take in the query (same as PageSize).
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.ApiError">
+            <summary>
+            Represents an API error response with detailed information about the error.
+            </summary>
+            <param name="Code">The error code identifying the type of error.</param>
+            <param name="Message">A human-readable message describing the error.</param>
+            <param name="Target">The specific target of the error (e.g., property name or parameter).</param>
+            <param name="Details">Additional details about the error as key-value pairs.</param>
+            <param name="Severity">The severity level of the error (default: "error").</param>
+            <param name="Category">The category of the error (default: "system").</param>
+            <param name="HelpUrl">A URL to documentation or help resources for this error.</param>
+            <param name="SuggestedAction">A suggested action to resolve the error.</param>
+            <param name="TraceId">A trace identifier for tracking the error across systems.</param>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiError.#ctor(System.String,System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Represents an API error response with detailed information about the error.
+            </summary>
+            <param name="Code">The error code identifying the type of error.</param>
+            <param name="Message">A human-readable message describing the error.</param>
+            <param name="Target">The specific target of the error (e.g., property name or parameter).</param>
+            <param name="Details">Additional details about the error as key-value pairs.</param>
+            <param name="Severity">The severity level of the error (default: "error").</param>
+            <param name="Category">The category of the error (default: "system").</param>
+            <param name="HelpUrl">A URL to documentation or help resources for this error.</param>
+            <param name="SuggestedAction">A suggested action to resolve the error.</param>
+            <param name="TraceId">A trace identifier for tracking the error across systems.</param>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Code">
+            <summary>The error code identifying the type of error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Message">
+            <summary>A human-readable message describing the error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Target">
+            <summary>The specific target of the error (e.g., property name or parameter).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Details">
+            <summary>Additional details about the error as key-value pairs.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Severity">
+            <summary>The severity level of the error (default: "error").</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.Category">
+            <summary>The category of the error (default: "system").</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.HelpUrl">
+            <summary>A URL to documentation or help resources for this error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.SuggestedAction">
+            <summary>A suggested action to resolve the error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiError.TraceId">
+            <summary>A trace identifier for tracking the error across systems.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.ApiResponseOptions">
+            <summary>
+            Options bag for customising an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse`1"/> beyond its default values.
+            All properties are optional; supply only what you need.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.Message">
+            <summary>Human-readable message summarising the operation outcome.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.Errors">
+            <summary>List of errors to include in the response envelope.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.Warnings">
+            <summary>List of non-fatal warnings to include in the response envelope.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.Metadata">
+            <summary>Arbitrary metadata key-value pairs attached to the response.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.CorrelationId">
+            <summary>Correlation identifier for distributed tracing.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.TraceId">
+            <summary>Trace identifier — defaults to <see cref="P:System.Diagnostics.Activity.Current"/>?.Id when not supplied.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.Timestamp">
+            <summary>ISO-8601 timestamp — defaults to <see cref="P:System.DateTimeOffset.UtcNow"/> when not supplied.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponseOptions.StatusCode">
+            <summary>HTTP status code to use for this response. Defaults to <see cref="F:System.Net.HttpStatusCode.OK"/>.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.ApiResponse`1">
+            <summary>
+            Generic API response envelope.
+            Wraps <typeparamref name="T"/> data together with status, errors, warnings, and observability fields.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Status">
+            <summary>High-level operation status (Success / Error / Warning).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Code">
+            <summary>HTTP status code as a string (e.g., <c>"200"</c>).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Data">
+            <summary>Response payload. <c>null</c> on error responses.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Message">
+            <summary>Human-readable summary of the outcome.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Errors">
+            <summary>List of errors when <see cref="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Status"/> is <see cref="F:Acontplus.Core.Domain.Enums.ResponseStatus.Error"/>.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Warnings">
+            <summary>Non-fatal warnings when <see cref="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Status"/> is <see cref="F:Acontplus.Core.Domain.Enums.ResponseStatus.Warning"/>.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Metadata">
+            <summary>Arbitrary metadata key-value pairs.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.CorrelationId">
+            <summary>Correlation ID for distributed tracing.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.TraceId">
+            <summary>Trace ID sourced from <see cref="P:System.Diagnostics.Activity.Current"/>.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Timestamp">
+            <summary>ISO-8601 UTC timestamp when this response was created.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.StatusCode">
+            <summary>The HTTP status code. Excluded from JSON serialization (use <see cref="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Code"/>).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse`1.#ctor(Acontplus.Core.Domain.Enums.ResponseStatus,System.String,Acontplus.Core.Dtos.Responses.ApiResponseOptions,`0)">
+            <summary>Internal constructor — use the static factory methods instead.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.IsSuccess">
+            <summary><c>true</c> when the operation succeeded.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.IsError">
+            <summary><c>true</c> when the operation failed.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.HasWarnings">
+            <summary><c>true</c> when the response carries one or more warnings.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.HasErrors">
+            <summary><c>true</c> when the response carries one or more errors.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.HasData">
+            <summary><c>true</c> when <see cref="P:Acontplus.Core.Dtos.Responses.ApiResponse`1.Data"/> is not <c>null</c>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse`1.Success(`0,Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a successful response wrapping <paramref name="data"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse`1.Failure(Acontplus.Core.Dtos.Responses.ApiError,Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a failure response from a single error.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse`1.Failure(System.Collections.Generic.IReadOnlyList{Acontplus.Core.Dtos.Responses.ApiError},Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a failure response from a list of errors.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse`1.Warning(`0,System.Collections.Generic.IReadOnlyList{Acontplus.Core.Dtos.Responses.ApiError},Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a success response with non-fatal warnings.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.ApiResponse">
+            <summary>
+            Non-generic convenience wrapper for responses that carry no typed payload.
+            Inherits from <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse`1"/> with <c>T = object?</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse.Success(System.Object,Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a successful response (no typed payload).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse.Failure(System.Collections.Generic.IReadOnlyList{Acontplus.Core.Dtos.Responses.ApiError},Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a failure response from a list of errors.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.ApiResponse.Failure(Acontplus.Core.Dtos.Responses.ApiError,Acontplus.Core.Dtos.Responses.ApiResponseOptions)">
+            <summary>Creates a failure response from a single error.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.BaseResponseDto">
+            <summary>
+            Base DTO that mirrors the common audit fields of <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            Extend this class in response DTOs that need to surface audit information to clients.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.Id">
+            <summary>Primary key of the entity.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.CreatedDate">
+            <summary>UTC timestamp of when the entity was created.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.CreatedByUserId">
+            <summary>ID of the user who created the entity.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.UpdatedDate">
+            <summary>UTC timestamp of the last update.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.UpdatedByUserId">
+            <summary>ID of the user who last updated the entity.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.IsActive">
+            <summary>Whether the entity is currently active.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.BaseResponseDto.IsDeleted">
+            <summary>Whether the entity has been soft-deleted.</summary>
+        </member>
         <member name="T:Acontplus.Core.Dtos.Responses.LookupItem">
             <summary>
             Represents a lookup item for dropdown lists, select boxes, and other UI components.
@@ -1129,6 +3321,69 @@
             Supports hierarchical structures via ParentId and custom ordering via DisplayOrder.
             All properties are nullable to support flexible SQL query mapping.
             </summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.PagedResult`1">
+            <summary>
+            Represents a paged result set returned from a query.
+            </summary>
+            <typeparam name="T">The type of items in the result set.</typeparam>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.Items">
+            <summary>The items on the current page.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.PageIndex">
+            <summary>The current page number (1-based).</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.PageSize">
+            <summary>The number of items per page.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.TotalCount">
+            <summary>The total number of items across all pages.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.TotalPages">
+            <summary>The total number of pages.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.HasPreviousPage">
+            <summary>Whether there is a page before this one.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.HasNextPage">
+            <summary>Whether there is a page after this one.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.PagedResult`1.Metadata">
+            <summary>Optional metadata attached to the result.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.PagedResult`1.#ctor">
+            <summary>Parameterless constructor required for JSON serialization/deserialization.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.PagedResult`1.#ctor(System.Collections.Generic.IEnumerable{`0},System.Int32,System.Int32,System.Int32)">
+            <summary>Creates a paged result without metadata.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Dtos.Responses.PagedResult`1.#ctor(System.Collections.Generic.IEnumerable{`0},System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
+            <summary>Creates a paged result with optional metadata.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Dtos.Responses.SpResponse">
+            <summary>
+            Represents a standardised response from a stored procedure.
+            A Code of <c>"0"</c> indicates success; any other value is treated as an error.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.Code">
+            <summary>Result code returned by the stored procedure. <c>"0"</c> means success.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.Result">
+            <summary>Primary result payload returned by the stored procedure.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.Payload">
+            <summary>
+            Deprecated secondary payload. Prefer <see cref="P:Acontplus.Core.Dtos.Responses.SpResponse.Result"/> for all new stored procedures.
+            Retained for backward compatibility with existing procedures that still populate Payload.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.Message">
+            <summary>Human-readable message returned by the stored procedure.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Dtos.Responses.SpResponse.IsSuccess">
+            <summary>Returns <c>true</c> when <see cref="P:Acontplus.Core.Dtos.Responses.SpResponse.Code"/> is <c>"0"</c> (success).</summary>
         </member>
         <member name="T:Acontplus.Core.Enums.AddressType">
             <summary>
@@ -1264,6 +3519,48 @@
             <summary>
             Entity has been deleted (soft delete)
             </summary>
+        </member>
+        <member name="T:Acontplus.Core.Enums.Calendar">
+            <summary>Calendar-related enumerations for Spanish-language applications.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Enums.Calendar.Months">
+            <summary>Months of the year in Spanish, with integer values matching their calendar order (1–12).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Enero">
+            <summary>January</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Febrero">
+            <summary>February</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Marzo">
+            <summary>March</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Abril">
+            <summary>April</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Mayo">
+            <summary>May</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Junio">
+            <summary>June</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Julio">
+            <summary>July</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Agosto">
+            <summary>August</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Septiembre">
+            <summary>September</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Octubre">
+            <summary>October</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Noviembre">
+            <summary>November</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.Calendar.Months.Diciembre">
+            <summary>December</summary>
         </member>
         <member name="T:Acontplus.Core.Enums.CommunicationChannelType">
             <summary>
@@ -1640,6 +3937,24 @@
             <summary>
             Human resources document
             </summary>
+        </member>
+        <member name="T:Acontplus.Core.Enums.EnvironmentEnums">
+            <summary>Deployment environment identifiers.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.EnvironmentEnums.Development">
+            <summary>Local developer workstation.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.EnvironmentEnums.IntegrationTests">
+            <summary>Automated integration-test environment.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.EnvironmentEnums.QA">
+            <summary>Quality-assurance environment.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.EnvironmentEnums.Staging">
+            <summary>Pre-production / staging environment.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.EnvironmentEnums.Production">
+            <summary>Live production environment.</summary>
         </member>
         <member name="T:Acontplus.Core.Enums.EventType">
             <summary>
@@ -2117,6 +4432,18 @@
             Emergency priority level - highest possible priority
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Enums.SortDirection">
+            <summary>Direction in which query results should be ordered.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.SortDirection.Default">
+            <summary>No explicit sort direction; the data source decides.</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.SortDirection.Asc">
+            <summary>Ascending order (A → Z, 0 → 9).</summary>
+        </member>
+        <member name="F:Acontplus.Core.Enums.SortDirection.Desc">
+            <summary>Descending order (Z → A, 9 → 0).</summary>
+        </member>
         <member name="T:Acontplus.Core.Enums.TimeZone">
             <summary>
             Time zone enum for scheduling and international applications
@@ -2309,6 +4636,15 @@
             Service account for automated processes, system integrations, and APIs
             </summary>
         </member>
+        <member name="T:Acontplus.Core.Extensions.EnumExtensions">
+            <summary>Extension methods for <see cref="T:System.Enum"/> values.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.EnumExtensions.DisplayName(System.Enum)">
+            <summary>
+            Returns the <see cref="T:System.ComponentModel.DescriptionAttribute"/> text for an enum value,
+            or the enum member name when no description is defined.
+            </summary>
+        </member>
         <member name="T:Acontplus.Core.Extensions.FilterPredicateExtensions">
             <summary>
             Extension methods for converting filters to LINQ expressions.
@@ -2354,62 +4690,79 @@
         </member>
         <member name="T:Acontplus.Core.Extensions.FilterRequestExtensions">
             <summary>
-            Extension methods for FilterRequest to provide fluent API and helper functionality.
+            Extension methods for <see cref="T:Acontplus.Core.Dtos.Requests.FilterRequest"/> (and its subtype <see cref="T:Acontplus.Core.Dtos.Requests.PaginationRequest"/>)
+            providing fluent builders and type-safe filter value retrieval.
             </summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithSearch(Acontplus.Core.Dtos.Requests.FilterRequest,System.String)">
-            <summary>
-            Adds a search term to the filter request.
-            </summary>
-            <param name="filter">The filter object</param>
-            <param name="searchTerm">The search term to add</param>
-            <returns>A new FilterRequest with the search term</returns>
+            <summary>Returns a copy of <paramref name="filter"/> with the given search term.</summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithSort(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,Acontplus.Core.Enums.SortDirection)">
-            <summary>
-            Adds sorting criteria to the filter request.
-            </summary>
-            <param name="filter">The filter object</param>
-            <param name="sortBy">The field to sort by</param>
-            <param name="direction">The sort direction</param>
-            <returns>A new FilterRequest with sorting criteria</returns>
+            <summary>Returns a copy of <paramref name="filter"/> with the given sort field and direction.</summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithFilters(Acontplus.Core.Dtos.Requests.FilterRequest,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
-            <summary>
-            Adds or merges filters with the existing filter request.
-            </summary>
-            <param name="filter">The filter object</param>
-            <param name="filters">The filters to add or merge</param>
-            <returns>A new FilterRequest with merged filters</returns>
+            <summary>Returns a copy of <paramref name="filter"/> with the provided filters merged in (existing keys are overwritten).</summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithFilter(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,System.Object)">
-            <summary>
-            Adds a single filter to the filter request.
-            </summary>
-            <param name="filter">The filter object</param>
-            <param name="key">The filter key</param>
-            <param name="value">The filter value</param>
-            <returns>A new FilterRequest with the additional filter</returns>
+            <summary>Returns a copy of <paramref name="filter"/> with a single additional filter entry.</summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
             <summary>
-            Gets a filter value by key with type safety and conversion support.
+            Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+            <para>
+            Conversion priority:
+            <list type="number">
+              <item>Direct cast — fastest path when the stored value is already the right type.</item>
+              <item><see cref="M:System.Convert.ChangeType(System.Object,System.Type)"/> — handles all <see cref="T:System.IConvertible"/> types
+                    (int, bool, decimal, DateTime, …) and values stored as strings (query-string origin).</item>
+              <item><see cref="T:System.ComponentModel.TypeDescriptor"/> — handles enums, Guid, and other types with registered converters.</item>
+            </list>
+            Nullable value types (e.g. <c>int?</c>, <c>bool?</c>) are supported: the underlying type is
+            extracted automatically so <c>GetFilterValue&lt;int?&gt;("companyId")</c> works as expected.
+            </para>
             </summary>
-            <typeparam name="T">The expected type of the filter value</typeparam>
-            <param name="filter">The filter request</param>
-            <param name="key">The filter key to retrieve</param>
-            <param name="defaultValue">Default value if key not found or conversion fails</param>
-            <returns>The filter value converted to type T, or the default value</returns>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filter">The filter request.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+            <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0@)">
             <summary>
-            Tries to get a filter value by key with type safety and conversion support.
+            Tries to retrieve and convert a filter value by key.
+            Returns <c>true</c> when the key exists <em>and</em> the value converts successfully to
+            <typeparamref name="T"/>; <c>false</c> when the key is absent or conversion fails.
             </summary>
-            <typeparam name="T">The expected type of the filter value</typeparam>
-            <param name="filter">The filter request</param>
-            <param name="key">The filter key to retrieve</param>
-            <param name="value">The output value if found and successfully converted</param>
-            <returns>True if the value was found and successfully converted; otherwise, false</returns>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filter">The filter request.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
+        </member>
+        <member name="T:Acontplus.Core.Extensions.JsonExtensions">
+            <summary>
+            JSON serialization helpers built on top of <see cref="N:System.Text.Json"/>.
+            The three <c>*Options</c> fields are <c>static readonly</c> so that
+            <see cref="T:System.Text.Json.JsonSerializer"/> can cache its internal type metadata
+            across calls — recreating options on every access discards that cache.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Extensions.JsonExtensions.DefaultOptions">
+            <summary>
+            Default options: camelCase, null-ignoring, comment-tolerant, enum-as-string.
+            Suitable for the vast majority of API scenarios.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Extensions.JsonExtensions.PrettyOptions">
+            <summary>
+            Pretty-print options: same as <see cref="F:Acontplus.Core.Extensions.JsonExtensions.DefaultOptions"/> with <c>WriteIndented = true</c>.
+            Useful for logging or developer-facing output.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Core.Extensions.JsonExtensions.StrictOptions">
+            <summary>
+            Strict options: case-sensitive, no trailing commas, no comments, never-ignore-null,
+            strict number handling. Suitable for security-sensitive deserialization.
+            </summary>
         </member>
         <member name="M:Acontplus.Core.Extensions.JsonExtensions.DeserializeOptimized``1(System.String)">
             <summary>
@@ -2455,6 +4808,30 @@
             <typeparam name="T">The type of object to clone.</typeparam>
             <param name="obj">The object to clone.</param>
             <returns>A deep clone of the object.</returns>
+        </member>
+        <member name="T:Acontplus.Core.Extensions.NullableExtensions">
+            <summary>Extension methods for working with nullable reference types.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.IsNull``1(``0)">
+            <summary>Returns <c>true</c> when the value is <c>null</c>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.IsNotNull``1(``0)">
+            <summary>Returns <c>true</c> when the value is not <c>null</c>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.OrDefault``1(``0,``0)">
+            <summary>Returns <paramref name="value"/> when non-null; otherwise returns <paramref name="defaultValue"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.OrThrow``1(``0,System.Exception)">
+            <summary>Returns <paramref name="value"/> when non-null; otherwise throws <paramref name="exception"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.OrThrow``1(``0,System.Func{System.Exception})">
+            <summary>Returns <paramref name="value"/> when non-null; otherwise throws the exception produced by <paramref name="exceptionFactory"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.OrThrow``1(``0,System.String)">
+            <summary>Returns <paramref name="value"/> when non-null; otherwise throws an <see cref="T:System.ArgumentNullException"/> with <paramref name="message"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.NullableExtensions.OrThrow``1(``0,System.Func{System.String})">
+            <summary>Returns <paramref name="value"/> when non-null; otherwise throws an <see cref="T:System.ArgumentNullException"/> whose message is produced by <paramref name="messageFactory"/>.</summary>
         </member>
         <member name="T:Acontplus.Core.Extensions.PaginationExtensions">
             <summary>
@@ -2583,6 +4960,69 @@
         <member name="M:Acontplus.Core.Extensions.RepositoryAuditExtensions.SoftDeleteRangeAsync``1(Acontplus.Core.Abstractions.Persistence.IRepository{``0},System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}},System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <summary>
             Soft deletes multiple entities matching a predicate.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Validation.DataValidation">
+            <summary>
+            Common data-validation helpers for business and infrastructure use.
+            All methods are pure (no side effects) and thread-safe.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.IsValidEmail(System.String)">
+            <summary>Returns <c>true</c> if the string is a valid e-mail address.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.IsValidUrl(System.String)">
+            <summary>Returns <c>true</c> if the string is a valid HTTP/HTTPS URL.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.IsValidPhoneNumber(System.String)">
+            <summary>Returns <c>true</c> if the string looks like a phone number (7–20 digits/symbols).</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.IsValidJson(System.String)">
+            <summary>Returns <c>true</c> if the string is valid JSON.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.IsValidXml(System.String)">
+            <summary>Returns <c>true</c> if the string is well-formed XML.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.RemoveSpecialCharacters(System.String)">
+            <summary>Strips all characters that are not alphanumeric, spaces, underscores, or hyphens.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.ValidateIpAddress(System.String)">
+            <summary>
+            Validates an IP address string and returns it if valid; otherwise returns <c>"0.0.0.0"</c>.
+            Handles forwarded-for headers that may be prefixed with <c>"::ffff:"</c> (IPv4-mapped IPv6).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.ToDbNullOrDefault(System.Object)">
+            <summary>Returns <c>DBNull.Value</c> if <paramref name="obj"/> is <c>null</c>; otherwise returns <paramref name="obj"/>.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.DataTableIsNull(System.Data.DataTable)">
+            <summary>Returns <c>true</c> if the <see cref="T:System.Data.DataTable"/> is <c>null</c> or contains no rows.</summary>
+        </member>
+        <member name="M:Acontplus.Core.Validation.DataValidation.DataSetIsNull(System.Data.DataSet,System.Boolean)">
+            <summary>
+            Returns <c>true</c> if the <see cref="T:System.Data.DataSet"/> is <c>null</c> or contains no tables (with rows).
+            When <paramref name="removeEmptyTables"/> is <c>true</c>, tables with zero rows are removed first.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Core.Validation.ValidationError">
+            <summary>Represents a single error or warning produced during XML schema validation.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Validation.ValidationError.Message">
+            <summary>Human-readable description of the validation issue.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Validation.ValidationError.Severity">
+            <summary>Whether this is a warning or a hard error.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Validation.ValidationError.LineNumber">
+            <summary>1-based line number in the source XML where the issue was detected.</summary>
+        </member>
+        <member name="P:Acontplus.Core.Validation.ValidationError.LinePosition">
+            <summary>1-based character position on <see cref="P:Acontplus.Core.Validation.ValidationError.LineNumber"/> where the issue was detected.</summary>
+        </member>
+        <member name="T:Acontplus.Core.Validation.XmlValidator">
+            <summary>
+            Provides XML schema validation and sanitisation helpers for processing
+            SRI electronic documents and other XML payloads.
             </summary>
         </member>
         <member name="M:Acontplus.Core.Validation.XmlValidator.Validate(System.Xml.XmlDocument,System.IO.Stream)">

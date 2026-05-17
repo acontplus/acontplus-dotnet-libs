@@ -10,7 +10,7 @@ A comprehensive .NET utility library providing common functionality for business
 
 - **API Response Extensions** - Comprehensive Result<T> to IActionResult/IResult conversions with domain error handling, pagination, and warnings support
 - **Domain Extensions** - Consolidated domain-to-API conversion logic for clean architectural separation
-- **FilterQuery Extensions** - Type-safe filter value extraction from FilterQuery with `GetFilterValue<T>()` and `TryGetFilterValue<T>()`
+- **FilterQuery & PaginationQuery** - `PaginationQuery` extends `FilterQuery`; type-safe `GetFilterValue<T>()` / `TryGetFilterValue<T>()` work on both; use `.Adapt<PaginationRequest>()` to map to the service layer
 - **Encryption** - Data encryption/decryption utilities with BCrypt support
 - **External Validations** - Third-party validation integrations and data validation helpers
 - **Custom Logging** - Enhanced logging capabilities
@@ -154,54 +154,76 @@ var metadata = new Dictionary<string, object>()
     .WithPagination(page: 1, pageSize: 10, totalItems: 100);
 ```
 
-### 6. FilterQuery Extensions - Type-Safe Filter Extraction
+### 6. FilterQuery & PaginationQuery - Type-Safe Filter Extraction
+
+`PaginationQuery` inherits from `FilterQuery`, so both types share the same `GetFilterValue<T>()` and `TryGetFilterValue<T>()` extension methods.
+Use `.Adapt<PaginationRequest>()` (Mapster) to convert the HTTP binding model to the domain request type accepted by the service layer.
 
 ```csharp
 using Acontplus.Utilities.Extensions;
 
+// Works the same on FilterQuery or PaginationQuery
+app.MapGet("/api/users", async (PaginationQuery pagination, IUserService service) =>
+{
+    // Extract typed filter values with defaults — never throws
+    var isActive  = pagination.GetFilterValue<bool>("isActive", true);
+    var minAge    = pagination.GetFilterValue<int>("minAge", 0);
+    var role      = pagination.GetFilterValue<string>("role", "User");
+
+    // Map HTTP binding model → domain request (Filters dict is copied automatically)
+    // Client filters (e.g. filters[createdAfter]=2026-01-01) are already in request.Filters
+    var request = pagination.Adapt<PaginationRequest>()
+        .WithFilter("IsActive", isActive)
+        .WithFilter("MinAge", minAge);
+
+    // TryGetFilterValue: drive server-side logic based on whether a filter was supplied
+    // (do NOT re-add client filters that are already in request.Filters via Adapt)
+    if (!pagination.TryGetFilterValue<string>("role", out _) || role == "User")
+        request = request.WithFilter("Status", "Active");
+    else
+        request = request.WithFilter("Status", "Active").WithFilter("Role", role);
+
+    return await service.GetPaginatedUsersAsync(request)
+        .ToGetMinimalApiResultAsync();
+});
+
+// Non-paginated (FilterQuery only)
 app.MapGet("/api/lookups", async (FilterQuery filterQuery, ILookupService service) =>
 {
-    // Extract typed filter values with defaults - never throws
-    var category = filterQuery.GetFilterValue<string>("category");
-    var isActive = filterQuery.GetFilterValue<bool>("isActive", true);
-    var minPriority = filterQuery.GetFilterValue<int>("minPriority", 1);
-
-    // Safe retrieval with try pattern
-    if (filterQuery.TryGetFilterValue<Guid>("entityId", out var entityId))
-    {
-        // entityId successfully converted to Guid
-    }
-
-    return await service.GetLookupsAsync(filterQuery);
+    var filterRequest = filterQuery.Adapt<FilterRequest>();
+    return await service.GetLookupsAsync("dbo.GetLookups", filterRequest, ct)
+        .ToGetMinimalApiResultAsync();
 });
 ```
 
 **Benefits:**
-- ✅ **Type-safe** - Automatic type conversion with fallback to defaults
-- ✅ **Never throws** - Handles missing keys and conversion failures gracefully
-- ✅ **Clean code** - No manual dictionary checks or type casting
-- ✅ **Flexible** - Works with any type that supports `Convert.ChangeType()`
+- ✅ **Single type hierarchy** — `PaginationQuery : FilterQuery`, one set of extensions covers both
+- ✅ **Type-safe** — automatic type conversion with fallback to defaults
+- ✅ **Never throws** — handles missing keys and conversion failures gracefully
+- ✅ **Clean mapping** — `.Adapt<PaginationRequest>()` via Mapster replaces manual constructor calls
 
 ## 📄 Core Examples
 
 ### PaginationQuery with Minimal APIs
 
-The `PaginationQuery` record provides automatic parameter binding in minimal APIs with support for multiple filters, sorting, and pagination.
+`PaginationQuery` extends `FilterQuery` and provides automatic query-string binding in minimal APIs.
+Map it to `PaginationRequest` (the service/repository contract) via `.Adapt<PaginationRequest>()`.
 
 #### Backend (Minimal API)
 
 ```csharp
-// Program.cs or endpoint definition
 app.MapGet("/api/users", async (PaginationQuery pagination, IUserService userService) =>
 {
-    var result = await userService.GetPaginatedUsersAsync(pagination);
+    // Map the HTTP binding model to the domain request type
+    var request = pagination.Adapt<PaginationRequest>();
+    var result = await userService.GetPaginatedUsersAsync(request);
     return Results.Ok(result);
 })
 .WithName("GetUsers")
 .WithOpenApi();
 
-// Service implementation
-public async Task<PagedResult<UserDto>> GetPaginatedUsersAsync(PaginationQuery pagination)
+// Service implementation accepts PaginationRequest (domain contract)
+public async Task<PagedResult<UserDto>> GetPaginatedUsersAsync(PaginationRequest request)
 {
     var spParameters = new Dictionary<string, object>
     {
