@@ -2,6 +2,8 @@ using Acontplus.Core.Domain.Common.Events;
 using Acontplus.Notifications.WhatsApp.Extensions;
 using Acontplus.Persistence.Common.Configuration;
 using Acontplus.S3Application.Extensions;
+using Acontplus.Services.Extensions;
+using Acontplus.Services.Extensions.Authentication;
 using Asp.Versioning;
 using Asp.Versioning.Builder;
 using Asp.Versioning.Conventions;
@@ -37,6 +39,18 @@ public static class ProgramExtensions
 
         // Configure Application Services (v2.0)
         services.AddApplicationServices(configuration);
+
+        // ========================================
+        // JWT AUTHENTICATION + AUDIT CONTEXT
+        // ========================================
+        // Validates Bearer tokens on every authenticated endpoint.
+        services.AddJwtAuthentication(configuration);
+
+        // HttpAuditContext reads UserId/UserName/RoleId from the validated JWT
+        // and injects them into BaseContext so every SaveChanges auto-stamps
+        // CreatedBy/UpdatedBy/DeletedBy without any application-layer code.
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IAuditContext, HttpAuditContext>();
 
         // Configure Lookup Service
         services.AddLookupService();
@@ -155,6 +169,7 @@ public static class ProgramExtensions
         // APPLICATION SERVICES
         // ========================================
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         // ========================================
         // ANALYTICS SERVICES
@@ -265,6 +280,7 @@ public static class ProgramExtensions
 
         // ── Available in both V1 and V2 ───────────────────────────────────────────
         allVersions.MapAllEndpoints();
+        allVersions.MapAuthEndpoints();
         allVersions.MapAtsEndpoints();
         allVersions.MapDocumentoElectronicoEndpoints();
         allVersions.MapReportsEndpoints();

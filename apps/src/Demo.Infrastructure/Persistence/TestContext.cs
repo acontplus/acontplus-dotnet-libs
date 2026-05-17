@@ -2,8 +2,11 @@ using System.Reflection;
 
 namespace Demo.Infrastructure.Persistence;
 
-public class TestContext(DbContextOptions<TestContext> options) : BaseContext(options)
+public class TestContext : BaseContext
 {
+    public TestContext(DbContextOptions<TestContext> options, IAuditContext auditContext)
+        : base(options, auditContext) { }
+
     public DbSet<Dia> Dias { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<WhatsAppUsage> WhatsAppUsages { get; set; }
@@ -60,4 +63,3 @@ public class TestContext(DbContextOptions<TestContext> options) : BaseContext(op
         //SimpleEntityRegistration.RegisterEntitiesWithCustomConfigurations(modelBuilder, typeof(TestContext), customConfigs, typeof(Producto));
     }
 }
-

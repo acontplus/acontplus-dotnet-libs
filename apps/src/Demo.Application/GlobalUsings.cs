@@ -1,5 +1,9 @@
 // Global using directives
 
+global using System.Data;
+global using System.Data.Common;
+global using System.Linq.Expressions;
+global using System.Text;
 global using Acontplus.Core.Abstractions.Persistence;
 global using Acontplus.Core.Constants;
 global using Acontplus.Core.Domain.Common.Results;
@@ -15,7 +19,3 @@ global using Demo.Application.Interfaces;
 global using Demo.Domain.Entities;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
-global using System.Data;
-global using System.Data.Common;
-global using System.Linq.Expressions;
-
