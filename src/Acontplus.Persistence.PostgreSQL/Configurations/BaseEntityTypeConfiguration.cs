@@ -1,9 +1,18 @@
 namespace Acontplus.Persistence.PostgreSQL.Configurations;
 
+/// <summary>
+/// Base configuration class for Entity Framework Core entity type configurations.
+/// Provides common configuration for entities inheriting from <see cref="BaseEntity"/>.
+/// </summary>
+/// <typeparam name="TEntity">The entity type being configured.</typeparam>
 public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
     where TEntity : BaseEntity
 
 {
+    /// <summary>
+    /// Configures the entity type.
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {
         ConfigurePrimaryKey(builder);
@@ -13,6 +22,10 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
         ConfigureSoftDeleteAndIndexes(builder);
     }
 
+    /// <summary>
+    /// Configures the primary key for the entity.
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigurePrimaryKey(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasKey(x => x.Id);
@@ -21,6 +34,10 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .ValueGeneratedOnAdd();
     }
 
+    /// <summary>
+    /// Configures timestamp properties (CreatedAt, UpdatedAt, DeletedAt).
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigureTimestamps(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.CreatedAt)
@@ -36,6 +53,11 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .HasColumnType("timestamp with time zone")
             .IsRequired(false);
     }
+
+    /// <summary>
+    /// Configures status-related boolean fields (IsActive, IsDeleted, IsMobileRequest).
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigureStatusFields(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.IsActive)
@@ -51,6 +73,10 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .IsRequired();
     }
 
+    /// <summary>
+    /// Configures external user tracking fields (CreatedBy, UpdatedBy, DeletedBy).
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigureExternalUserTracking(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.CreatedBy)
@@ -69,12 +95,20 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .HasColumnType("varchar(100)");
     }
 
+    /// <summary>
+    /// Configures soft delete query filter and indexes.
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigureSoftDeleteAndIndexes(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasQueryFilter(x => !x.IsDeleted);
         ConfigureIndexes(builder);
     }
 
+    /// <summary>
+    /// Configures database indexes for the entity, including standard and partial indexes.
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     protected virtual void ConfigureIndexes(EntityTypeBuilder<TEntity> builder)
     {
         var tableName = typeof(TEntity).Name.ToSnakeCase();

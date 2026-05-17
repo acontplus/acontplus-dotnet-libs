@@ -2,9 +2,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Acontplus.Persistence.SqlServer.Configurations;
 
+/// <summary>
+/// Base EF Core entity type configuration for auditable SQL Server entities.
+/// </summary>
+/// <typeparam name="TEntity">The entity type to configure.</typeparam>
 public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
     where TEntity : BaseEntity
 {
+    /// <summary>
+    /// Applies base configuration including keys, timestamps, status fields, user tracking, and indexes.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {
         ConfigurePrimaryKey(builder);
@@ -14,12 +22,20 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
         ConfigureSoftDeleteAndIndexes(builder);
     }
 
+    /// <summary>
+    /// Configures the primary key and value generation strategy.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigurePrimaryKey(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
     }
 
+    /// <summary>
+    /// Configures timestamp columns for creation, update, and deletion tracking.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigureTimestamps(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.CreatedAt)
@@ -39,6 +55,10 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .IsRequired(false);
     }
 
+    /// <summary>
+    /// Configures soft-delete and activity status columns.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigureStatusFields(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.IsActive)
@@ -54,6 +74,10 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .IsRequired();
     }
 
+    /// <summary>
+    /// Configures external user-tracking columns (<c>CreatedBy</c>, <c>UpdatedBy</c>, <c>DeletedBy</c>).
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigureExternalUserTracking(EntityTypeBuilder<TEntity> builder)
     {
         builder.Property(x => x.CreatedBy)
@@ -72,12 +96,20 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
             .IsUnicode(false);
     }
 
+    /// <summary>
+    /// Applies the global soft-delete query filter and configures database indexes.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigureSoftDeleteAndIndexes(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasQueryFilter(x => !x.IsDeleted);
         ConfigureIndexes(builder);
     }
 
+    /// <summary>
+    /// Configures database indexes for common query patterns.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     protected virtual void ConfigureIndexes(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasIndex(x => x.CreatedAt)

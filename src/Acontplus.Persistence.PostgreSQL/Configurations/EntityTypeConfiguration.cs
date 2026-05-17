@@ -7,6 +7,10 @@ public class EntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEntity
     where TEntity : BaseEntity
 
 {
+    /// <summary>
+    /// Configures the primary key for the entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {
         // Configure the primary key

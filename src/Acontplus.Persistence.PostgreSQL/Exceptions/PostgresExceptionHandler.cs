@@ -2,14 +2,27 @@ using System.Runtime.CompilerServices;
 
 namespace Acontplus.Persistence.PostgreSQL.Exceptions;
 
+/// <summary>
+/// Handles PostgreSQL exceptions by mapping them to domain error types.
+/// </summary>
 public static class PostgresExceptionHandler
 {
+    /// <summary>
+    /// Determines whether the exception represents a transient PostgreSQL error.
+    /// </summary>
+    /// <param name="ex">The Npgsql exception to evaluate.</param>
+    /// <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
     public static bool IsTransientException(NpgsqlException ex)
     {
         // 40001: serialization_failure, 40P01: deadlock_detected, 23505: unique_violation, 23503: foreign_key_violation
         return ex.SqlState is "40001" or "40P01" or "23505" or "23503" || (ex.SqlState?.StartsWith("08") ?? false);
     }
 
+    /// <summary>
+    /// Maps a <see cref="NpgsqlException"/> to a <see cref="SqlErrorInfo"/> domain error descriptor.
+    /// </summary>
+    /// <param name="ex">The Npgsql exception to map.</param>
+    /// <returns>A <see cref="SqlErrorInfo"/> describing the domain error.</returns>
     public static SqlErrorInfo MapSqlException(NpgsqlException ex)
     {
         if (ex.SqlState == "23505" && ex.Message.Contains("duplicate key"))
@@ -63,6 +76,13 @@ public static class PostgresExceptionHandler
             ex);
     }
 
+    /// <summary>
+    /// Logs and throws a <see cref="NpgsqlException"/> as a <see cref="SqlDomainException"/>.
+    /// </summary>
+    /// <param name="ex">The Npgsql exception to handle.</param>
+    /// <param name="logger">The logger to write the error details to.</param>
+    /// <param name="operation">A description of the operation that failed.</param>
+    /// <param name="caller">The name of the calling member (auto-populated).</param>
     public static void HandleSqlException(
         NpgsqlException ex,
         ILogger logger,

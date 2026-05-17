@@ -4,6 +4,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Acontplus.Persistence.SqlServer.DependencyInjection;
 
+/// <summary>
+/// Extension methods for registering SQL Server persistence services with the DI container.
+/// </summary>
 public static class SqlServerServiceCollectionExtensions
 {
     /// <summary>

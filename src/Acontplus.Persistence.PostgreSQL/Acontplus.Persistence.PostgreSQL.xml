@@ -4,6 +4,41 @@
         <name>Acontplus.Persistence.PostgreSQL</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Ado.Parameters.CommandParameterBuilder">
+            <summary>
+            Provides helper methods for building ADO.NET command parameters.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Ado.Parameters.CommandParameterBuilder.AddParameter(System.Data.Common.DbCommand,System.String,System.Object)">
+            <summary>
+            Adds a named input parameter to the specified <see cref="T:System.Data.Common.DbCommand"/>.
+            </summary>
+            <param name="cmd">The command to add the parameter to.</param>
+            <param name="name">The parameter name. An '@' prefix is added automatically if missing.</param>
+            <param name="value">The parameter value.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Ado.Parameters.CommandParameterBuilder.AddOutputParameter(Npgsql.NpgsqlCommand,System.String,NpgsqlTypes.NpgsqlDbType,System.Int32)">
+            <summary>
+            Adds a named output parameter to the specified <see cref="T:Npgsql.NpgsqlCommand"/>.
+            </summary>
+            <param name="cmd">The Npgsql command to add the parameter to.</param>
+            <param name="name">The parameter name.</param>
+            <param name="type">The Npgsql data type of the parameter.</param>
+            <param name="size">The maximum size of the parameter value.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Ado.Parameters.CommandParameterBuilder.GetParameter(Npgsql.NpgsqlCommand,System.String)">
+            <summary>
+            Returns the value of the named output parameter from the specified <see cref="T:Npgsql.NpgsqlCommand"/>.
+            </summary>
+            <param name="command">The Npgsql command containing the parameter.</param>
+            <param name="parameterName">The name of the parameter to retrieve.</param>
+            <returns>The parameter value, or <c>null</c>.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration">
+            <summary>
+            Provides methods for registering EF Core entity types with the PostgreSQL model builder.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.GetPrimaryKeyType(System.Type)">
             <summary>
             Gets the primary key type for an entity that inherits from BaseEntity
@@ -40,9 +75,70 @@
             Registers entities with specific custom configurations.
             </summary>
         </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1">
+            <summary>
+            Base configuration class for Entity Framework Core entity type configurations.
+            Provides common configuration for entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+            <typeparam name="TEntity">The entity type being configured.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the entity type.
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigurePrimaryKey(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key for the entity.
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureTimestamps(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures timestamp properties (CreatedAt, UpdatedAt, DeletedAt).
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureStatusFields(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures status-related boolean fields (IsActive, IsDeleted, IsMobileRequest).
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureExternalUserTracking(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures external user tracking fields (CreatedBy, UpdatedBy, DeletedBy).
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureSoftDeleteAndIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures soft delete query filter and indexes.
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures database indexes for the entity, including standard and partial indexes.
+            </summary>
+            <param name="builder">The builder used to configure the entity type.</param>
+        </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.EntityTypeConfiguration`1">
             <summary>
             Base configuration for non-auditable entities.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.EntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key for the entity.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration">
+            <summary>
+            Provides methods for registering simple entities with the Entity Framework ModelBuilder,
+            supporting custom schema/table names and entity configurations.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.GetPrimaryKeyType(System.Type)">
@@ -91,6 +187,76 @@
             Base configuration for simple entities that don't inherit from BaseEntity.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key and identity column for the simple entity.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext">
+            <summary>
+            Base context class for Entity Framework Core database contexts with support for domain events, auditing, and soft deletes.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
+            <summary>
+            Base context class for Entity Framework Core database contexts with support for domain events, auditing, and soft deletes.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext"/> class with domain event dispatcher.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="eventDispatcher">The domain event dispatcher for handling domain events.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher,Acontplus.Core.Abstractions.Context.IAuditContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext"/> class with domain event dispatcher and audit context.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="eventDispatcher">The domain event dispatcher for handling domain events.</param>
+            <param name="auditContext">The audit context for tracking user information.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Abstractions.Context.IAuditContext)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext"/> class with audit context.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="auditContext">The audit context for tracking user information.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.SaveChangesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes asynchronously.
+            </summary>
+            <param name="cancellationToken">A token to cancel the operation.</param>
+            <returns>The number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.SaveChanges">
+            <summary>
+            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes synchronously.
+            </summary>
+            <returns>The number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Configures the model by applying global soft-delete filters and date-time conversions.
+            </summary>
+            <param name="modelBuilder">The model builder used to construct the model for the context.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.ConfigureDateTimeProperties(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Applies UTC-aware value converters to all <see cref="T:System.DateTime"/> and <see cref="T:System.Nullable`1"/> DateTime properties.
+            </summary>
+            <param name="builder">The model builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.DependencyInjection.PostgresServiceCollectionExtensions">
+            <summary>
+            Extension methods for registering PostgreSQL persistence services with the DI container.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.DependencyInjection.PostgresServiceCollectionExtensions.EnsureResilienceOptionsRegistered(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
             Ensures PersistenceResilienceOptions is registered with default values.
@@ -129,6 +295,53 @@
             <param name="serviceKey">Optional key to register the service with (for keyed DI).</param>
             <returns>The updated IServiceCollection.</returns>
         </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionHandler">
+            <summary>
+            Handles PostgreSQL exceptions by mapping them to domain error types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionHandler.IsTransientException(Npgsql.NpgsqlException)">
+            <summary>
+            Determines whether the exception represents a transient PostgreSQL error.
+            </summary>
+            <param name="ex">The Npgsql exception to evaluate.</param>
+            <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionHandler.MapSqlException(Npgsql.NpgsqlException)">
+            <summary>
+            Maps a <see cref="T:Npgsql.NpgsqlException"/> to a <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo"/> domain error descriptor.
+            </summary>
+            <param name="ex">The Npgsql exception to map.</param>
+            <returns>A <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo"/> describing the domain error.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionHandler.HandleSqlException(Npgsql.NpgsqlException,Microsoft.Extensions.Logging.ILogger,System.String,System.String)">
+            <summary>
+            Logs and throws a <see cref="T:Npgsql.NpgsqlException"/> as a <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlDomainException"/>.
+            </summary>
+            <param name="ex">The Npgsql exception to handle.</param>
+            <param name="logger">The logger to write the error details to.</param>
+            <param name="operation">A description of the operation that failed.</param>
+            <param name="caller">The name of the calling member (auto-populated).</param>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionTranslator">
+            <summary>
+            Translates PostgreSQL exceptions into domain exceptions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionTranslator.IsTransient(System.Exception)">
+            <summary>
+            Determines whether the exception represents a transient PostgreSQL error.
+            </summary>
+            <param name="ex">The exception to evaluate.</param>
+            <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionTranslator.Translate(System.Exception)">
+            <summary>
+            Translates an exception into a <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/>.
+            </summary>
+            <param name="ex">The exception to translate.</param>
+            <returns>A <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> representing the error.</returns>
+        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.PostgresExceptionTranslator.FindNpgsqlException(System.Exception)">
             <summary>
             Recursively searches for NpgsqlException in the exception chain
@@ -159,10 +372,35 @@
             <param name="innerException">The exception that is the cause of the current exception, or a null reference
             (Nothing in Visual Basic) if no inner exception is specified.</param>
         </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Mapping.DataTableNameMapper">
+            <summary>
+            Provides utilities for assigning table names in a <see cref="T:System.Data.DataSet"/> from a stored procedure output parameter.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DataTableNameMapper.ProcessTableNames(Npgsql.NpgsqlCommand,System.Data.DataSet)">
+            <summary>
+            Assigns table names from the <c>@tableNames</c> command parameter to the corresponding tables in the <see cref="T:System.Data.DataSet"/>.
+            </summary>
+            <param name="cmd">The Npgsql command containing the <c>@tableNames</c> parameter.</param>
+            <param name="ds">The data set whose tables will be renamed.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper">
+            <summary>
+            Provides extension methods for mapping <see cref="T:System.Data.Common.DbDataReader"/> results to strongly-typed objects.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.ToListAsync``1(System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
             <summary>
             Maps a DbDataReader to a List of entities of type T with support for records and init-only properties
             </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.ToList``1(System.Data.Common.DbDataReader)">
+            <summary>
+            Synchronously maps all rows from the data reader to a list of <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The target type to map each row to.</typeparam>
+            <param name="reader">The data reader positioned before the first row.</param>
+            <returns>A list of mapped <typeparamref name="T"/> instances.</returns>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.MapToObject``1(System.Data.Common.DbDataReader)">
             <summary>
@@ -489,10 +727,104 @@
             </code>
             </remarks>
         </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1">
+            <summary>
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+            </summary>
+            <typeparam name="TContext">The EF Core database context type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.#ctor(`0,Acontplus.Core.Abstractions.Persistence.IAdoRepository,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork{`0}})">
+            <summary>
+            Initializes a new <see cref="T:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1"/>.
+            </summary>
+            <param name="context">The EF Core database context.</param>
+            <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.CurrentDbTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.CurrentDbConnection">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.AdoRepository">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.HasActiveTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.GetRepository``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.SaveChangesAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Utilities.DiagnosticConfig">
+            <summary>
+            Provides OpenTelemetry diagnostic configuration for the PostgreSQL repository layer.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.PostgreSQL.Utilities.DiagnosticConfig.ActivitySource">
+            <summary>
+            The <see cref="F:Acontplus.Persistence.PostgreSQL.Utilities.DiagnosticConfig.ActivitySource"/> used to create diagnostic tracing activities.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Utilities.SqlStringParam">
+            <summary>
+            Provides utilities for sanitizing SQL string parameters to prevent SQL injection.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.SqlStringParam.Sanitize(System.String)">
+            <summary>
+            Removes common SQL injection patterns from the input string by replacing them with spaces.
+            </summary>
+            <param name="input">The raw input string to sanitize.</param>
+            <returns>The sanitized string with dangerous patterns replaced by spaces.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Utilities.StringExtensions">
+            <summary>
+            String extension methods for PostgreSQL snake_case naming conventions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.StringExtensions.ToSnakeCase(System.String)">
+            <summary>
+            Converts a PascalCase or camelCase string to snake_case.
+            </summary>
+            <param name="input">The string to convert.</param>
+            <returns>The snake_case representation of the input.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.PostgreSQL.Utilities.TimeZoneHelper">
+            <summary>
+            Provides time zone conversion utilities for Ecuador and server local time.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.TimeZoneHelper.ToEcuadorTime(System.DateTime)">
             <summary>
             OPCIÓN 1 (RECOMENDADA): Convertir UTC a zona horaria específica
             </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.TimeZoneHelper.ToEcuadorTime(System.Nullable{System.DateTime})">
+            <summary>
+            Converts a nullable UTC <see cref="T:System.DateTime"/> to Ecuador time, returning <c>null</c> if the input is <c>null</c>.
+            </summary>
+            <param name="utcDateTime">The nullable UTC date and time.</param>
+            <returns>The Ecuador local date and time, or <c>null</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.TimeZoneHelper.ToServerTime(System.DateTime)">
+            <summary>
+            Converts a UTC <see cref="T:System.DateTime"/> to the server's local time zone.
+            </summary>
+            <param name="utcDateTime">The UTC date and time to convert.</param>
+            <returns>The date and time in the server's local time zone.</returns>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Utilities.TimeZoneHelper.FromEcuadorTimeToUtc(System.DateTime)">
             <summary>

@@ -2,6 +2,10 @@ using System.Reflection;
 
 namespace Acontplus.Persistence.PostgreSQL.Configurations;
 
+/// <summary>
+/// Provides methods for registering simple entities with the Entity Framework ModelBuilder,
+/// supporting custom schema/table names and entity configurations.
+/// </summary>
 public static class SimpleEntityRegistration
 {
     /// <summary>

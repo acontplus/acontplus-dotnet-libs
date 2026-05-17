@@ -1,3 +1,7 @@
+using System.Collections.Concurrent;
+using System.Dynamic;
+using System.Security.Authentication;
+using System.Text.Json;
 using Acontplus.Core.Extensions;
 using Acontplus.Notifications.Abstractions;
 using Acontplus.Notifications.Models;
@@ -5,10 +9,6 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using MimeKit.Utils;
 using Scriban;
-using System.Collections.Concurrent;
-using System.Dynamic;
-using System.Security.Authentication;
-using System.Text.Json;
 
 namespace Acontplus.Notifications.Services;
 
@@ -144,7 +144,7 @@ public class MailKitService : IMailKitService, IDisposable
                 RecordAuthenticationAttempt(serverKey);
 
                 _logger.LogInformation("Authenticating with SMTP server for {SenderEmail}...", email.SenderEmail);
-                await newClient.AuthenticateAsync(email.SenderEmail, email.Password, ct);
+                await newClient.AuthenticateAsync(email.SenderEmail!, email.Password, ct);
 
                 _logger.LogInformation("Successfully connected and authenticated to SMTP server.");
 
@@ -228,6 +228,7 @@ public class MailKitService : IMailKitService, IDisposable
 
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct)
     {
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
         SmtpClient? smtpClient = null;
 
         try
@@ -237,8 +238,8 @@ public class MailKitService : IMailKitService, IDisposable
                 using var message = new MimeMessage();
 
                 message.To.Clear();
-                message.From.Add(new MailboxAddress(email.SenderName, email.SenderEmail));
-                message.Sender = new MailboxAddress(email.SenderName, email.SenderEmail);
+                message.From.Add(new MailboxAddress(email.SenderName, email.SenderEmail!));
+                message.Sender = new MailboxAddress(email.SenderName, email.SenderEmail!);
 
                 var delimiters = new char[] { ',', ';', '|' };
                 var receiver = email.RecipientEmail.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);

@@ -1,7 +1,15 @@
 namespace Acontplus.Persistence.PostgreSQL.Mapping;
 
+/// <summary>
+/// Provides utilities for assigning table names in a <see cref="DataSet"/> from a stored procedure output parameter.
+/// </summary>
 public static class DataTableNameMapper
 {
+    /// <summary>
+    /// Assigns table names from the <c>@tableNames</c> command parameter to the corresponding tables in the <see cref="DataSet"/>.
+    /// </summary>
+    /// <param name="cmd">The Npgsql command containing the <c>@tableNames</c> parameter.</param>
+    /// <param name="ds">The data set whose tables will be renamed.</param>
     public static async Task ProcessTableNames(NpgsqlCommand cmd, DataSet ds)
     {
         var tableNames = cmd.Parameters["@tableNames"].Value?.ToString()?.Split(',');

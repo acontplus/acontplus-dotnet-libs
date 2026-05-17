@@ -3,6 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace Acontplus.Persistence.PostgreSQL.Mapping;
 
+/// <summary>
+/// Provides extension methods for mapping <see cref="DbDataReader"/> results to strongly-typed objects.
+/// </summary>
 public static class DbDataReaderMapper
 {
     /// <summary>
@@ -154,6 +157,12 @@ public static class DbDataReaderMapper
     }
 
     // Synchronous version
+    /// <summary>
+    /// Synchronously maps all rows from the data reader to a list of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target type to map each row to.</typeparam>
+    /// <param name="reader">The data reader positioned before the first row.</param>
+    /// <returns>A list of mapped <typeparamref name="T"/> instances.</returns>
     public static List<T> ToList<T>(this DbDataReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);

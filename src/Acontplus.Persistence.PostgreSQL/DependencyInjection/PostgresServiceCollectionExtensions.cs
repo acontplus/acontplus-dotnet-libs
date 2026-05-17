@@ -3,6 +3,9 @@ using Acontplus.Persistence.PostgreSQL.Repositories;
 
 namespace Acontplus.Persistence.PostgreSQL.DependencyInjection;
 
+/// <summary>
+/// Extension methods for registering PostgreSQL persistence services with the DI container.
+/// </summary>
 public static class PostgresServiceCollectionExtensions
 {
     /// <summary>
