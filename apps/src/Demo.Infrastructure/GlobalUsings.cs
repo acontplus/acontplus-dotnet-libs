@@ -1,5 +1,6 @@
 // Global using directives
 
+global using Acontplus.Core.Abstractions.Context;
 global using Acontplus.Core.Abstractions.Persistence;
 global using Acontplus.Core.Dtos.Requests;
 global using Acontplus.Core.Dtos.Responses;
