@@ -42,6 +42,10 @@ public static class CommandParameterBuilder
     /// <param name="command">The SQL command containing the parameter.</param>
     /// <param name="parameterName">The name of the parameter to retrieve.</param>
     /// <returns>The value of the specified parameter.</returns>
-    public static object GetParameter(SqlCommand command, string parameterName) =>
-        command.Parameters[parameterName].Value;
+    public static object GetParameter(SqlCommand command, string parameterName)
+    {
+        if (command?.Parameters[parameterName] == null)
+            throw new ArgumentException($"Parameter '{parameterName}' not found in command.", nameof(parameterName));
+        return command.Parameters[parameterName].Value;
+    }
 }
