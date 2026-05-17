@@ -7,6 +7,8 @@ tools:
   - create_file
   - file_search
   - semantic_search
+  - grep_search
+  - run_in_terminal
 ---
 
 # Generate Documentation for Acontplus Library
@@ -189,3 +191,7 @@ public enum NotificationChannel
 - [ ] `<exception>` tags present where exceptions are deliberately thrown
 - [ ] No duplicate documentation — prefer `<inheritdoc />` on overrides/implementations
 - [ ] `<NoWarn>1591</NoWarn>` is set in `.csproj` (suppress missing-XML warnings for intentionally undocumented internal members)
+
+## Final Verification
+
+Run `dotnet build src/Acontplus.<Name>` and confirm there are **0 errors and 0 CS1591 XML documentation warnings**. If any warnings remain, add missing `<summary>` tags before presenting the result.

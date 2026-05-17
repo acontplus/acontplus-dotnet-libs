@@ -6,7 +6,9 @@ tools:
   - replace_string_in_file
   - create_file
   - file_search
+  - grep_search
   - get_changed_files
+  - run_in_terminal
 ---
 
 # Document New Changes
@@ -135,6 +137,8 @@ For each affected library, update the `<Version>` tag following Semantic Version
 
 Also update `AssemblyVersion` if the **major** version changed.
 
+If other packages in this monorepo depend on the updated package, also update the `<PackageVersion Include="Acontplus.<Name>" Version="<new-version>" />` entry in `Directory.Packages.props`.
+
 ---
 
 ## Step 5 — Suggest Commit Message
@@ -166,4 +170,9 @@ And list the files modified:
 - `src/Acontplus.<Name>/Acontplus.<Name>.csproj` — version + release notes updated
 - `CHANGELOG.md` — new `### [<Version>]` block inserted under `## Acontplus.<Name>` (or "skipped — version already present")
 - `src/Acontplus.<Name>/README.md` — "What's New" section updated to current version only
+- `Directory.Packages.props` — internal `<PackageVersion>` entry updated (if applicable)
 - `docs/wiki/*.md` — only if a new cross-cutting guide was needed (breaking changes, migrations)
+
+## Step 7 — Verify Build
+
+After all edits, run `dotnet build acontplus-dotnet-libs.slnx` and confirm **0 errors**. If errors appear, fix them before finalising.

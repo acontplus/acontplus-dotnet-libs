@@ -24,6 +24,7 @@ Use this checklist to ensure your GitHub Actions for NuGet publishing is properl
 
 - [ ] All package projects have `<GeneratePackageOnBuild>false</GeneratePackageOnBuild>` (packing is explicit via `dotnet pack`)
 - [ ] All package projects have valid `<Version>X.Y.Z</Version>`
+- [ ] FrameworkReference decision made per library: ASP.NET Core-only libs use `<FrameworkReference Include="Microsoft.AspNetCore.App" />`; host-agnostic libs use standalone NuGet packages
 - [ ] All package projects have `<AssemblyVersion>` matching the major version (e.g., `2.0.0.0` for v2.x.x packages)
 - [ ] All package projects have SourceLink enabled (`IncludeSymbols`, `SymbolPackageFormat>snupkg`, `PublishRepositoryUrl`, `EmbedUntrackedSources`)
 - [ ] All package projects have `<ContinuousIntegrationBuild>` conditioned on `$(CI)` / `$(TF_BUILD)`
@@ -55,7 +56,7 @@ Use this checklist to ensure your GitHub Actions for NuGet publishing is properl
 ### Test 2: Manual Publish (Dry Run)
 
 - [ ] Increment version in one test package
-- [ ] Go to Actions → Publish NuGet Packages → Run workflow
+- [ ] Go to **Actions** → **Cascade Publish NuGet Packages** → **Run workflow**
 - [ ] Select manual trigger with package name
 - [ ] Monitor workflow execution
 - [ ] Check for successful completion
@@ -70,7 +71,7 @@ Use this checklist to ensure your GitHub Actions for NuGet publishing is properl
 - [ ] Create pull request
 - [ ] Verify "Build and Test" runs on PR
 - [ ] Merge PR to main
-- [ ] Verify "Publish NuGet Packages" runs automatically
+- [ ] Verify **Smart Publish - Auto Cascade Detection** runs automatically
 - [ ] Check package published to NuGet.org
 - [ ] Verify GitHub release created
 
@@ -228,6 +229,6 @@ _________________________________________________________________
 
 ---
 
-**Last Updated**: December 23, 2025
-**Checklist Version**: 1.0.0
+**Last Updated**: June 2026
+**Checklist Version**: 1.1.0
 **Repository**: acontplus-dotnet-libs

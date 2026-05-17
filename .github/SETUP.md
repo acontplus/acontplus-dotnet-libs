@@ -37,7 +37,7 @@ This guide will help you configure GitHub Actions for automated NuGet package pu
 
 #### Option A: Manual Test (Recommended for First Time)
 
-1. Go to **Actions** → **Publish NuGet Packages**
+1. Go to **Actions** → **Cascade Publish NuGet Packages**
 2. Click **"Run workflow"**
 3. Leave options empty (will detect changed versions)
 4. Click **"Run workflow"**
@@ -54,10 +54,11 @@ This guide will help you configure GitHub Actions for automated NuGet package pu
    ```bash
    git add src/Acontplus.Core/Acontplus.Core.csproj
    git commit -m "feat(core): bump version for testing"
-   git push origin main
+   git push origin feature/test-publish
+   # Open a Pull Request on GitHub and merge to main
    ```
 
-3. GitHub Actions will automatically start
+3. GitHub Actions will automatically start on PR merge
 
 ## What Happens Next?
 
