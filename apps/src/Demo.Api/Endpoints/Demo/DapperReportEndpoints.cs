@@ -37,14 +37,7 @@ public static class DapperReportEndpoints
         ILogger<Program> logger,
         CancellationToken ct)
     {
-        // Map PaginationQuery to PaginationRequest
-        var request = new PaginationRequest
-        {
-            PageIndex = pagination.PageIndex,
-            PageSize = pagination.PageSize,
-            SortBy = pagination.SortBy,
-            SortDirection = pagination.SortDirection ?? SortDirection.Asc
-        };
+        var request = pagination.Adapt<PaginationRequest>();
 
         logger.LogInformation("Dapper: Getting paged orders - Page {Page}, Size {Size}",
             request.PageIndex, request.PageSize);

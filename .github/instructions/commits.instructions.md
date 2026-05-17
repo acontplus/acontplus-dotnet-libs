@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: "**"
 ---
 
 # Commit Message Guidelines
@@ -43,6 +43,7 @@ Use one of these types only:
 Use the affected library or component name in parentheses. Choose from:
 
 ### Library Packages (src/)
+
 - `core` - Acontplus.Core (domain, result pattern, enums, specifications)
 - `billing` - Acontplus.Billing (electronic invoicing, SRI integration)
 - `notifications` - Acontplus.Notifications (email, WhatsApp, SMS, templates)
@@ -56,14 +57,18 @@ Use the affected library or component name in parentheses. Choose from:
 - `logging` - Acontplus.Logging (Serilog configuration)
 - `barcode` - Acontplus.Barcode (QR/barcode generation)
 - `s3` - Acontplus.S3Application (AWS S3 storage)
+- `analytics` - Acontplus.Analytics
+- `infrastructure` - Acontplus.Infrastructure
 
 ### Sample Applications (apps/)
+
 - `demo-api` - Demo.Api
 - `demo-app` - Demo.Application
 - `demo-domain` - Demo.Domain
 - `demo-infra` - Demo.Infrastructure
 
 ### Infrastructure & Configuration
+
 - `build` - Build configuration, Directory.Packages.props, .csproj files
 - `ci` - GitHub Actions, CI/CD workflows
 - `docs` - Documentation, README files, wiki
@@ -72,6 +77,7 @@ Use the affected library or component name in parentheses. Choose from:
 - `deps` - Dependency updates across multiple packages
 
 ### Special Cases
+
 - Omit scope only if the change affects multiple libraries across the entire workspace
 - For multi-package version updates, use `build(deps)` or just `build`
 - Use kebab-case for multi-word scopes (e.g., `api-docs`, `demo-api`)
@@ -84,10 +90,10 @@ feat(billing): add SRI electronic signature support
 fix(persistence): correct transaction handling in SaveChanges
 fix(notifications): handle null template variables
 docs(reports): update RDLC usage examples
-docs: update main README with .NET 9 features
+docs: update main README with .NET 10 features
 refactor(utilities): simplify encryption service interface
 refactor(services): extract cache configuration to options
-chore(build): upgrade to .NET 9.0
+chore(build): upgrade to .NET 10.0
 test(core): add unit tests for Result pattern
 perf(persistence-sqlserver): optimize bulk insert operations
 build(deps): update NuGet dependencies
@@ -113,13 +119,15 @@ style(api-docs): apply consistent code formatting
 
 ## Context & Best Practices
 
-This repository is a **.NET 9 library monorepo** containing:
+This repository is a **.NET 10 library monorepo** containing:
+
 - **13 library packages** distributed as NuGet packages
 - **4 sample applications** demonstrating library usage
 - **Central package management** via Directory.Packages.props
 - Focus on **clean architecture**, **DDD patterns**, and **modern C# features**
 
 When committing:
+
 - Reference the **library scope**, not the full package name
 - Use `build` for version bumps and package configuration
 - Use `docs` for README and XML documentation updates

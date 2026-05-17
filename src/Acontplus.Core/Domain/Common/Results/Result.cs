@@ -1,3 +1,8 @@
+// All functional composition overloads in this file (async/ValueTask/CT variants) are
+// symmetric by design. The primary overload for each operation carries the XML doc comment;
+// the variants are self-explanatory from their signatures and the section headers.
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 using System.Runtime.CompilerServices;
 
 namespace Acontplus.Core.Domain.Common.Results;

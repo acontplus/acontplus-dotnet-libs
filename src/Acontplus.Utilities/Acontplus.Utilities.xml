@@ -109,7 +109,7 @@
             Implements the minimal API binding pattern for automatic parameter binding.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Dtos.PaginationQuery.#ctor(System.Int32,System.Int32,System.String,System.Nullable{Acontplus.Core.Enums.SortDirection},System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object})">
+        <member name="M:Acontplus.Utilities.Dtos.PaginationQuery.#ctor(System.Int32,System.Int32)">
             <summary>
             Represents a pagination query with sorting and search capabilities.
             Implements the minimal API binding pattern for automatic parameter binding.
@@ -123,11 +123,6 @@
         <member name="P:Acontplus.Utilities.Dtos.PaginationQuery.Take">
             <summary>
             Gets the number of items to take for database queries.
-            </summary>
-        </member>
-        <member name="P:Acontplus.Utilities.Dtos.PaginationQuery.IsEmpty">
-            <summary>
-            Gets whether the query has no search criteria.
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Dtos.PaginationQuery.BindAsync(Microsoft.AspNetCore.Http.HttpContext,System.Reflection.ParameterInfo)">
@@ -147,22 +142,34 @@
         <member name="M:Acontplus.Utilities.Extensions.FilterQueryExtensions.GetFilterValue``1(Acontplus.Utilities.Dtos.FilterQuery,System.String,``0)">
             <summary>
             Gets a filter value by key with type safety and conversion support.
+            <para>
+            Conversion priority:
+            <list type="number">
+              <item>Direct cast — fastest path when the stored value is already the right type.</item>
+              <item><see cref="M:System.Convert.ChangeType(System.Object,System.Type)"/> — handles all <see cref="T:System.IConvertible"/> types
+                    (int, bool, decimal, DateTime, …) and values stored as strings (query-string origin).</item>
+              <item><see cref="T:System.ComponentModel.TypeDescriptor"/> — handles enums, Guid, and other types with registered converters.</item>
+            </list>
+            Nullable value types (e.g. <c>int?</c>, <c>bool?</c>) are supported: the underlying type is
+            extracted automatically so <c>GetFilterValue&lt;int?&gt;("companyId")</c> works as expected.
+            </para>
             </summary>
-            <typeparam name="T">The expected type of the filter value</typeparam>
-            <param name="query">The filter query</param>
-            <param name="key">The filter key to retrieve</param>
-            <param name="defaultValue">Default value if key not found or conversion fails</param>
-            <returns>The filter value converted to type T, or the default value</returns>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="query">The filter query.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+            <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Extensions.FilterQueryExtensions.TryGetFilterValue``1(Acontplus.Utilities.Dtos.FilterQuery,System.String,``0@)">
             <summary>
             Tries to get a filter value by key with type safety and conversion support.
+            Returns <c>true</c> when the key exists <em>and</em> the value converts successfully to
+            <typeparamref name="T"/>; <c>false</c> when the key is absent or conversion fails.
             </summary>
-            <typeparam name="T">The expected type of the filter value</typeparam>
-            <param name="query">The filter query</param>
-            <param name="key">The filter key to retrieve</param>
-            <param name="value">The output value if found and successfully converted</param>
-            <returns>True if the value was found and successfully converted; otherwise, false</returns>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="query">The filter query.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
         </member>
         <member name="P:Acontplus.Utilities.Extensions.ResultApiExtensions.ConfigureResponse">
             <summary>

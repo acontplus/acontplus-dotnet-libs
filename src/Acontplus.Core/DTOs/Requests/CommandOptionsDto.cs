@@ -2,21 +2,35 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Acontplus.Core.Dtos.Requests;
 
+/// <summary>
+/// Configuration options for database command execution.
+/// </summary>
 public class CommandOptionsDto
 {
-    // Default command timeout in seconds. 0 indicates no timeout.
-    // Null means use ADO.NET default (usually 30 seconds).
+    /// <summary>
+    /// Gets or sets the command timeout in seconds. 
+    /// 0 indicates no timeout. Null means use ADO.NET default (usually 30 seconds).
+    /// </summary>
     [Range(0, 3600)]
     public int? CommandTimeout { get; set; }
 
-    // Specifies how the command text is to be interpreted (StoredProcedure or Text)
-    public CommandType CommandType { get; set; } = CommandType.StoredProcedure; // Sensible default for your usage
+    /// <summary>
+    /// Gets or sets how the command text is to be interpreted (StoredProcedure or Text).
+    /// </summary>
+    public CommandType CommandType { get; set; } = CommandType.StoredProcedure;
 
-    // Specific to GetDataSetAsync
+    /// <summary>
+    /// Gets or sets a value indicating whether to include table names in the result.
+    /// Specific to GetDataSetAsync.
+    /// </summary>
     public bool WithTableNames { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the maximum length for table names.
+    /// </summary>
     [Range(1, 1000)]
     public int TableNamesLength { get; set; } = 500;
+
     /// <summary>
     /// Controls filter parameter strategy:
     /// - false (default): Individual parameters for raw SQL (better performance)

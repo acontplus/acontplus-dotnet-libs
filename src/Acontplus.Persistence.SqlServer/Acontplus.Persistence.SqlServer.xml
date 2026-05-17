@@ -4,6 +4,36 @@
         <name>Acontplus.Persistence.SqlServer</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Persistence.SqlServer.Ado.Parameters.CommandParameterBuilder">
+            <summary>
+            Provides utility methods for building and managing SQL command parameters.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Ado.Parameters.CommandParameterBuilder.AddParameter(System.Data.Common.DbCommand,System.String,System.Object)">
+            <summary>
+            Adds an input parameter to the specified database command.
+            </summary>
+            <param name="cmd">The database command to add the parameter to.</param>
+            <param name="name">The parameter name, with or without the '@' prefix.</param>
+            <param name="value">The parameter value.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Ado.Parameters.CommandParameterBuilder.AddOutputParameter(Microsoft.Data.SqlClient.SqlCommand,System.String,System.Data.SqlDbType,System.Int32)">
+            <summary>
+            Adds an output parameter to the specified SQL command.
+            </summary>
+            <param name="cmd">The SQL command to add the parameter to.</param>
+            <param name="name">The parameter name.</param>
+            <param name="type">The SQL database type of the parameter.</param>
+            <param name="size">The maximum size of the parameter data.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Ado.Parameters.CommandParameterBuilder.GetParameter(Microsoft.Data.SqlClient.SqlCommand,System.String)">
+            <summary>
+            Retrieves the value of a parameter from the specified SQL command.
+            </summary>
+            <param name="command">The SQL command containing the parameter.</param>
+            <param name="parameterName">The name of the parameter to retrieve.</param>
+            <returns>The value of the specified parameter.</returns>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.GetPrimaryKeyType(System.Type)">
             <summary>
                 Gets the primary key type for an entity that inherits from BaseEntity

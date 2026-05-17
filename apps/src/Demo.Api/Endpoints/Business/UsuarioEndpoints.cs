@@ -11,46 +11,54 @@ public static class UsuarioEndpoints
 
         group.MapGet("/{id:int}", GetUsuario)
             .WithName("GetUsuario")
+            .WithSummary("Gets a user by ID")
             .Produces<ApiResponse<UsuarioDto>>(StatusCodes.Status200OK)
             .Produces<ApiResponse>(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapPost("", CreateUsuario)
             .WithName("CreateUsuario")
+            .WithSummary("Creates a new user")
             .Produces<ApiResponse<Usuario>>(StatusCodes.Status201Created)
             .Produces<ApiResponse>(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapPut("/{id:int}", UpdateUsuario)
             .WithName("UpdateUsuario")
+            .WithSummary("Updates an existing user by ID")
             .Produces<ApiResponse>(StatusCodes.Status200OK)
             .Produces<ApiResponse>(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapDelete("/{id:int}", DeleteUsuario)
             .WithName("DeleteUsuario")
+            .WithSummary("Deletes a user by ID")
             .Produces<ApiResponse>(StatusCodes.Status200OK)
             .Produces<ApiResponse>(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapGet("", GetUsuarios)
             .WithName("GetUsuarios")
+            .WithSummary("Gets a paginated list of users")
             .Produces<ApiResponse<PagedResult<UsuarioDto>>>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapPost("/import", ImportUsuarios)
             .WithName("ImportUsuarios")
+            .WithSummary("Bulk-imports a list of users from a DTO array")
             .Produces<ApiResponse>(StatusCodes.Status200OK)
             .Produces<ApiResponse>(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapGet("/legacy-ado", GetUsersAdo)
             .WithName("GetUsersAdo")
+            .WithSummary("Gets users via legacy ADO.NET stored procedure (compatibility demo)")
             .Produces<ApiResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
         group.MapGet("/get-dynamic", GetDynamicUsers)
             .WithName("GetDynamicUsers")
+            .WithSummary("Gets users as a dynamic list (schema-less response demo)")
             .Produces<ApiResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status500InternalServerError);
 
@@ -170,18 +178,7 @@ public static class UsuarioEndpoints
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        // Map PaginationQuery to PaginationRequest
-        var PaginationRequest = new PaginationRequest
-        {
-            PageIndex = pagination.PageIndex,
-            PageSize = pagination.PageSize,
-            SortBy = pagination.SortBy,
-            SortDirection = pagination.SortDirection ?? SortDirection.Asc,
-            SearchTerm = pagination.SearchTerm,
-            Filters = pagination.Filters
-        };
-
-        return await usuarioService.GetPaginatedUsersAsync(PaginationRequest).ToGetMinimalApiResultAsync();
+        return await usuarioService.GetPaginatedUsersAsync(pagination.Adapt<PaginationRequest>()).ToGetMinimalApiResultAsync();
     }
 
     private static async Task<IResult> ImportUsuarios(
@@ -222,74 +219,34 @@ public static class UsuarioEndpoints
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        // Map PaginationQuery to PaginationRequest
-        var PaginationRequest = new PaginationRequest
-        {
-            PageIndex = pagination.PageIndex,
-            PageSize = pagination.PageSize,
-            SortBy = pagination.SortBy,
-            SortDirection = pagination.SortDirection ?? SortDirection.Asc,
-            SearchTerm = pagination.SearchTerm,
-            Filters = pagination.Filters
-        };
+        var request = pagination.Adapt<PaginationRequest>();
 
-        // ✅ Example: Use GetFilterValue to extract and validate filter values from original pagination
-        var showDeleted = PaginationRequest.GetFilterValue<bool>("showDeleted", false);
-        var minAge = PaginationRequest.GetFilterValue<int>("minAge", 0);
-        var role = PaginationRequest.GetFilterValue<string>("role", "User");
+        // Extract typed filter values using the FilterQuery extension methods
+        var showDeleted = pagination.GetFilterValue<bool>("showDeleted", false);
+        var minAge = pagination.GetFilterValue<int>("minAge", 0);
+        var role = pagination.GetFilterValue<string>("role", "User");
 
-        // ✅ Example: Use TryGetFilterValue for conditional logic
-        if (PaginationRequest.TryGetFilterValue<DateTime>("createdAfter", out var createdAfter))
-        {
-            // Additional validation or processing for date filter
-            PaginationRequest = PaginationRequest.WithFilter("CreatedAfter", createdAfter);
-        }
-
-        // ✅ Example: Add extra filters using WithFilter extension
+        // Conditionally enrich the domain request with additional server-side filters
         if (!showDeleted)
-        {
-            PaginationRequest = PaginationRequest.WithFilter("IsDeleted", false);
-        }
+            request = request.WithFilter("IsDeleted", false);
 
-        if (role != null && role != "User")
-        {
-            PaginationRequest = PaginationRequest
-                .WithFilter("Status", "Active")
-                .WithFilter("MinAge", minAge)
-                .WithFilter("Role", role);
-        }
-        else
-        {
-            PaginationRequest = PaginationRequest
-                .WithFilter("Status", "Active")
-                .WithFilter("MinAge", minAge);
-        }
+        request = role is not null and not "User"
+            ? request.WithFilter("Status", "Active").WithFilter("MinAge", minAge).WithFilter("Role", role)
+            : request.WithFilter("Status", "Active").WithFilter("MinAge", minAge);
 
-        return await usuarioService.GetPagedUsersAdoAsync(PaginationRequest).ToGetMinimalApiResultAsync();
+        return await usuarioService.GetPagedUsersAdoAsync(request).ToGetMinimalApiResultAsync();
     }
 
     private static async Task<IResult> GetPagedUsersComplex(
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        // Map PaginationQuery to PaginationRequest
-        var PaginationRequest = new PaginationRequest
-        {
-            PageIndex = pagination.PageIndex,
-            PageSize = pagination.PageSize,
-            SortBy = pagination.SortBy,
-            SortDirection = pagination.SortDirection ?? SortDirection.Asc,
-            SearchTerm = pagination.SearchTerm,
-            Filters = pagination.Filters
-        };
-
-        // ✅ Example: Chain multiple WithFilter calls for complex filtering
-        PaginationRequest = PaginationRequest
+        var request = pagination.Adapt<PaginationRequest>()
             .WithFilter("IsDeleted", false)
             .WithFilter("CreatedAfter", DateTime.UtcNow.AddDays(-30))
             .WithFilter("MinimumRole", "User");
 
-        return await usuarioService.GetPagedUsersComplexAsync(PaginationRequest).ToGetMinimalApiResultAsync();
+        return await usuarioService.GetPagedUsersComplexAsync(request).ToGetMinimalApiResultAsync();
     }
 
     private static async Task<IResult> GetPagedUsersFromStoredProc(
@@ -297,27 +254,16 @@ public static class UsuarioEndpoints
         IUsuarioService usuarioService,
         HttpContext httpContext)
     {
-        // Map PaginationQuery to PaginationRequest
-        var PaginationRequest = new PaginationRequest
-        {
-            PageIndex = pagination.PageIndex,
-            PageSize = pagination.PageSize,
-            SortBy = pagination.SortBy,
-            SortDirection = pagination.SortDirection ?? SortDirection.Asc,
-            SearchTerm = pagination.SearchTerm,
-            Filters = pagination.Filters
-        };
+        var request = pagination.Adapt<PaginationRequest>();
 
         // Extract userId from claims and append to filters
         var userId = httpContext.User.FindFirst("sub")?.Value
             ?? httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (!string.IsNullOrEmpty(userId))
-        {
-            PaginationRequest = PaginationRequest.WithFilter("UserId", userId);
-        }
+            request = request.WithFilter("UserId", userId);
 
-        return await usuarioService.GetPagedUsersFromStoredProcAsync(PaginationRequest).ToGetMinimalApiResultAsync();
+        return await usuarioService.GetPagedUsersFromStoredProcAsync(request).ToGetMinimalApiResultAsync();
     }
 
     private static async Task<IResult> BulkInsertUsers(
@@ -350,4 +296,3 @@ public static class UsuarioEndpoints
 
     #endregion
 }
-

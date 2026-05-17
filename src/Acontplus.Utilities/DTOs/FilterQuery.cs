@@ -7,7 +7,7 @@ namespace Acontplus.Utilities.Dtos;
 /// Implements the minimal API binding pattern for automatic parameter binding.
 /// Ideal for reports, exports, and scenarios where all matching results are needed.
 /// </summary>
-public sealed record FilterQuery(
+public record FilterQuery(
     string? SortBy = null,
     SortDirection? SortDirection = null,
     string? SearchTerm = null,

@@ -1,7 +1,12 @@
 namespace Acontplus.Core.Domain.Enums;
 
+/// <summary>
+/// Extension methods that enrich <see cref="ErrorType"/> with HTTP-layer mappings
+/// and diagnostic metadata (severity / category strings).
+/// </summary>
 public static class ErrorTypeExtensions
 {
+    /// <summary>Maps an <see cref="ErrorType"/> to the corresponding <see cref="HttpStatusCode"/>.</summary>
     public static HttpStatusCode ToHttpStatusCode(this ErrorType errorType) =>
         errorType switch
         {
@@ -41,6 +46,7 @@ public static class ErrorTypeExtensions
             _ => HttpStatusCode.InternalServerError
         };
 
+    /// <summary>Returns a lowercase severity string (<c>"warning"</c> or <c>"error"</c>) for use in API responses.</summary>
     public static string ToSeverityString(this ErrorType errorType) =>
         errorType switch
         {
@@ -62,6 +68,7 @@ public static class ErrorTypeExtensions
             _ => "error"
         };
 
+    /// <summary>Returns a lowercase category string (e.g., <c>"validation"</c>, <c>"security"</c>) for grouping errors in API responses.</summary>
     public static string ToCategoryString(this ErrorType errorType) =>
         errorType switch
         {
@@ -103,7 +110,10 @@ public static class ErrorTypeExtensions
             _ => "system"
         };
 
-    // Using ReadOnlySpan<char> for better performance (if needed)
+    /// <summary>
+    /// Returns a <see cref="ReadOnlySpan{T}"/> severity string.
+    /// Prefer this over <see cref="ToSeverityString"/> in hot paths to avoid string allocation.
+    /// </summary>
     public static ReadOnlySpan<char> ToSeveritySpan(this ErrorType errorType) =>
         errorType switch
         {

@@ -6,6 +6,8 @@ tools:
   - replace_string_in_file
   - read_file
   - file_search
+  - grep_search
+  - run_in_terminal
 ---
 
 # Scaffold New Acontplus NuGet Library
@@ -42,7 +44,7 @@ Use this exact structure (replace `<Name>`, `<Description>`, `<Tags>`, `<Release
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
-    <Copyright>Copyright © 2025 Acontplus</Copyright>
+    <Copyright>Copyright © 2026 Acontplus</Copyright>
     <Description><Description></Description>
     <PackageTags><Tags></PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
@@ -201,3 +203,4 @@ Is the library ONLY usable in ASP.NET Core apps (Web API, MVC)?
 - [ ] `README.md` included in `PackagePath`
 - [ ] `icon.png` included in `PackagePath`
 - [ ] FrameworkReference vs standalone packages decision documented above
+- [ ] Build passes: run `dotnet build src/Acontplus.<Name>` and confirm 0 errors before presenting to user

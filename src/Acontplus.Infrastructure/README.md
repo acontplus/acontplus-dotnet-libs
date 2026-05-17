@@ -57,7 +57,7 @@ Enterprise-grade infrastructure library providing caching, resilience patterns, 
 - **Performance Boost**: Reduce bandwidth and improve response times
 - **Client-Aware**: Automatic compression based on client capabilities
 
-### 📡 Application Event Bus (NEW in v1.2.1+)
+### 📡 Application Event Bus
 
 - **Channel-Based Architecture**: High-performance using `System.Threading.Channels`
 - **Async Background Processing**: Non-blocking event handling for cross-cutting concerns

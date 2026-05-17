@@ -8,17 +8,7 @@
 
 A high-performance .NET library for enterprise report generation. Covers RDLC reports, QuestPDF code-first PDF documents, **MiniExcel** streaming Excel exports, and **ClosedXML** richly-formatted Excel workbooks — all with async APIs, concurrency control, timeout protection, and full DI integration.
 
-## 🚀 What's New (Latest Version)
-
-- **QuestPDF `InvoiceHeader` section** — SRI Ecuador-style invoice layout (company block + SRI auth box + buyer band)
-- **QuestPDF `Image` and `Barcode` sections** — raw byte array images and Code-128/QR codes via `Acontplus.Barcode`
-- **QuestPDF `MasterDetail` and `TwoColumn` sections** — EstadoCuenta pattern and side-by-side layouts
-- **QuestPDF grouped table headers** — `IsGroupHeader` / `ColumnSpan` for Kardex-style band headers
-- **QuestPDF logo from bytes** — `LogoBytes` + `LogoMimeType` for database-sourced logos
-- **ClosedXML grouped report headers** — `ReportTitle`, `ReportSubTitle`, `GroupHeaders`, `GroupHeaderStyle`
-- **ClosedXML `AdvancedExcelGroupHeader` DTO** — merge-span band headers above column headers
-
-> Full version history: [CHANGELOG.md](../../CHANGELOG.md)
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
 ## 🚀 Features
 

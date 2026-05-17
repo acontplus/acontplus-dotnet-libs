@@ -8,6 +8,44 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Acontplus.Logging
+
+### [2.0.0]
+
+- **Breaking** Removed per-signal OTLP properties (`EnableOtlpExporter`, `OtlpEndpoint`, `OtlpProtocol`) from `TracingOptions`, `MetricsOptions`, and `OTelLoggingOptions`; configure once at `OpenTelemetryOptions` root instead
+- **Breaking** Removed `OTelLoggingOptions.Enabled` — logging OTLP is now governed by `OpenTelemetryOptions.EnableOtlpExporter`
+- **Added** `OpenTelemetryOptions.EnableOtlpExporter` — single flag enabling OTLP for all three signals (traces, metrics, logs)
+- **Added** `OpenTelemetryOptions.OtlpEndpoint` / `OtlpProtocol` — shared endpoint and protocol used by all signals
+- **Changed** OTLP registration strategy: uses `UseOtlpExporter(protocol, endpoint)` (one call for all signals) when no Dynatrace exporter is active; falls back to per-signal `AddOtlpExporter` automatically when Dynatrace is configured (the two cannot coexist)
+- **Added** Full OpenTelemetry support: distributed tracing (`OpenTelemetry.Instrumentation.AspNetCore`, `Http`, `SqlClient`), metrics, and OTLP log export
+- **Added** Dynatrace exporter support via per-signal OTLP with `Authorization: Api-Token` header injection
+- **Added** `TracingOptions.AdditionalSources` — register extra `ActivitySource` names from configuration
+- **Added** `MetricsOptions.AdditionalMeters` — register extra `Meter` names from configuration
+- **Added** Auto-detection of `ServiceName` and `ServiceVersion` from entry assembly metadata
+- **Added** `TracingHelper` and `MetricsHelper` convenience wrappers for DI injection
+
+---
+
+## Acontplus.Core
+
+### [2.3.0]
+
+- **Fixed** `EntityCreatedEvent`: parameter renamed `DeletedByUserId` → `CreatedByUserId`
+- **Fixed** `EntityModifiedEvent`: parameter renamed `DeletedByUserId` → `ModifiedByUserId`
+- **Fixed** `EntityRestoredEvent`: parameter renamed `DeletedByUserId` → `RestoredByUserId`
+- **Fixed** `ErrorType.Timeout` HTTP mapping corrected to 504 Gateway Timeout (was wrongly documented as 408; `RequestTimeout` is the 408 type)
+- **Changed** `JsonExtensions.DefaultOptions`, `PrettyOptions`, `StrictOptions` — converted from `property` (new instance per call) to `static readonly` field; `System.Text.Json` caches type metadata per options instance so reusing the same instance is significantly faster
+- **Changed** `PagedResult<T>` — converted from mutable `class` with `set` properties to `sealed record` with `init`-only properties, consistent with the rest of the package's DTO design; `Metadata` type widened from `Dictionary<string,object>` to `IReadOnlyDictionary<string,object>`
+- **Changed** `SpResponse` — `dynamic` replaced by `object?`; `Payload` marked `[Obsolete]`; `IsSuccess` simplified to `Code == "0"` only (the `Code == "1"` special-case was ambiguous and removed)
+- **Added** `IHttpClientService` — new abstraction at `Abstractions/Infrastructure/Http/` for decoupled outbound HTTP (GET, POST, PUT, PATCH, DELETE) with header and `CancellationToken` support
+- **Added** `ICacheService.RemoveByPrefix`, `RemoveByPrefixAsync` — batch cache invalidation by key prefix
+- **Added** `ICacheService.GetStatisticsAsync` — exposes the existing `CacheStatistics` class (previously orphaned)
+- **Added** `DataValidation.IsValidEmail`, `IsValidUrl`, `IsValidPhoneNumber` — were documented in earlier versions but not implemented; now present with precompiled regex and timeout guards
+- **Added** Full XML documentation on all public types and members; `NoWarn 1591` suppression removed from the project file
+- **Changed** Target framework: `net10.0` only (removed `net8.0` and `net9.0` multi-targeting)
+
+---
+
 ## Acontplus.Reports
 
 ### [1.8.0]

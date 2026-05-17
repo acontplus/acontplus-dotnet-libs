@@ -9,20 +9,25 @@
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced persistence abstractions and infrastructure. Includes generic repository
+    <Description>
+      Advanced persistence abstractions and infrastructure. Includes generic repository
       patterns, context factory, connection string providers, and multi-provider support for SQL
-      Server, PostgreSQL, and other databases with enterprise-ready abstractions.</Description>
+      Server, PostgreSQL, and other databases with enterprise-ready abstractions.
+    </Description>
     <PackageTags>
-      dotnet;dotnet10;persistence;database;abstractions;repository;efcore;multi-provider;entity-framework;connection-string;context-factory;enterprise;infrastructure;sql-server;postgresql</PackageTags>
+      dotnet;dotnet10;persistence;database;abstractions;repository;efcore;multi-provider;entity-framework;connection-string;context-factory;enterprise;infrastructure;sql-server;postgresql
+    </PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary repository patterns, multi-provider support,
+    <PackageReleaseNotes>
+      Enhanced with contemporary repository patterns, multi-provider support,
       connection string management, context factory patterns, and enterprise-ready abstractions for
-      SQL Server, PostgreSQL, and other database providers.</PackageReleaseNotes>
+      SQL Server, PostgreSQL, and other database providers.
+    </PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -46,9 +51,13 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Acontplus.Core" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
   </ItemGroup>
 </Project>

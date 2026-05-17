@@ -6,36 +6,43 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Logging</PackageId>
-    <Version>1.2.8</Version>
+    <Version>2.0.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
     <Copyright>Copyright © 2025 Acontplus</Copyright>
-    <Description>Advanced logging library with Serilog integration. Provides enterprise-grade
-      logging capabilities with support for multiple sinks (console, file, database, Elasticsearch),
-      structured logging, custom enrichers, and cloud-native observability patterns. Features
-      official ELK stack integration with Elastic.Serilog.Sinks, ECS compliance, and
-      high-performance logging for .NET applications.</Description>
+    <Description>Advanced logging and observability library with Serilog and OpenTelemetry
+      integration.
+      Provides enterprise-grade logging, distributed tracing, and metrics with support for multiple
+      sinks (console, file, database, Elasticsearch), structured logging, custom enrichers, and
+      cloud-native observability patterns. Features OpenTelemetry support for Jaeger,
+      Dynatrace, Prometheus, OTLP protocol, official ELK stack integration with
+      Elastic.Serilog.Sinks,
+      ECS compliance, auto-detection of service metadata, and high-performance observability for
+      .NET applications.</Description>
     <PackageTags>
-      dotnet;dotnet10;logging;serilog;structured-logging;elasticsearch;elk-stack;ecs-compliance;database-logs;console-logs;file-logs;enterprise;cloud-native;observability;tracing;elastic-sinks;data-streams;ilm</PackageTags>
+      dotnet;dotnet10;logging;serilog;opentelemetry;observability;tracing;metrics;distributed-tracing;jaeger;dynatrace;prometheus;otlp;structured-logging;elasticsearch;elk-stack;ecs-compliance;telemetry;apm;monitoring;auto-instrumentation</PackageTags>
     <RepositoryUrl>https://github.com/acontplus/acontplus-dotnet-libs</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/acontplus/acontplus-dotnet-libs</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with official Elastic.Serilog.Sinks integration for ELK stack
-      support, ECS compliance, and data streams. Removed S3 dependencies for simplified
-      architecture. Added enterprise-grade logging capabilities with structured logging, custom
-      enrichers, and cloud-native observability patterns. Optimized for high-performance production
-      workloads.</PackageReleaseNotes>
+    <PackageReleaseNotes>Major observability upgrade: Added full OpenTelemetry support with
+      distributed tracing (Jaeger, Dynatrace), metrics (Prometheus, Dynatrace), and OTLP
+      protocol.
+      Features ActivitySource for tracing, Meter for metrics, automatic instrumentation for ASP.NET
+      Core,
+      HTTP, and SQL. Auto-detection of ServiceName and ServiceVersion from assembly metadata.
+      Includes official Elastic.Serilog.Sinks integration for ELK stack, ECS compliance,
+      and enterprise-grade observability patterns. Optimized for cloud-native and microservices
+      architectures.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
 
     <!-- SourceLink configuration for enterprise-grade debugging -->
     <IncludeSymbols>true</IncludeSymbols>
@@ -48,10 +55,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- Serilog packages -->
     <PackageReference Include="Elastic.Serilog.Sinks" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Enrichers.Environment" />
     <PackageReference Include="Serilog.Extensions.Logging" />
@@ -61,6 +69,16 @@
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Sinks.MSSqlServer" />
+
+    <!-- OpenTelemetry core packages -->
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+
+    <!-- OpenTelemetry exporters -->
+    <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
   </ItemGroup>
 
   <ItemGroup>

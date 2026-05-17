@@ -13,8 +13,8 @@
     <PackageVersion Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
-    <PackageVersion Include="AWSSDK.Core" Version="4.0.6" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.22.1" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.7.1" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
     <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.12" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />
@@ -32,11 +32,6 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.7" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.7" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.5.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.18.0" />
@@ -45,6 +40,14 @@
     <PackageVersion Include="MiniExcel" Version="1.43.1" />
     <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+    <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.2" />
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="QuestPDF" Version="2026.2.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.7" />
@@ -66,7 +69,7 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.1.7" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.7" />
-    <PackageVersion Include="System.Drawing.Common" Version="10.0.7" />
+    <PackageVersion Include="System.Drawing.Common" Version="10.0.8" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
     <PackageVersion Include="ZXing.Net" Version="0.16.11" />
     <PackageVersion Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.22" />

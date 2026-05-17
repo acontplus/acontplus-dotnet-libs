@@ -8,6 +8,7 @@ tools:
   - semantic_search
   - grep_search
   - fetch_webpage
+  - run_in_terminal
 ---
 
 # Generate Tests for Acontplus Library
@@ -225,8 +226,14 @@ Generate tests to achieve at minimum:
 
 ## After Generating Tests
 
-Remind the user to:
+1. Add the new test project to `acontplus-dotnet-libs.slnx` — XML-based format, add inside the `/tests/` folder node (create it if absent):
 
-1. Add the new test project to `acontplus-dotnet-libs.slnx`
-2. Add any missing test packages to `Directory.Packages.props`
-3. Run `dotnet test tests/Acontplus.<Name>.Tests` to verify
+   ```xml
+   <Folder Name="/tests/">
+     <Project Path="tests/Acontplus.<Name>.Tests/Acontplus.<Name>.Tests.csproj" />
+   </Folder>
+   ```
+
+2. Run `dotnet build tests/Acontplus.<Name>.Tests` and confirm 0 errors.
+3. Run `dotnet test tests/Acontplus.<Name>.Tests --no-build` and confirm all tests pass.
+4. Report the final test count and any failures to the user.

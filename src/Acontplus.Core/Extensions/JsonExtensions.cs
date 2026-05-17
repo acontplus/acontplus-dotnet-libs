@@ -1,8 +1,18 @@
 namespace Acontplus.Core.Extensions;
 
+/// <summary>
+/// JSON serialization helpers built on top of <see cref="System.Text.Json"/>.
+/// The three <c>*Options</c> fields are <c>static readonly</c> so that
+/// <see cref="System.Text.Json.JsonSerializer"/> can cache its internal type metadata
+/// across calls — recreating options on every access discards that cache.
+/// </summary>
 public static class JsonExtensions
 {
-    public static JsonSerializerOptions DefaultOptions => new()
+    /// <summary>
+    /// Default options: camelCase, null-ignoring, comment-tolerant, enum-as-string.
+    /// Suitable for the vast majority of API scenarios.
+    /// </summary>
+    public static readonly JsonSerializerOptions DefaultOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -14,7 +24,11 @@ public static class JsonExtensions
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public static JsonSerializerOptions PrettyOptions => new()
+    /// <summary>
+    /// Pretty-print options: same as <see cref="DefaultOptions"/> with <c>WriteIndented = true</c>.
+    /// Useful for logging or developer-facing output.
+    /// </summary>
+    public static readonly JsonSerializerOptions PrettyOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -26,7 +40,11 @@ public static class JsonExtensions
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public static JsonSerializerOptions StrictOptions => new()
+    /// <summary>
+    /// Strict options: case-sensitive, no trailing commas, no comments, never-ignore-null,
+    /// strict number handling. Suitable for security-sensitive deserialization.
+    /// </summary>
+    public static readonly JsonSerializerOptions StrictOptions = new()
     {
         PropertyNameCaseInsensitive = false,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

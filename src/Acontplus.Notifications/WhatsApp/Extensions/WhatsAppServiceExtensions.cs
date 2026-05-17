@@ -89,6 +89,9 @@ public static class WhatsAppServiceExtensions
                 // Per-attempt timeout (before the retry kicks in).
                 opts.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
 
+                // SamplingDuration must be >= 2x AttemptTimeout per Polly validation rules.
+                opts.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+
                 // Total timeout covering all attempts including retries.
                 opts.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
             });
