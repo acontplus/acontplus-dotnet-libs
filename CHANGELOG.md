@@ -8,6 +8,30 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Acontplus.Persistence.PostgreSQL
+
+### [1.4.0]
+
+- **Added** `AuditSaveChangesInterceptor` — EF Core `SaveChangesInterceptor` that automatically populates audit fields (`CreatedBy`, `CreatedByUserId`, `IsMobileRequest`, `UpdatedBy`, `UpdatedByUserId`, `DeletedBy`, `DeletedByUserId`) on every `BaseEntity` before saving
+- **Fixed** Audit identity fields now correctly captured per-request under `AddDbContextPool`. The old constructor-injection approach captured the first request's user permanently on each pooled context instance; `CreateScope()` per save resolves a fresh `IAuditContext` every time
+- **Changed** `AddPostgresPersistence<TContext>` now registers `AuditSaveChangesInterceptor` as a singleton and injects it into the `DbContextPool` factory; requires no extra configuration
+- **Changed** `BaseContext` — removed `IAuditContext` constructor overloads; timestamps (`CreatedAt`, `UpdatedAt`, `DeletedAt`) are still managed by `BaseContext`; user-identity fields are now exclusively handled by `AuditSaveChangesInterceptor`
+- **Changed** Audit stamping is a no-op when `IAuditContext` is not registered in DI
+
+---
+
+## Acontplus.Persistence.SqlServer
+
+### [2.2.0]
+
+- **Added** `AuditSaveChangesInterceptor` — EF Core `SaveChangesInterceptor` that automatically populates audit fields (`CreatedBy`, `CreatedByUserId`, `IsMobileRequest`, `UpdatedBy`, `UpdatedByUserId`, `DeletedBy`, `DeletedByUserId`) on every `BaseEntity` before saving
+- **Fixed** Audit identity fields now correctly captured per-request under `AddDbContextPool`. The old constructor-injection approach captured the first request's user permanently on each pooled context instance; `CreateScope()` per save resolves a fresh `IAuditContext` every time
+- **Changed** `AddSqlServerPersistence<TContext>` now registers `AuditSaveChangesInterceptor` as a singleton and injects it into the `DbContextPool` factory; requires no extra configuration
+- **Changed** `BaseContext` — removed `IAuditContext` constructor overloads; timestamps (`CreatedAt`, `UpdatedAt`, `DeletedAt`) are still managed by `BaseContext`; user-identity fields are now exclusively handled by `AuditSaveChangesInterceptor`
+- **Changed** Audit stamping is a no-op when `IAuditContext` is not registered in DI
+
+---
+
 ## Acontplus.Logging
 
 ### [2.0.0]

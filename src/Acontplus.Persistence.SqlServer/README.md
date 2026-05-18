@@ -8,7 +8,7 @@ SQL Server implementation of the Acontplus persistence layer. Provides optimized
 ADO.NET repositories, and SQL Server-specific features for high-performance data access.
 
 > **Note:** This package implements the abstractions defined in [**Acontplus.Persistence.Common
-**](https://www.nuget.org/packages/Acontplus.Persistence.Common). For general persistence patterns and repository
+> **](https://www.nuget.org/packages/Acontplus.Persistence.Common). For general persistence patterns and repository
 > interfaces, see the common package.
 
 ## 🚀 SQL Server-Specific Features
@@ -20,6 +20,7 @@ ADO.NET repositories, and SQL Server-specific features for high-performance data
 - **Dapper Integration** - Lightweight micro-ORM for complex queries with automatic object mapping
 - **SqlBulkCopy Integration** - Optimized bulk inserts with automatic column mapping
 - **Streaming Queries** - Memory-efficient `IAsyncEnumerable<T>` for large datasets
+- **Automatic Audit Stamping** - `AuditSaveChangesInterceptor` auto-populates `CreatedBy`, `UpdatedBy`, `DeletedBy` (and their `UserId` counterparts) on every `BaseEntity` via `IAuditContext`, singleton-safe with `AddDbContextPool`
 - **SQL Injection Prevention** - Regex validation and keyword blacklisting for dynamic queries
 - **Performance Monitoring** - Query execution statistics and performance insights
 
@@ -51,13 +52,17 @@ dotnet add package Acontplus.Persistence.SqlServer
 ### 1. Configure SQL Server Persistence
 
 ```csharp
-// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository automatically)
+// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository and audit interceptor automatically)
 services.AddSqlServerPersistence<MyDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
         sqlOptions.CommandTimeout(60);
     }));
+
+// Register your IAuditContext implementation so the interceptor can resolve audit info
+// (optional — stamping is skipped when IAuditContext is not registered)
+services.AddScoped<IAuditContext, HttpContextAuditContext>();
 
 // Option 2: Add Dapper alongside EF Core (for complex queries)
 services.AddSqlServerPersistence<MyDbContext>(options => options.UseSqlServer(connectionString));
@@ -395,7 +400,9 @@ public async Task<IReadOnlyList<OrderSummary>> GetOrderSummariesAsync(
 ### Performance Tuning
 
 ```csharp
-services.AddDbContext<BaseContext>(options =>
+// Use AddSqlServerPersistence — this wires the AuditSaveChangesInterceptor automatically.
+// Do NOT use AddDbContext directly; it bypasses the interceptor registration.
+services.AddSqlServerPersistence<MyDbContext>(options =>
 {
     options.UseSqlServer(connectionString, sqlOptions =>
     {
@@ -428,18 +435,31 @@ services.AddDbContext<BaseContext>(options =>
 
 - `IAdoRepository` - Interface for direct ADO.NET operations
 - `AdoRepository` - SQL Server optimized implementation with:
-    - **Scalar Queries**: `ExecuteScalarAsync<T>`, `ExistsAsync`, `CountAsync`, `LongCountAsync`
-    - **Pagination**: `GetPagedAsync<T>` with OFFSET-FETCH optimization
-    - **Bulk Operations**: `BulkInsertAsync` using SqlBulkCopy (10,000+ records/sec)
-    - **Streaming**: `QueryAsyncEnumerable<T>` for memory-efficient processing
-    - **Batch Operations**: `ExecuteBatchNonQueryAsync`, `QueryMultipleAsync<T>`
-    - **Stored Procedures**: `GetPagedFromStoredProcedureAsync<T>` with OUTPUT parameters
+  - **Scalar Queries**: `ExecuteScalarAsync<T>`, `ExistsAsync`, `CountAsync`, `LongCountAsync`
+  - **Pagination**: `GetPagedAsync<T>` with OFFSET-FETCH optimization
+  - **Bulk Operations**: `BulkInsertAsync` using SqlBulkCopy (10,000+ records/sec)
+  - **Streaming**: `QueryAsyncEnumerable<T>` for memory-efficient processing
+  - **Batch Operations**: `ExecuteBatchNonQueryAsync`, `QueryMultipleAsync<T>`
+  - **Stored Procedures**: `GetPagedFromStoredProcedureAsync<T>` with OUTPUT parameters
 
 ### Security & Error Handling
 
 - `SqlServerExceptionHandler` - Maps SQL Server error codes to domain exceptions
 - `ValidateAndSanitizeSortColumn` - SQL injection prevention (regex `^[a-zA-Z0-9_\.]+$` + keyword blacklist)
 - `AsyncRetryPolicy` - Polly integration with 3 retries and exponential backoff
+
+### EF Core Interceptors
+
+- `AuditSaveChangesInterceptor` - Singleton registered automatically by `AddSqlServerPersistence`. Before every save it creates a fresh DI scope, resolves `IAuditContext`, and stamps:
+  - `CreatedByUserId` / `CreatedBy` / `IsMobileRequest` on `Added` entities
+  - `UpdatedByUserId` / `UpdatedBy` on `Modified` entities
+  - `DeletedByUserId` / `DeletedBy` on soft-deleted (`IsDeleted = true`) `Modified` entities
+
+  Audit stamping is silently skipped when `IAuditContext` is not registered.
+
+  **Why `CreateScope()` per save instead of constructor injection?** `AddDbContextPool` reuses context instances across requests without re-running constructors. If `IAuditContext` were injected in the constructor it would capture the first request's user and stamp all subsequent requests incorrectly. `CreateScope()` resolves a fresh `IAuditContext` on every save, always capturing the current request's identity — the only correct approach with pooling.
+
+  **High-concurrency overhead**: `IServiceScopeFactory.CreateScope()` is allocation-only (no locks, no I/O). Under 10k concurrent writes/sec the extra cost is ~1–3μs per save and negligible Gen0 GC pressure.
 
 ### Utilities
 
@@ -478,7 +498,7 @@ services.Configure<PaginationMetadataOptions>(options =>
 ## ⚡ Performance Benchmarks
 
 | Operation                  | EF Core     | ADO.NET | Performance Gain     |
-|----------------------------|-------------|---------|----------------------|
+| -------------------------- | ----------- | ------- | -------------------- |
 | Simple Query (1,000 rows)  | 45ms        | 12ms    | **3.75x faster**     |
 | Pagination (10,000 rows)   | 180ms       | 35ms    | **5.14x faster**     |
 | Bulk Insert (10,000 rows)  | 8,500ms     | 850ms   | **10x faster**       |

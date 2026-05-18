@@ -204,14 +204,28 @@
         </member>
         <member name="T:Acontplus.Persistence.SqlServer.Context.BaseContext">
             <summary>
-            Base EF Core database context for SQL Server with support for domain events, auditing, and soft deletes.
+            Base EF Core database context for SQL Server with support for domain events, timestamp auditing, and soft deletes.
             </summary>
+            <remarks>
+            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
+            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
+            <see cref="T:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>, which is registered as a singleton by <c>AddSqlServerPersistence</c>.
+            This context only manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>) and the
+            hard-delete → soft-delete conversion.
+            </remarks>
             <param name="options">The options to be used by the DbContext.</param>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
             <summary>
-            Base EF Core database context for SQL Server with support for domain events, auditing, and soft deletes.
+            Base EF Core database context for SQL Server with support for domain events, timestamp auditing, and soft deletes.
             </summary>
+            <remarks>
+            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
+            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
+            <see cref="T:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>, which is registered as a singleton by <c>AddSqlServerPersistence</c>.
+            This context only manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>) and the
+            hard-delete → soft-delete conversion.
+            </remarks>
             <param name="options">The options to be used by the DbContext.</param>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher)">
@@ -221,51 +235,37 @@
             <param name="options">The options to be used by the DbContext.</param>
             <param name="eventDispatcher">The domain event dispatcher.</param>
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher,Acontplus.Core.Abstractions.Context.IAuditContext)">
-            <summary>
-            Initializes a new instance with a domain event dispatcher and audit context.
-            </summary>
-            <param name="options">The options to be used by the DbContext.</param>
-            <param name="eventDispatcher">The domain event dispatcher.</param>
-            <param name="auditContext">The audit context for tracking user information.</param>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Abstractions.Context.IAuditContext)">
-            <summary>
-            Initializes a new instance with an audit context.
-            </summary>
-            <param name="options">The options to be used by the DbContext.</param>
-            <param name="auditContext">The audit context for tracking user information.</param>
-        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.SaveChangesAsync(System.Threading.CancellationToken)">
-            <summary>
-            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes asynchronously.
-            </summary>
-            <param name="cancellationToken">A token to cancel the operation.</param>
-            <returns>The number of state entries written to the database.</returns>
+            <inheritdoc/>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.SaveChanges">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.UpdateTimestamps">
             <summary>
-            Saves all changes, dispatches domain events, updates audit fields, and handles soft deletes synchronously.
+            Stamps <c>CreatedAt</c> on added entities and <c>UpdatedAt</c> on modified entities.
+            User-identity fields are handled by <see cref="T:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>.
             </summary>
-            <returns>The number of state entries written to the database.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.HandleSoftDeletes">
+            <summary>
+            Converts hard-deletes into soft-deletes and handles restore logic.
+            User-identity fields on deletion (<c>DeletedBy</c>, <c>DeletedByUserId</c>) are handled
+            by <see cref="T:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>.
+            </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <summary>
-            Configures the model by applying global soft-delete filters, date-time conversions, and SQL Server-specific settings.
-            </summary>
-            <param name="modelBuilder">The model builder used to construct the model for the context.</param>
+            <inheritdoc/>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.ConfigureDateTimeProperties(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
             Applies UTC-aware value converters to all <see cref="T:System.DateTime"/> and nullable DateTime properties.
             </summary>
-            <param name="builder">The model builder.</param>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Context.BaseContext.ApplySqlServerConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <summary>
             Applies SQL Server-specific model configurations such as decimal precision and non-Unicode string mappings.
             </summary>
-            <param name="builder">The model builder.</param>
         </member>
         <member name="T:Acontplus.Persistence.SqlServer.DependencyInjection.SqlServerServiceCollectionExtensions">
             <summary>
@@ -388,6 +388,36 @@
                 The exception that is the cause of the current exception, or a null reference
                 (Nothing in Visual Basic) if no inner exception is specified.
             </param>
+        </member>
+        <member name="T:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor">
+            <summary>
+            A singleton EF Core interceptor that populates audit fields (<c>CreatedBy</c>,
+            <c>UpdatedBy</c>, <c>DeletedBy</c> and their UserId counterparts) on every
+            <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
+            </summary>
+            <remarks>
+            Registered automatically by <c>AddSqlServerPersistence</c>.  Resolves
+            <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
+            safe to use with <c>AddDbContextPool</c> (singleton-compatible).
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor.#ctor(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)">
+            <summary>
+            A singleton EF Core interceptor that populates audit fields (<c>CreatedBy</c>,
+            <c>UpdatedBy</c>, <c>DeletedBy</c> and their UserId counterparts) on every
+            <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
+            </summary>
+            <remarks>
+            Registered automatically by <c>AddSqlServerPersistence</c>.  Resolves
+            <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
+            safe to use with <c>AddDbContextPool</c> (singleton-compatible).
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc/>
         </member>
         <member name="T:Acontplus.Persistence.SqlServer.Mapping.DataTableNameMapper">
             <summary>

@@ -16,6 +16,7 @@ PostgreSQL implementation of the Acontplus persistence layer. Provides optimized
 - **Dapper Integration** - Lightweight micro-ORM for complex queries with automatic object mapping
 - **COPY Command Integration** - Optimized bulk inserts with NpgsqlBinaryImporter
 - **Streaming Queries** - Memory-efficient `IAsyncEnumerable<T>` for large datasets
+- **Automatic Audit Stamping** - `AuditSaveChangesInterceptor` auto-populates `CreatedBy`, `UpdatedBy`, `DeletedBy` (and their `UserId` counterparts) on every `BaseEntity` via `IAuditContext`, singleton-safe with `AddDbContextPool`
 - **JSON/JSONB Support** - Native JSON operations and indexing
 - **Array Types** - PostgreSQL array type handling and operations
 - **Full-Text Search** - PostgreSQL full-text search integration
@@ -25,16 +26,19 @@ PostgreSQL implementation of the Acontplus persistence layer. Provides optimized
 ## 📦 Installation
 
 ### NuGet Package Manager
+
 ```bash
 Install-Package Acontplus.Persistence.PostgreSQL
 ```
 
 ### .NET CLI
+
 ```bash
 dotnet add package Acontplus.Persistence.PostgreSQL
 ```
 
 ### PackageReference
+
 ```xml
 <ItemGroup>
   <PackageReference Include="Acontplus.Persistence.PostgreSQL" Version="x.x.x" />
@@ -47,13 +51,17 @@ dotnet add package Acontplus.Persistence.PostgreSQL
 ### 1. Configure PostgreSQL Persistence
 
 ```csharp
-// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository automatically)
+// Option 1: Full EF Core with UnitOfWork (includes IAdoRepository and audit interceptor automatically)
 services.AddPostgresPersistence<MyDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
         npgsqlOptions.CommandTimeout(60);
     }));
+
+// Register your IAuditContext implementation so the interceptor can resolve audit info
+// (optional — stamping is skipped when IAuditContext is not registered)
+services.AddScoped<IAuditContext, HttpContextAuditContext>();
 
 // Option 2: Add Dapper alongside EF Core (for complex queries)
 services.AddPostgresPersistence<MyDbContext>(options => options.UseNpgsql(connectionString));
@@ -71,6 +79,7 @@ services.Configure<PersistenceResilienceOptions>(
 ```
 
 ### 2. Entity Framework Repository Pattern
+
 ```csharp
 public class UserService
 {
@@ -94,6 +103,7 @@ public class UserService
 ### 3. High-Performance ADO.NET Operations
 
 #### Scalar Queries
+
 ```csharp
 public class OrderService
 {
@@ -128,6 +138,7 @@ public class OrderService
 ```
 
 #### Pagination with Security
+
 ```csharp
 // Using PaginationDto from Acontplus.Core
 public async Task<PagedResult<Order>> GetPagedOrdersAsync(PaginationDto pagination)
@@ -175,6 +186,7 @@ public async Task<PagedResult<User>> GetPagedUsersFromFunctionAsync(
 ```
 
 #### Bulk Operations (100,000+ records/sec with COPY)
+
 ```csharp
 // PostgreSQL COPY command with DataTable
 public async Task<int> BulkInsertOrdersAsync(List<Order> orders)
@@ -219,6 +231,7 @@ public async Task<int> BulkInsertProductsAsync(IEnumerable<Product> products)
 ```
 
 #### Streaming Large Datasets
+
 ```csharp
 // Memory-efficient CSV export with IAsyncEnumerable
 public async Task ExportOrdersToCsvAsync(StreamWriter writer)
@@ -257,6 +270,7 @@ public async Task ProcessLargeOrderBatchAsync()
 ```
 
 #### Batch and Multi-Result Queries
+
 ```csharp
 // Execute multiple commands in one transaction
 public async Task<int> ExecuteBatchUpdatesAsync(List<int> orderIds)
@@ -344,6 +358,7 @@ public class ReportService
 ```
 
 ### 5. Advanced EF Core Query Operations
+
 ```csharp
 // Complex queries with PostgreSQL optimizations
 public async Task<IReadOnlyList<OrderSummary>> GetOrderSummariesAsync(
@@ -371,6 +386,7 @@ public async Task<IReadOnlyList<OrderSummary>> GetOrderSummariesAsync(
 ## 🔧 PostgreSQL Configuration
 
 ### Connection String Best Practices
+
 ```json
 {
   "ConnectionStrings": {
@@ -380,8 +396,11 @@ public async Task<IReadOnlyList<OrderSummary>> GetOrderSummariesAsync(
 ```
 
 ### Performance Tuning
+
 ```csharp
-services.AddDbContext<BaseContext>(options =>
+// Use AddPostgresPersistence — this wires the AuditSaveChangesInterceptor automatically.
+// Do NOT use AddDbContext directly; it bypasses the interceptor registration.
+services.AddPostgresPersistence<MyDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
@@ -405,11 +424,13 @@ services.AddDbContext<BaseContext>(options =>
 ## 📚 PostgreSQL API Reference
 
 ### Entity Framework Repositories
+
 - `BaseContext` - Optimized EF Core context for PostgreSQL
 - `IRepository<TEntity>` - Generic repository pattern with change tracking
 - `BaseRepository<TEntity>` - EF Core implementation with query optimization
 
 ### ADO.NET High-Performance Repositories
+
 - `IAdoRepository` - Interface for direct ADO.NET operations
 - `AdoRepository` - PostgreSQL-optimized implementation with:
   - **Scalar Queries**: `ExecuteScalarAsync<T>`, `ExistsAsync`, `CountAsync`, `LongCountAsync`
@@ -420,11 +441,26 @@ services.AddDbContext<BaseContext>(options =>
   - **Functions/Procedures**: `GetPagedFromStoredProcedureAsync<T>` with OUTPUT parameters
 
 ### Security & Error Handling
+
 - `PostgreSqlExceptionHandler` - Maps PostgreSQL error codes to domain exceptions
 - `ValidateAndSanitizeSortColumn` - SQL injection prevention (regex `^[a-zA-Z0-9_\.]+$` + keyword blacklist)
 - `AsyncRetryPolicy` - Polly integration with 3 retries and exponential backoff
 
+### EF Core Interceptors
+
+- `AuditSaveChangesInterceptor` - Singleton registered automatically by `AddPostgresPersistence`. Before every save it creates a fresh DI scope, resolves `IAuditContext`, and stamps:
+  - `CreatedByUserId` / `CreatedBy` / `IsMobileRequest` on `Added` entities
+  - `UpdatedByUserId` / `UpdatedBy` on `Modified` entities
+  - `DeletedByUserId` / `DeletedBy` on soft-deleted (`IsDeleted = true`) `Modified` entities
+
+  Audit stamping is silently skipped when `IAuditContext` is not registered.
+
+  **Why `CreateScope()` per save instead of constructor injection?** `AddDbContextPool` reuses context instances across requests without re-running constructors. If `IAuditContext` were injected in the constructor it would capture the first request's user and stamp all subsequent requests incorrectly. `CreateScope()` resolves a fresh `IAuditContext` on every save, always capturing the current request's identity — the only correct approach with pooling.
+
+  **High-concurrency overhead**: `IServiceScopeFactory.CreateScope()` is allocation-only (no locks, no I/O). Under 10k concurrent writes/sec the extra cost is ~1–3μs per save and negligible Gen0 GC pressure.
+
 ### PostgreSQL-Specific Features
+
 - `DbDataReaderMapper` - Fast mapping from DbDataReader to entities/DTOs
 - `NpgsqlBinaryImporter` - Ultra-fast bulk insert with COPY command
 - `CommandParameterBuilder` - Type-safe parameter builder
@@ -435,6 +471,7 @@ services.AddDbContext<BaseContext>(options =>
 ## 🔐 Security Features
 
 ### SQL Injection Prevention
+
 ```csharp
 // Automatic validation of sort columns
 var pagination = new PaginationDto
@@ -448,6 +485,7 @@ var pagination = new PaginationDto
 ```
 
 ### Metadata Exposure Control
+
 ```csharp
 // PaginationMetadataOptions controls what metadata is exposed
 services.Configure<PaginationMetadataOptions>(options =>
@@ -459,19 +497,20 @@ services.Configure<PaginationMetadataOptions>(options =>
 
 ## ⚡ Performance Benchmarks
 
-| Operation | EF Core | ADO.NET (COPY) | Performance Gain |
-|-----------|---------|----------------|------------------|
-| Simple Query (1,000 rows) | 48ms | 14ms | **3.43x faster** |
-| Pagination (10,000 rows) | 195ms | 42ms | **4.64x faster** |
-| Bulk Insert (10,000 rows) | 9,200ms | 320ms | **28.75x faster** |
-| Bulk Insert (100,000 rows) | 98,000ms | 2,800ms | **35x faster** |
-| Streaming Export (1M rows) | OutOfMemory | 3.8s | **Memory efficient** |
+| Operation                  | EF Core     | ADO.NET (COPY) | Performance Gain     |
+| -------------------------- | ----------- | -------------- | -------------------- |
+| Simple Query (1,000 rows)  | 48ms        | 14ms           | **3.43x faster**     |
+| Pagination (10,000 rows)   | 195ms       | 42ms           | **4.64x faster**     |
+| Bulk Insert (10,000 rows)  | 9,200ms     | 320ms          | **28.75x faster**    |
+| Bulk Insert (100,000 rows) | 98,000ms    | 2,800ms        | **35x faster**       |
+| Streaming Export (1M rows) | OutOfMemory | 3.8s           | **Memory efficient** |
 
 > **Note:** PostgreSQL COPY command significantly outperforms SqlBulkCopy for bulk operations
 
 ### When to Use Each Approach
 
 **Use EF Core (`IRepository<T>`) when:**
+
 - ✅ Complex object graphs with navigation properties
 - ✅ Change tracking is needed
 - ✅ LINQ query composition
@@ -480,6 +519,7 @@ services.Configure<PaginationMetadataOptions>(options =>
 - ✅ JSON/JSONB operations with entity mapping
 
 **Use ADO.NET (`IAdoRepository`) when:**
+
 - ✅ High-volume bulk operations (50,000+ records)
 - ✅ Simple DTOs or read-only queries
 - ✅ Custom SQL optimization required
