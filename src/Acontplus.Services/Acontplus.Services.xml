@@ -4,6 +4,36 @@
         <name>Acontplus.Services</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Services.Configuration.ApplicationConfigurationBuilder">
+             <summary>
+             Builds the merged <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> for every AcontPlus service.
+             </summary>
+             <remarks>
+             Priority order (lowest → highest, last wins):
+             <list type="number">
+               <item><c>appsettings.json</c></item>
+               <item><c>appsettings.{Environment}.json</c></item>
+               <item>Environment variables – for operational overrides and path resolution</item>
+               <item>Shared settings file – <c>sharedsettings.{Environment}.json</c> from the platform shared folder</item>
+               <item>Azure Key Vault – secrets only; activated when <c>KeyVault:VaultUri</c> or the
+                     <c>KEYVAULT_URI</c> environment variable is set</item>
+             </list>
+            
+             <para><b>Local development:</b> leave <c>KeyVault:VaultUri</c> unset and use User Secrets /
+             <c>sharedsettings.Development.json</c> for sensitive values.  When you do want to test against
+             the dev vault, run <c>az login</c> first — <see cref="T:Azure.Identity.DefaultAzureCredential"/> will pick up
+             those credentials automatically.</para>
+            
+             <para><b>Azure-hosted environments (Staging / Production):</b> set <c>KeyVault:VaultUri</c>
+             in <c>appsettings.json</c> (or as the <c>KEYVAULT_URI</c> environment variable) and assign the
+             Managed Identity the <em>Key Vault Secrets User</em> role on the vault.  For user-assigned
+             Managed Identities, also set <c>KeyVault:ManagedIdentityClientId</c>.</para>
+            
+             <para><b>Key Vault secret naming convention:</b> use double-dash as the hierarchy separator,
+             e.g. <c>JwtSettings--SecurityKey</c>, <c>ConnectionStrings--DefaultConnection</c>,
+             <c>AwsConfiguration--AWSSecretKey</c>.</para>
+             </remarks>
+        </member>
         <member name="T:Acontplus.Services.Configuration.JsonConfigurationService">
             <summary>
             Service for configuring JSON serialization in applications
@@ -193,6 +223,28 @@
             <param name="user">The ClaimsPrincipal instance from which the claim will be retrieved.</param>
             <param name="claimName">The name of the claim to retrieve.</param>
             <returns>The value of the claim converted to the specified type, or the default value of the type if the claim does not exist or cannot be converted.</returns>
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Context.HttpAuditContext">
+            <summary>
+            Resolves audit identity from the current HTTP request context and JWT claims.
+            Register as <c>Scoped</c> so each request gets a fresh snapshot of the caller's identity.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Services.Extensions.Context.HttpAuditContext.UserId">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Extensions.Context.HttpAuditContext.UserName">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Extensions.Context.HttpAuditContext.UserRoleId">
+            <inheritdoc />
+        </member>
+        <member name="P:Acontplus.Services.Extensions.Context.HttpAuditContext.IsMobile">
+            <inheritdoc />
+            <remarks>
+            Relies on <c>IsMobileRequest</c> being set in <c>HttpContext.Items</c> by the device-detection
+            middleware that is registered via <c>AddApplicationServices()</c>.
+            </remarks>
         </member>
         <member name="T:Acontplus.Services.Extensions.Context.UserContext">
             <summary>
@@ -465,28 +517,6 @@
             <summary>
             Implementation of device detection service for identifying device types and capabilities.
             </summary>
-        </member>
-        <member name="T:Acontplus.Services.Services.Implementations.HttpAuditContext">
-            <summary>
-            Resolves audit identity from the current HTTP request context and JWT claims.
-            Register as <c>Scoped</c> so each request gets a fresh snapshot of the caller's identity.
-            </summary>
-        </member>
-        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserId">
-            <inheritdoc />
-        </member>
-        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserName">
-            <inheritdoc />
-        </member>
-        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.UserRoleId">
-            <inheritdoc />
-        </member>
-        <member name="P:Acontplus.Services.Services.Implementations.HttpAuditContext.IsMobile">
-            <inheritdoc />
-            <remarks>
-            Relies on <c>IsMobileRequest</c> being set in <c>HttpContext.Items</c> by the device-detection
-            middleware that is registered via <c>AddApplicationServices()</c>.
-            </remarks>
         </member>
         <member name="T:Acontplus.Services.Services.Implementations.LookupService">
             <summary>

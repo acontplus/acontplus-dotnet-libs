@@ -38,7 +38,6 @@ global using Acontplus.Reports.Interfaces;
 global using Acontplus.Services.Configuration;
 global using Acontplus.Services.Extensions.Context;
 global using Acontplus.Services.Services.Abstractions;
-global using Acontplus.Services.Services.Implementations;
 global using Acontplus.Utilities.Dtos;
 global using Acontplus.Utilities.Extensions;
 global using Acontplus.Utilities.Mapping;
