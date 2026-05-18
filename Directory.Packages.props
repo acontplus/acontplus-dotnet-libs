@@ -13,6 +13,8 @@
     <PackageVersion Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="11.0.0" />
+    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="AWSSDK.Core" Version="4.0.7.1" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
     <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.16" />

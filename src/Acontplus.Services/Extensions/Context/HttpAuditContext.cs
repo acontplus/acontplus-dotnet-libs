@@ -1,4 +1,4 @@
-namespace Acontplus.Services.Services.Implementations;
+namespace Acontplus.Services.Extensions.Context;
 
 /// <summary>
 /// Resolves audit identity from the current HTTP request context and JWT claims.
