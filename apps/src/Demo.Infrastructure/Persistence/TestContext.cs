@@ -4,8 +4,8 @@ namespace Demo.Infrastructure.Persistence;
 
 public class TestContext : BaseContext
 {
-    public TestContext(DbContextOptions<TestContext> options, IAuditContext auditContext)
-        : base(options, auditContext) { }
+    public TestContext(DbContextOptions<TestContext> options)
+        : base(options) { }
 
     public DbSet<Dia> Dias { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
