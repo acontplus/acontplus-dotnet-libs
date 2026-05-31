@@ -18,6 +18,43 @@ GET {{baseUrl}}/barcode?text=HelloWorld&includeLabel=true
 ### Generate Sample Invoice Report
 GET {{baseUrl}}/reports/sample-invoice
 
+### ========================================
+### 2. XADES-BES SIGNING (Acontplus.Billing)
+### ========================================
+### Signs an unsigned SRI comprobante XML with XAdES-BES (RSA-SHA1).
+### Returns the signed XML as a downloadable file ready for SRI reception.
+###
+### Replace the file paths with real local files before running:
+###   - xmlFile  : unsigned comprobante (e.g. factura_unsigned.xml)
+###   - pfxFile  : your PFX/P12 certificate (e.g. certificate.p12)
+###   - pfxPassword : password protecting the certificate
+###   - claveAcceso : 49-digit SRI access key
+
+POST {{baseUrl}}/api/billing/sign
+Content-Type: multipart/form-data; boundary=----SriBoundary
+
+------SriBoundary
+Content-Disposition: form-data; name="xmlFile"; filename="factura_unsigned.xml"
+Content-Type: text/xml
+
+< ./factura_unsigned.xml
+------SriBoundary
+Content-Disposition: form-data; name="pfxFile"; filename="certificate.p12"
+Content-Type: application/x-pkcs12
+
+< ./certificate.p12
+------SriBoundary
+Content-Disposition: form-data; name="pfxPassword"
+
+YourCertificatePassword
+------SriBoundary
+Content-Disposition: form-data; name="claveAcceso"
+
+2905202601179265679300110010010000000011234567890
+------SriBoundary--
+
+
+
 ### Generate Sample Customers Report
 GET {{baseUrl}}/reports/sample-customers?format=PDF
 

@@ -137,6 +137,7 @@ public static class ProgramExtensions
         services.AddScoped<IAtsXmlService, AtsXmlService>();
         services.AddScoped<IWebServiceSri, WebServiceSri>();
         services.AddScoped<IXmlSriFileService, XmlSriFileService>();
+        services.AddSingleton<ISriSigner, SriSigner>();
         services.AddScoped<IMailKitService, AmazonSesService>();
         services.AddTransient<ISqlExceptionTranslator, SqlExceptionTranslator>();
         services.AddDataProtection();
@@ -283,6 +284,7 @@ public static class ProgramExtensions
         allVersions.MapAuthEndpoints();
         allVersions.MapAtsEndpoints();
         allVersions.MapDocumentoElectronicoEndpoints();
+        allVersions.MapSriSignerEndpoints();
         allVersions.MapReportsEndpoints();
         allVersions.MapUsuarioEndpoints();
         allVersions.MapEncryptionEndpoints();

@@ -8,6 +8,25 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Acontplus.Billing
+
+### [1.3.0] - 2026-05-30
+
+- **Added** `ISriSigner` — interface contract for XAdES-BES XML signature
+- **Added** `SriSigner` — native implementation of XAdES-BES electronic signature for SRI Ecuador, replicating the MITyCLibXADES output expected by the SRI web service
+  - RSA-SHA1 (`xmldsig#rsa-sha1`) with SHA-1 digests throughout
+  - Three-reference structure: `etsi:SignedProperties` | `ds:KeyInfo` | comprobante (enveloped)
+  - Full `ds:KeyInfo` with `X509Data` and `RSAKeyValue` blocks
+  - `etsi:SigningCertificate` with SHA-1 cert digest and decimal `X509SerialNumber`
+  - `etsi:DataObjectFormat` with MIME type `text/xml`
+  - Cryptographically secure random IDs via `RandomNumberGenerator.GetInt32` (replaces predictable `System.Random`)
+  - `EphemeralKeySet` flag prevents PFX key material from being written to disk (required on Linux/macOS)
+  - Cross-platform timezone resolution: IANA `America/Guayaquil` → Windows `SA Pacific Standard Time` → fixed UTC-5 fallback
+  - No additional NuGet dependency — uses `System.Security.Cryptography.Xml` shipped with `Microsoft.AspNetCore.App`
+- **Changed** `Sign` API returns `string` instead of `bool` + `ref` out-parameter; failures surface as typed exceptions (`ArgumentException`, `InvalidOperationException`)
+
+---
+
 ## Acontplus.Persistence.PostgreSQL
 
 ### [1.4.0]
