@@ -50,7 +50,7 @@ dotnet add package Acontplus.Billing
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Acontplus.Billing" Version="x.x.x" />
+  <PackageReference Include="Acontplus.Billing" Version="1.3.0" />
 </ItemGroup>
 ```
 
@@ -166,6 +166,7 @@ bool isValid = DocumentTypes.IsValidDocumentCode("01"); // true
 - **`IAtsXmlService`** - Generate ATS (Anexo Transaccional Simplificado) XML
 - **`IElectronicDocumentService`** - High-level document management
 - **`IDocumentValidator`** - XSD schema validation
+- **`ISriSigner`** - XAdES-BES electronic signature for SRI Ecuador
 
 ### Document Models
 
@@ -180,3 +181,74 @@ All document types include complete model classes:
 - **`InfoCompRetencion`** - Withholding information
 - **`Destinatario`** - Delivery guide recipients with details
 - **`DocSustento`** - Supporting documents with retentions and reimbursements
+
+## ✍️ XAdES-BES Electronic Signature
+
+`SriSigner` provides a native, cross-platform implementation of the XAdES-BES signature required by SRI Ecuador, replicating the MITyCLibXADES output format.
+
+### Register the service
+
+```csharp
+services.AddSingleton<ISriSigner, SriSigner>();
+```
+
+### Sign a comprobante
+
+```csharp
+public class SigningService(ISriSigner signer)
+{
+    /// <summary>
+    /// Signs the comprobante XML and sends it to SRI for reception.
+    /// </summary>
+    public string SignAndSend(string xmlUnsigned, string claveAcceso)
+    {
+        // Load the PFX certificate from disk or a secret store.
+        byte[] pfxBytes = File.ReadAllBytes("certificate.p12");
+        string password = Environment.GetEnvironmentVariable("CERT_PASSWORD")!;
+
+        // Returns the signed XML string ready for SriService.ReceptionAsync().
+        return signer.Sign(xmlUnsigned, password, pfxBytes, claveAcceso);
+    }
+}
+```
+
+### Typical full workflow
+
+```csharp
+public class ElectronicInvoiceWorkflow(ISriSigner signer, IWebServiceSri sri)
+{
+    private const string ReceptionUrl = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline";
+    private const string AuthUrl      = "https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline";
+
+    public async Task<string> ProcessAsync(
+        string xmlUnsigned, string claveAcceso,
+        byte[] pfxBytes,    string pfxPassword)
+    {
+        // 1. Sign
+        string xmlSigned = signer.Sign(xmlUnsigned, pfxPassword, pfxBytes, claveAcceso);
+
+        // 2. Send to SRI
+        ResponseSri reception = await sri.ReceptionAsync(xmlSigned, ReceptionUrl);
+        if (reception.Estado != "RECIBIDA")
+            throw new InvalidOperationException($"SRI rejected the document: {reception.Estado}");
+
+        // 3. Authorize
+        ResponseSri auth = await sri.AuthorizationAsync(claveAcceso, AuthUrl);
+        return auth.NumeroAutorizacion ?? throw new InvalidOperationException("Authorization failed.");
+    }
+}
+```
+
+### Signature details
+
+| Property | Value |
+|---|---|
+| Signature algorithm | RSA PKCS#1 v1.5 + SHA-1 (`xmldsig#rsa-sha1`) |
+| Digest algorithm | SHA-1 (`xmldsig#sha1`) |
+| Canonicalization | C14N (`REC-xml-c14n-20010315`) |
+| References | `etsi:SignedProperties` · `ds:KeyInfo` · comprobante (enveloped) |
+| Format | XAdES-BES v1.3.2 (`etsi` namespace) |
+| Serial number | Hex → decimal conversion (XAdES-compliant) |
+| Signing time | Ecuador (UTC-5): IANA → Windows → fixed-offset fallback |
+| Key storage | `EphemeralKeySet` — no disk write on Linux/macOS |
+| Random IDs | `RandomNumberGenerator.GetInt32` — cryptographically secure |

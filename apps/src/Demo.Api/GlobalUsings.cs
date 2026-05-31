@@ -8,6 +8,7 @@ global using Acontplus.Billing.Interfaces.Services;
 global using Acontplus.Billing.Services.Documents;
 global using Acontplus.Billing.Services.Documents.Mapping;
 global using Acontplus.Billing.Services.External;
+global using Acontplus.Billing.Services.Signing;
 global using Acontplus.Core.Abstractions.Context;
 global using Acontplus.Core.Abstractions.Infrastructure.Caching;
 global using Acontplus.Core.Abstractions.Persistence;
