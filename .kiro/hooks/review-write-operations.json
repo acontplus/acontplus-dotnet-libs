@@ -1,0 +1,13 @@
+{
+  "name": "Review Write Operations",
+  "version": "1.0.0",
+  "description": "Before any file write, checks that the operation follows project conventions — no Version on PackageReference, no version history in READMEs, and correct file placement.",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["write"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file write operation is about to happen. Review the target file path and content carefully:\n\n1. If writing a **.csproj** file: verify no <PackageReference> element has a Version attribute (CPM rule).\n2. If writing a **README.md**: verify it contains no version-stamped headings like '### Feature (NEW in v1.x)' or 'What's New (Latest Version)' sections (readme-conventions rule).\n3. If writing a **C# source file**: verify it follows the Result<T> pattern for service methods — no throwing exceptions for expected failures.\n4. If writing to **CHANGELOG.md**: verify new content is inserted at the top of the relevant package section, not appended at the bottom.\n\nIf a violation is found, describe it clearly and ask the user to confirm or cancel before proceeding. If no violations, confirm the write can proceed."
+  }
+}

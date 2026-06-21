@@ -1,0 +1,13 @@
+{
+  "name": "Check PackageReference Versions",
+  "version": "1.0.0",
+  "description": "Guards the Central Package Management rule: warns if a Version attribute is added directly to a <PackageReference> element in any .csproj file instead of using Directory.Packages.props.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/**/*.csproj", "apps/**/*.csproj", "tests/**/*.csproj"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A .csproj file was just saved. Read the file and scan every <PackageReference> element.\n\nIf any <PackageReference> has a Version=\"...\" attribute (e.g. <PackageReference Include=\"Foo\" Version=\"1.0.0\" />), warn the user:\n\n> ❌ CPM violation: <PackageReference Include=\"{name}\" Version=\"{version}\" /> has a hardcoded version. Remove the Version attribute from the .csproj and ensure a <PackageVersion Include=\"{name}\" Version=\"{version}\" /> entry exists in Directory.Packages.props instead.\n\nIf no violations are found, do nothing."
+  }
+}
