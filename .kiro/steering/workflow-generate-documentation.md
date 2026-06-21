@@ -24,8 +24,16 @@ Ask the user for the following before proceeding:
 | -------------------------------- | ----------------------------------------------------------- | ------------------- |
 | `src/Acontplus.<Name>/README.md` | How to install and use the package. Published to NuGet.org. | External consumers  |
 | `CHANGELOG.md` (repo root)       | Full versioned history for all packages. Never in READMEs.  | Team + contributors |
+| `docs/wiki/Architecture.md`      | All cross-cutting architecture diagrams. Update this file.  | Team / repo         |
 | `docs/wiki/Home.md`              | Navigation index — links only, no content.                  | Team / repo         |
-| `docs/wiki/*.md`                 | Cross-cutting guides: architecture, resilience, migrations. | Team / repo         |
+| `docs/wiki/*.md`                 | Cross-cutting guides: resilience, billing spec, migrations. | Team / repo         |
+
+**Architecture diagram placement rule:**
+
+- Cross-cutting diagrams (full dep map, DDD layers, request flow) → `docs/wiki/Architecture.md`
+- Package-specific diagrams for complex packages → `src/Acontplus.<Name>/README.md` after `## Features`
+- Complex packages that warrant a README diagram: `Core`, `Billing`, `Infrastructure`, `Persistence.SqlServer`, `Persistence.PostgreSQL`, `Notifications`
+- Simple packages where diagrams add noise: `Reports`, `Services`, `Utilities`, `Analytics`, `Barcode`, `Logging`, `S3Application`, `ApiDocumentation`, `Persistence.Common`
 
 ---
 
@@ -145,9 +153,11 @@ Use `<inheritdoc />` on interface implementations to avoid duplication.
 
 ## Quality Checklist
 
+- [ ] README section order: badges → description → Features → (diagram?) → Installation → Quick Start → Configuration → Examples → Requirements → License
 - [ ] README has all 3 badges (NuGet, .NET, License)
 - [ ] README includes a minimal working Quick Start example
 - [ ] README Configuration section shows both JSON and C# registration
+- [ ] Architecture diagram only included for: Core, Billing, Infrastructure, Persistence.SqlServer/PostgreSQL, Notifications
 - [ ] All `public` and `protected` members have `<summary>` tags
 - [ ] Methods returning `Result<T>` document both success and failure in `<returns>`
 - [ ] `CancellationToken` parameters documented in `<param>`

@@ -19,21 +19,6 @@ Ask the user for the following before generating:
 
 ---
 
-## GitHub Wiki Compatibility Rules
-
-1. Always wrap with ` ```mermaid ` fenced code block
-2. No HTML inside node labels — avoid `<br>`, `<b>`. Use `\n` for line breaks in quoted labels
-3. Quote node labels containing spaces, parentheses, or special characters: `A["My Label (v2)"]`
-4. Node IDs: short, alphanumeric + underscores only — no spaces or hyphens: `acontplus_core`
-5. Use `flowchart` not `graph`: `flowchart TD`
-6. Subgraph titles: plain text, no quotes: `subgraph src[Source Libraries]`
-7. Link labels: `-->|label|` syntax, keep labels short
-8. Maximum ~50 nodes per diagram — split if larger
-9. `classDef` for color-coding — define at bottom, apply with `:::className`
-10. Every `subgraph` must have a closing `end`
-
----
-
 ## Mermaid v11+ Syntax Rules
 
 Use **Mermaid v11+** syntax. Key rules for multi-line labels:
@@ -57,11 +42,44 @@ Use **Mermaid v11+** syntax. Key rules for multi-line labels:
 
 ---
 
+## WHERE Diagrams Go
+
+Before generating any diagram, choose the right output location:
+
+| Subject                                                     | Location                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------- |
+| Full monorepo dependency map                                | `docs/wiki/Architecture.md` — update existing page          |
+| DDD layers (cross-cutting)                                  | `docs/wiki/Architecture.md`                                 |
+| Package-specific internal structure (complex packages only) | `src/Acontplus.<Name>/README.md` after Features section     |
+| New cross-cutting guide                                     | `docs/wiki/<NewTopic>.md` + add link to `docs/wiki/Home.md` |
+
+**Packages that benefit from a README diagram** (non-obvious internal structure):
+`Core`, `Billing`, `Infrastructure`, `Persistence.SqlServer`, `Persistence.PostgreSQL`, `Notifications`
+
+**Packages where README diagrams add noise** (simple, obvious):
+`Reports`, `Services`, `Utilities`, `Analytics`, `Barcode`, `Logging`, `S3Application`, `ApiDocumentation`, `Persistence.Common`
+
+---
+
 ## Diagram Type Reference
 
 ### Package Dependency Map (`flowchart TD`)
 
-**Before drawing**: scan all `src/Acontplus.*/Acontplus.*.csproj` files and collect every `<ProjectReference>` and `<PackageReference Include="Acontplus.*">`. Build the graph from actual data.
+**Before drawing**: scan all `src/Acontplus.*/Acontplus.*.csproj` files. Real dependency levels (never guess):
+
+```
+Level 0 (no internal deps): Core, Barcode, Logging, ApiDocumentation, S3Application
+Level 1 (depend on Core):   Utilities, Infrastructure, Services, Persistence.Common
+Level 2 (depend on L1):     Analytics, Notifications, Billing, Reports,
+                             Persistence.SqlServer, Persistence.PostgreSQL
+```
+
+Critical facts:
+
+- `Billing` → Utilities + Barcode (NOT Core directly)
+- `Reports` → Utilities + Barcode (Level 2, NOT level 4)
+- `Barcode` has zero internal dependencies (Level 0)
+- `Analytics` and `Notifications` depend only on Utilities
 
 ```mermaid
 ---
@@ -69,42 +87,54 @@ config:
   htmlLabels: false
 ---
 flowchart TD
-  subgraph infra["`**Infrastructure Layer**`"]
-    persistence_sql["`Acontplus.Persistence
-    .SqlServer`"]
-    persistence_pg["`Acontplus.Persistence
-    .PostgreSQL`"]
-    persistence_common[Acontplus.Persistence.Common]
-    infrastructure[Acontplus.Infrastructure]
-  end
-
-  subgraph app["`**Application Layer**`"]
-    notifications[Acontplus.Notifications]
-    billing[Acontplus.Billing]
-    reports[Acontplus.Reports]
-    services[Acontplus.Services]
-  end
-
-  subgraph foundation["`**Foundation**`"]
-    core["`Acontplus.Core
+  subgraph l0["`**Level 0** — no internal deps`"]
+    Core["`Acontplus.Core
     Result, DDD, Specs`"]
-    utilities["`Acontplus.Utilities
-    Helpers, Encryption`"]
+    Barcode[Acontplus.Barcode]
+    Logging[Acontplus.Logging]
+    ApiDocs[Acontplus.ApiDocumentation]
+    S3[Acontplus.S3Application]
   end
 
-  persistence_sql --> persistence_common
-  persistence_pg --> persistence_common
-  persistence_common --> core
-  notifications --> core
-  billing --> core
+  subgraph l1["`**Level 1** — depend on Core`"]
+    Utilities["`Acontplus.Utilities
+    Encryption, IO, BCrypt`"]
+    Infrastructure["`Acontplus.Infrastructure
+    Caching, Redis, Resilience`"]
+    Services[Acontplus.Services]
+    PersCommon[Acontplus.Persistence.Common]
+  end
 
-  classDef foundation fill:#1f4e79,color:#fff,stroke:#1f4e79
-  classDef app fill:#2e7d32,color:#fff,stroke:#2e7d32
-  classDef infra fill:#4a148c,color:#fff,stroke:#4a148c
+  subgraph l2["`**Level 2** — depend on Level 1`"]
+    Analytics[Acontplus.Analytics]
+    Notifications[Acontplus.Notifications]
+    Billing["`Acontplus.Billing
+    SRI, XAdES-BES`"]
+    Reports["`Acontplus.Reports
+    RDLC, PDF, Excel`"]
+    PersSQL[Acontplus.Persistence.SqlServer]
+    PersPG[Acontplus.Persistence.PostgreSQL]
+  end
 
-  class core,utilities foundation
-  class notifications,billing,reports,services app
-  class persistence_sql,persistence_pg,persistence_common,infrastructure infra
+  Core --> Utilities
+  Core --> Infrastructure
+  Core --> Services
+  Core --> PersCommon
+  Barcode --> Billing
+  Barcode --> Reports
+  Utilities --> Analytics
+  Utilities --> Notifications
+  Utilities --> Billing
+  Utilities --> Reports
+  PersCommon --> PersSQL
+  PersCommon --> PersPG
+
+  classDef l0 fill:#831742,color:#fff,stroke:#6a1235
+  classDef l1 fill:#d61572,color:#fff,stroke:#b01260
+  classDef l2 fill:#b97800,color:#fff,stroke:#9a6400
+  class Core,Barcode,Logging,ApiDocs,S3 l0
+  class Utilities,Infrastructure,Services,PersCommon l1
+  class Analytics,Notifications,Billing,Reports,PersSQL,PersPG l2
 ```
 
 ### Request / Data Flow (`flowchart LR`)
@@ -178,40 +208,24 @@ sequenceDiagram
 
 ## Output Format
 
-For wiki pages (`docs/wiki/<Name>.md`):
+For `docs/wiki/Architecture.md` — update the existing file, don't create a new one unless it's a genuinely new topic. Add as a new `## Section`.
 
-````markdown
-# <Title>
+For `src/Acontplus.<Name>/README.md` — place after `## Features`, before `## Usage Examples`. One sentence caption above the diagram. Keep ≤ ~20 nodes.
 
-<One paragraph describing what this diagram illustrates.>
-
-## Diagram
-
-```mermaid
-<diagram here>
-```
-````
-
-## Notes
-
-- Note 1
-- Note 2
-
-```
-
-For inline in README: place after the Features section, before API Reference.
+For a new wiki page (`docs/wiki/<NewTopic>.md`) — add `[[<NewTopic>]] — description` to the Guides list in `docs/wiki/Home.md`.
 
 ---
 
 ## Quality Checklist
 
-- [ ] Diagram renders without syntax errors
-- [ ] All node labels quoted if they contain spaces/special chars
-- [ ] Node IDs use only `[a-zA-Z0-9_]`
+- [ ] Dependencies verified from actual `.csproj` files
+- [ ] `Billing` shows Utilities + Barcode deps (not Core directly)
+- [ ] `Reports` shows Utilities + Barcode deps (Level 2, not Level 4)
+- [ ] `Barcode` shown as Level 0 (no internal deps)
+- [ ] Config block `htmlLabels: false` present when using markdown strings
+- [ ] Node IDs alphanumeric + underscores only
 - [ ] Every `subgraph` has a matching `end`
-- [ ] `classDef` uses readable contrast (dark bg + white text)
-- [ ] No HTML tags inside node labels
-- [ ] Diagram has ≤ ~50 nodes; split if larger
-- [ ] Package dependency graph was built from actual `.csproj` files, not guessed
-- [ ] File saved to the agreed location
-```
+- [ ] ≤ ~50 nodes; split if larger
+- [ ] Color palette consistent (blue L0 / green L1 / purple L2 / orange API)
+- [ ] Output location matches the decision table
+- [ ] If new wiki page: link added to `docs/wiki/Home.md`

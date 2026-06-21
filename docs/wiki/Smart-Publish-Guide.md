@@ -60,9 +60,9 @@ flowchart TD
   L --> M[Comment on PR]
   M --> N([Run cascade-publish.yml manually])
 
-  classDef green fill:#1b5e20,color:#fff,stroke:#1b5e20
-  classDef orange fill:#e65100,color:#fff,stroke:#e65100
-  classDef blue fill:#1f4e79,color:#fff,stroke:#1f4e79
+  classDef green fill:#d61572,color:#fff,stroke:#b01260
+  classDef orange fill:#0a7db5,color:#fff,stroke:#085e8a
+  classDef blue fill:#831742,color:#fff,stroke:#6a1235
 
   class E,F,G,H,I,J green
   class K,L,M,N orange
