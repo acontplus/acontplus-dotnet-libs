@@ -1,0 +1,18 @@
+{
+  "name": "Build on .csproj Change",
+  "version": "1.0.0",
+  "description": "Runs dotnet build on the solution whenever a .csproj or Directory.Packages.props file is saved, catching version conflicts and broken references early.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.csproj",
+      "apps/**/*.csproj",
+      "tests/**/*.csproj",
+      "Directory.Packages.props"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "dotnet build acontplus-dotnet-libs.slnx --no-incremental -v minimal 2>&1 | tail -20"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Validate Version Bump",
+  "version": "1.0.0",
+  "description": "When a .csproj is edited, checks that the Version follows semver format and that the same version is also updated in Directory.Packages.props (CPM consistency).",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["src/**/*.csproj"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A .csproj file was just saved. Please do the following checks:\n\n1. Read the saved .csproj file and extract the <Version> value.\n2. Verify the version follows semver format (X.Y.Z or X.Y.Z-prerelease). If it doesn't, warn the user.\n3. Read Directory.Packages.props and check whether a <PackageVersion Include=\"<PackageId>\" Version=\"...\"> entry exists for this package.\n4. If the entry exists but the version doesn't match the .csproj version, alert the user with the exact fix needed: update Directory.Packages.props to match.\n5. If everything is consistent, confirm silently with a one-line message.\n\nDo NOT make any changes automatically — only report findings."
+  }
+}

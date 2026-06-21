@@ -1,0 +1,13 @@
+{
+  "name": "Run Tests on Source Change",
+  "version": "1.0.0",
+  "description": "Runs dotnet test whenever a C# source file in a test project is saved, giving immediate feedback on test failures.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["tests/**/*.cs"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "dotnet test --no-build -v minimal 2>&1 | tail -30"
+  }
+}
