@@ -103,8 +103,8 @@ flowchart LR
   D --> E
   E --> F
 
-  classDef manual fill:#1f4e79,color:#fff,stroke:#1f4e79
-  classDef auto fill:#1b5e20,color:#fff,stroke:#1b5e20
+  classDef manual fill:#831742,color:#fff,stroke:#6a1235
+  classDef auto fill:#d61572,color:#fff,stroke:#b01260
   class A manual
   class B,C,D,E,F auto
 ```

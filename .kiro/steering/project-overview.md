@@ -37,12 +37,17 @@ acontplus-dotnet-libs/
 ## Package Dependency Layers
 
 ```
-Foundation:   Core ← Utilities
-Application:  Notifications, Billing, Reports, Services, Analytics, S3, Barcode, Logging, ApiDocs
-              (all depend on Core)
-Infrastructure: Persistence.Common ← Persistence.SqlServer / Persistence.PostgreSQL
-                Infrastructure → Core
+Level 0 (no internal deps):  Core, Barcode, Logging, ApiDocumentation, S3Application
+Level 1 (depend on Core):    Utilities, Infrastructure, Services, Persistence.Common
+Level 2 (depend on Level 1): Analytics, Notifications, Billing, Reports,
+                              Persistence.SqlServer, Persistence.PostgreSQL
 ```
+
+Notes:
+
+- `Barcode` has zero internal deps — used by Billing (QR on RIDE) and Reports (barcode in PDFs)
+- `Billing` depends on Utilities + Barcode (not Core directly)
+- `Reports` depends on Utilities + Barcode — same level as Billing, NOT level 4
 
 ## Key Architectural Decisions
 

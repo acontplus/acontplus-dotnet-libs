@@ -6,7 +6,12 @@ on:
       - main
     paths:
       - "docs/wiki/**"
+      - ".github/workflows/publish-wiki.yml"
   workflow_dispatch:
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -17,14 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Publish wiki pages
-        uses: Andrew-Chen-Wang/github-wiki-action@v4
+      - uses: Andrew-Chen-Wang/github-wiki-action@v5
         with:
           path: docs/wiki/
           commit-message: "docs: sync wiki from docs/wiki [skip ci]"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
+          disable-empty-commits: true

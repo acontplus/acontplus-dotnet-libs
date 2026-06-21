@@ -19,60 +19,53 @@ Path: `src/Acontplus.<Name>/README.md`
 
 Follow `readme-conventions.md` steering strictly — no version-stamped content, no change history.
 
-````markdown
-# Acontplus.<Name>
+**Canonical section order** — this order is mandatory:
 
+1. Title + 3 badges (NuGet, .NET, License)
+2. One-paragraph description
+3. `## Features` — current capabilities, no version refs
+4. Architecture diagram _(only for qualifying packages — see Step 2a)_
+5. `## Installation`
+6. `## Quick Start`
+7. `## Configuration` — JSON snippet + C# registration
+8. `## Usage Examples`
+9. `## Requirements`
+10. `## Troubleshooting` _(optional)_
+11. `## License`
+
+Badge template:
+
+```markdown
 [![NuGet](https://img.shields.io/nuget/v/Acontplus.<Name>.svg)](https://www.nuget.org/packages/Acontplus.<Name>)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-
-<One paragraph — purpose and primary value.>
-
-## Features
-
-- ✅ **Feature A** — what it does
-- ✅ **Feature B** — what it does
-
-## Installation
-
-```bash
-dotnet add package Acontplus.<Name>
-```
-````
-
-## Quick Start
-
-```csharp
-builder.Services.Add<Name>(builder.Configuration);
 ```
 
-## Configuration
+---
 
-```json
-{ "<Name>": { "Option": "value" } }
+### Step 2a — Architecture Diagram Decision
+
+Only add a diagram to the README for packages with **non-obvious internal structure**.
+
+**Add a diagram** (place after `## Features`, before `## Installation`, ≤ ~20 nodes):
+
+- `Core` — Domain/, Abstractions/, Validation/, DTOs/ layer relationships
+- `Billing` — SRI async authorization sequence
+- `Infrastructure` — the 5 subsystems (Caching, Resilience, HTTP, Middleware, HealthChecks)
+- `Persistence.SqlServer` / `Persistence.PostgreSQL` — EF Core vs ADO.NET dual-access
+- `Notifications` — multi-channel map (Email/WhatsApp/SES/Templates)
+
+**Do NOT add a diagram** (text description is sufficient):
+
+- `Reports`, `Services`, `Utilities`, `Analytics`, `Barcode`, `Logging`, `S3Application`, `ApiDocumentation`, `Persistence.Common`
+
+If adding one: one sentence above the diagram block. Use Mermaid v11 markdown strings with `config: htmlLabels: false`.
+
+For complex diagrams that would exceed ~20 nodes, link to the wiki instead:
+
+```markdown
+> Full architecture diagrams: [Architecture](https://github.com/acontplus/acontplus-dotnet-libs/wiki/Architecture)
 ```
-
-```csharp
-services.Add<Name>(opts => { opts.Option = "value"; });
-```
-
-## Usage Examples
-
-### Example: <Scenario>
-
-```csharp
-// code
-```
-
-## Requirements
-
-- .NET 10.0+
-
-## License
-
-MIT
-
-````
 
 ---
 
@@ -81,11 +74,12 @@ MIT
 Every `public` and `protected` member must have `<summary>`.
 
 **Classes/Interfaces**:
+
 ```csharp
 /// <summary>One sentence describing what this type does.</summary>
 /// <remarks>Optional: threading notes, usage context.</remarks>
 public class MyService : IMyService
-````
+```
 
 **Methods**:
 
@@ -111,10 +105,12 @@ Use `<inheritdoc />` on implementations to avoid duplication.
 
 ### Step 4 — Quality Checklist
 
+- [ ] README section order matches the canonical order above
 - [ ] README has all 3 badges (NuGet, .NET, License)
 - [ ] No version-stamped headings or change history in README
 - [ ] Quick Start has a minimal working code example
 - [ ] Configuration shows both JSON and C# registration
+- [ ] Architecture diagram included only for qualifying packages (Step 2a)
 - [ ] All `public`/`protected` members have `<summary>`
 - [ ] `Result<T>` returns document both success and failure paths
 - [ ] `CancellationToken` params documented

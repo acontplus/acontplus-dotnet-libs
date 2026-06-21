@@ -89,9 +89,9 @@ flowchart TD
   s3 --> core
   barcode --> utilities
 
-  classDef foundation fill:#1f4e79,color:#fff,stroke:#1f4e79
-  classDef app fill:#2e7d32,color:#fff,stroke:#2e7d32
-  classDef infra fill:#4a148c,color:#fff,stroke:#4a148c
+  classDef foundation fill:#831742,color:#fff,stroke:#6a1235
+  classDef app fill:#0a8f64,color:#fff,stroke:#097352
+  classDef infra fill:#b97800,color:#fff,stroke:#9a6400
 
   class core,utilities foundation
   class notifications,billing,reports,services,analytics,s3,barcode,logging,api_docs app

@@ -120,7 +120,7 @@ flowchart TD
 
   layer1 --> layer2 --> layer3 --> layer4 --> db[(Database)]
 
-  classDef layer fill:#1f4e79,color:#fff,stroke:#1f4e79
+  classDef layer fill:#831742,color:#fff,stroke:#6a1235
   class layer1,layer2,layer3,layer4 layer
 ```
 

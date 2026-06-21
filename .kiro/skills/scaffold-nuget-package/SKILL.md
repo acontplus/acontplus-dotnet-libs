@@ -116,7 +116,13 @@ public static class <Name>ServiceExtensions
 
 ### Step 6 — Create `README.md`
 
-Follow `readme-conventions.md`. Must include: 3 badges, description paragraph, `## Features` (no version refs), `## Installation`, `## Quick Start`, `## Configuration`.
+Follow `readme-conventions.md`. Must include in this order: 3 badges, description paragraph, `## Features` (no version refs), `## Installation`, `## Quick Start`, `## Configuration` (JSON + C#), `## Usage Examples`, `## Requirements`, `## License`.
+
+**Diagram in README?** New packages start as simple — skip the diagram. Only add one after the package grows into non-obvious complexity. The qualifying packages that warrant README diagrams are: `Core`, `Billing`, `Infrastructure`, `Persistence.SqlServer`, `Persistence.PostgreSQL`, `Notifications`. When in doubt, link to the wiki instead:
+
+```markdown
+> Architecture overview: [Architecture](https://github.com/acontplus/acontplus-dotnet-libs/wiki/Architecture)
+```
 
 ---
 
