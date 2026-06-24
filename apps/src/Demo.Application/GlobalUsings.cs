@@ -16,6 +16,7 @@ global using Acontplus.Utilities.Extensions;
 global using Acontplus.Utilities.Mapping;
 global using Demo.Application.Dtos;
 global using Demo.Application.Interfaces;
+global using Demo.Application.Mapping;
 global using Demo.Domain.Entities;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;

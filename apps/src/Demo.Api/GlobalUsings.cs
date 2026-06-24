@@ -51,7 +51,6 @@ global using Demo.Api.Extensions;
 global using Demo.Application.Dtos;
 global using Demo.Application.Interfaces;
 global using Demo.Domain.Entities;
-global using Mapster;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.DependencyInjection;

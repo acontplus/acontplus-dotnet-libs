@@ -132,9 +132,10 @@ public static class UsuarioEndpoints
 
     private static async Task<IResult> CreateUsuario(
         UsuarioDto usuarioDto,
-        IUsuarioService usuarioService)
+        IUsuarioService usuarioService,
+        IObjectMapper mapper)
     {
-        var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(usuarioDto);
+        var usuario = mapper.Map<UsuarioDto, Usuario>(usuarioDto);
         if (usuario == null)
             return Results.BadRequest(ApiResponse.Failure(
                 [new ApiError("MAPPING_ERROR", "Invalid user data")]));
@@ -159,9 +160,10 @@ public static class UsuarioEndpoints
     private static async Task<IResult> UpdateUsuario(
         int id,
         UsuarioDto usuarioDto,
-        IUsuarioService usuarioService)
+        IUsuarioService usuarioService,
+        IObjectMapper mapper)
     {
-        var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(usuarioDto);
+        var usuario = mapper.Map<UsuarioDto, Usuario>(usuarioDto);
         if (usuario == null)
             return Results.BadRequest(ApiResponse.Failure(
                 [new ApiError("MAPPING_ERROR", "Invalid user data")]));
@@ -178,7 +180,7 @@ public static class UsuarioEndpoints
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        return await usuarioService.GetPaginatedUsersAsync(pagination.Adapt<PaginationRequest>()).ToGetMinimalApiResultAsync();
+        return await usuarioService.GetPaginatedUsersAsync(pagination.ToPaginationRequest()).ToGetMinimalApiResultAsync();
     }
 
     private static async Task<IResult> ImportUsuarios(
@@ -219,7 +221,7 @@ public static class UsuarioEndpoints
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        var request = pagination.Adapt<PaginationRequest>();
+        var request = pagination.ToPaginationRequest();
 
         // Extract typed filter values using the FilterQuery extension methods
         var showDeleted = pagination.GetFilterValue<bool>("showDeleted", false);
@@ -241,7 +243,7 @@ public static class UsuarioEndpoints
         PaginationQuery pagination,
         IUsuarioService usuarioService)
     {
-        var request = pagination.Adapt<PaginationRequest>()
+        var request = pagination.ToPaginationRequest()
             .WithFilter("IsDeleted", false)
             .WithFilter("CreatedAfter", DateTime.UtcNow.AddDays(-30))
             .WithFilter("MinimumRole", "User");
@@ -254,7 +256,7 @@ public static class UsuarioEndpoints
         IUsuarioService usuarioService,
         HttpContext httpContext)
     {
-        var request = pagination.Adapt<PaginationRequest>();
+        var request = pagination.ToPaginationRequest();
 
         // Extract userId from claims and append to filters
         var userId = httpContext.User.FindFirst("sub")?.Value

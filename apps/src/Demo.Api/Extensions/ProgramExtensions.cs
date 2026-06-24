@@ -4,12 +4,14 @@ using Acontplus.Persistence.Common.Configuration;
 using Acontplus.S3Application.Extensions;
 using Acontplus.Services.Extensions;
 using Acontplus.Services.Extensions.Authentication;
+using Acontplus.Utilities.Mapping;
 using Asp.Versioning;
 using Asp.Versioning.Builder;
 using Asp.Versioning.Conventions;
 using Demo.Api.Endpoints.Business.Analytics;
 using Demo.Api.Endpoints.Demo;
 using Demo.Api.Endpoints.Infrastructure;
+using Demo.Application.Mapping;
 using Demo.Application.Services;
 using Demo.Infrastructure.EventHandlers;
 using Demo.Infrastructure.Persistence;
@@ -51,6 +53,13 @@ public static class ProgramExtensions
         // CreatedBy/UpdatedBy/DeletedBy without any application-layer code.
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<IAuditContext, HttpAuditContext>();
+
+        // ========================================
+        // OBJECT MAPPER (Compiled Delegates)
+        // ========================================
+        // Registers IObjectMapper as a singleton with pre-compiled expression-tree delegates.
+        // All mapping delegates are compiled at startup — zero reflection on the hot path.
+        services.AddObjectMapper(new DemoMappingProfile());
 
         // Configure Lookup Service
         services.AddLookupService();
@@ -295,6 +304,9 @@ public static class ProgramExtensions
         allVersions.MapExceptionTestEndpoints();
         allVersions.MapOrderEndpoints();
         allVersions.MapSalesAnalyticsEndpoints();
+
+        // Object Mapper Demo endpoints
+        allVersions.MapObjectMapperDemoEndpoints();
 
         // ── Swagger UI ────────────────────────────────────────────────────────────
         // Called LAST so app.DescribeApiVersions() (inside the library) reads the

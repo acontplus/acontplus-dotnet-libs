@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Acontplus.Core.Dtos.Requests;
 using Acontplus.Utilities.Dtos;
 
 namespace Acontplus.Utilities.Extensions;
@@ -81,5 +82,43 @@ public static class FilterQueryExtensions
 
         value = GetFilterValue<T>(query, key);
         return value is not null;
+    }
+
+    /// <summary>
+    /// Converts a <see cref="FilterQuery"/> to a <see cref="FilterRequest"/>.
+    /// This is a direct property-to-property conversion that replaces the need for
+    /// external mapping libraries (e.g., Mapster).
+    /// </summary>
+    /// <param name="query">The source filter query.</param>
+    /// <returns>A new <see cref="FilterRequest"/> with the same filter values.</returns>
+    public static FilterRequest ToFilterRequest(this FilterQuery query)
+    {
+        return new FilterRequest
+        {
+            SortBy = query.SortBy,
+            SortDirection = query.SortDirection ?? SortDirection.Asc,
+            SearchTerm = query.SearchTerm,
+            Filters = query.Filters
+        };
+    }
+
+    /// <summary>
+    /// Converts a <see cref="PaginationQuery"/> to a <see cref="PaginationRequest"/>.
+    /// This is a direct property-to-property conversion that replaces the need for
+    /// external mapping libraries (e.g., Mapster).
+    /// </summary>
+    /// <param name="query">The source pagination query.</param>
+    /// <returns>A new <see cref="PaginationRequest"/> with the same pagination and filter values.</returns>
+    public static PaginationRequest ToPaginationRequest(this PaginationQuery query)
+    {
+        return new PaginationRequest
+        {
+            PageIndex = query.PageIndex,
+            PageSize = query.PageSize,
+            SortBy = query.SortBy,
+            SortDirection = query.SortDirection ?? SortDirection.Asc,
+            SearchTerm = query.SearchTerm,
+            Filters = query.Filters
+        };
     }
 }

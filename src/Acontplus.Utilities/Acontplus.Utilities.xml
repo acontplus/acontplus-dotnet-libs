@@ -171,6 +171,24 @@
             <param name="key">The filter key to retrieve.</param>
             <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
         </member>
+        <member name="M:Acontplus.Utilities.Extensions.FilterQueryExtensions.ToFilterRequest(Acontplus.Utilities.Dtos.FilterQuery)">
+            <summary>
+            Converts a <see cref="T:Acontplus.Utilities.Dtos.FilterQuery"/> to a <see cref="T:Acontplus.Core.Dtos.Requests.FilterRequest"/>.
+            This is a direct property-to-property conversion that replaces the need for
+            external mapping libraries (e.g., Mapster).
+            </summary>
+            <param name="query">The source filter query.</param>
+            <returns>A new <see cref="T:Acontplus.Core.Dtos.Requests.FilterRequest"/> with the same filter values.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.FilterQueryExtensions.ToPaginationRequest(Acontplus.Utilities.Dtos.PaginationQuery)">
+            <summary>
+            Converts a <see cref="T:Acontplus.Utilities.Dtos.PaginationQuery"/> to a <see cref="T:Acontplus.Core.Dtos.Requests.PaginationRequest"/>.
+            This is a direct property-to-property conversion that replaces the need for
+            external mapping libraries (e.g., Mapster).
+            </summary>
+            <param name="query">The source pagination query.</param>
+            <returns>A new <see cref="T:Acontplus.Core.Dtos.Requests.PaginationRequest"/> with the same pagination and filter values.</returns>
+        </member>
         <member name="P:Acontplus.Utilities.Extensions.ResultApiExtensions.ConfigureResponse">
             <summary>
             Allows configuring the ApiResponse before it's returned in success cases.
@@ -262,6 +280,28 @@
             <summary>
             Async version for Result&lt;PagedResult&lt;T&gt;&gt; to IResult (Minimal API, DomainErrors)
             </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Extensions.UtilitiesServiceExtensions">
+            <summary>
+            Extension methods for <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> to register Acontplus.Utilities services.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.UtilitiesServiceExtensions.AddObjectMapper(Microsoft.Extensions.DependencyInjection.IServiceCollection,Acontplus.Utilities.Mapping.MappingProfile[])">
+            <summary>
+            Registers the compiled object mapper as a singleton in the service collection.
+            Configures the <see cref="T:Acontplus.Utilities.Mapping.MapperConfiguration"/> with the provided profiles, compiles
+            all mapping delegates at startup, and registers the resulting <see cref="T:Acontplus.Utilities.Mapping.IObjectMapper"/>
+            as a singleton.
+            </summary>
+            <param name="services">The service collection to register the mapper into.</param>
+            <param name="profiles">
+            Zero or more <see cref="T:Acontplus.Utilities.Mapping.MappingProfile"/> instances to register. When no profiles are
+            provided, convention-based mappings are still available on demand.
+            </param>
+            <returns>The same <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> instance for fluent chaining.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when <see cref="T:Acontplus.Utilities.Mapping.IObjectMapper"/> has already been registered in the service collection.
+            </exception>
         </member>
         <member name="T:Acontplus.Utilities.Format.CompressionUtils">
             <summary>
@@ -436,75 +476,863 @@
             Extension method to compare JSON
             </summary>
         </member>
-        <member name="T:Acontplus.Utilities.Mapping.ObjectMapper">
+        <member name="T:Acontplus.Utilities.Mapping.CompiledObjectMapper">
             <summary>
-            A lightweight object mapper that provides AutoMapper-like functionality.
+            Default implementation of <see cref="T:Acontplus.Utilities.Mapping.IObjectMapper"/> backed by pre-compiled
+            <c>Expression</c>-tree delegates. Register as a singleton via
+            <c>services.AddObjectMapper(...)</c>.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.CreateMap``2">
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.#ctor(Acontplus.Utilities.Mapping.MapperRegistry)">
+            <summary>Initialises the mapper with a fully built <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/>.</summary>
+            <param name="registry">
+            A fully initialised registry containing compiled delegates for all registered type pairs.
+            </param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="registry"/> is <c>null</c>.
+            </exception>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.CompiledObjectMapper.Registry">
             <summary>
-            Creates a mapping configuration between source and target types.
+            Exposes the internal registry for use by the backward-compatibility static shim
+            when registering late <c>CreateMap</c> calls after <c>Build()</c>.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.Map``2(``0)">
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(``0)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(``0,``1)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(System.Collections.Generic.IEnumerable{``0})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.ProjectTo``2(System.Linq.IQueryable{``0})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.MapInternal``2(``0,Acontplus.Utilities.Mapping.TypePair)">
             <summary>
-            Maps a source object to a new instance of a target type.
+            Resolves and invokes the compiled delegate for the specified type pair.
+            Falls back to runtime type resolution when the declared source type differs
+            from the actual runtime type.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.Map``2(``0,``1)">
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.ResolveDelegate``2(Acontplus.Utilities.Mapping.TypePair)">
             <summary>
-            Maps a source object to an existing target object.
+            Resolves the typed mapping delegate for the specified type pair.
+            Uses the registry cache or compiles a convention delegate on demand.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.CreateInstance``2(``0)">
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.CopyProperties``1(``0,``0)">
             <summary>
-            Creates an instance of the target type, using constructor parameters matched from the source if necessary.
+            Copies all writable public properties from <paramref name="source"/> to
+            <paramref name="destination"/>. Used by the "map into existing" overload to
+            apply mapped values onto an existing target instance.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MapProperties``2(``0,``1)">
+        <member name="T:Acontplus.Utilities.Mapping.Internal.DelegateCompiler">
             <summary>
-            Maps an object to another type without using a predefined mapping configuration.
+            Compiles <see cref="T:System.Linq.Expressions.Expression"/> trees into <c>Func&lt;TSource, TTarget&gt;</c> delegates.
+            Handles flat, nested, collection, and constructor-based mappings.
             </summary>
         </member>
-        <member name="T:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.DelegateCompiler.Compile(System.Linq.Expressions.LambdaExpression)">
             <summary>
-            Base mapping configuration class.
+            Compiles the provided expression tree into a typed delegate and returns it
+            wrapped as a <see cref="T:System.Delegate"/>.
+            </summary>
+            <param name="expression">
+            A <see cref="T:System.Linq.Expressions.LambdaExpression"/> previously built by <see cref="T:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder"/>.
+            </param>
+            <returns>The compiled delegate ready for invocation.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.DelegateCompiler.CompileConvention(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MapperRegistry)">
+            <summary>
+            Builds and compiles a delegate for a convention-based <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>
+            with no explicit <see cref="T:Acontplus.Utilities.Mapping.MappingExpressionBase"/> configuration.
+            </summary>
+            <param name="pair">The source-to-target type pair to build a convention mapping for.</param>
+            <param name="registry">
+            The mapper registry used to resolve nested pair delegates during expression building.
+            </param>
+            <returns>The compiled convention mapping delegate.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder">
+            <summary>
+            Builds <see cref="T:System.Linq.Expressions.Expression"/> trees for mapping and projection operations.
+            Does not perform compilation — returns <see cref="T:System.Linq.Expressions.LambdaExpression"/> instances only.
             </summary>
         </member>
-        <member name="T:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2">
+        <member name="F:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SimpleTypes">
             <summary>
-            Mapping configuration for source and target types.
+            Set of types considered "simple" for the purposes of flat mapping.
+            Includes numeric primitives, bool, char, string, decimal, DateTime, DateTimeOffset,
+            TimeSpan, Guid, enums, and their <see cref="T:System.Nullable`1"/> wrappers.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.ForMember``1(System.Linq.Expressions.Expression{System.Func{`1,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildMappingExpression(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
             <summary>
-            Configures a custom mapping for a target property.
+            Builds a <see cref="T:System.Linq.Expressions.LambdaExpression"/> for the given <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> and optional
+            <see cref="T:Acontplus.Utilities.Mapping.MappingExpressionBase"/> configuration. Handles flat member mappings with
+            case-insensitive name matching, type conversion, ForMember rules, delegate resolvers,
+            and Ignore rules. When the target type lacks a parameterless constructor, applies
+            constructor-parameter mapping with priority-based argument resolution.
+            </summary>
+            <param name="pair">The source-to-target type pair to build the expression for.</param>
+            <param name="config">
+            Optional configuration containing custom member rules, delegate resolvers, and ignore rules.
+            When <c>null</c>, convention-only mapping is applied.
+            </param>
+            <param name="registry">
+            The mapper registry for resolving nested pair delegates. Not used for flat mapping
+            but accepted for future nested/cycle support.
+            </param>
+            <param name="inProgress">
+            Set of type pairs currently being compiled, used for cycle detection.
+            Not used for flat mapping but accepted for future nested support.
+            </param>
+            <returns>
+            A <see cref="T:System.Linq.Expressions.LambdaExpression"/> of the form <c>(TSource source) => new TTarget { ... }</c>
+            with member init bindings for all resolvable destination properties.
+            </returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when the target type has no parameterless constructor and no public constructor
+            is fully satisfiable, or when a <c>ForCtorParam</c> rule references a parameter that
+            does not exist on any constructor of the target type.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildParameterlessCtorExpression(System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Type,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds a mapping expression using the parameterless constructor and member init bindings.
+            This is the original flat-mapping path.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.ForMember``1(System.Linq.Expressions.Expression{System.Func{`1,``0}},System.Func{`0,``0})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildConstructorMappingExpression(Acontplus.Utilities.Mapping.TypePair,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Type,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
             <summary>
-            Configures a custom mapping function for a target property.
+            Builds a mapping expression using constructor-parameter mapping.
+            Selects the best public constructor, resolves arguments, and wraps with
+            <see cref="T:System.Linq.Expressions.MemberInitExpression"/> for remaining settable properties.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when no public constructor is fully satisfiable or when a <c>ForCtorParam</c>
+            rule references a non-existent parameter.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ValidateCtorParamRules(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+            <summary>
+            Validates that all <c>ForCtorParam</c> rule names correspond to an actual parameter
+            on at least one public constructor of the target type. Throws
+            <see cref="T:System.InvalidOperationException"/> if a rule names a non-existent parameter.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.ForCtorParam(System.String,System.String)">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
             <summary>
-            Maps a source property to a constructor parameter.
+            Selects the best public constructor for the target type based on the number of
+            satisfiable parameters. A constructor is "fully satisfiable" when ALL its parameters
+            can be resolved. Among fully satisfiable constructors, the one with the most parameters
+            is preferred. Ties are broken by <see cref="M:System.Type.GetConstructors"/> order (first wins).
+            </summary>
+            <returns>
+            A tuple of the selected constructor and its resolved argument expressions.
+            </returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when no public constructor is fully satisfiable.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ResolveConstructorParameter(System.Reflection.ParameterInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+            <summary>
+            Resolves a single constructor parameter's argument expression using the priority order:
+            <c>ForCtorParam</c> rule → convention name match → declared default value.
+            Returns <c>null</c> if the parameter cannot be resolved.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.ForCtorParam``1(System.String,System.Linq.Expressions.Expression{System.Func{`0,``0}})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsAssignableForCtorParam(System.Type,System.Type)">
             <summary>
-            Maps a source property to a constructor parameter using expressions.
+            Determines whether a source type is assignable to a constructor parameter type,
+            considering direct assignability, nullable conversions, and numeric conversions.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.Ignore``1(System.Linq.Expressions.Expression{System.Func{`1,``0}})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildCtorParamValueExpression(System.Linq.Expressions.Expression,System.Type,System.Type)">
             <summary>
-            Ignores a specific property during mapping.
+            Builds the value expression for a constructor parameter from a matched source property,
+            handling type conversion and null safety for value-type parameters.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.ObjectMapper.MappingConfiguration`2.IgnoreUnmappedProperties">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsInitOnlySetter(System.Reflection.PropertyInfo)">
             <summary>
-            Ignores all unmapped properties.
+            Determines whether a property has an init-only setter (not a regular public setter).
+            A property is considered init-only if it has a setter marked with the
+            <c>IsExternalInit</c> modifier but that setter is NOT public.
+            Properties with public setters that are also init (e.g., <c>public init</c>) are
+            treated as regular writable properties.
             </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildMemberBinding(System.Reflection.PropertyInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds a member binding for a single destination property, applying the member
+            resolution priority: Ignore → ForMember expression → delegate resolver → convention match.
+            For convention-matched complex-type properties, recursively builds nested mapping
+            expressions with cycle detection. Returns <c>null</c> if the member should be omitted
+            from bindings.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildConventionValueExpression(System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo,System.Reflection.PropertyInfo)">
+            <summary>
+            Builds the value expression for a convention-matched property, handling type
+            compatibility and null source values.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildTypeConversionExpression(System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Builds a type conversion expression from the source member access to the destination type.
+            Returns <c>null</c> if conversion is not possible.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildChangeTypeExpression(System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Builds a <c>Convert.ChangeType</c> expression wrapped in a try/catch that returns
+            <c>default(TDest)</c> on failure.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildNullGuardedExpression(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Wraps a value expression with a null guard. When the source is null, produces
+            <c>null</c> for nullable reference types or <c>default(T)</c> for non-nullable value types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildDelegateResolverExpression(System.Linq.Expressions.ParameterExpression,System.Func{System.Object,System.Object},System.Type)">
+            <summary>
+            Builds an expression that invokes a boxed <c>Func&lt;object, object?&gt;</c> delegate
+            resolver, casting the result to the destination property type.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ReplaceParameter(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.ParameterExpression)">
+            <summary>
+            Replaces occurrences of <paramref name="oldParam"/> in <paramref name="body"/>
+            with <paramref name="newParam"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ReplaceParameter(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.Expression)">
+            <summary>
+            Replaces occurrences of <paramref name="oldParam"/> in <paramref name="body"/>
+            with an arbitrary <paramref name="replacement"/> expression.
+            Used for inlining nested lambda bodies where the parameter is replaced with a
+            property access expression.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.EnsureType(System.Linq.Expressions.Expression,System.Type)">
+            <summary>
+            Ensures that the expression is of the specified type, adding a conversion if necessary.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsSimpleType(System.Type)">
+            <summary>
+            Determines whether a type is considered a "simple type" for mapping purposes.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsNumericOrConvertible(System.Type)">
+            <summary>
+            Determines whether a type supports direct numeric/primitive conversion via
+            <c>Expression.Convert</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsNullableType(System.Type)">
+            <summary>
+            Determines whether a type is nullable (either a <see cref="T:System.Nullable`1"/> or a reference type).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.HasWritableSetter(System.Reflection.PropertyInfo)">
+            <summary>
+            Determines whether a destination property has a writable setter (public set or init-only).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildCollectionMemberBinding(System.Reflection.PropertyInfo,System.Reflection.PropertyInfo,System.Linq.Expressions.ParameterExpression,Acontplus.Utilities.Mapping.MapperRegistry,System.Func{Acontplus.Utilities.Mapping.TypePair,System.Delegate})">
+            <summary>
+            Builds a <see cref="T:System.Linq.Expressions.MemberBinding"/> for a collection-type destination property.
+            Resolves element types, obtains or compiles the element mapping delegate from the registry,
+            builds a <c>Enumerable.Select(...).ToList()/ToArray()</c> expression, and wraps with a null guard.
+            </summary>
+            <param name="destProp">The destination collection property to bind.</param>
+            <param name="sourceProp">The source collection property to read from.</param>
+            <param name="sourceParam">The source parameter expression.</param>
+            <param name="registry">The mapper registry for resolving element delegates.</param>
+            <param name="factory">Factory function for compiling element delegates on demand.</param>
+            <returns>A <see cref="T:System.Linq.Expressions.MemberBinding"/> for the collection mapping, or <c>null</c> if types cannot be resolved.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsCollectionType(System.Type)">
+            <summary>
+            Determines whether a type is a collection type (implements <see cref="T:System.Collections.IEnumerable"/>
+            but is not <see cref="T:System.String"/>).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.GetCollectionElementType(System.Type)">
+            <summary>
+            Extracts the generic element type from a collection type.
+            For arrays returns the element type; for generic collections returns the generic argument.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildSelectExpression(System.Linq.Expressions.Expression,System.Delegate,System.Type,System.Type)">
+            <summary>
+            Builds a <c>Enumerable.Select(source, elementMapper)</c> expression that projects
+            each element through the element mapping delegate.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildMaterialisationExpression(System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Appends the appropriate materialisation method call to the <paramref name="selectExpression"/>:
+            <c>.ToArray()</c> for <c>T[]</c> destinations, <c>.ToList()</c> for all other supported collection types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildCollectionNullGuard(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Wraps the materialised collection expression with a null guard:
+            if source is null → <c>null</c> (nullable dest) or <c>new List&lt;T&gt;()</c> / <c>new T[0]</c> (non-nullable dest).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildEmptyCollectionExpression(System.Type,System.Type)">
+            <summary>
+            Builds an expression that creates an empty collection of the appropriate concrete type
+            for non-nullable destination collection properties.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildNestedComplexTypeExpression(System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo,System.Reflection.PropertyInfo,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds an expression for mapping a nested complex-type property. Handles cycle detection
+            by producing a deferred <c>Lazy&lt;Func&lt;TNestedSource, TNestedTarget&gt;&gt;</c> closure
+            when a cycle is detected, or inlining the nested lambda body when no cycle exists.
+            The result is wrapped in a null guard for the source property.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildDeferredCyclicMapping(System.Linq.Expressions.Expression,System.Type,System.Type,Acontplus.Utilities.Mapping.MapperRegistry)">
+            <summary>
+            Builds a deferred mapping invocation for cyclic type pairs. Creates a
+            <c>Lazy&lt;Func&lt;TNestedSource, TNestedTarget&gt;&gt;</c> that resolves the compiled
+            delegate from the registry after all compilation completes. The expression tree captures
+            <c>Expression.Invoke(Expression.Property(lazyConst, "Value"), sourceExpr)</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.CreateLazyRegistryResolver(Acontplus.Utilities.Mapping.MapperRegistry,Acontplus.Utilities.Mapping.TypePair,System.Type,System.Type,System.Type)">
+            <summary>
+            Creates a <c>Lazy&lt;Func&lt;TNestedSource, TNestedTarget&gt;&gt;</c> instance whose factory
+            resolves the compiled mapping delegate from the registry. The <c>Lazy</c> ensures the delegate
+            is fetched exactly once, on first invocation (which occurs after <c>Build()</c> completes).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildNestedNullGuard(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Wraps a nested complex-type mapping expression with a null guard.
+            When the source property is null, assigns <c>null</c> for nullable reference types
+            or <c>default(TTarget)</c> for non-nullable value types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionExpression(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase)">
+            <summary>
+            Builds a pure <see cref="T:System.Linq.Expressions.LambdaExpression"/> suitable for passing to
+            <c>IQueryable&lt;TSource&gt;.Select(...)</c>. Uses the same member-resolution rules as
+            <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildMappingExpression(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase,Acontplus.Utilities.Mapping.MapperRegistry,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})"/> but throws <see cref="T:System.NotSupportedException"/> for
+            any member that requires <c>Convert.ChangeType</c> or uses a <c>Func&lt;&gt;</c> delegate resolver.
+            Nested complex-type pairs are inlined recursively; cycles throw <see cref="T:System.NotSupportedException"/>.
+            </summary>
+            <param name="pair">The source-to-target type pair to build the projection expression for.</param>
+            <param name="config">
+            Optional configuration containing custom member rules, delegate resolvers, and ignore rules.
+            When <c>null</c>, convention-only projection is applied.
+            </param>
+            <returns>
+            A <see cref="T:System.Linq.Expressions.LambdaExpression"/> of the form <c>(TSource source) =&gt; new TTarget { ... }</c>
+            suitable for LINQ query provider translation.
+            </returns>
+            <exception cref="T:System.NotSupportedException">
+            Thrown when a member requires <c>Convert.ChangeType</c>, uses a <c>Func&lt;&gt;</c> delegate resolver,
+            or when a cycle is detected in nested complex-type projection.
+            </exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when the target type has no satisfiable constructor.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionExpressionInternal(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Internal recursive implementation of <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionExpression(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase)"/> with
+            cycle detection via an <paramref name="inProgress"/> set.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionParameterlessCtorExpression(System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Type,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds a projection expression using the parameterless constructor and member init bindings.
+            Produces a pure expression tree without <c>Convert.ChangeType</c> or delegate resolvers.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionConstructorExpression(Acontplus.Utilities.Mapping.TypePair,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Type,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds a projection expression using constructor-parameter mapping.
+            Produces a pure expression tree with a <see cref="T:System.Linq.Expressions.NewExpression"/> containing named arguments.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestProjectionConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+            <summary>
+            Selects the best public constructor for projection, applying the same resolution rules
+            as <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})"/> but without delegate-based resolution.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ResolveProjectionConstructorParameter(System.Reflection.ParameterInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+            <summary>
+            Resolves a constructor parameter for projection. Uses the same priority order as
+            <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ResolveConstructorParameter(System.Reflection.ParameterInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})"/> (ForCtorParam → convention → default) but
+            produces only pure expression-tree compatible values — no delegate-based resolution.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionMemberBinding(System.Reflection.PropertyInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],Acontplus.Utilities.Mapping.MappingExpressionBase,System.Collections.Generic.HashSet{Acontplus.Utilities.Mapping.TypePair})">
+            <summary>
+            Builds a member binding for a single destination property in projection mode.
+            Applies the member resolution priority: Ignore → ForMember expression → convention match.
+            Throws <see cref="T:System.NotSupportedException"/> for delegate resolvers or <c>Convert.ChangeType</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionValueExpression(System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Builds a value expression for projection, enforcing that no <c>Convert.ChangeType</c> is used.
+            Throws <see cref="T:System.NotSupportedException"/> for type conversions that require runtime conversion.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.IsProjectionAssignable(System.Type,System.Type)">
+            <summary>
+            Determines whether a source type is assignable to a destination type for projection purposes,
+            without requiring <c>Convert.ChangeType</c>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.BuildProjectionTypeConversion(System.Linq.Expressions.Expression,System.Type,System.Type)">
+            <summary>
+            Builds a type conversion expression for projection that is safe for LINQ query providers.
+            Only uses <c>Expression.Convert</c> for directly convertible types.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ParameterReplacer">
+            <summary>
+            Expression visitor that replaces one <see cref="T:System.Linq.Expressions.ParameterExpression"/> with another.
+            Used to rebind lambda bodies to the mapping source parameter.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ParameterExpressionReplacer">
+            <summary>
+            Expression visitor that replaces a <see cref="T:System.Linq.Expressions.ParameterExpression"/> with an arbitrary
+            <see cref="T:System.Linq.Expressions.Expression"/>. Used for inlining nested lambda bodies where the parameter
+            is replaced with a property access expression (e.g., <c>source.Address</c>).
+            </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.IObjectMapper">
+            <summary>
+            Abstraction for compiled-delegate object mapping.
+            Register via <c>services.AddObjectMapper(...)</c> and inject as a singleton.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.IObjectMapper.Map``2(``0)">
+            <summary>Maps <paramref name="source"/> to a new <typeparamref name="TTarget"/> instance.</summary>
+            <typeparam name="TSource">The source type to map from.</typeparam>
+            <typeparam name="TTarget">The target type to map to.</typeparam>
+            <param name="source">The source object to map.</param>
+            <returns>A new instance of <typeparamref name="TTarget"/> populated from <paramref name="source"/>.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.IObjectMapper.Map``2(``0,``1)">
+            <summary>Maps <paramref name="source"/> onto an existing <paramref name="destination"/>.</summary>
+            <typeparam name="TSource">The source type to map from.</typeparam>
+            <typeparam name="TTarget">The target type to map to.</typeparam>
+            <param name="source">The source object to map.</param>
+            <param name="destination">The existing target instance to map onto.</param>
+            <returns>The <paramref name="destination"/> instance with mapped values applied.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.IObjectMapper.Map``2(System.Collections.Generic.IEnumerable{``0})">
+            <summary>Maps each element of <paramref name="source"/> to <typeparamref name="TTarget"/>.</summary>
+            <typeparam name="TSource">The source element type to map from.</typeparam>
+            <typeparam name="TTarget">The target element type to map to.</typeparam>
+            <param name="source">The source collection to map.</param>
+            <returns>An enumerable of mapped <typeparamref name="TTarget"/> instances.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.IObjectMapper.ProjectTo``2(System.Linq.IQueryable{``0})">
+            <summary>
+            Projects a queryable source sequence to <typeparamref name="TTarget"/> using a pure
+            <see cref="T:System.Linq.Expressions.Expression"/> tree so that LINQ query providers (e.g., EF Core) can translate
+            the projection to SQL without materialising source objects.
+            </summary>
+            <typeparam name="TSource">The source element type to project from.</typeparam>
+            <typeparam name="TTarget">The target element type to project to.</typeparam>
+            <param name="source">The queryable source sequence to project.</param>
+            <returns>An <see cref="T:System.Linq.IQueryable`1"/> of projected <typeparamref name="TTarget"/> instances.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MapperConfiguration">
+            <summary>
+            Immutable snapshot of all registered mapping profiles.
+            Call <see cref="M:Acontplus.Utilities.Mapping.MapperConfiguration.Build"/> to validate configurations, compile delegates, and produce
+            a <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/>.
+            After <see cref="M:Acontplus.Utilities.Mapping.MapperConfiguration.Build"/> returns, no further profiles may be added.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperConfiguration.AddProfile(Acontplus.Utilities.Mapping.MappingProfile)">
+            <summary>
+            Adds a <see cref="T:Acontplus.Utilities.Mapping.MappingProfile"/> to the configuration.
+            All registrations from the profile are merged into the internal configuration store.
+            </summary>
+            <param name="profile">The profile instance containing mapping registrations.</param>
+            <returns>This instance for fluent chaining.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="profile"/> is <c>null</c>.
+            </exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown if called after <see cref="M:Acontplus.Utilities.Mapping.MapperConfiguration.Build"/> has been invoked, indicating that the
+            configuration is sealed and no further profiles may be registered.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperConfiguration.Build">
+            <summary>
+            Validates all registered <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>s in a single pass, compiles delegates
+            for each one, and returns a fully initialised <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/>.
+            Throws a single <see cref="T:System.InvalidOperationException"/> listing every violation if
+            any <c>ForMember</c> target does not exist or has an incompatible resolved type.
+            Seals this configuration — further calls to <see cref="M:Acontplus.Utilities.Mapping.MapperConfiguration.AddProfile(Acontplus.Utilities.Mapping.MappingProfile)"/> will throw.
+            </summary>
+            <returns>A fully initialised <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/> ready for mapping operations.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when one or more validation violations are found across registered type pairs.
+            The message lists every violation found during validation.
+            </exception>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MapperConfiguration.CompileDelegate">
+            <summary>
+            Internal hook for delegate compilation. Set by the ExpressionBuilder/DelegateCompiler
+            subsystem when it is available. When null, Build() validates and creates the registry
+            without compiling delegates (pairs will be compiled on first use via convention mapping).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MapperConfiguration.Registrations">
+            <summary>
+            Gets the merged registrations dictionary. Used internally for testing and by
+            future compilation infrastructure.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MapperConfiguration.ConventionOnlyExpression">
+            <summary>
+            Internal expression class for convention-only reverse-map registrations.
+            Contains no custom rules — all members map by name convention.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MapperRegistry">
+            <summary>
+            Thread-safe store for compiled <c>Func&lt;TSource, TTarget&gt;</c> mapping delegates,
+            keyed by <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>. After startup, all operations are lock-free concurrent reads.
+            Unregistered pairs are compiled exactly once on first use via <see cref="T:System.Lazy`1"/> factories.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperRegistry.Register(Acontplus.Utilities.Mapping.TypePair,System.Delegate)">
+            <summary>
+            Registers a pre-compiled delegate for the specified <paramref name="pair"/>.
+            Overwrites any existing entry for the same <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>.
+            </summary>
+            <param name="pair">The source-to-target type pair identifying the mapping route.</param>
+            <param name="compiledDelegate">The compiled mapping delegate to store.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="compiledDelegate"/> is <c>null</c>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperRegistry.GetOrAdd(Acontplus.Utilities.Mapping.TypePair,System.Func{Acontplus.Utilities.Mapping.TypePair,System.Delegate})">
+            <summary>
+            Returns the compiled delegate for the specified <paramref name="pair"/>.
+            If the pair is not yet registered, the <paramref name="factory"/> is invoked exactly once
+            (even under concurrent access) to produce the delegate, which is then cached for all
+            subsequent calls.
+            </summary>
+            <param name="pair">The source-to-target type pair identifying the mapping route.</param>
+            <param name="factory">
+            A factory function that compiles and returns a mapping delegate for the given
+            <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>. Invoked at most once per <paramref name="pair"/>.
+            </param>
+            <returns>The compiled mapping delegate for the specified <paramref name="pair"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="factory"/> is <c>null</c>.
+            </exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when the <paramref name="factory"/> cannot produce a valid delegate for the pair
+            (e.g., no satisfiable constructor, no matched members for convention mapping).
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperRegistry.TryGet(Acontplus.Utilities.Mapping.TypePair,System.Delegate@)">
+            <summary>
+            Attempts to retrieve the compiled delegate for the specified <paramref name="pair"/>.
+            </summary>
+            <param name="pair">The source-to-target type pair identifying the mapping route.</param>
+            <param name="compiledDelegate">
+            When this method returns <c>true</c>, contains the compiled delegate for the pair;
+            otherwise, <c>null</c>.
+            </param>
+            <returns>
+            <c>true</c> if a compiled delegate exists (or has been lazily initialised) for the
+            specified <paramref name="pair"/>; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperRegistry.RegisterConfiguration(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase)">
+            <summary>
+            Stores the <see cref="T:Acontplus.Utilities.Mapping.MappingExpressionBase"/> configuration for the specified
+            <paramref name="pair"/>. Used by <c>ProjectTo</c> to retrieve member rules
+            when building projection expressions.
+            </summary>
+            <param name="pair">The source-to-target type pair identifying the mapping route.</param>
+            <param name="config">
+            The configuration to store, or <c>null</c> for convention-only mappings.
+            </param>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MapperRegistry.TryGetConfiguration(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase@)">
+            <summary>
+            Attempts to retrieve the <see cref="T:Acontplus.Utilities.Mapping.MappingExpressionBase"/> configuration for the
+            specified <paramref name="pair"/>.
+            </summary>
+            <param name="pair">The source-to-target type pair identifying the mapping route.</param>
+            <param name="config">
+            When this method returns <c>true</c>, contains the configuration for the pair;
+            otherwise, <c>null</c>.
+            </param>
+            <returns>
+            <c>true</c> if a configuration exists for the specified <paramref name="pair"/>;
+            otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MappingExpression`2">
+            <summary>
+            Fluent builder for configuring the mapping from
+            <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>.
+            Instantiated by <see cref="M:Acontplus.Utilities.Mapping.MappingProfile.CreateMap``2"/>
+            and provides chainable methods for custom member, ignore, constructor, and
+            reverse-map configuration.
+            </summary>
+            <typeparam name="TSource">The source type to map from.</typeparam>
+            <typeparam name="TTarget">The target type to map to.</typeparam>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.#ctor(Acontplus.Utilities.Mapping.TypePair,System.Collections.Generic.Dictionary{Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase})">
+            <summary>
+            Initialises a new <see cref="T:Acontplus.Utilities.Mapping.MappingExpression`2"/> for the
+            specified type pair, linked to the owning profile's registration dictionary.
+            </summary>
+            <param name="pair">The source-to-target type pair this expression describes.</param>
+            <param name="registrations">
+            The owning profile's registration dictionary, used for reverse-map registration.
+            </param>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.ForMember``1(System.Linq.Expressions.Expression{System.Func{`1,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})">
+            <summary>
+            Maps a destination member via a source member expression.
+            </summary>
+            <typeparam name="TProperty">The type of the destination property.</typeparam>
+            <param name="destination">
+            An expression selecting the destination property to configure.
+            Must resolve to a writable property of <typeparamref name="TTarget"/>.
+            </param>
+            <param name="source">
+            An expression selecting the source member whose value will be assigned
+            to the destination property.
+            </param>
+            <returns>This instance for fluent chaining.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown at configuration time if <paramref name="destination"/> does not resolve
+            to a writable property of <typeparamref name="TTarget"/>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.ForMember``1(System.Linq.Expressions.Expression{System.Func{`1,``0}},System.Func{`0,``0})">
+            <summary>
+            Maps a destination member via an arbitrary delegate resolver.
+            Note: this overload is incompatible with <c>ProjectTo</c> because LINQ query
+            providers cannot inspect compiled delegates.
+            </summary>
+            <typeparam name="TProperty">The type of the destination property.</typeparam>
+            <param name="destination">
+            An expression selecting the destination property to configure.
+            Must resolve to a writable property of <typeparamref name="TTarget"/>.
+            </param>
+            <param name="resolver">
+            A delegate that computes the destination property value from the source object.
+            </param>
+            <returns>This instance for fluent chaining.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown at configuration time if <paramref name="destination"/> does not resolve
+            to a writable property of <typeparamref name="TTarget"/>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.Ignore``1(System.Linq.Expressions.Expression{System.Func{`1,``0}})">
+            <summary>
+            Excludes a destination member from forward-direction mapping.
+            The exclusion does not propagate to any reverse mapping registered via
+            <see cref="M:Acontplus.Utilities.Mapping.MappingExpression`2.ReverseMap"/>.
+            </summary>
+            <typeparam name="TProperty">The type of the destination property.</typeparam>
+            <param name="destination">
+            An expression selecting the destination property to ignore.
+            Must resolve to a writable property of <typeparamref name="TTarget"/>.
+            </param>
+            <returns>This instance for fluent chaining.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown at configuration time if <paramref name="destination"/> does not resolve
+            to a writable property of <typeparamref name="TTarget"/>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.ForCtorParam``1(System.String,System.Linq.Expressions.Expression{System.Func{`0,``0}})">
+            <summary>
+            Binds a source member expression to a named constructor parameter on
+            <typeparamref name="TTarget"/>. Validation that the parameter exists on the
+            selected constructor occurs at delegate-compilation time, not here.
+            </summary>
+            <typeparam name="TProperty">The type of the constructor parameter.</typeparam>
+            <param name="paramName">
+            The name of the constructor parameter to bind (case-insensitive matching).
+            </param>
+            <param name="source">
+            An expression selecting the source member whose value will be passed
+            as the constructor argument.
+            </param>
+            <returns>This instance for fluent chaining.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="paramName"/> is <c>null</c> or empty.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.ReverseMap">
+            <summary>
+            Registers the inverse <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> (<typeparamref name="TTarget"/> →
+            <typeparamref name="TSource"/>) using only name-based convention matching.
+            Forward <c>ForMember</c>, <c>ForCtorParam</c>, and <c>Ignore</c> rules are NOT
+            carried over to the reverse direction.
+            </summary>
+            <returns>This instance for fluent chaining.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MappingExpressionBase">
+            <summary>
+            Abstract base class that holds the raw rule data collected during profile configuration.
+            <see cref="T:Acontplus.Utilities.Mapping.MappingExpression`2"/> inherits from this class and populates
+            these collections via the fluent API. The expression builder reads from these collections
+            during delegate compilation.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpressionBase.#ctor(Acontplus.Utilities.Mapping.TypePair)">
+            <summary>
+            Initialises a new <see cref="T:Acontplus.Utilities.Mapping.MappingExpressionBase"/> for the specified type pair.
+            </summary>
+            <param name="pair">The source-to-target type pair this expression describes.</param>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingExpressionBase.Pair">
+            <summary>The source-to-target type pair this expression describes.</summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingExpressionBase.MemberRules">
+            <summary>
+            Custom member mapping rules keyed by destination property name.
+            A <c>null</c> value indicates an <c>Ignore</c> rule for that member.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingExpressionBase.DelegateResolvers">
+            <summary>
+            Delegate-based resolvers keyed by destination property name.
+            These store boxed <c>Func&lt;object, object?&gt;</c> wrappers and are incompatible
+            with <c>ProjectTo</c> because LINQ query providers cannot inspect compiled delegates.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingExpressionBase.CtorParamRules">
+            <summary>
+            Constructor parameter rules keyed by parameter name (case-insensitive).
+            Each value is a <see cref="T:System.Linq.Expressions.LambdaExpression"/> that resolves the source value
+            for the named constructor parameter on the target type.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingExpressionBase.HasReverseMap">
+            <summary>
+            Indicates whether <c>.ReverseMap()</c> was called, signalling that the inverse
+            <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> should be registered using name-based convention matching.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpressionBase.ValidateDestinationExpression``2(System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+            <summary>
+            Validates that the destination expression resolves to a writable property
+            (public setter or init-only setter) on the target type.
+            </summary>
+            <param name="destinationExpression">The destination member expression to validate.</param>
+            <typeparam name="TTarget">The target type.</typeparam>
+            <typeparam name="TProperty">The property type.</typeparam>
+            <returns>The property name extracted from the expression.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when the expression does not resolve to a writable property of <typeparamref name="TTarget"/>.
+            </exception>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.MappingProfile">
+            <summary>
+            Base class for grouping a set of <c>CreateMap</c> registrations.
+            Derive from this class and register instances via <c>services.AddObjectMapper(profile)</c>.
+            </summary>
+            <remarks>
+            The derived class constructor should call <see cref="M:Acontplus.Utilities.Mapping.MappingProfile.CreateMap``2"/> one or
+            more times to define the mappings owned by this profile.
+            </remarks>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.MappingProfile.Registrations">
+            <summary>
+            Gets the internal collection of registrations keyed by <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>.
+            This is read by <c>MapperConfiguration</c> during the build phase.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingProfile.#ctor">
+            <summary>
+            Initialises a new instance of the <see cref="T:Acontplus.Utilities.Mapping.MappingProfile"/> class.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.MappingProfile.CreateMap``2">
+            <summary>
+            Registers a mapping from <typeparamref name="TSource"/> to <typeparamref name="TTarget"/>
+            and returns a fluent builder for further configuration.
+            </summary>
+            <typeparam name="TSource">The source type to map from.</typeparam>
+            <typeparam name="TTarget">The target type to map to.</typeparam>
+            <returns>
+            A <see cref="T:Acontplus.Utilities.Mapping.MappingExpression`2"/> instance for fluent configuration
+            of member mappings, ignores, constructor parameters, and reverse mapping.
+            </returns>
+            <remarks>
+            Calling this method a second time for the same <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> within the same
+            profile overwrites the previous registration for that pair, fulfilling requirement 3.1.
+            <para>
+            The inverse <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> is NOT registered by this method. Use
+            <see cref="M:Acontplus.Utilities.Mapping.MappingExpression`2.ReverseMap"/> to explicitly register
+            the reverse direction with convention-only rules (requirement 3.6).
+            </para>
+            </remarks>
+        </member>
+        <member name="T:Acontplus.Utilities.Mapping.TypePair">
+            <summary>
+            Identifies a unique mapping route from <see cref="P:Acontplus.Utilities.Mapping.TypePair.SourceType"/> to <see cref="P:Acontplus.Utilities.Mapping.TypePair.TargetType"/>.
+            Implemented as a value type to allow efficient use as a dictionary key.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.TypePair.SourceType">
+            <summary>The source CLR type.</summary>
+        </member>
+        <member name="P:Acontplus.Utilities.Mapping.TypePair.TargetType">
+            <summary>The target CLR type.</summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.#ctor(System.Type,System.Type)">
+            <summary>Initialises a new <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>.</summary>
+            <param name="sourceType">The source CLR type.</param>
+            <param name="targetType">The target CLR type.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.Equals(Acontplus.Utilities.Mapping.TypePair)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.Equals(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.GetHashCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.op_Equality(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.TypePair)">
+            <summary>Determines whether two <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> instances are equal.</summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.op_Inequality(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.TypePair)">
+            <summary>Determines whether two <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> instances are not equal.</summary>
         </member>
         <member name="T:Acontplus.Utilities.Security.Helpers.PathSecurityValidator">
             <summary>

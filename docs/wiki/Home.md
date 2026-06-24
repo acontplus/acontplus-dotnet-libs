@@ -95,9 +95,3 @@ flowchart TD
 ```
 
 Key: `Reports` is Level 2 (not 4) — it depends on `Utilities` + `Barcode`, both of which are Level 0/1. Full diagrams: [[Architecture]]
-
----
-
-## 🏢 About Acontplus
-
-[Acontplus](https://www.acontplus.com) is a leading provider of software solutions in Ecuador, specializing in digital transformation, electronic invoicing, secure integrations, and business process automation.

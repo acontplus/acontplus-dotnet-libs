@@ -8,6 +8,27 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Acontplus.Utilities
+
+### [2.2.0] - 2026-06-24
+
+- **Added** `IObjectMapper` — public interface for compiled-delegate object mapping; register via `services.AddObjectMapper()`
+- **Added** `MappingProfile` — abstract base class for grouping `CreateMap<TSource, TTarget>()` registrations with fluent `ForCtorParam`, `Ignore`, and `ReverseMap` configuration
+- **Added** `MappingExpression<TSource, TTarget>` — fluent builder returned by `CreateMap`; supports `ForMember` (expression overload), `Ignore`, `ForCtorParam`, and `ReverseMap`
+- **Added** `MapperConfiguration` — collects profiles, validates all type pairs in a single pass, and compiles delegates at startup; sealed after `Build()` to prevent late registration
+- **Added** `MapperRegistry` — thread-safe `ConcurrentDictionary<TypePair, Lazy<Delegate>>` backing store; convention pairs compiled once on first use
+- **Added** `TypePair` — `readonly struct` dictionary key with `IEquatable<TypePair>` and `HashCode.Combine` hash
+- **Added** `ExpressionBuilder` (internal) — builds `LambdaExpression` trees for flat, nested, collection, and constructor-parameter mappings; cycle detection via in-progress `HashSet<TypePair>`
+- **Added** `DelegateCompiler` (internal) — compiles `LambdaExpression` to `Delegate`; handles convention-only pairs on demand
+- **Added** `UtilitiesServiceExtensions.AddObjectMapper(params MappingProfile[])` — registers `IObjectMapper` as `ServiceLifetime.Singleton`; zero profiles accepted for full convention-based on-demand mapping
+- **Added** `FilterQueryExtensions.ToPaginationRequest()` — converts `PaginationQuery` to `PaginationRequest` without external mapper dependency
+- **Added** `FilterQueryExtensions.ToFilterRequest()` — converts `FilterQuery` to `FilterRequest` without external mapper dependency
+- **Removed** `ObjectMapper` static class — the reflection-based static API has been deleted; all call sites must use injected `IObjectMapper`
+- **Changed** `PackageTags` updated to include `mapping`, `expression-trees`, `compiled-delegates`, `object-mapper`
+- **Changed** README rewritten to document the new DI-based mapper API, profile authoring guide, and updated pagination conversion examples
+
+---
+
 ## Acontplus.Billing
 
 ### [1.3.0] - 2026-05-30
