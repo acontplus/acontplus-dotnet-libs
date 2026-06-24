@@ -17,7 +17,7 @@ public static class LookupEndpoints
             ILookupService lookupService,
             CancellationToken cancellationToken) =>
         {
-            var filterRequest = filterQuery.Adapt<FilterRequest>();
+            var filterRequest = filterQuery.ToFilterRequest();
 
             return await lookupService
                 .GetLookupsAsync("dbo.GetLookups", filterRequest, cancellationToken)
@@ -34,7 +34,7 @@ public static class LookupEndpoints
             ILookupService lookupService,
             CancellationToken cancellationToken) =>
         {
-            var filterRequest = filterQuery.Adapt<FilterRequest>();
+            var filterRequest = filterQuery.ToFilterRequest();
 
             return await lookupService
                 .RefreshLookupsAsync("dbo.GetLookups", filterRequest, cancellationToken)

@@ -7,18 +7,21 @@ namespace Demo.Application.Services
         private readonly ILogger<UsuarioService> _logger;
         private readonly IAdoRepository _adoRepository;
         private readonly ISqlExceptionTranslator _exceptionTranslator;
+        private readonly IObjectMapper _mapper;
 
         public UsuarioService(
             IUnitOfWork unitOfWork,
             ILogger<UsuarioService> logger,
             IAdoRepository adoRepository,
-            ISqlExceptionTranslator exceptionTranslator)
+            ISqlExceptionTranslator exceptionTranslator,
+            IObjectMapper mapper)
         {
             _usuarioRepository = unitOfWork.GetRepository<Usuario>();
             _unitOfWork = unitOfWork;
             _logger = logger;
             _adoRepository = adoRepository;
             _exceptionTranslator = exceptionTranslator;
+            _mapper = mapper;
         }
 
         public async Task<Result<Usuario, DomainErrors>> AddAsync(Usuario usuario)
@@ -229,7 +232,7 @@ namespace Demo.Application.Services
                     orderByDescending: true);
 
                 var userDtos = pagedResult.Items
-                    .Select(ObjectMapper.Map<Usuario, UsuarioDto>)
+                    .Select(u => _mapper.Map<Usuario, UsuarioDto>(u))
                     .ToList();
 
                 var links = pagedResult.BuildPaginationLinks(
@@ -298,7 +301,7 @@ namespace Demo.Application.Services
                     warnings.Add(DomainError.Conflict("DUPLICATE_USER", $"Username '{dto.Username}' already exists"));
                     continue;
                 }
-                var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(dto);
+                var usuario = _mapper.Map<UsuarioDto, Usuario>(dto);
                 if (usuario != null)
                 {
                     await _usuarioRepository.AddAsync(usuario);
@@ -598,4 +601,3 @@ namespace Demo.Application.Services
         #endregion
     }
 }
-

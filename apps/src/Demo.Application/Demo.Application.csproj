@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Acontplus.Analytics\Acontplus.Analytics.csproj" />
     <ProjectReference Include="..\..\..\src\Acontplus.Billing\Acontplus.Billing.csproj" />
+    <ProjectReference Include="..\..\..\src\Acontplus.Utilities\Acontplus.Utilities.csproj" />
     <ProjectReference Include="..\Demo.Domain\Demo.Domain.csproj" />
   </ItemGroup>
 

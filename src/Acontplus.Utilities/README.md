@@ -4,564 +4,269 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A comprehensive .NET utility library providing common functionality for business applications. Async, extension methods, minimal API support, and more.
+A comprehensive .NET utility library providing common functionality for business applications. Includes compiled-delegate object mapping, API response extensions, pagination, encryption, and more.
 
-## 🚀 Features
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
-- **API Response Extensions** - Comprehensive Result<T> to IActionResult/IResult conversions with domain error handling, pagination, and warnings support
-- **Domain Extensions** - Consolidated domain-to-API conversion logic for clean architectural separation
-- **FilterQuery & PaginationQuery** - `PaginationQuery` extends `FilterQuery`; type-safe `GetFilterValue<T>()` / `TryGetFilterValue<T>()` work on both; use `.Adapt<PaginationRequest>()` to map to the service layer
-- **Encryption** - Data encryption/decryption utilities with BCrypt support
-- **External Validations** - Third-party validation integrations and data validation helpers
-- **Custom Logging** - Enhanced logging capabilities
-- **Enum Extensions** - Enhanced enum functionality
-- **Picture Helper** - Image processing utilities
-- **Text Handlers** - Text manipulation and processing
-- **Pagination & Metadata** - Helpers for API metadata, pagination, and diagnostics
-- **Data Utilities** - JSON manipulation, DataTable mapping, and data converters
-- **Object Mapping** - AutoMapper-like object mapping utilities
-- **File Extensions** - File handling, MIME types, and compression utilities
+## Features
 
-> **Note:** For barcode generation features, see the separate [**Acontplus.Barcode**](https://www.nuget.org/packages/Acontplus.Barcode) package which provides QR codes, Code 128, EAN-13, and other barcode formats.
+- **Compiled Object Mapper** — Expression-tree compiled delegates; zero reflection on the hot path; convention-based, profile-optional; DI-registered as `IObjectMapper` singleton
+- **API Response Extensions** — `Result<T>` to `IActionResult`/`IResult` conversions with domain error handling, pagination, and warnings support
+- **FilterQuery & PaginationQuery** — Minimal API query binding; type-safe `GetFilterValue<T>()` / `TryGetFilterValue<T>()`; `.ToPaginationRequest()` / `.ToFilterRequest()` extension conversions
+- **Encryption** — AES data encryption/decryption utilities with BCrypt support
+- **External Validations** — Third-party validation integrations and data validation helpers
+- **Enum Extensions** — Enhanced enum functionality
+- **Text Handlers** — Text manipulation and processing utilities
+- **Pagination & Metadata** — Helpers for API metadata, pagination links, and diagnostics
+- **Data Utilities** — JSON manipulation, DataTable mapping, and data converters
+- **File Extensions** — File handling, MIME types, and compression utilities
 
-## 🏗️ Architecture & Domain Extensions
+> For barcode generation see [Acontplus.Barcode](https://www.nuget.org/packages/Acontplus.Barcode).
 
-This package provides a clean architectural separation between domain logic (in `Acontplus.Core`) and API conversion logic (in `Acontplus.Utilities`). All domain-to-API conversions are consolidated here for maintainability.
+## Installation
 
-### Consolidated Domain Extensions
-
-The following domain extensions have been consolidated into this package for clean separation:
-
-- **Domain Error Extensions**: Convert `DomainError`, `DomainErrors`, and `Result<T>` to `ApiResponse<T>` with proper HTTP status codes
-- **Pagination Extensions**: Build pagination links for `PagedResult<T>` with navigation metadata
-- **Domain Warnings Extensions**: Handle `DomainWarnings` and `SuccessWithWarnings<T>` conversions
-- **Error Analysis**: Severity-based error prioritization and aggregate error messaging
-
-### Result-to-API Conversion Pipeline
-
-```csharp
-// Domain layer (Acontplus.Core) - Pure domain logic
-public Result<User, DomainError> GetUser(int id) { /* domain logic */ }
-
-// API layer (Acontplus.Utilities) - Clean conversions
-public IActionResult GetUser(int id)
-{
-    var result = _userService.GetUser(id);
-    return result.ToActionResult(); // Automatic conversion with error handling
-}
-
-// Minimal API
-app.MapGet("/users/{id}", (int id) =>
-{
-    var result = userService.GetUser(id);
-    return result.ToMinimalApiResult(); // Clean, type-safe responses
-});
-```
-
-## 📦 Installation
-
-### NuGet Package Manager
-```bash
-Install-Package Acontplus.Utilities
-```
-
-### .NET CLI
 ```bash
 dotnet add package Acontplus.Utilities
 ```
 
-### PackageReference
 ```xml
-<ItemGroup>
-  <PackageReference Include="Acontplus.Utilities" Version="x.x.x" />
-</ItemGroup>
+<PackageReference Include="Acontplus.Utilities" />
 ```
 
-## 🎯 Quick Start
+## Quick Start
 
-### 1. Consolidated API Response Extensions
-
-The `ResultApiExtensions` class provides comprehensive conversions from domain `Result<T>` types to API responses:
+### Register services
 
 ```csharp
-using Acontplus.Utilities.Extensions;
+// Program.cs / Startup.cs
 
-// Domain result to API response (automatic error handling)
-public IActionResult GetUser(int id)
+// Zero profiles — convention mapping on demand
+builder.Services.AddObjectMapper();
+
+// With explicit profiles — delegates compiled at startup, fails fast on misconfiguration
+builder.Services.AddObjectMapper(new OrderMappingProfile(), new UserMappingProfile());
+```
+
+### Inject and use
+
+```csharp
+public class OrderService(IObjectMapper mapper)
 {
-    var result = userService.GetUser(id);
-    return result.ToActionResult(); // Handles success/error automatically
+    public OrderDto ToDto(Order order) =>
+        mapper.Map<Order, OrderDto>(order);
+
+    public IEnumerable<OrderDto> ToDtos(IEnumerable<Order> orders) =>
+        mapper.Map<Order, OrderDto>(orders);
 }
+```
 
-// With custom success message
-var result = userService.CreateUser(user);
-return result.ToActionResult("User created successfully");
+## Usage Examples
 
-// Minimal API support
-app.MapGet("/users/{id}", (int id) =>
+### Object Mapping
+
+#### Convention mapping — zero configuration
+
+When source and target share property names and compatible types, no profile is needed. The mapper compiles a delegate on first use and caches it forever.
+
+```csharp
+// No profile registration required
+var dto = mapper.Map<Order, OrderDto>(order);
+var dtos = mapper.Map<Order, OrderDto>(orders);           // IEnumerable<T> overload
+var dto = mapper.Map<Order, OrderDto>(order, existing);   // map onto existing instance
+```
+
+#### Mapping profile — explicit configuration
+
+Create a profile when you need `Ignore`, `ForCtorParam`, or to pre-compile and validate at startup.
+
+```csharp
+public sealed class OrderMappingProfile : MappingProfile
 {
-    var result = userService.GetUser(id);
-    return result.ToMinimalApiResult();
+    public OrderMappingProfile()
+    {
+        // Flat convention — maps all name-matched properties automatically
+        CreateMap<Order, OrderListItemDto>();
+
+        // Ignore a destination member
+        CreateMap<Order, OrderDetailDto>()
+            .Ignore(d => d.InternalNotes);
+
+        // Constructor parameter binding for immutable records
+        // record OrderSummary(int Id, string CustomerName, decimal Total, string Status)
+        CreateMap<Order, OrderSummary>()
+            .ForCtorParam("Status", (Order src) => src.Status.ToString());
+
+        // Collection elements — convention handles element mapping
+        CreateMap<OrderLineItem, OrderLineItemDto>();
+    }
+}
+```
+
+Register it at startup:
+
+```csharp
+builder.Services.AddObjectMapper(new OrderMappingProfile());
+```
+
+#### When a profile is optional vs required
+
+| Scenario                                          | Profile needed?                  |
+| ------------------------------------------------- | -------------------------------- |
+| Same property names, compatible types             | No — convention handles it       |
+| Immutable `record` with matching ctor param names | No — convention resolves by name |
+| `Ignore` a destination property                   | Yes                              |
+| `ForCtorParam` with custom source expression      | Yes                              |
+| Pre-compilation and fail-fast at startup          | Yes                              |
+
+#### Mapping in minimal API endpoints
+
+```csharp
+app.MapPost("/orders", (CreateOrderRequest req, IObjectMapper mapper, IOrderService svc) =>
+{
+    var command = mapper.Map<CreateOrderRequest, CreateOrderCommand>(req);
+    return svc.CreateAsync(command).ToMinimalApiResultAsync();
 });
 ```
 
-### 2. Domain Error Handling
+#### Mapping in application services
 
 ```csharp
-using Acontplus.Utilities.Extensions;
-
-// Automatic domain error to API response conversion
-public IActionResult UpdateUser(int id, UserDto dto)
+public sealed class UserService(IObjectMapper mapper, IRepository<User> repo) : IUserService
 {
-    var result = userService.UpdateUser(id, dto);
-    return result.ToActionResult(); // DomainError automatically becomes 400/404/500 etc.
-}
-
-// Multiple errors with severity-based HTTP status
-var errors = DomainErrors.Multiple(new[] {
-    DomainError.Validation("EMAIL_INVALID", "Invalid email format"),
-    DomainError.NotFound("USER_NOT_FOUND", "User not found")
-});
-return errors.ToActionResult<UserDto>();
-```
-
-### 3. Pagination with Links
-
-```csharp
-using Acontplus.Utilities.Extensions;
-
-// Build pagination links automatically
-public IActionResult GetUsers(PaginationQuery query)
-{
-    var result = userService.GetUsers(query);
-    var links = result.BuildPaginationLinks("/api/users", query.PageSize);
-    return result.ToActionResult();
+    public async Task<Result<UserDto>> GetByIdAsync(int id)
+    {
+        var user = await repo.GetByIdAsync(id);
+        return user is null
+            ? Result<UserDto>.Failure(DomainError.NotFound("USER_NOT_FOUND", $"User {id} not found"))
+            : Result<UserDto>.Success(mapper.Map<User, UserDto>(user));
+    }
 }
 ```
 
-### 4. Encryption Example
+### FilterQuery & PaginationQuery
+
+`PaginationQuery` extends `FilterQuery`; both support automatic minimal API query-string binding.
 
 ```csharp
-var encryptionService = new SensitiveDataEncryptionService();
-byte[] encrypted = await encryptionService.EncryptToBytesAsync("password", "data");
-string decrypted = await encryptionService.DecryptFromBytesAsync("password", encrypted);
-```
-
-### 5. Pagination Metadata Example
-
-```csharp
-var metadata = new Dictionary<string, object>()
-    .WithPagination(page: 1, pageSize: 10, totalItems: 100);
-```
-
-### 6. FilterQuery & PaginationQuery - Type-Safe Filter Extraction
-
-`PaginationQuery` inherits from `FilterQuery`, so both types share the same `GetFilterValue<T>()` and `TryGetFilterValue<T>()` extension methods.
-Use `.Adapt<PaginationRequest>()` (Mapster) to convert the HTTP binding model to the domain request type accepted by the service layer.
-
-```csharp
-using Acontplus.Utilities.Extensions;
-
-// Works the same on FilterQuery or PaginationQuery
 app.MapGet("/api/users", async (PaginationQuery pagination, IUserService service) =>
 {
-    // Extract typed filter values with defaults — never throws
-    var isActive  = pagination.GetFilterValue<bool>("isActive", true);
-    var minAge    = pagination.GetFilterValue<int>("minAge", 0);
-    var role      = pagination.GetFilterValue<string>("role", "User");
+    // Type-safe filter extraction — never throws, returns default on missing/invalid
+    var isActive = pagination.GetFilterValue<bool>("isActive", true);
+    var role     = pagination.GetFilterValue<string>("role", "User");
 
-    // Map HTTP binding model → domain request (Filters dict is copied automatically)
-    // Client filters (e.g. filters[createdAfter]=2026-01-01) are already in request.Filters
-    var request = pagination.Adapt<PaginationRequest>()
+    // Convert HTTP binding model → domain request
+    var request = pagination.ToPaginationRequest()
         .WithFilter("IsActive", isActive)
-        .WithFilter("MinAge", minAge);
+        .WithFilter("Role", role);
 
-    // TryGetFilterValue: drive server-side logic based on whether a filter was supplied
-    // (do NOT re-add client filters that are already in request.Filters via Adapt)
-    if (!pagination.TryGetFilterValue<string>("role", out _) || role == "User")
-        request = request.WithFilter("Status", "Active");
-    else
-        request = request.WithFilter("Status", "Active").WithFilter("Role", role);
-
-    return await service.GetPaginatedUsersAsync(request)
-        .ToGetMinimalApiResultAsync();
+    return await service.GetPaginatedUsersAsync(request).ToGetMinimalApiResultAsync();
 });
 
 // Non-paginated (FilterQuery only)
-app.MapGet("/api/lookups", async (FilterQuery filterQuery, ILookupService service) =>
+app.MapGet("/api/lookups", async (FilterQuery filter, ILookupService service, CancellationToken ct) =>
 {
-    var filterRequest = filterQuery.Adapt<FilterRequest>();
-    return await service.GetLookupsAsync("dbo.GetLookups", filterRequest, ct)
-        .ToGetMinimalApiResultAsync();
+    var request = filter.ToFilterRequest();
+    return await service.GetLookupsAsync("dbo.GetLookups", request, ct).ToGetMinimalApiResultAsync();
 });
 ```
 
-**Benefits:**
-- ✅ **Single type hierarchy** — `PaginationQuery : FilterQuery`, one set of extensions covers both
-- ✅ **Type-safe** — automatic type conversion with fallback to defaults
-- ✅ **Never throws** — handles missing keys and conversion failures gracefully
-- ✅ **Clean mapping** — `.Adapt<PaginationRequest>()` via Mapster replaces manual constructor calls
+**Frontend query string format:**
 
-## 📄 Core Examples
+```
+GET /api/users?pageIndex=1&pageSize=20&searchTerm=john&sortBy=createdAt&sortDirection=desc
+               &filters[status]=active&filters[role]=admin&filters[isActive]=true
+```
 
-### PaginationQuery with Minimal APIs
-
-`PaginationQuery` extends `FilterQuery` and provides automatic query-string binding in minimal APIs.
-Map it to `PaginationRequest` (the service/repository contract) via `.Adapt<PaginationRequest>()`.
-
-#### Backend (Minimal API)
+### API Response Extensions
 
 ```csharp
-app.MapGet("/api/users", async (PaginationQuery pagination, IUserService userService) =>
-{
-    // Map the HTTP binding model to the domain request type
-    var request = pagination.Adapt<PaginationRequest>();
-    var result = await userService.GetPaginatedUsersAsync(request);
-    return Results.Ok(result);
-})
-.WithName("GetUsers")
-.WithOpenApi();
-
-// Service implementation accepts PaginationRequest (domain contract)
-public async Task<PagedResult<UserDto>> GetPaginatedUsersAsync(PaginationRequest request)
-{
-    var spParameters = new Dictionary<string, object>
-    {
-        ["@PageIndex"] = pagination.PageIndex,
-        ["@PageSize"] = pagination.PageSize,
-        ["@SearchTerm"] = pagination.SearchTerm ?? (object)DBNull.Value,
-        ["@SortBy"] = pagination.SortBy ?? "CreatedAt",
-        ["@SortDirection"] = (pagination.SortDirection ?? SortDirection.Asc).ToString()
-    };
-
-    // Add filters from PaginationQuery.Filters
-    if (pagination.Filters != null)
-    {
-        foreach (var filter in pagination.Filters)
-        {
-            var paramName = $"@{filter.Key}";
-            spParameters[paramName] = filter.Value ?? DBNull.Value;
-        }
-    }
-
-    // Execute stored procedure with all parameters
-    var dataSet = await _adoRepository.GetDataSetAsync("sp_GetPaginatedUsers", spParameters);
-    // Process results and return PagedResult
-}
-```
-
-#### Frontend (JavaScript/TypeScript)
-
-```typescript
-// API client function
-async function getUsers(filters: UserFilters = {}) {
-    const params = new URLSearchParams({
-        pageIndex: '1',
-        pageSize: '20',
-        searchTerm: filters.searchTerm || '',
-        sortBy: 'createdAt',
-        sortDirection: 'desc'
-    });
-
-    // Add filters
-    if (filters.status) params.append('filters[status]', filters.status);
-    if (filters.role) params.append('filters[role]', filters.role);
-    if (filters.isActive !== undefined) params.append('filters[isActive]', filters.isActive.toString());
-    if (filters.createdDate) params.append('filters[createdDate]', filters.createdDate);
-
-    const response = await fetch(`/api/users?${params.toString()}`);
-    return response.json();
-}
-
-// Usage examples
-const users = await getUsers({
-    searchTerm: 'john',
-    status: 'active',
-    role: 'admin',
-    isActive: true
-});
-
-// URL generated: /api/users?pageIndex=1&pageSize=20&searchTerm=john&sortBy=createdAt&sortDirection=desc&filters[status]=active&filters[role]=admin&filters[isActive]=true
-```
-
-#### React Component Example
-
-```tsx
-import React, { useState, useEffect } from 'react';
-
-interface UserFilters {
-    searchTerm?: string;
-    status?: string;
-    role?: string;
-    isActive?: boolean;
-}
-
-const UserList: React.FC = () => {
-    const [users, setUsers] = useState([]);
-    const [filters, setFilters] = useState<UserFilters>({});
-    const [pagination, setPagination] = useState({ pageIndex: 1, pageSize: 20 });
-
-    const fetchUsers = async () => {
-        const params = new URLSearchParams({
-            pageIndex: pagination.pageIndex.toString(),
-            pageSize: pagination.pageSize.toString(),
-            sortBy: 'createdAt',
-            sortDirection: 'desc'
-        });
-
-        // Add search term
-        if (filters.searchTerm) {
-            params.append('searchTerm', filters.searchTerm);
-        }
-
-        // Add filters
-        Object.entries(filters).forEach(([key, value]) => {
-            if (value !== undefined && key !== 'searchTerm') {
-                params.append(`filters[${key}]`, value.toString());
-            }
-        });
-
-        const response = await fetch(`/api/users?${params.toString()}`);
-        const data = await response.json();
-        setUsers(data.items);
-    };
-
-    useEffect(() => {
-        fetchUsers();
-    }, [filters, pagination]);
-
-    return (
-        <div>
-            {/* Filter controls */}
-            <input
-                type="text"
-                placeholder="Search users..."
-                onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-            />
-            <select onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}>
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-
-            {/* User list */}
-            {users.map(user => (
-                <div key={user.id}>{user.name}</div>
-            ))}
-        </div>
-    );
-};
-```
-
-#### Query Parameter Examples
-
-```
-# Basic pagination
-GET /api/users?pageIndex=1&pageSize=20
-
-# With search and sorting
-GET /api/users?pageIndex=1&pageSize=20&searchTerm=john&sortBy=name&sortDirection=asc
-
-# With multiple filters
-GET /api/users?pageIndex=1&pageSize=20&filters[status]=active&filters[role]=admin&filters[isActive]=true
-
-# Complex filter combinations
-GET /api/users?pageIndex=1&pageSize=20&searchTerm=john&filters[status]=active&filters[role]=admin&filters[createdDate]=2024-01-01&filters[departments][]=IT&filters[departments][]=HR
-```
-
-### Result & API Response Patterns with Usuario Module
-
-#### Controller Usage
-
-```csharp
-[HttpGet("{id:int}")]
-public async Task<IActionResult> GetUsuario(int id)
-{
-    var result = await _usuarioService.GetByIdAsync(id);
-    return result.ToGetActionResult();
-}
-
-[HttpPost]
-public async Task<IActionResult> CreateUsuario([FromBody] UsuarioDto dto)
-{
-    var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(dto);
-    var result = await _usuarioService.AddAsync(usuario);
-    if (result.IsSuccess && result.Value is not null)
-    {
-        var locationUri = $"/api/Usuario/{result.Value.Id}";
-        return ApiResponse<Usuario>.Success(result.Value, new ApiResponseOptions { Message = "Usuario creado exitosamente." }).ToActionResult();
-    }
-    return result.ToActionResult();
-}
-
-[HttpPut("{id:int}")]
-public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UsuarioDto dto)
-{
-    var usuario = ObjectMapper.Map<UsuarioDto, Usuario>(dto);
-    var result = await _usuarioService.UpdateAsync(id, usuario);
-    if (result.IsSuccess)
-    {
-        return ApiResponse<Usuario>.Success(result.Value, new ApiResponseOptions { Message = "Usuario actualizado correctamente." }).ToActionResult();
-    }
-    return result.ToActionResult();
-}
-
-[HttpDelete("{id:int}")]
-public async Task<IActionResult> DeleteUsuario(int id)
-{
-    var result = await _usuarioService.DeleteAsync(id);
-    return result.ToDeleteActionResult();
-}
-```
-
-#### Minimal API Usage
-
-```csharp
-app.MapGet("/usuarios/{id:int}", async (int id, IUsuarioService service) =>
+// Minimal API
+app.MapGet("/users/{id}", async (int id, IUserService service) =>
 {
     var result = await service.GetByIdAsync(id);
-    return result.ToMinimalApiResult();
+    return result.ToGetMinimalApiResultAsync(); // 200 / 404 / 500 automatically
+});
+
+// With custom message
+app.MapPost("/users", async (CreateUserDto dto, IUserService service) =>
+{
+    var result = await service.CreateAsync(dto);
+    return result.ToMinimalApiResultAsync("User created successfully.");
 });
 ```
 
-#### Service Layer Example
+### Encryption
 
 ```csharp
-public async Task<Result<Usuario, DomainErrors>> AddAsync(Usuario usuario)
-{
-    var errors = new List<DomainError>();
-    if (string.IsNullOrWhiteSpace(usuario.Username))
-        errors.Add(DomainError.Validation("USERNAME_REQUIRED", "Username is required"));
-    if (string.IsNullOrWhiteSpace(usuario.Email))
-        errors.Add(DomainError.Validation("EMAIL_REQUIRED", "Email is required"));
-
-    if (errors.Count > 0)
-        return DomainErrors.Multiple(errors);
-
-    // ... check for existing user, add, etc.
-}
+var svc = new SensitiveDataEncryptionService();
+byte[] encrypted = await svc.EncryptToBytesAsync("passphrase", "sensitive-data");
+string decrypted = await svc.DecryptFromBytesAsync("passphrase", encrypted);
 ```
 
-## 🗃️ Data Utilities
+### Data Utilities
 
-### DataConverters
 ```csharp
-using Acontplus.Utilities.Data;
+// DataTable ↔ JSON
+string json   = DataConverters.DataTableToJson(myDataTable);
+DataTable tbl = DataConverters.JsonToDataTable(jsonString);
 
-// Convert DataTable to JSON
-string json = DataConverters.DataTableToJson(myDataTable);
-
-// Convert DataSet to JSON
-string json = DataConverters.DataSetToJson(myDataSet);
-
-// Convert JSON to DataTable
-DataTable table = DataConverters.JsonToDataTable(jsonString);
-
-// Serialize any object (with DataTable/DataSet support)
-string json = DataConverters.SerializeObjectCustom(myObject);
-
-// Serialize and sanitize complex objects
-string json = DataConverters.SerializeSanitizedData(myObject);
-```
-
-### DataTableMapper
-```csharp
-using Acontplus.Utilities.Data;
-
-// Map a DataRow to a strongly-typed model
+// Map DataRow → strongly-typed model
 var model = DataTableMapper.MapDataRowToModel<MyModel>(dataRow);
-
-// Map a DataTable to a list of models
-List<MyModel> models = DataTableMapper.MapDataTableToList<MyModel>(dataTable);
+List<MyModel> list = DataTableMapper.MapDataTableToList<MyModel>(dataTable);
 ```
 
-## 🧩 JSON Utilities
+### JSON Utilities
 
-### JsonHelper
 ```csharp
-using Acontplus.Utilities.Json;
-
-// Validate JSON
 var result = JsonHelper.ValidateJson(jsonString);
-if (!result.IsValid) Console.WriteLine(result.ErrorMessage);
-
-// Get a property value from JSON
 string? value = JsonHelper.GetJsonProperty<string>(jsonString, "propertyName");
-
-// Merge two JSON objects
 string merged = JsonHelper.MergeJson(json1, json2);
-
-// Compare two JSON strings (ignoring property order)
-bool areEqual = JsonHelper.AreEqual(json1, json2);
+bool equal    = JsonHelper.AreEqual(json1, json2);
 ```
 
-### JsonManipulationExtensions
+## Configuration
+
+`AddObjectMapper` takes zero or more `MappingProfile` instances. With zero profiles the mapper resolves convention mappings on demand. With profiles, all registered type-pairs are compiled during `IServiceProvider` construction so any misconfiguration throws at startup, not at first use.
+
 ```csharp
-using Acontplus.Utilities.Json;
+// Zero profiles — lazy convention mapping
+services.AddObjectMapper();
 
-// Validate JSON using extension
-bool isValid = jsonString.IsValidJson();
-
-// Get property value using extension
-int? id = jsonString.GetJsonProperty<int>("id");
-
-// Merge JSON using extension
-string merged = json1.MergeJson(json2);
-
-// Compare JSON using extension
-bool equal = json1.JsonEquals(json2);
+// One or more profiles — eager compilation, fail-fast validation
+services.AddObjectMapper(
+    new OrderMappingProfile(),
+    new UserMappingProfile());
 ```
 
-## 🔄 Object Mapping
+## API Reference
 
-### ObjectMapper
-```csharp
-using Acontplus.Utilities.Mapping;
+### Mapping
 
-// Map between objects (AutoMapper-like)
-var target = ObjectMapper.Map<SourceType, TargetType>(sourceObject);
+| Type                     | Description                                                             |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `IObjectMapper`          | Interface — inject this singleton anywhere mapping is needed            |
+| `MappingProfile`         | Abstract base — derive and call `CreateMap<S,T>()` in the constructor   |
+| `MappingExpression<S,T>` | Fluent builder returned by `CreateMap` — chain `ForCtorParam`, `Ignore` |
+| `MapperConfiguration`    | Holds profiles; call `Build()` to produce a compiled registry           |
+| `TypePair`               | Value-type key `(SourceType, TargetType)` used in the registry          |
 
-// Configure custom mapping
-ObjectMapper.CreateMap<SourceType, TargetType>()
-    .ForMember(dest => dest.SomeProperty, src => src.OtherProperty)
-    .Ignore(dest => dest.IgnoredProperty);
+### Extensions
 
-// Map with configuration
-var mapped = ObjectMapper.Map<SourceType, TargetType>(sourceObject);
-```
+| Method                                     | Description                                           |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `AddObjectMapper(params MappingProfile[])` | Registers `IObjectMapper` as singleton                |
+| `PaginationQuery.ToPaginationRequest()`    | Converts query-binding model to domain request        |
+| `FilterQuery.ToFilterRequest()`            | Converts query-binding model to domain filter request |
+| `GetFilterValue<T>(key, default)`          | Type-safe filter extraction with fallback             |
+| `TryGetFilterValue<T>(key, out value)`     | Non-throwing filter presence check                    |
+| `result.ToMinimalApiResultAsync()`         | `Result<T>` → minimal API `IResult`                   |
+| `result.ToGetMinimalApiResultAsync()`      | Same, using 200 on empty collections                  |
 
-## 🔧 Advanced Usage
+## Requirements
 
-### File Name Sanitization
-```csharp
-string safeName = FileExtensions.SanitizeFileName("my*illegal:file?.txt");
-```
+- .NET 10.0
+- ASP.NET Core (via `FrameworkReference`) — `IServiceCollection`, `HttpContext`
 
-### Base64 Conversion
-```csharp
-string base64 = FileExtensions.GetBase64FromByte(myBytes);
-```
+## License
 
-### Compression Utilities
-```csharp
-byte[] compressed = CompressionUtils.CompressGZip(data);
-byte[] decompressed = CompressionUtils.DecompressGZip(compressed);
-```
-
-## 📚 API Documentation
-
-### Consolidated Domain Extensions
-- `ResultApiExtensions` - Comprehensive Result<T> to IActionResult/IResult conversions with domain error handling
-- `DomainErrorExtensions` - Convert DomainError/DomainErrors to ApiResponse with HTTP status mapping
-- `PagedResultExtensions` - Build pagination links and metadata for API responses
-- `DomainWarningsExtensions` - Handle DomainWarnings and SuccessWithWarnings conversions
-
-### Core Utilities
-- `SensitiveDataEncryptionService` - AES encryption/decryption helpers with BCrypt support
-- `FileExtensions` - File name sanitization and byte array utilities
-- `CompressionUtils` - GZip/Deflate compression helpers
-- `TextHandlers` - String formatting and splitting utilities
-- `DirectoryHelper` / `EnvironmentHelper` - Runtime and environment utilities
-- `DataConverters` - DataTable/DataSet JSON conversion
-- `JsonHelper` - JSON validation and manipulation
-- `ObjectMapper` - Object-to-object mapping utilities
+MIT © Acontplus

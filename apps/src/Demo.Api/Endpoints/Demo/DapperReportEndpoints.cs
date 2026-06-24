@@ -37,7 +37,7 @@ public static class DapperReportEndpoints
         ILogger<Program> logger,
         CancellationToken ct)
     {
-        var request = pagination.Adapt<PaginationRequest>();
+        var request = pagination.ToPaginationRequest();
 
         logger.LogInformation("Dapper: Getting paged orders - Page {Page}, Size {Size}",
             request.PageIndex, request.PageSize);
