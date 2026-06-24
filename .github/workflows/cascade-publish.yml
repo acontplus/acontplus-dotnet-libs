@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       root-package:
-        description: 'Root package to update (e.g., Core, Utilities)'
+        description: "Root package to update (e.g., Core, Utilities)"
         required: true
         type: string
       bump-type:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
         type: choice
         options:
@@ -17,7 +17,7 @@ on:
           - major
         default: patch
       cascade-bump:
-        description: 'Bump type for dependent packages'
+        description: "Bump type for dependent packages"
         required: true
         type: choice
         options:
@@ -26,18 +26,18 @@ on:
           - none
         default: patch
       run-tests:
-        description: 'Run tests before publishing'
+        description: "Run tests before publishing"
         required: false
         type: boolean
         default: true
       dry-run:
-        description: 'Dry run (no actual publish)'
+        description: "Dry run (no actual publish)"
         required: false
         type: boolean
         default: false
 
 env:
-  DOTNET_VERSION: '10.0.x'
+  DOTNET_VERSION: "10.0.x"
   CONFIGURATION: Release
 
 permissions:
@@ -55,7 +55,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Calculate dependency order
         id: calculate
@@ -227,13 +227,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -586,7 +586,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.update-and-publish.outputs.branch-name }}
 
@@ -603,7 +603,7 @@ jobs:
           fi
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}-cascade-${{ inputs.root-package }}
           name: 🔄 Cascade Release - ${{ inputs.root-package }}
@@ -621,7 +621,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Notify rollback needed
         shell: pwsh
@@ -643,7 +643,7 @@ jobs:
           Write-Host "================================================" -ForegroundColor Red
 
       - name: Create rollback issue
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issue = await github.rest.issues.create({
