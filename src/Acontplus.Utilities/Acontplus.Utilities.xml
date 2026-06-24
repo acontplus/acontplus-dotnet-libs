@@ -492,12 +492,6 @@
             Thrown when <paramref name="registry"/> is <c>null</c>.
             </exception>
         </member>
-        <member name="P:Acontplus.Utilities.Mapping.CompiledObjectMapper.Registry">
-            <summary>
-            Exposes the internal registry for use by the backward-compatibility static shim
-            when registering late <c>CreateMap</c> calls after <c>Build()</c>.
-            </summary>
-        </member>
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(``0)">
             <inheritdoc />
         </member>
@@ -510,24 +504,12 @@
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.ProjectTo``2(System.Linq.IQueryable{``0})">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.MapInternal``2(``0,Acontplus.Utilities.Mapping.TypePair)">
+        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.GetOrCompileCopyDelegate``1">
             <summary>
-            Resolves and invokes the compiled delegate for the specified type pair.
-            Falls back to runtime type resolution when the declared source type differs
-            from the actual runtime type.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.ResolveDelegate``2(Acontplus.Utilities.Mapping.TypePair)">
-            <summary>
-            Resolves the typed mapping delegate for the specified type pair.
-            Uses the registry cache or compiles a convention delegate on demand.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.CopyProperties``1(``0,``0)">
-            <summary>
-            Copies all writable public properties from <paramref name="source"/> to
-            <paramref name="destination"/>. Used by the "map into existing" overload to
-            apply mapped values onto an existing target instance.
+            Returns a compiled <c>Action&lt;T, T&gt;</c> that copies all writable public
+            properties from the first argument onto the second. The delegate is built once
+            from an <see cref="T:System.Linq.Expressions.Expression"/> tree and cached per type — zero reflection at
+            call time.
             </summary>
         </member>
         <member name="T:Acontplus.Utilities.Mapping.Internal.DelegateCompiler">

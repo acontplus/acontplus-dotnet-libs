@@ -1,3 +1,4 @@
+using System.Reflection;
 using Acontplus.Utilities.Mapping.Internal;
 
 namespace Acontplus.Utilities.Mapping;
@@ -11,6 +12,12 @@ public sealed class CompiledObjectMapper : IObjectMapper
 {
     private readonly MapperRegistry _registry;
 
+    // Separate cache for compiled copy-delegates used by the into-existing Map overload.
+    // Key: TypePair(T, T) — source and target are the same type.
+    // Value: Action<T, T> compiled once from an expression tree.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Delegate>
+        _copyDelegateCache = new();
+
     /// <summary>Initialises the mapper with a fully built <see cref="MapperRegistry"/>.</summary>
     /// <param name="registry">
     /// A fully initialised registry containing compiled delegates for all registered type pairs.
@@ -23,12 +30,6 @@ public sealed class CompiledObjectMapper : IObjectMapper
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }
 
-    /// <summary>
-    /// Exposes the internal registry for use by the backward-compatibility static shim
-    /// when registering late <c>CreateMap</c> calls after <c>Build()</c>.
-    /// </summary>
-    internal MapperRegistry Registry => _registry;
-
     /// <inheritdoc />
     public TTarget Map<TSource, TTarget>(TSource source)
     {
@@ -39,14 +40,14 @@ public sealed class CompiledObjectMapper : IObjectMapper
         var targetType = typeof(TTarget);
         var pair = new TypePair(sourceType, targetType);
 
-        // Try declared types first (fast path for explicitly registered pairs)
+        // Fast path — explicitly registered or already cached convention pair
         if (_registry.TryGet(pair, out var directDelegate))
         {
             var func = (Func<TSource, TTarget>)directDelegate!;
             return func(source);
         }
 
-        // Fall back to runtime type of source (for interface/base class declared types)
+        // Fall back to runtime type of source (interface / base-class declared types)
         var runtimeSourceType = source.GetType();
         if (runtimeSourceType != sourceType)
         {
@@ -55,12 +56,13 @@ public sealed class CompiledObjectMapper : IObjectMapper
                 runtimePair,
                 p => DelegateCompiler.CompileConvention(p, _registry));
 
-            // Use DynamicInvoke since the delegate is Func<RuntimeType, TTarget> not Func<TSource, TTarget>
+            // DynamicInvoke is unavoidable here: the delegate is Func<ConcreteType, TTarget>
+            // and we only know ConcreteType at runtime.
             var result = runtimeDelegate.DynamicInvoke(source);
             return (TTarget)result!;
         }
 
-        // No existing registration and runtime == declared, compile convention on demand
+        // Unregistered pair whose source runtime type equals the declared type — compile once
         var conventionDelegate = _registry.GetOrAdd(
             pair,
             p => DelegateCompiler.CompileConvention(p, _registry));
@@ -77,15 +79,13 @@ public sealed class CompiledObjectMapper : IObjectMapper
         if (source is null)
             return destination;
 
-        var sourceType = typeof(TSource);
-        var targetType = typeof(TTarget);
-        var pair = new TypePair(sourceType, targetType);
+        var pair = new TypePair(typeof(TSource), typeof(TTarget));
 
-        // Map source to a fresh instance using the compiled delegate
+        // Map source to a fresh instance then copy onto the caller-supplied destination.
         var mapped = MapInternal<TSource, TTarget>(source, pair);
 
-        // Copy all writable properties from the mapped result onto the destination
-        CopyProperties(mapped, destination);
+        // Copy via a compiled Action<TTarget, TTarget> — zero per-call reflection.
+        GetOrCompileCopyDelegate<TTarget>()(mapped, destination);
 
         return destination;
     }
@@ -96,11 +96,7 @@ public sealed class CompiledObjectMapper : IObjectMapper
         if (source is null)
             return [];
 
-        var sourceType = typeof(TSource);
-        var targetType = typeof(TTarget);
-        var pair = new TypePair(sourceType, targetType);
-
-        // Resolve the element mapping delegate once
+        var pair = new TypePair(typeof(TSource), typeof(TTarget));
         var elementDelegate = ResolveDelegate<TSource, TTarget>(pair);
 
         return source.Select(elementDelegate);
@@ -111,14 +107,10 @@ public sealed class CompiledObjectMapper : IObjectMapper
     {
         ArgumentNullException.ThrowIfNull(source, nameof(source));
 
-        var sourceType = typeof(TSource);
-        var targetType = typeof(TTarget);
-        var pair = new TypePair(sourceType, targetType);
+        var pair = new TypePair(typeof(TSource), typeof(TTarget));
 
-        // Try to get explicit config from registry's configurations (if available)
         _registry.TryGetConfiguration(pair, out var config);
 
-        // Build projection expression
         LambdaExpression projectionExpr;
         try
         {
@@ -130,26 +122,19 @@ public sealed class CompiledObjectMapper : IObjectMapper
                 $"No registration and no valid convention projection exists for {pair}.");
         }
 
-        // Cast to Expression<Func<TSource, TTarget>> and pass to Select
         var typedExpression = (Expression<Func<TSource, TTarget>>)projectionExpr;
         return source.Select(typedExpression);
     }
 
-    /// <summary>
-    /// Resolves and invokes the compiled delegate for the specified type pair.
-    /// Falls back to runtime type resolution when the declared source type differs
-    /// from the actual runtime type.
-    /// </summary>
+    // ─────────────────────────────────────────────────────────────────────────
+    // Private helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
     private TTarget MapInternal<TSource, TTarget>(TSource source, TypePair pair)
     {
-        // Try declared types first
         if (_registry.TryGet(pair, out var directDelegate))
-        {
-            var func = (Func<TSource, TTarget>)directDelegate!;
-            return func(source);
-        }
+            return ((Func<TSource, TTarget>)directDelegate!)(source);
 
-        // Fall back to runtime type of source
         var runtimeSourceType = source!.GetType();
         if (runtimeSourceType != pair.SourceType)
         {
@@ -158,61 +143,59 @@ public sealed class CompiledObjectMapper : IObjectMapper
                 runtimePair,
                 p => DelegateCompiler.CompileConvention(p, _registry));
 
-            var result = runtimeDelegate.DynamicInvoke(source);
-            return (TTarget)result!;
+            return (TTarget)runtimeDelegate.DynamicInvoke(source)!;
         }
 
-        // Compile convention on demand
         var conventionDelegate = _registry.GetOrAdd(
             pair,
             p => DelegateCompiler.CompileConvention(p, _registry));
 
-        var conventionFunc = (Func<TSource, TTarget>)conventionDelegate;
-        return conventionFunc(source);
+        return ((Func<TSource, TTarget>)conventionDelegate)(source);
     }
 
-    /// <summary>
-    /// Resolves the typed mapping delegate for the specified type pair.
-    /// Uses the registry cache or compiles a convention delegate on demand.
-    /// </summary>
     private Func<TSource, TTarget> ResolveDelegate<TSource, TTarget>(TypePair pair)
     {
-        if (_registry.TryGet(pair, out var existingDelegate))
-        {
-            return (Func<TSource, TTarget>)existingDelegate!;
-        }
+        if (_registry.TryGet(pair, out var existing))
+            return (Func<TSource, TTarget>)existing!;
 
-        var conventionDelegate = _registry.GetOrAdd(
+        var compiled = _registry.GetOrAdd(
             pair,
             p => DelegateCompiler.CompileConvention(p, _registry));
 
-        return (Func<TSource, TTarget>)conventionDelegate;
+        return (Func<TSource, TTarget>)compiled;
     }
 
     /// <summary>
-    /// Copies all writable public properties from <paramref name="source"/> to
-    /// <paramref name="destination"/>. Used by the "map into existing" overload to
-    /// apply mapped values onto an existing target instance.
+    /// Returns a compiled <c>Action&lt;T, T&gt;</c> that copies all writable public
+    /// properties from the first argument onto the second. The delegate is built once
+    /// from an <see cref="Expression"/> tree and cached per type — zero reflection at
+    /// call time.
     /// </summary>
-    private static void CopyProperties<TTarget>(TTarget source, TTarget destination)
+    private Action<TTarget, TTarget> GetOrCompileCopyDelegate<TTarget>()
     {
-        if (source is null)
-            return;
-
-        var properties = typeof(TTarget).GetProperties(
-            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-
-        foreach (var prop in properties)
+        var del = _copyDelegateCache.GetOrAdd(typeof(TTarget), static t =>
         {
-            if (!prop.CanWrite)
-                continue;
+            // (TTarget src, TTarget dst) => { dst.P1 = src.P1; dst.P2 = src.P2; ... }
+            var src  = Expression.Parameter(t, "src");
+            var dst  = Expression.Parameter(t, "dst");
 
-            var setter = prop.GetSetMethod();
-            if (setter is null)
-                continue;
+            var assignments = t
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p =>
+                {
+                    if (!p.CanRead || !p.CanWrite) return false;
+                    var setter = p.GetSetMethod();
+                    return setter is not null && setter.IsPublic;
+                })
+                .Select(p => (Expression)Expression.Assign(
+                    Expression.Property(dst, p),
+                    Expression.Property(src, p)));
 
-            var value = prop.GetValue(source);
-            prop.SetValue(destination, value);
-        }
+            var body  = Expression.Block(assignments);
+            var lambda = Expression.Lambda<Action<TTarget, TTarget>>(body, src, dst);
+            return lambda.Compile();
+        });
+
+        return (Action<TTarget, TTarget>)del;
     }
 }
