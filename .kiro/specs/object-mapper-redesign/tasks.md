@@ -116,7 +116,7 @@ Redesign the `ObjectMapper` in `Acontplus.Utilities` to use expression-tree comp
     - **Property 12: Cyclic object graphs map correctly and Build() does not throw**
     - **Validates: Requirement 10.5**
 
-- [~] 5. Checkpoint — core expression building
+- [ ] 5. Checkpoint — core expression building
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 6. Implement `DelegateCompiler` and `ObjectMapper` concrete class
@@ -173,7 +173,7 @@ Redesign the `ObjectMapper` in `Acontplus.Utilities` to use expression-tree comp
     - Test `ProjectTo` throws `ArgumentNullException` when source is null
     - _Requirements: 8.2, 8.4, 8.7_
 
-- [~] 8. Checkpoint — mapper and projection working
+- [ ] 8. Checkpoint — mapper and projection working
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 9. Implement DI registration and backward-compatibility shim
@@ -206,7 +206,7 @@ Redesign the `ObjectMapper` in `Acontplus.Utilities` to use expression-tree comp
     - _Requirements: 9.6, 11.3, 11.5, 11.6, 9.4_
 
 - [ ] 10. Integration wiring and remaining property tests
-  - [~] 10.1 Wire all components together and verify end-to-end flow
+  - [ ] 10.1 Wire all components together and verify end-to-end flow
     - Ensure `MapperConfiguration.Build()` invokes `ExpressionBuilder` → `DelegateCompiler` → `MapperRegistry.Register` for each registered `TypePair`
     - Ensure `ObjectMapper.Map` resolves delegates correctly for registered pairs, convention pairs, and runtime-typed sources (interface/base class declared types resolved by concrete runtime type)
     - Ensure `Map<TSource, TTarget>(IEnumerable<TSource>)` uses the same registry lookup
@@ -226,7 +226,7 @@ Redesign the `ObjectMapper` in `Acontplus.Utilities` to use expression-tree comp
     - Test `AddObjectMapper` with profiles triggers delegate compilation at startup (first `Map` call does not compile)
     - _Requirements: 8.1, 9.2_
 
-- [~] 11. Final checkpoint
+- [ ] 11. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

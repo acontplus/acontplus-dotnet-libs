@@ -45,7 +45,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
-    <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="ZXing.Net" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" />
   </ItemGroup>
