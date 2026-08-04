@@ -49,7 +49,7 @@ Only add a diagram to the README for packages with **non-obvious internal struct
 
 **Add a diagram** (place after `## Features`, before `## Installation`, ≤ ~20 nodes):
 
-- `Core` — Domain/, Abstractions/, Validation/, DTOs/ layer relationships
+- `Core` — Domain/, Abstractions/, Validation/, Dtos/ layer relationships
 - `Billing` — SRI async authorization sequence
 - `Infrastructure` — the 5 subsystems (Caching, Resilience, HTTP, Middleware, HealthChecks)
 - `Persistence.SqlServer` / `Persistence.PostgreSQL` — EF Core vs ADO.NET dual-access

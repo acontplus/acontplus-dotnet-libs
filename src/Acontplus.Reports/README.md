@@ -192,7 +192,7 @@ The `IRdlcReportService` provides methods for generating reports in various form
 
 ```csharp
 using Acontplus.Reports.Interfaces;
-using Acontplus.Reports.DTOs;
+using Acontplus.Reports.Dtos;
 using Acontplus.Reports.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -354,7 +354,7 @@ The `IRdlcPrinterService` enables direct printing to thermal printers, receipt p
 
 ```csharp
 using Acontplus.Reports.Interfaces;
-using Acontplus.Reports.DTOs;
+using Acontplus.Reports.Dtos;
 using Acontplus.Reports.Exceptions;
 
 public class PosService
