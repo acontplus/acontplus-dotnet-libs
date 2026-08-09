@@ -95,7 +95,8 @@ Install-Package Acontplus.Infrastructure
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// Load merged configuration (appsettings + shared settings + Azure Key Vault)
+// Load Acontplus configuration (appsettings + shared settings + Azure Key Vault).
+// Pass this instance to registrations that require the merged values.
 var configuration = ApplicationConfigurationBuilder.Load();
 
 // Add application services (context, security, device detection)
@@ -305,7 +306,8 @@ Complete setup for enterprise applications with all features enabled.
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// Load merged configuration (appsettings + shared settings + Azure Key Vault)
+// Load Acontplus configuration (appsettings + shared settings + Azure Key Vault).
+// Pass this instance to registrations that require the merged values.
 var configuration = ApplicationConfigurationBuilder.Load();
 
 // Application services
@@ -409,7 +411,9 @@ The `UseApplicationMiddleware()` extension configures middleware in this order:
 
 ### ApplicationConfigurationBuilder
 
-Builds a merged `IConfiguration` with the following priority (lowest → highest):
+`ApplicationConfigurationBuilder.Load()` builds and returns a separate merged `IConfiguration` for Acontplus registrations. It doesn't modify `builder.Configuration`; pass the returned instance to every registration that needs these values.
+
+Configuration sources are applied in the following priority (lowest → highest):
 
 1. `appsettings.json`
 2. `appsettings.{Environment}.json`
@@ -422,23 +426,44 @@ Builds a merged `IConfiguration` with the following priority (lowest → highest
 var configuration = ApplicationConfigurationBuilder.Load();
 ```
 
-**Key Vault secret naming convention:** use double-dash as hierarchy separator:
+`appsettings.json` is required by `Load()`. The environment name comes from `ASPNETCORE_ENVIRONMENT` and defaults to `Production`.
+
+#### Azure Key Vault
+
+Azure Key Vault is enabled only when either `KEYVAULT_URI` or `KeyVault:VaultUri` is set. `KEYVAULT_URI` takes precedence. For a user-assigned managed identity, set `KeyVault:ManagedIdentityClientId`.
+
+```json
+{
+  "KeyVault": {
+    "VaultUri": "https://my-app-prod.vault.azure.net/",
+    "ManagedIdentityClientId": "<user-assigned-managed-identity-client-id>"
+  }
+}
+```
+
+The implementation authenticates with `DefaultAzureCredential`. In Azure, assign the workload identity the least-privilege **Key Vault Secrets User** role on its vault. Keep a separate vault for each application and environment.
+
+Key Vault secret names use double dashes as the hierarchy separator, which the provider maps to configuration colons:
 
 - `JwtSettings--SecurityKey`
 - `ConnectionStrings--DefaultConnection`
 
-**Shared settings path resolution:**
+For arrays, use numeric segments, for example `AllowedClients--0` and `AllowedClients--1`.
+
+Key Vault configuration is loaded when `Load()` runs and isn't refreshed automatically. Restart the application after a secret rotation, or add a refresh strategy at the host level if runtime rotation is required.
+
+#### Local development and host configuration
+
+`Load()` doesn't add .NET User Secrets or command-line configuration. For local values consumed through the returned configuration, use environment variables, `appsettings.Development.json`, or the shared settings file. If the host adds User Secrets, they remain available through `builder.Configuration` but are not included in the configuration returned by `Load()`.
+
+#### Shared settings path resolution
 
 - Windows: `SharedPaths:Windows` from appsettings
 - Linux: `SharedPaths:Linux` from appsettings
 - macOS: `SharedPaths:OSX` from appsettings
 - Override: `SHARED_SETTINGS_PATH` environment variable
 
-**Azure Key Vault setup:**
-
-- Local development: leave `KeyVault:VaultUri` unset, use User Secrets
-- Azure-hosted: set `KeyVault:VaultUri` and assign Managed Identity the _Key Vault Secrets User_ role
-- User-assigned identity: also set `KeyVault:ManagedIdentityClientId`
+For provider details, secret naming rules, reload behavior, and identity guidance, see Microsoft's [Azure Key Vault configuration provider documentation](https://learn.microsoft.com/aspnet/core/security/key-vault-configuration).
 
 ### JWT Authentication
 

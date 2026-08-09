@@ -55,3 +55,10 @@ Tests use xUnit. Put them under `tests/Acontplus.<Name>.Tests/`, mirror the prod
 - Update or add tests whenever behavior changes, especially public APIs, validation, security, persistence, billing, or serialization behavior.
 - Workflows in `.github/workflows/` are authoritative for CI/release behavior. Consult `docs/wiki/Smart-Publish-Guide.md` and `docs/wiki/Cascade-Publish-Guide.md` before changing versions or release automation.
 - Suggested commits follow Conventional Commits. Use the repository scopes and rules in `.github/instructions/commits.instructions.md`; format is `type(scope): description` and descriptions must be concise.
+
+## OpenCode configuration
+
+- `opencode.json` (checked in) sets project-level agent guardrails: read-only `git` and non-mutating `dotnet` CLI commands (restore/build/test/pack/format) run without approval; commits, pushes, `dotnet nuget push`, and `gh` always prompt; force-pushes and catastrophic `rm -rf` are denied.
+- The `microsoft-learn` MCP server is configured for official Microsoft/.NET documentation. When uncertain about a .NET API, NuGet behavior, or framework guidance, query its tools instead of guessing.
+- `.opencode/commands/verify.md` provides `/verify`, the CI-parity restore → Release build → test check.
+- Config is loaded at startup: restart opencode after editing `opencode.json` or files under `.opencode/`.
