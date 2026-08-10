@@ -29,7 +29,7 @@ Before generating, decide the output location:
 
 **Packages where a README diagram adds real value** (non-obvious internal structure):
 
-- `Core` — Domain/, DTOs/, Abstractions/, Validation/ layers
+- `Core` — Domain/, Dtos/, Abstractions/, Validation/ layers
 - `Billing` — SRI async authorization flow (sequence diagram)
 - `Infrastructure` — 5 subsystems in one package
 - `Persistence.SqlServer` / `Persistence.PostgreSQL` — EF Core + ADO.NET dual pattern

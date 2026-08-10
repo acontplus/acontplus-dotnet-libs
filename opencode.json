@@ -1,0 +1,38 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "manual",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "dotnet --*": "allow",
+      "dotnet restore *": "allow",
+      "dotnet build *": "allow",
+      "dotnet test *": "allow",
+      "dotnet pack *": "allow",
+      "dotnet clean *": "allow",
+      "dotnet list *": "allow",
+      "dotnet format *": "allow",
+      "git status*": "allow",
+      "git diff *": "allow",
+      "git log *": "allow",
+      "git show *": "allow",
+      "git blame *": "allow",
+      "git fetch *": "allow",
+      "git commit *": "ask",
+      "git push *": "ask",
+      "dotnet nuget push *": "ask",
+      "gh *": "ask",
+      "git push --force*": "deny",
+      "git push -f *": "deny",
+      "rm -rf /*": "deny",
+      "rm -rf ~*": "deny"
+    }
+  },
+  "mcp": {
+    "microsoft-learn": {
+      "type": "remote",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "enabled": true
+    }
+  }
+}
