@@ -8,6 +8,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## Acontplus.Services
+
+### [2.4.0] - 2026-08-10
+
+- **Added** opt-in antiforgery support for cookie-authenticated web flows: `AddAcontplusAntiforgery()`, `UseAcontplusAntiforgery()`, and optional `MapAntiforgeryTokenEndpoint()`.
+- **Added** safe warning-level observability for rejected antiforgery requests; token values and request bodies are never logged.
+- **Changed** protection remains endpoint-scoped: APIs select protected routes/groups and explicitly leave webhooks, machine-to-machine endpoints, and bearer-only APIs outside CSRF validation.
+
+---
+
 ## Acontplus.Utilities
 
 ### [2.2.0] - 2026-06-24

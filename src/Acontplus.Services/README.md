@@ -37,6 +37,7 @@ A comprehensive .NET service library providing business-grade patterns, security
 - **Client Validation**: Client-ID based access control with whitelist support
 - **Tenant Isolation**: Multi-tenant security policies with user-tenant cross-validation
 - **JWT Authentication**: Enterprise-grade JWT token validation with multi-audience support
+- **Opt-in Antiforgery**: Cookie-authenticated browser flows can enable CSRF validation without affecting bearer-only APIs, webhooks, or machine-to-machine integrations
 
 ### 📱 Device & Context Awareness
 
@@ -125,6 +126,37 @@ app.UseAuthorization();
 app.MapControllers();
 app.Run();
 ```
+
+### Cookie-authenticated browser flows (optional)
+
+Enable antiforgery only when an API accepts authentication cookies from a browser. Configure its cookie and header to match the frontend, then require it only for the routes that use cookie authentication. Configure CORS and allowed frontend origins in the consuming API.
+
+```csharp
+builder.Services.AddAcontplusAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "__Host-myapp-antiforgery";
+});
+
+var app = builder.Build();
+
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseAcontplusAntiforgery();
+
+var web = app.MapGroup("/web").RequireAuthorization();
+web.RequireAntiforgery();
+
+app.MapAntiforgeryTokenEndpoint()
+    .RequireAuthorization();
+
+// Webhooks and bearer-token-only endpoints intentionally remain outside `web`.
+app.MapPost("/webhooks/provider", HandleWebhook);
+app.MapPost("/mobile/refresh", RefreshMobileToken);
+```
+
+`UseAcontplusAntiforgery()` preserves ASP.NET Core's standard `400 Bad Request` response for invalid tokens and emits a warning without logging token values or request bodies.
 
 ### 2. Exception Handling — No Catch Needed
 
