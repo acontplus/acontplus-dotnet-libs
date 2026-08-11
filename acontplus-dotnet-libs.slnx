@@ -33,4 +33,8 @@
     <Project Path="src/Acontplus.Services/Acontplus.Services.csproj" />
     <Project Path="src/Acontplus.Utilities/Acontplus.Utilities.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Demo.Application.Tests/Demo.Application.Tests.csproj" />
+    <Project Path="tests/Acontplus.Services.Tests/Acontplus.Services.Tests.csproj" />
+  </Folder>
 </Solution>

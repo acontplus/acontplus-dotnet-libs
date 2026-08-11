@@ -311,6 +311,63 @@
             Includes stack traces and exception details in API responses (for debugging). Default: false.
             </summary>
         </member>
+        <member name="T:Acontplus.Services.Extensions.Security.AntiforgeryExtensions">
+            <summary>
+            Extension methods for opting into ASP.NET Core antiforgery protection in cookie-authenticated web flows.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Security.AntiforgeryExtensions.AddAntiforgerySupport(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Microsoft.AspNetCore.Antiforgery.AntiforgeryOptions})">
+            <summary>
+            Registers ASP.NET Core antiforgery services using the framework defaults unless explicitly configured.
+            </summary>
+            <param name="services">The service collection to configure.</param>
+            <param name="configure">Optional configuration for the antiforgery cookie, header, and token behavior.</param>
+            <returns>The configured service collection.</returns>
+            <remarks>
+            Register this only for APIs that use browser cookies for authentication. This registration does not protect
+            every endpoint: apply <c>RequireAntiforgery()</c> only to the minimal API groups or endpoints that need it,
+            or use the corresponding MVC antiforgery filters. Do not apply it to webhooks, machine-to-machine endpoints,
+            or APIs authenticated solely with bearer tokens.
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Security.AntiforgeryExtensions.UseAntiforgerySupport(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Adds antiforgery validation to the request pipeline and logs rejected protected requests.
+            </summary>
+            <param name="app">The application builder to configure.</param>
+            <returns>The configured application builder.</returns>
+            <remarks>
+            Call after routing and before mapped minimal API endpoints. Invalid tokens receive ASP.NET Core's standard
+            <c>400 Bad Request</c> response. The log entry deliberately excludes token values and request bodies.
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Security.AntiforgeryExtensions.MapAntiforgeryTokenEndpoint(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder,System.String)">
+            <summary>
+            Maps an optional endpoint that issues an antiforgery request token and stores its cookie token.
+            </summary>
+            <param name="endpoints">The endpoint route builder to configure.</param>
+            <param name="pattern">The route pattern for the token endpoint.</param>
+            <returns>The mapped route handler builder, allowing callers to require authorization or add metadata.</returns>
+            <remarks>
+            The caller is responsible for CORS and frontend-origin configuration. For authenticated browser applications,
+            require authorization on the returned builder and fetch this endpoint with credentials included.
+            </remarks>
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Security.AntiforgeryTokenResponse">
+            <summary>
+            Represents a request token issued for a browser client to send in the configured antiforgery header or form field.
+            </summary>
+            <param name="RequestToken">The request token paired with the antiforgery cookie stored in the response.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Security.AntiforgeryTokenResponse.#ctor(System.String)">
+            <summary>
+            Represents a request token issued for a browser client to send in the configured antiforgery header or form field.
+            </summary>
+            <param name="RequestToken">The request token paired with the antiforgery cookie stored in the response.</param>
+        </member>
+        <member name="P:Acontplus.Services.Extensions.Security.AntiforgeryTokenResponse.RequestToken">
+            <summary>The request token paired with the antiforgery cookie stored in the response.</summary>
+        </member>
         <member name="T:Acontplus.Services.Extensions.ServiceExtensions">
             <summary>
             Extension methods for registering application-level services.

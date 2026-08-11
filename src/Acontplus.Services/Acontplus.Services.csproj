@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Services</PackageId>
-    <Version>2.3.2</Version>
+    <Version>2.4.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -23,7 +23,8 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageReleaseNotes>v2.0.0: Major refactoring - Separated infrastructure concerns to
       Acontplus.Infrastructure. Focused on application-level services: JWT authentication, context
-      management, security headers, authorization policies, and ASP.NET Core middleware.</PackageReleaseNotes>
+      management, security headers, authorization policies, and ASP.NET Core middleware. v2.4.0: Optional
+      antiforgery registration, middleware, and token endpoint for cookie-authenticated web flows.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
