@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Acontplus.Barcode" Version="1.2.8" />
+    <PackageVersion Include="Acontplus.Barcode" Version="1.2.9" />
     <PackageVersion Include="Acontplus.Core" Version="2.3.2" />
     <PackageVersion Include="Acontplus.Services" Version="2.4.0" />
     <PackageVersion Include="Acontplus.Persistence.Common" Version="2.1.4" />
