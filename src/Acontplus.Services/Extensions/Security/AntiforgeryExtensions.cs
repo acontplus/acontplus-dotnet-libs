@@ -17,7 +17,7 @@ public static class AntiforgeryExtensions
     /// or use the corresponding MVC antiforgery filters. Do not apply it to webhooks, machine-to-machine endpoints,
     /// or APIs authenticated solely with bearer tokens.
     /// </remarks>
-    public static IServiceCollection AddAcontplusAntiforgery(
+    public static IServiceCollection AddAntiforgerySupport(
         this IServiceCollection services,
         Action<AntiforgeryOptions>? configure = null)
     {
@@ -37,7 +37,7 @@ public static class AntiforgeryExtensions
     /// Call after routing and before mapped minimal API endpoints. Invalid tokens receive ASP.NET Core's standard
     /// <c>400 Bad Request</c> response. The log entry deliberately excludes token values and request bodies.
     /// </remarks>
-    public static IApplicationBuilder UseAcontplusAntiforgery(this IApplicationBuilder app)
+    public static IApplicationBuilder UseAntiforgerySupport(this IApplicationBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
 

@@ -12,9 +12,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### [2.4.0] - 2026-08-10
 
-- **Added** opt-in antiforgery support for cookie-authenticated web flows: `AddAcontplusAntiforgery()`, `UseAcontplusAntiforgery()`, and optional `MapAntiforgeryTokenEndpoint()`.
+- **Added** opt-in antiforgery support for cookie-authenticated web flows: `AddAntiforgerySupport()`, `UseAntiforgerySupport()`, and optional `MapAntiforgeryTokenEndpoint()`.
 - **Added** safe warning-level observability for rejected antiforgery requests; token values and request bodies are never logged.
 - **Changed** protection remains endpoint-scoped: APIs select protected routes/groups and explicitly leave webhooks, machine-to-machine endpoints, and bearer-only APIs outside CSRF validation.
+- **Changed** JWT audience configuration rejects missing or blank values; access-token issuance now requires one explicit resource audience.
 
 ---
 

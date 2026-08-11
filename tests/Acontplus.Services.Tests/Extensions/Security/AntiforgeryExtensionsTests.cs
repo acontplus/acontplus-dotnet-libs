@@ -1,5 +1,7 @@
 using Acontplus.Services.Extensions.Security;
+using Acontplus.Services.Extensions.Authentication;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -13,14 +15,14 @@ namespace Acontplus.Services.Tests.Extensions.Security;
 public sealed class AntiforgeryExtensionsTests
 {
     [Fact]
-    public void AddAcontplusAntiforgery_WithConfiguredHeader_RegistersAntiforgeryAndPreservesConfiguration()
+    public void AddAntiforgerySupport_WithConfiguredHeader_RegistersAntiforgeryAndPreservesConfiguration()
     {
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
 
         // Act
-        var result = services.AddAcontplusAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        var result = services.AddAntiforgerySupport(options => options.HeaderName = "X-CSRF-TOKEN");
         using var provider = services.BuildServiceProvider();
 
         // Assert
@@ -34,7 +36,7 @@ public sealed class AntiforgeryExtensionsTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        builder.Services.AddAcontplusAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        builder.Services.AddAntiforgerySupport(options => options.HeaderName = "X-CSRF-TOKEN");
         await using var app = builder.Build();
         app.MapAntiforgeryTokenEndpoint("/csrf/token");
         var endpoint = ((IEndpointRouteBuilder)app).DataSources.SelectMany(dataSource => dataSource.Endpoints)

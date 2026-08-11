@@ -132,7 +132,7 @@ app.Run();
 Enable antiforgery only when an API accepts authentication cookies from a browser. Configure its cookie and header to match the frontend, then require it only for the routes that use cookie authentication. Configure CORS and allowed frontend origins in the consuming API.
 
 ```csharp
-builder.Services.AddAcontplusAntiforgery(options =>
+builder.Services.AddAntiforgerySupport(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
     options.Cookie.Name = "__Host-myapp-antiforgery";
@@ -143,7 +143,7 @@ var app = builder.Build();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseAcontplusAntiforgery();
+app.UseAntiforgerySupport();
 
 var web = app.MapGroup("/web").RequireAuthorization();
 web.RequireAntiforgery();
@@ -156,7 +156,7 @@ app.MapPost("/webhooks/provider", HandleWebhook);
 app.MapPost("/mobile/refresh", RefreshMobileToken);
 ```
 
-`UseAcontplusAntiforgery()` preserves ASP.NET Core's standard `400 Bad Request` response for invalid tokens and emits a warning without logging token values or request bodies.
+`UseAntiforgerySupport()` preserves ASP.NET Core's standard `400 Bad Request` response for invalid tokens and emits a warning without logging token values or request bodies.
 
 ### 2. Exception Handling — No Catch Needed
 
@@ -229,7 +229,7 @@ Add to your `appsettings.json`:
 {
   "JwtSettings": {
     "Issuer": "https://auth.yourapp.com",
-    "Audience": ["api.yourapp.com", "admin.yourapp.com"],
+    "Audience": "https://api.yourapp.com",
     "SecurityKey": "your-super-secret-key-at-least-32-characters-long",
     "ClockSkew": "5",
     "RequireHttps": "true"
@@ -499,7 +499,7 @@ For provider details, secret naming rules, reload behavior, and identity guidanc
 
 ### JWT Authentication
 
-Supports single or multiple audiences, configurable clock skew, and HTTPS enforcement.
+Requires an audience for every access token, supports one or more trusted resource audiences during validation, and supports configurable clock skew and HTTPS enforcement. Frontend clients such as admin or mobile apps are not API audiences.
 
 ```csharp
 // One-line registration
@@ -510,7 +510,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 {
   "JwtSettings": {
     "Issuer": "https://auth.yourapp.com",
-    "Audience": ["api.yourapp.com", "admin.yourapp.com"],
+    "Audience": "https://api.yourapp.com",
     "SecurityKey": "your-super-secret-key-at-least-32-characters-long",
     "ClockSkew": "5",
     "RequireHttps": "true"

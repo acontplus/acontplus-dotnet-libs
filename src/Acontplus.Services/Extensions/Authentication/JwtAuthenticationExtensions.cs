@@ -8,26 +8,7 @@ public static class JwtAuthenticationExtensions
         var issuer = config["JwtSettings:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is required");
         var securityKey = config["JwtSettings:SecurityKey"] ?? throw new InvalidOperationException("JWT SecurityKey is required");
 
-        // Get audience(s) - supports both string and array
-        var audienceSection = config.GetSection("JwtSettings:Audience");
-        string[] audiences;
-
-        if (audienceSection.Value != null)
-        {
-            // Single audience (string)
-            audiences = new[] { audienceSection.Value };
-        }
-        else
-        {
-            // Multiple audiences (array)
-            audiences = audienceSection.Get<string[]>() ??
-                throw new InvalidOperationException("JWT Audience is required");
-        }
-
-        if (audiences.Length == 0)
-        {
-            throw new InvalidOperationException("At least one JWT Audience is required");
-        }
+        var audiences = GetValidAudiences(config);
 
         services.AddAuthentication(options =>
         {
@@ -40,6 +21,7 @@ public static class JwtAuthenticationExtensions
                 {
                     // Security best practices
                     RequireExpirationTime = true,
+                    RequireAudience = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
@@ -70,5 +52,29 @@ public static class JwtAuthenticationExtensions
         // Authorization will be configured by AddAuthorizationPolicies() in ApplicationServiceExtensions
 
         return services;
+    }
+
+    private static string[] GetValidAudiences(IConfiguration configuration)
+    {
+        var audienceSection = configuration.GetSection("JwtSettings:Audience");
+        if (audienceSection.Value is { } singleAudience)
+        {
+            return !string.IsNullOrWhiteSpace(singleAudience)
+                ? [singleAudience.Trim()]
+                : throw new InvalidOperationException("JWT Audience is required.");
+        }
+
+        var audiences = audienceSection.Get<string[]>()
+            ?? throw new InvalidOperationException("JWT Audience is required.");
+
+        if (audiences.Length == 0 || audiences.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new InvalidOperationException("JWT Audience must contain at least one non-empty value.");
+        }
+
+        return audiences
+            .Select(audience => audience.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
     }
 }

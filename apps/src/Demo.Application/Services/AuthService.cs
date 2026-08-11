@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Acontplus.Utilities.Security.Interfaces;
+using Demo.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -90,7 +91,7 @@ public class AuthService : IAuthService
     private (string Token, int ExpiresInSeconds) GenerateJwt(Usuario user)
     {
         var issuer = _config["JwtSettings:Issuer"]!;
-        var audience = _config["JwtSettings:Audience"]!;
+        var audience = JwtTokenConfiguration.GetRequiredAudience(_config);
         var key = _config["JwtSettings:SecurityKey"]!;
         var expiryMinutes = int.Parse(_config["JwtSettings:ExpiryMinutes"] ?? "60");
 
