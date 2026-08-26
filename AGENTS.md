@@ -53,7 +53,7 @@ Tests use xUnit. Put them under `tests/Acontplus.<Name>.Tests/`, mirror the prod
 - Inspect `git status` before editing and preserve unrelated user changes.
 - Keep diffs scoped; do not reformat unrelated files or upgrade dependencies opportunistically.
 - Update or add tests whenever behavior changes, especially public APIs, validation, security, persistence, billing, or serialization behavior.
-- Workflows in `.github/workflows/` are authoritative for CI/release behavior. Consult `docs/wiki/Smart-Publish-Guide.md` and `docs/wiki/Cascade-Publish-Guide.md` before changing versions or release automation.
+- Workflows in `.github/workflows/` are authoritative for CI/release behavior. Consult `docs/wiki/Smart-Publish-Guide.md` before changing versions or release automation.
 - Suggested commits follow Conventional Commits. Use the repository scopes and rules in `.github/instructions/commits.instructions.md`; format is `type(scope): description` and descriptions must be concise.
 
 ## OpenCode configuration

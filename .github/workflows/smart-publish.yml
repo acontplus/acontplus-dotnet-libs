@@ -1,4 +1,4 @@
-name: Smart Publish - Auto Cascade Detection
+name: Release — Publish NuGet Packages
 
 on:
   pull_request:
@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - "src/**/*.csproj"
-      - "Directory.Packages.props"
 
 env:
   DOTNET_VERSION: "10.0.x"
@@ -15,8 +14,6 @@ env:
 
 permissions:
   contents: write
-  pull-requests: write
-  issues: write
 
 # Prevents duplicate runs with other workflows
 concurrency:
@@ -36,19 +33,9 @@ jobs:
       - name: Check if this workflow should run
         id: check
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-
-          # Skip if it's a cascade-update branch (handled by pr-cascade-publish.yml)
-          if [[ "$BRANCH_NAME" == cascade-update/* ]]; then
-            echo "should-run=false" >> $GITHUB_OUTPUT
-            echo "reason=cascade-branch" >> $GITHUB_OUTPUT
-            echo "⏭️ Skipping: This is a cascade branch, handled by pr-cascade-publish.yml"
-            exit 0
-          fi
-
           echo "should-run=true" >> $GITHUB_OUTPUT
           echo "reason=normal-pr" >> $GITHUB_OUTPUT
-          echo "✅ Proceeding: Normal PR, smart-publish will handle it"
+          echo "✅ Proceeding: publishing versioned packages from the merged PR"
 
   analyze-changes:
     name: Analyze Package Changes
@@ -56,10 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.check-eligibility.outputs.should-run == 'true'
     outputs:
-      strategy: ${{ steps.analyze.outputs.strategy }}
       changed-packages: ${{ steps.analyze.outputs.changed-packages }}
-      has-dependents: ${{ steps.analyze.outputs.has-dependents }}
-      cascade-needed: ${{ steps.analyze.outputs.cascade-needed }}
 
     steps:
       - name: Checkout code
@@ -75,37 +59,10 @@ jobs:
           Write-Host "Smart Publish - Analyzing Changes"
           Write-Host "================================================`n"
 
-          # Build dependency graph
-          $dependencies = @{}
-          $projectFiles = Get-ChildItem -Path "src" -Filter "*.csproj" -Recurse
-
-          foreach ($project in $projectFiles) {
-            [xml]$csproj = Get-Content $project.FullName
-            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
-            $generatePackage = $csproj.Project.PropertyGroup.GeneratePackageOnBuild | Select-Object -First 1
-
-            if ($generatePackage -ne "true" -or [string]::IsNullOrEmpty($packageId)) {
-              continue
-            }
-
-            $deps = @()
-            foreach ($itemGroup in $csproj.Project.ItemGroup) {
-              if ($itemGroup.PackageReference) {
-                foreach ($packageRef in $itemGroup.PackageReference) {
-                  if ($packageRef.Include -like "Acontplus.*") {
-                    $deps += $packageRef.Include
-                  }
-                }
-              }
-            }
-            $dependencies[$packageId] = $deps
-          }
-
-          Write-Host "Dependency Graph:"
-          $dependencies | ConvertTo-Json | Write-Host
-
-          # Detect changed packages
-          $changedFiles = git diff --name-only HEAD~1 HEAD | Where-Object { $_ -like "src/*/*.csproj" }
+          # Compare the exact merge range. A project-file change without a package
+          # version change must not result in a NuGet publication.
+          $baseSha = "${{ github.event.pull_request.base.sha }}"
+          $changedFiles = git diff --name-only $baseSha HEAD | Where-Object { $_ -like "src/*/*.csproj" }
           $changedPackages = @()
 
           foreach ($file in $changedFiles) {
@@ -115,47 +72,34 @@ jobs:
               $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
 
               if ($packageId -and $version) {
-                Write-Host "`n📦 Detected change: $packageId v$version"
+                $previousVersion = $null
+                $previousProject = git show "${baseSha}:$file" 2>$null
 
-                # Check if this package has dependents
-                $dependents = $dependencies.Keys | Where-Object {
-                  $dependencies[$_] -contains $packageId
+                if ($LASTEXITCODE -eq 0) {
+                  [xml]$previousCsproj = $previousProject
+                  $previousVersion = $previousCsproj.Project.PropertyGroup.Version | Select-Object -First 1
                 }
 
+                if ($previousVersion -eq $version) {
+                  Write-Host "⏭️ Skipping $packageId: version remains $version"
+                  continue
+                }
+
+                Write-Host "`n📦 Version change: $packageId $previousVersion → $version"
                 $changedPackages += @{
                   Name = $packageId
                   Version = $version
-                  Dependents = @($dependents)
-                  HasDependents = $dependents.Count -gt 0
-                }
-
-                if ($dependents.Count -gt 0) {
-                  Write-Host "  ⚠️ Has $($dependents.Count) dependent(s):" -ForegroundColor Yellow
-                  $dependents | ForEach-Object { Write-Host "    - $_" }
-                } else {
-                  Write-Host "  ✅ No dependents - standalone package" -ForegroundColor Green
                 }
               }
             }
           }
 
-          # Determine strategy
-          $hasDependents = $changedPackages | Where-Object { $_.HasDependents } | Measure-Object | Select-Object -ExpandProperty Count
-          # Previously, packages with dependents triggered a cascade recommendation.
-          # Now we always publish via smart flow; no cascade hand-off.
-          $cascadeNeeded = $false
-
           Write-Host "`n================================================"
           Write-Host "Analysis Result:"
           Write-Host "================================================"
-          Write-Host "Changed packages: $($changedPackages.Count)"
-          Write-Host "Packages with dependents: $hasDependents"
-
-          Write-Host "Strategy: ✅ SIMPLE PUBLISH" -ForegroundColor Green
-          Write-Host "Reason: Smart flow now handles dependents without cascade" -ForegroundColor Green
-
-          # Output for next jobs
-          $strategy = if ($cascadeNeeded) { "cascade" } else { "simple" }
+          Write-Host "Versioned packages: $($changedPackages.Count)"
+          Write-Host "Strategy: ✅ PUBLISH CHANGED PACKAGES" -ForegroundColor Green
+          Write-Host "Requirement: dependent package references and versions must be updated in the merged PR." -ForegroundColor Green
 
           # Ensure valid JSON output (empty array if no changes)
           if ($changedPackages.Count -eq 0) {
@@ -167,85 +111,10 @@ jobs:
             $packagesJson = $changedPackages | ConvertTo-Json -Compress
           }
 
-          "strategy=$strategy" >> $env:GITHUB_OUTPUT
           "changed-packages=$packagesJson" >> $env:GITHUB_OUTPUT
-          "has-dependents=$hasDependents" >> $env:GITHUB_OUTPUT
-          "cascade-needed=$cascadeNeeded" >> $env:GITHUB_OUTPUT
-
-  trigger-cascade:
-    name: Trigger Cascade Update
-    needs: [check-eligibility, analyze-changes]
-    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.cascade-needed == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Create cascade update issue
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const packages = JSON.parse('${{ needs.analyze-changes.outputs.changed-packages }}');
-            const packagesWithDeps = packages.filter(p => p.HasDependents);
-
-            let body = `## 🔄 Cascade Update Required\n\n`;
-            body += `A merged PR has updated package(s) that have dependents. A cascade update is recommended.\n\n`;
-            body += `### 📦 Changed Packages with Dependents\n\n`;
-
-            for (const pkg of packagesWithDeps) {
-              const shortName = pkg.Name.replace('Acontplus.', '');
-              body += `#### ${shortName} (v${pkg.Version})\n`;
-              body += `**Dependents:**\n`;
-              for (const dep of pkg.Dependents) {
-                body += `- ${dep}\n`;
-              }
-              body += `\n`;
-            }
-
-            body += `### 🎯 Recommended Action\n\n`;
-            body += `1. Go to [Actions → Cascade Publish](/${{ github.repository }}/actions/workflows/cascade-publish.yml)\n`;
-            body += `2. Click "Run workflow"\n`;
-            body += `3. Configure:\n`;
-
-            if (packagesWithDeps.length === 1) {
-              const rootPkg = packagesWithDeps[0].Name.replace('Acontplus.', '');
-              body += `   - **Root Package**: \`${rootPkg}\`\n`;
-            } else {
-              body += `   - **Root Package**: Choose the primary package updated\n`;
-            }
-
-            body += `   - **Bump Type**: \`patch\` (or appropriate version bump)\n`;
-            body += `   - **Cascade Bump**: \`patch\`\n`;
-            body += `   - **Run Tests**: ✅ true\n\n`;
-
-            body += `### ⚠️ Important\n\n`;
-            body += `The changed package has been published, but its dependents are still using the old version. `;
-            body += `Run the cascade update to ensure all dependent packages are updated to use the latest version.\n\n`;
-            body += `**Merged PR**: #${{ github.event.pull_request.number }}\n`;
-            body += `**Author**: @${{ github.event.pull_request.user.login }}\n`;
-
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🔄 Cascade Update Recommended',
-              body: body,
-              labels: ['cascade-needed', 'automated', 'dependencies'],
-              assignees: ['${{ github.event.pull_request.user.login }}']
-            });
-
-            console.log(`Created issue #${issue.data.number}`);
-
-            // Add comment to the original PR
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ github.event.pull_request.number }},
-              body: `⚠️ **Cascade Update Recommended**\n\nThis PR updated packages with dependents. See issue #${issue.data.number} for details on running a cascade update.`
-            });
 
   simple-publish:
-    name: Simple Publish (No Dependents)
+    name: Publish Changed Packages
     needs: [check-eligibility, analyze-changes]
     if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.changed-packages != '[]'
     runs-on: ubuntu-latest
@@ -283,13 +152,28 @@ jobs:
 
       - name: Run tests
         run: |
-          TEST_PROJECT=$(find tests -name "${{ matrix.package.Name }}.Tests.csproj" 2>/dev/null | head -n 1)
+          TEST_PROJECT=$(find tests -name "${{ matrix.package.Name }}.Tests.Unit.csproj" 2>/dev/null | head -n 1)
           if [ -n "$TEST_PROJECT" ]; then
             echo "Running tests for ${{ matrix.package.Name }}"
-            dotnet test "$TEST_PROJECT" --configuration ${{ env.CONFIGURATION }} --no-build
+            mkdir -p TestResults/coverage
+            dotnet test --project "$TEST_PROJECT" \
+              --configuration ${{ env.CONFIGURATION }} \
+              --no-build \
+              --coverage \
+              --coverage-output "$PWD/TestResults/coverage/${{ matrix.package.Name }}.cobertura.xml" \
+              --coverage-output-format cobertura
           else
             echo "No tests found for ${{ matrix.package.Name }}"
           fi
+
+      - name: Upload code coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-coverage-${{ matrix.package.Name }}-${{ matrix.package.Version }}
+          path: TestResults/coverage/*.cobertura.xml
+          retention-days: 14
+          if-no-files-found: warn
 
       - name: Find project file
         id: find-project
@@ -374,7 +258,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     needs: [check-eligibility, analyze-changes, simple-publish]
-    if: needs.check-eligibility.outputs.should-run == 'true'
+    if: needs.check-eligibility.outputs.should-run == 'true' && needs.analyze-changes.outputs.changed-packages != '[]'
     runs-on: ubuntu-latest
 
     steps:
@@ -392,9 +276,9 @@ jobs:
         run: |
           $packages = '${{ needs.analyze-changes.outputs.changed-packages }}' | ConvertFrom-Json
 
-          $notes = "## 📦 Simple Package Release`n`n"
+          $notes = "## 📦 Package Release`n`n"
           $notes += "**Merged PR**: #${{ github.event.pull_request.number }}`n"
-          $notes += "**Strategy**: Simple publish (no dependents)`n`n"
+          $notes += "**Strategy**: publish package versions prepared in the merged PR`n`n"
           $notes += "### Published Packages`n`n"
 
           foreach ($pkg in $packages) {
@@ -422,7 +306,7 @@ jobs:
 
   notify-completion:
     name: Notify Completion
-    needs: [check-eligibility, analyze-changes, trigger-cascade, simple-publish]
+    needs: [check-eligibility, analyze-changes, simple-publish]
     if: always() && needs.check-eligibility.outputs.should-run == 'true'
     runs-on: ubuntu-latest
 
@@ -430,18 +314,8 @@ jobs:
       - name: Summary
         shell: pwsh
         run: |
-          $strategy = "${{ needs.analyze-changes.outputs.strategy }}"
-          $cascadeNeeded = "${{ needs.analyze-changes.outputs.cascade-needed }}" -eq "true"
-
           Write-Host "================================================"
           Write-Host "Smart Publish Workflow Complete"
           Write-Host "================================================"
-          Write-Host "Strategy: $strategy"
-
-          if ($cascadeNeeded) {
-            Write-Host "⚠️ Cascade update recommended"
-            Write-Host "Check the created issue for instructions"
-          } else {
-            Write-Host "✅ Simple publish completed"
-            Write-Host "Packages published to NuGet.org"
-          }
+          Write-Host "✅ Changed packages were processed for publication"
+          Write-Host "Packages published to NuGet.org"

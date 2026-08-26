@@ -62,7 +62,7 @@ This repository contains multiple libraries and sample applications, each in its
 
 ---
 
-## 📦 Package Dependency Order (Cascade Update Strategy)
+## 📦 Package Dependency Order
 
 When updating versions, always follow this order — from base packages to dependents:
 
@@ -84,7 +84,7 @@ When updating versions, always follow this order — from base packages to depen
 | 3        | `Acontplus.Persistence.PostgreSQL` | `Persistence.Common`   |
 | 4 — Top  | `Acontplus.Reports`                | `Utilities`, `Barcode` |
 
-> For automated cascade publishing via GitHub Actions, see the [Cascade Publish Guide](docs/CASCADE_PUBLISH_GUIDE.md).
+> Prepare dependency-aware version updates in one PR, then let [Smart Publish](docs/wiki/Smart-Publish-Guide.md) publish the merged release set through GitHub Actions.
 
 ---
 

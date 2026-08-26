@@ -35,22 +35,17 @@
                                   ┌─────────────────────┐
                                   │ ANALYZE CHANGES     │
                                   │ ─────────────────   │
-                                  │ • Scan all .csproj  │
-                                  │ • Compare NuGet.org │
-                                  │ • Build dep graph   │
+                                  │ • Scan changed      │
+                                  │   package projects  │
+                                  │ • Read release set  │
                                   └──────────┬──────────┘
                                             │
-                          ┌─────────────────┴─────────────────┐
-                          │       Has dependents?              │
-                          └────┬──────────────────────┬────────┘
-                          NO   │                      │  YES
-                               ▼                      ▼
-                    ┌──────────────────┐   ┌──────────────────┐
-                    │ BUILD & TEST     │   │ OPEN ISSUE       │
-                    │ PUBLISH directly │   │ recommend        │
-                    │ to NuGet.org     │   │ cascade-         │
-                    │ CREATE RELEASE   │   │ publish.yml      │
-                    └──────────────────┘   └──────────────────┘
+                                  ┌──────────────────┐
+                                  │ BUILD & TEST     │
+                                  │ PACK & PUBLISH   │
+                                  │ changed packages │
+                                  │ CREATE RELEASE   │
+                                  └──────────────────┘
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -209,18 +204,19 @@ Result: A ✅, B ❌, C ✅ (Partial success)
 - Faster deployment
 
 ### 🔒 Security
-- API keys stored in GitHub Secrets
-- Never exposed in logs
-- Scoped permissions
+- GitHub OIDC identity token for publication
+- NuGet.org issues a short-lived API key through `NuGet/login@v1`
+- Trusted Publishing policy is restricted to `smart-publish.yml` and `production`
 
 ### 📊 Monitoring
 - GitHub Actions logs
 - Workflow summaries
-- Automatic issue creation
+- NuGet indexing verification
+- Cobertura coverage artifacts
 
 ### 🎛️ Control
-- Manual cascade publishing via `cascade-publish.yml`
-- Selective package publishing with dependency ordering
+- Reviewed PRs are the release manifest
+- Dependency references and package versions are prepared before merge
 
 ## Workflow States
 
@@ -230,7 +226,7 @@ Result: A ✅, B ❌, C ✅ (Partial success)
 └─────────────┘
 
 ┌─────────────┐
-│ TRIGGERED   │ ← Push detected or manual start
+│ TRIGGERED   │ ← Merged release PR detected
 └─────────────┘
 
 ┌─────────────┐

@@ -34,7 +34,7 @@
     <Project Path="src/Acontplus.Utilities/Acontplus.Utilities.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Demo.Application.Tests/Demo.Application.Tests.csproj" />
-    <Project Path="tests/Acontplus.Services.Tests/Acontplus.Services.Tests.csproj" />
+    <Project Path="tests/Acontplus.Services.Tests.Unit/Acontplus.Services.Tests.Unit.csproj" />
+    <Project Path="tests/Acontplus.Reports.Tests.Unit/Acontplus.Reports.Tests.Unit.csproj" />
   </Folder>
 </Solution>
