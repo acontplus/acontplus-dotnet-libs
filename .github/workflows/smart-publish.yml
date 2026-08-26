@@ -81,7 +81,7 @@ jobs:
                 }
 
                 if ($previousVersion -eq $version) {
-                  Write-Host "⏭️ Skipping $packageId: version remains $version"
+                  Write-Host "⏭️ Skipping ${packageId}: version remains $version"
                   continue
                 }
 
