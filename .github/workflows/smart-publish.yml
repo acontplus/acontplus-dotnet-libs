@@ -7,24 +7,41 @@ on:
       - main
     paths:
       - "src/**/*.csproj"
+  workflow_dispatch:
+    inputs:
+      base_sha:
+        description: "Commit immediately before the package version changes"
+        required: true
+        type: string
+      source_sha:
+        description: "Commit containing the package versions to publish"
+        required: true
+        type: string
+      confirm_publish:
+        description: "Confirm that the selected package versions may be published"
+        required: true
+        default: false
+        type: boolean
 
 env:
   DOTNET_VERSION: "10.0.x"
   CONFIGURATION: Release
+  BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || inputs.base_sha }}
+  SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.sha || inputs.source_sha }}
 
 permissions:
   contents: write
 
 # Prevents duplicate runs with other workflows
 concurrency:
-  group: publish-${{ github.event.pull_request.number }}
+  group: publish-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
   check-eligibility:
     name: Check Workflow Eligibility
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     outputs:
       should-run: ${{ steps.check.outputs.should-run }}
       reason: ${{ steps.check.outputs.reason }}
@@ -32,10 +49,35 @@ jobs:
     steps:
       - name: Check if this workflow should run
         id: check
+        shell: pwsh
+        env:
+          MANUAL_BASE_SHA: ${{ inputs.base_sha }}
+          MANUAL_SOURCE_SHA: ${{ inputs.source_sha }}
+          MANUAL_CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
         run: |
-          echo "should-run=true" >> $GITHUB_OUTPUT
-          echo "reason=normal-pr" >> $GITHUB_OUTPUT
-          echo "✅ Proceeding: publishing versioned packages from the merged PR"
+          if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") {
+            if ($env:GITHUB_REF -ne "refs/heads/main") {
+              throw "Manual publishing is only allowed from the main branch."
+            }
+
+            if ($env:MANUAL_CONFIRM_PUBLISH -ne "true") {
+              throw "Set confirm_publish=true to authorize a manual package publication."
+            }
+
+            if ([string]::IsNullOrWhiteSpace($env:MANUAL_BASE_SHA) -or
+                [string]::IsNullOrWhiteSpace($env:MANUAL_SOURCE_SHA)) {
+              throw "base_sha and source_sha are required for a manual publication."
+            }
+
+            "should-run=true" >> $env:GITHUB_OUTPUT
+            "reason=manual-dispatch" >> $env:GITHUB_OUTPUT
+            Write-Host "✅ Proceeding: manually publishing the selected release range"
+          }
+          else {
+            "should-run=true" >> $env:GITHUB_OUTPUT
+            "reason=normal-pr" >> $env:GITHUB_OUTPUT
+            Write-Host "✅ Proceeding: publishing versioned packages from the merged PR"
+          }
 
   analyze-changes:
     name: Analyze Package Changes
@@ -50,6 +92,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Analyze changed packages and dependencies
         id: analyze
@@ -61,8 +104,25 @@ jobs:
 
           # Compare the exact merge range. A project-file change without a package
           # version change must not result in a NuGet publication.
-          $baseSha = "${{ github.event.pull_request.base.sha }}"
-          $changedFiles = git diff --name-only $baseSha HEAD | Where-Object { $_ -like "src/*/*.csproj" }
+          $baseSha = $env:BASE_SHA
+          $sourceSha = $env:SOURCE_SHA
+
+          git cat-file -e "${baseSha}^{commit}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The supplied base_sha is not a commit available in the repository: $baseSha"
+          }
+
+          git cat-file -e "${sourceSha}^{commit}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The supplied source_sha is not a commit available in the repository: $sourceSha"
+          }
+
+          git merge-base --is-ancestor $baseSha $sourceSha
+          if ($LASTEXITCODE -ne 0) {
+            throw "base_sha must be an ancestor of source_sha."
+          }
+
+          $changedFiles = git diff --name-only $baseSha $sourceSha | Where-Object { $_ -like "src/*/*.csproj" }
           $changedPackages = @()
 
           foreach ($file in $changedFiles) {
@@ -130,6 +190,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -264,6 +326,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v8
@@ -277,8 +341,18 @@ jobs:
           $packages = '${{ needs.analyze-changes.outputs.changed-packages }}' | ConvertFrom-Json
 
           $notes = "## 📦 Package Release`n`n"
-          $notes += "**Merged PR**: #${{ github.event.pull_request.number }}`n"
-          $notes += "**Strategy**: publish package versions prepared in the merged PR`n`n"
+          if ("${{ github.event_name }}" -eq "pull_request") {
+            $notes += "**Merged PR**: #${{ github.event.pull_request.number }}`n"
+          }
+          else {
+            $notes += "**Manual dispatch**: release range $env:BASE_SHA..$env:SOURCE_SHA`n"
+          }
+          if ("${{ github.event_name }}" -eq "pull_request") {
+            $notes += "**Strategy**: publish package versions prepared in the merged PR`n`n"
+          }
+          else {
+            $notes += "**Strategy**: publish package versions from the approved manual range`n`n"
+          }
           $notes += "### Published Packages`n`n"
 
           foreach ($pkg in $packages) {
