@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace Acontplus.Services.Tests.Extensions.Authentication;
+namespace Acontplus.Services.Tests.Unit.Extensions.Authentication;
 
 public sealed class JwtAuthenticationExtensionsTests
 {

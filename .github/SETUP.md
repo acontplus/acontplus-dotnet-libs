@@ -1,279 +1,62 @@
-# GitHub Actions Setup Guide
+# GitHub Actions and NuGet Setup
 
-This guide will help you configure GitHub Actions for automated NuGet package publishing.
+## Prerequisites
 
-## Quick Start (5 minutes)
+- GitHub Actions is enabled for the repository.
+- `main` and `develop` are protected and changes are merged through pull requests.
+- The NuGet.org owner has a Trusted Publishing policy for this repository.
 
-### Step 1: Get Your NuGet API Key
+## Configure NuGet Trusted Publishing
 
-1. Go to https://www.nuget.org/account/apikeys
-2. Click **"Create"**
-3. Configure:
-   - **Key Name**: `GitHub Actions - Acontplus Libs`
-   - **Scopes**: Select "Push"
-   - **Packages**: Select "All Packages" or specific packages
-   - **Glob Pattern**: `Acontplus.*` (recommended)
-   - **Expiration**: 365 days (or as per your policy)
-4. Click **"Create"**
-5. **Copy the API key immediately** (you won't see it again!)
+In NuGet.org, create a GitHub Trusted Publishing policy with:
 
-### Step 2: Add Secret to GitHub
+| Setting | Value |
+| --- | --- |
+| Repository owner | `acontplus` |
+| Repository | `acontplus-dotnet-libs` |
+| Workflow file | `smart-publish.yml` |
+| Environment | `production` |
 
-1. Go to your repository on GitHub
-2. Click **Settings** → **Secrets and variables** → **Actions**
-3. Click **"New repository secret"**
-4. Enter:
-   - **Name**: `NUGET_API_KEY`
-   - **Secret**: Paste your NuGet API key
-5. Click **"Add secret"**
+Add the repository secret `NUGET_USER` with the NuGet.org profile name that owns the policy. The workflow uses OIDC through `NuGet/login@v1`; no persistent `NUGET_API_KEY` is required.
 
-### Step 3: Enable GitHub Actions
+Follow [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) for the authoritative setup instructions.
 
-1. Go to **Actions** tab in your repository
-2. If prompted, click **"I understand my workflows, go ahead and enable them"**
-3. GitHub Actions is now ready!
+## Release a Package Set
 
-### Step 4: Test the Setup
+1. Update each released package's `<Version>` in its `.csproj`.
+2. Update the corresponding internal version in `Directory.Packages.props`.
+3. Include every changed Acontplus dependency reference and bump every consumer released with it.
+4. Run the local Release restore, build, and tests.
+5. Open and merge a PR to `main`.
 
-#### Option A: Manual Test (Recommended for First Time)
+`build-test.yml` validates pull requests to `main` and `develop`; it is intentionally not triggered by direct pushes. After merge to `main`, `smart-publish.yml` publishes changed package versions, verifies indexing, and creates a GitHub Release.
 
-1. Go to **Actions** → **Cascade Publish NuGet Packages**
-2. Click **"Run workflow"**
-3. Leave options empty (will detect changed versions)
-4. Click **"Run workflow"**
-5. Monitor the workflow execution
-
-#### Option B: Automatic Test
-
-1. Update a package version in any `.csproj` file:
-   ```xml
-   <Version>2.0.4</Version> <!-- Increment this -->
-   ```
-
-2. Commit and push:
-   ```bash
-   git add src/Acontplus.Core/Acontplus.Core.csproj
-   git commit -m "feat(core): bump version for testing"
-   git push origin feature/test-publish
-   # Open a Pull Request on GitHub and merge to main
-   ```
-
-3. GitHub Actions will automatically start on PR merge
-
-## What Happens Next?
-
-### Automatic Workflow Triggers
-
-✅ **On PR Merge to Main** (primary publishing path — `smart-publish.yml`):
-- Analyzes package dependency graph automatically
-- If package has no dependents → publishes directly to NuGet.org and creates a GitHub release
-- If package has dependents → opens a GitHub issue recommending `cascade-publish.yml`
-
-✅ **On Pull Requests** (`build-test.yml`):
-- Builds and validates the code
-- Checks version format
-- Generates package files (but doesn't publish)
-
-✅ **Daily at 9 AM UTC** (`version-check.yml`):
-- Compares local vs published versions
-- Creates summary report
-- Opens GitHub issue if unpublished versions exist
-
-### Manual Controls
-
-You can manually trigger workflows from **Actions** tab:
-
-1. **Cascade Publish**: Publish a root package and all its dependents in topological order
-2. **Build and Test**: Run full build and validation on any branch
-3. **Version Check**: Generate version comparison report on demand
-
-## Workflow Files
+## Workflow Inventory
 
 | File | Purpose | Trigger |
-|------|---------|----------|
-| `smart-publish.yml` | Primary: auto-detects strategy on PR merge | PR merge to main |
-| `cascade-publish.yml` | Manual cascade publishing with dependency ordering | Manual |
-| `build-test.yml` | Validates build and tests | All branches, PRs |
-| `version-check.yml` | Monitors version status | Daily, manual |
+| --- | --- | --- |
+| `smart-publish.yml` | Publish the merged, versioned release set through OIDC. | Merged PR to `main` changing a package project |
+| `build-test.yml` | CI build, test, pack validation, and Cobertura artifacts. | Pull requests to `main`/`develop` and manual runs |
+| `version-check.yml` | Detect local versions that are not published on NuGet.org. | Daily and manual |
+| `publish-wiki.yml` | Publish the documentation wiki. | Wiki documentation changes |
 
-## Common Workflows
+## Verification
 
-### Publishing a New Version
-
-```bash
-# 1. Use the version upgrade script
-.\upgrade-version.ps1 -PackageName Acontplus.Core -BumpType minor
-
-# 2. Commit the change
-git add src/Acontplus.Core/Acontplus.Core.csproj
-git commit -m "feat(core): add new feature xyz"
-
-# 3. Create a PR and merge to main
- # smart-publish.yml triggers automatically on merge
-
- # 4. Monitor in GitHub Actions tab
-```
-
-### Publishing Multiple Packages
+For a normal change, use:
 
 ```bash
- # 1. Upgrade multiple packages
- .\upgrade-version.ps1 -PackageName Acontplus.Core -BumpType minor
- .\upgrade-version.ps1 -PackageName Acontplus.Utilities -BumpType patch
-
- # 2. Commit all changes, create PR
- git add src/**/*.csproj
- git commit -m "chore(build): bump multiple package versions"
-
- # 3. Merge PR — smart-publish.yml handles the rest
+dotnet restore
+dotnet build acontplus-dotnet-libs.slnx --configuration Release --no-restore
+dotnet test --solution acontplus-dotnet-libs.slnx --configuration Release --no-build --verbosity normal
 ```
 
-### Cascade Publish (packages with dependents)
-
-When smart-publish detects a package has dependents it will open a GitHub issue recommending cascade:
-
-1. Go to **Actions** → **Cascade Publish NuGet Packages** → **Run workflow**
-2. Enter root package name, bump type, and cascade bump type
-3. Let it create a PR with all dependent version bumps
-4. Review and merge the PR
-
-## Monitoring
-
-### Check Publish Status
-
-- **GitHub Actions**: Repository → Actions tab
-- **NuGet.org**: https://www.nuget.org/packages/[PackageName]
-- **GitHub Releases**: Repository → Releases tab
-
-### View Workflow Logs
-
-1. Go to **Actions** tab
-2. Click on workflow run
-3. Click on job name
-4. Expand steps to see detailed logs
-
-### Download Published Packages
-
-- **From GitHub**: Actions → Workflow run → Artifacts section
-- **From NuGet**: `dotnet add package Acontplus.Core`
+For coverage of a test project, add `--coverage --coverage-output <path>.cobertura.xml --coverage-output-format cobertura`.
 
 ## Troubleshooting
 
-### ❌ "401 Unauthorized"
-
-**Problem**: Invalid or missing API key
-
-**Solution**:
-1. Verify `NUGET_API_KEY` secret exists in repository settings
-2. Check API key hasn't expired on NuGet.org
-3. Regenerate API key if necessary
-
-### ❌ "409 Conflict"
-
-**Problem**: Package version already exists
-
-**Solution**: NuGet doesn't allow republishing. Increment the version number:
-```xml
-<Version>2.0.5</Version> <!-- Was 2.0.4 -->
-```
-
-### ❌ Workflow Not Triggering
-
-**Problem**: Push to main doesn't start workflow
-
-**Solutions**:
-- Ensure changes are in `src/**/*.csproj` files
-- Check branch name is `main`
-- Verify workflows are enabled in Settings → Actions
-
-### ❌ Build Failures
-
-**Problem**: Workflow fails during build step
-
-**Solution**:
-1. Test locally: `dotnet build`
-2. Check error logs in Actions tab
-3. Verify all dependencies are available
-4. Ensure .NET SDK version matches (10.0.x)
-
-## Security Best Practices
-
-✅ **DO**:
-- Keep API keys in GitHub Secrets (never in code)
-- Use minimal API key permissions (Push only)
-- Set API key expiration dates
-- Rotate keys regularly (annually)
-- Use branch protection on `main`
-- Require PR reviews before merging
-
-❌ **DON'T**:
-- Commit API keys to repository
-- Use overly permissive API keys
-- Share API keys between projects
-- Publish from feature branches
-
-## Advanced Topics
-
-### Custom Package Sources
-
-To publish to private feeds, add a step to `smart-publish.yml` or `cascade-publish.yml`:
-
-```yaml
-- name: Publish to private feed
-  run: |
-    dotnet nuget push "nupkgs/*.nupkg" \
-      --api-key ${{ secrets.PRIVATE_FEED_KEY }} \
-      --source https://your-feed.com/nuget
-```
-
-### Pre-release Versions
-
-Use semantic versioning for pre-releases:
-
-```xml
-<Version>2.1.0-beta.1</Version>
-<Version>2.1.0-rc.2</Version>
-<Version>2.1.0-alpha.3</Version>
-```
-
-Workflow automatically handles pre-release versions.
-
-### Notifications
-
-Add Slack/Teams notifications by adding steps to workflows:
-
-```yaml
-- name: Notify Slack
-  uses: slackapi/slack-github-action@v1
-  with:
-    webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-    payload: |
-      {
-        "text": "Package published: ${{ matrix.package.Name }}"
-      }
-```
-
-## Getting Help
-
-- **Workflow Issues**: Check Actions tab → Workflow run → Logs
-- **NuGet Issues**: Visit https://status.nuget.org
-- **GitHub Actions Docs**: https://docs.github.com/actions
-
-## Next Steps
-
-After setup is complete:
-
-1. ✅ Test with a version bump
-2. ✅ Verify package appears on NuGet.org
-3. ✅ Check GitHub release was created
-4. ✅ Set up branch protection rules
-5. ✅ Document your release process
-6. ✅ Schedule API key rotation
-
----
-
-**Setup Complete!** 🎉
-
-Your repository is now configured for automated NuGet publishing. Every time you push a version change to `main`, your packages will automatically be published to NuGet.org.
-
-For detailed documentation, see [workflows/README.md](workflows/README.md)
+| Problem | Resolution |
+| --- | --- |
+| OIDC authentication fails | Verify the NuGet policy matches `smart-publish.yml`, repository, owner, and `production` environment. |
+| A package is not published | Confirm the merged PR changed its package `.csproj` version. |
+| Consumer restore fails | Update the consumer's central package reference and release version in the same PR. |
+| Version exists already | Use a new SemVer version; NuGet versions are immutable. |

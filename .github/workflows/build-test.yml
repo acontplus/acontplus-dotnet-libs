@@ -1,21 +1,19 @@
-name: Build and Test
+name: CI — Build, Test & Pack
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
     branches:
       - main
       - develop
+    # Do not add a paths filter here. A skipped required check remains pending
+    # and can block pull-request merges.
   workflow_dispatch:
 
 env:
   DOTNET_VERSION: "10.0.x"
   CONFIGURATION: Release
 
-# Cancel in-progress runs when new commits are pushed
+# Cancel an in-progress run when a newer commit is added to the same PR.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,9 +22,6 @@ jobs:
   build:
     name: Build Solution
     runs-on: ubuntu-latest
-    # Skip duplicate runs when PR is merged (runs on both PR and push)
-    if: github.event_name != 'push' || !contains(github.event.head_commit.message, 'Merge pull request')
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -43,7 +38,28 @@ jobs:
         run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
 
       - name: Run tests
-        run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+        shell: bash
+        run: |
+          mkdir -p TestResults/coverage
+          while IFS= read -r test_project; do
+            test_name="$(basename "${test_project%.csproj}")"
+            dotnet test --project "$test_project" \
+              --configuration ${{ env.CONFIGURATION }} \
+              --no-build \
+              --verbosity normal \
+              --coverage \
+              --coverage-output "$PWD/TestResults/coverage/${test_name}.cobertura.xml" \
+              --coverage-output-format cobertura
+          done < <(find tests -name "*.Tests.Unit.csproj" -print | sort)
+
+      - name: Upload code coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-coverage-${{ github.run_id }}
+          path: TestResults/coverage/*.cobertura.xml
+          retention-days: 14
+          if-no-files-found: warn
 
   validate-packages:
     name: Validate Package Versions

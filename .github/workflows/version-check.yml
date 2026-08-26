@@ -1,4 +1,4 @@
-name: Version Check
+name: Maintenance — Check NuGet Versions
 
 on:
   schedule:
@@ -161,7 +161,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title: issueTitle,
-                body: 'Automated workflow has detected unpublished package versions.\n\nCheck the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\nTo publish these packages:\n1. Review the version changes\n2. Push to main branch or\n3. Manually trigger the "Publish NuGet Packages" workflow',
+                body: 'Automated workflow has detected unpublished package versions.\n\nCheck the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.\n\nTo publish these packages:\n1. Review the version changes\n2. Merge the release PR to main\n3. Release — Publish NuGet Packages runs automatically',
                 labels: ['automation', 'package-version', 'needs-publish']
               });
             }

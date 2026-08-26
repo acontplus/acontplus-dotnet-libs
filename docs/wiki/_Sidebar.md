@@ -36,7 +36,6 @@
 
 - [Architecture](Architecture)
 - [Smart Publish Guide](Smart-Publish-Guide)
-- [Cascade Publish Guide](Cascade-Publish-Guide)
 - [Persistence Resilience Guide](Persistence-Resilience-Guide)
 - [SRI Electronic Billing Spec](SRI-Electronic-Billing-Spec)
 

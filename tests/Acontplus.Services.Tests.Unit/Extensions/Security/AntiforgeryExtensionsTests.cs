@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Xunit;
 
-namespace Acontplus.Services.Tests.Extensions.Security;
+namespace Acontplus.Services.Tests.Unit.Extensions.Security;
 
 public sealed class AntiforgeryExtensionsTests
 {
@@ -55,7 +55,9 @@ public sealed class AntiforgeryExtensionsTests
 
         // Assert
         responseBody.Position = 0;
-        using var response = await JsonDocument.ParseAsync(responseBody);
+        using var response = await JsonDocument.ParseAsync(
+            responseBody,
+            cancellationToken: TestContext.Current.CancellationToken);
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
         Assert.False(string.IsNullOrWhiteSpace(response.RootElement.GetProperty("requestToken").GetString()));
         Assert.Contains("Set-Cookie", context.Response.Headers.Keys);

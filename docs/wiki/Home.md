@@ -31,14 +31,13 @@ Welcome to the documentation wiki for the Acontplus .NET Libraries monorepo — 
 ## 📖 Guides
 
 - [[Architecture]] — Package dependency map, DDD layers, SRI billing flow, persistence patterns
-- [[Cascade-Publish-Guide]] — How to publish packages with dependencies in topological order
-- [[Smart-Publish-Guide]] — How the automatic PR-merge publishing flow works
+- [[Smart-Publish-Guide]] — How to prepare dependency-aware release PRs and publish them automatically after merge
 - [[Persistence-Resilience-Guide]] — Configuring retry, circuit breaker, and timeout policies
 - [[SRI-Electronic-Billing-Spec]] — SRI electronic billing technical spec (Ficha Técnica v2.32, Ecuador)
 
 ---
 
-## 🔄 Version Cascade Order
+## 🔄 Dependency-Aware Release Order
 
 When bumping versions, always publish dependencies before dependents. Built from actual `.csproj` references — **not** a diagram of intent.
 
