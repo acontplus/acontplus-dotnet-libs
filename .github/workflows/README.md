@@ -7,7 +7,7 @@ This directory contains the CI, package publication, and wiki workflows for the 
 | Workflow | Purpose | Trigger |
 | --- | --- | --- |
 | `build-test.yml` | Restores, builds, tests, validates package versions, packs, and uploads Cobertura coverage artifacts. | Pull requests to `main`/`develop` and manual runs |
-| `smart-publish.yml` | Publishes the package versions prepared in a merged release PR, with a guarded manual recovery mode. | Merged pull request to `main` that changes a package `<Version>`, or manual dispatch from `main` |
+| `smart-publish.yml` | Publishes the package versions prepared in a merged release PR, automatically recovers missing versions, and supports guarded manual recovery. | Merged pull request to `main` that changes a package `<Version>`, or manual dispatch from `main` |
 | `version-check.yml` | Compares local package versions with NuGet.org and reports unpublished versions. | Daily and manual |
 | `publish-wiki.yml` | Publishes `docs/wiki` to GitHub Wiki. | Changes to wiki documentation |
 
@@ -20,7 +20,9 @@ This directory contains the CI, package publication, and wiki workflows for the 
 5. Review and merge the PR to `main`.
 6. `smart-publish.yml` builds, tests, packs, and publishes every changed package version. It verifies NuGet indexing and creates a GitHub Release.
 
-If an automatic publish run fails before publication, run `Release — Publish NuGet Packages` manually from the `main` branch. The manual mode requires the exact `base_sha`, the exact `source_sha` containing the release versions, and `confirm_publish=true`; it compares only that range before publishing.
+If an automatic publish run fails during analysis or package publication, the workflow checks NuGet.org and dispatches one guarded recovery run only when a release version is still missing. If the recovery dispatch cannot be started, run `Release — Publish NuGet Packages` manually from `main` with the exact `base_sha`, `source_sha`, and `confirm_publish=true`.
+
+The recovery job has only `actions: write` and `contents: read`; the actual NuGet publication still runs through the protected `production` environment and its OIDC permissions. Recovery is limited to the original merged PR event, so a failed recovery dispatch cannot recursively dispatch itself.
 
 The publishing workflow does not edit versions, create release branches, or infer missing dependent releases after merge. The reviewed PR is the release manifest. Protect `main` and `develop` so changes reach them through pull requests; CI intentionally does not run on direct pushes.
 
@@ -47,7 +49,7 @@ Coverage is retained as a GitHub Actions artifact; it is not sent to a third-par
 | Symptom | Action |
 | --- | --- |
 | Publish workflow did not start | Confirm the merged PR changed a versioned `src/**/*.csproj` package project. |
-| Automatic publish failed before NuGet publication | Use the workflow's manual dispatch from `main` with the exact release `base_sha` and `source_sha`, then confirm publication. |
+| Automatic publish failed before NuGet publication | The recovery job checks NuGet.org and dispatches a guarded retry when a version is missing; otherwise use manual dispatch with the exact release `base_sha` and `source_sha`. |
 | Restore fails in CI | Ensure central versions and all released consumer references are included in the same PR. |
 | Trusted Publishing login fails | Confirm the NuGet policy names `smart-publish.yml` and, if configured, `production`. |
 | Version already exists | Bump to a new SemVer version and merge a new PR. |

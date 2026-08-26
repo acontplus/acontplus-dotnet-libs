@@ -8,7 +8,7 @@ How the automatic publishing flow works when a versioned PR is merged to `main`.
 
 `smart-publish.yml` triggers automatically when a PR modifying a package project (`src/**/*.csproj`) is merged to `main`. It publishes only package projects whose `<Version>` changed in that PR. Updating only `Directory.Packages.props`, or changing a project without changing its version, does not publish a package.
 
-The same workflow also supports a guarded `workflow_dispatch` recovery path. Manual runs are permitted only from `main` and require the exact commit range plus an explicit confirmation, so a retry does not accidentally publish unrelated package versions.
+The same workflow also supports two recovery paths. After an analysis or package-publication failure, a trusted recovery job checks NuGet.org and dispatches one guarded retry only when a version is still missing. Operators can use `workflow_dispatch` from `main` if that automatic dispatch cannot start. Manual runs require the exact commit range plus an explicit confirmation, so a retry does not accidentally publish unrelated package versions.
 
 > **Important**: the workflow never changes package versions or dependency references. Prepare, review, and validate all release changes in the PR before merging it.
 
@@ -45,13 +45,15 @@ git push origin feature/my-change
 
 ## Manual Recovery Publish
 
-Use this only when the automatic publish run failed before NuGet publication. The workflow file must already be present on the default branch for GitHub to expose the `workflow_dispatch` trigger. Open **Actions → Release — Publish NuGet Packages → Run workflow**, select `main`, and provide:
+Use this only when the automatic recovery dispatch could not start or needs an operator retry. The workflow file must already be present on the default branch for GitHub to expose the `workflow_dispatch` trigger. Open **Actions → Release — Publish NuGet Packages → Run workflow**, select `main`, and provide:
 
 | Input | Value |
 | --- | --- |
 | `base_sha` | The commit immediately before the release version changes. |
 | `source_sha` | The merged commit containing the package versions to publish. |
 | `confirm_publish` | `true` after verifying that those versions are intended for NuGet.org. |
+
+The automatic recovery is deliberately limited to analysis or package-publication failures. A release-creation failure does not trigger another publish attempt because the packages may already be on NuGet.org. The recovery job queries NuGet.org first and dispatches at most one retry for the failed PR range; the retry itself is a manual-dispatch event and therefore cannot recursively trigger the recovery job.
 
 The same operation can be started with GitHub CLI:
 
@@ -81,6 +83,11 @@ flowchart TD
   G --> H[Verify indexing<br/>30s + 20 retries]
   H --> I[Create GitHub Release]
   I --> J([Done])
+  D -. failure .-> K{Missing version on NuGet?}
+  G -. failure .-> K
+  K -->|yes| L[Guarded workflow_dispatch retry]
+  K -->|no| M([No duplicate publish])
+  L --> B
 
   classDef green fill:#d61572,color:#fff,stroke:#b01260
   classDef orange fill:#0a7db5,color:#fff,stroke:#085e8a
@@ -129,7 +136,7 @@ The publish job requests `id-token: write` and exchanges it with NuGet.org using
 | Problem                         | Cause                                | Solution                                                |
 | ------------------------------- | ------------------------------------ | ------------------------------------------------------- |
 | Workflow did not run | PR did not change a package `.csproj` | Include the intended package version changes in the PR. |
-| Automatic run failed before publication | The old run used a pre-fix workflow revision | Use manual recovery with the exact `base_sha`, `source_sha`, and `confirm_publish=true`. |
+| Automatic run failed before publication | The recovery job found a missing version and dispatched a retry, or the dispatch could not start | Inspect the recovery job; if needed, use manual recovery with the exact `base_sha`, `source_sha`, and `confirm_publish=true`. |
 | Restore or build fails | A dependency reference and release set are inconsistent | Update every affected `Acontplus.*` central reference and package version in the same PR. |
 | "Already published" | The package version already exists on NuGet.org | Use a new SemVer version, update the PR, and merge it. |
 | Indexing timeout | NuGet.org is slow to index | Check NuGet.org; the workflow logs the warning after retries. |
@@ -141,5 +148,6 @@ The publish job requests `id-token: write` and exchanges it with NuGet.org using
 
 - [GitHub Actions workflow syntax — `workflow_dispatch`](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
 - [GitHub Docs — Manually running a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
+- [GitHub REST API — Create a workflow dispatch event](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event)
 - [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
 - [[Persistence-Resilience-Guide]] — Retry and circuit breaker configuration
