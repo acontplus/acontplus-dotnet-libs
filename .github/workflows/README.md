@@ -7,7 +7,7 @@ This directory contains the CI, package publication, and wiki workflows for the 
 | Workflow | Purpose | Trigger |
 | --- | --- | --- |
 | `build-test.yml` | Restores, builds, tests, validates package versions, packs, and uploads Cobertura coverage artifacts. | Pull requests to `main`/`develop` and manual runs |
-| `smart-publish.yml` | Publishes the package versions prepared in a merged release PR. | Merged pull request to `main` that changes a package `<Version>` |
+| `smart-publish.yml` | Publishes the package versions prepared in a merged release PR, with a guarded manual recovery mode. | Merged pull request to `main` that changes a package `<Version>`, or manual dispatch from `main` |
 | `version-check.yml` | Compares local package versions with NuGet.org and reports unpublished versions. | Daily and manual |
 | `publish-wiki.yml` | Publishes `docs/wiki` to GitHub Wiki. | Changes to wiki documentation |
 
@@ -19,6 +19,8 @@ This directory contains the CI, package publication, and wiki workflows for the 
 4. Open a PR to `main` or `develop`. `build-test.yml` validates the entire solution and uploads code coverage artifacts.
 5. Review and merge the PR to `main`.
 6. `smart-publish.yml` builds, tests, packs, and publishes every changed package version. It verifies NuGet indexing and creates a GitHub Release.
+
+If an automatic publish run fails before publication, run `Release — Publish NuGet Packages` manually from the `main` branch. The manual mode requires the exact `base_sha`, the exact `source_sha` containing the release versions, and `confirm_publish=true`; it compares only that range before publishing.
 
 The publishing workflow does not edit versions, create release branches, or infer missing dependent releases after merge. The reviewed PR is the release manifest. Protect `main` and `develop` so changes reach them through pull requests; CI intentionally does not run on direct pushes.
 
@@ -45,6 +47,7 @@ Coverage is retained as a GitHub Actions artifact; it is not sent to a third-par
 | Symptom | Action |
 | --- | --- |
 | Publish workflow did not start | Confirm the merged PR changed a versioned `src/**/*.csproj` package project. |
+| Automatic publish failed before NuGet publication | Use the workflow's manual dispatch from `main` with the exact release `base_sha` and `source_sha`, then confirm publication. |
 | Restore fails in CI | Ensure central versions and all released consumer references are included in the same PR. |
 | Trusted Publishing login fails | Confirm the NuGet policy names `smart-publish.yml` and, if configured, `production`. |
 | Version already exists | Bump to a new SemVer version and merge a new PR. |

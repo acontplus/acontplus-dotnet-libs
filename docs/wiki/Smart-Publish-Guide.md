@@ -8,6 +8,8 @@ How the automatic publishing flow works when a versioned PR is merged to `main`.
 
 `smart-publish.yml` triggers automatically when a PR modifying a package project (`src/**/*.csproj`) is merged to `main`. It publishes only package projects whose `<Version>` changed in that PR. Updating only `Directory.Packages.props`, or changing a project without changing its version, does not publish a package.
 
+The same workflow also supports a guarded `workflow_dispatch` recovery path. Manual runs are permitted only from `main` and require the exact commit range plus an explicit confirmation, so a retry does not accidentally publish unrelated package versions.
+
 > **Important**: the workflow never changes package versions or dependency references. Prepare, review, and validate all release changes in the PR before merging it.
 
 ---
@@ -41,6 +43,28 @@ git push origin feature/my-change
 
 `smart-publish.yml` starts automatically. It builds, tests, packs, publishes, verifies indexing, and creates one GitHub Release for the changed package versions.
 
+## Manual Recovery Publish
+
+Use this only when the automatic publish run failed before NuGet publication. The workflow file must already be present on the default branch for GitHub to expose the `workflow_dispatch` trigger. Open **Actions → Release — Publish NuGet Packages → Run workflow**, select `main`, and provide:
+
+| Input | Value |
+| --- | --- |
+| `base_sha` | The commit immediately before the release version changes. |
+| `source_sha` | The merged commit containing the package versions to publish. |
+| `confirm_publish` | `true` after verifying that those versions are intended for NuGet.org. |
+
+The same operation can be started with GitHub CLI:
+
+```bash
+gh workflow run smart-publish.yml \
+  --ref main \
+  -f base_sha=BASE_COMMIT_SHA \
+  -f source_sha=RELEASE_COMMIT_SHA \
+  -f confirm_publish=true
+```
+
+For a merged pull request, obtain the two SHAs from the PR metadata and use the merge commit as `source_sha`. Do not use a moving branch name for either input. Confirm the version is not already present on NuGet.org before starting a recovery publish; the workflow uses `--skip-duplicate`, but the release range should still be reviewed first.
+
 ---
 
 ## Decision Flow
@@ -48,6 +72,7 @@ git push origin feature/my-change
 ```mermaid
 flowchart TD
   A([PR merged to main]) --> B{smart-publish.yml}
+  R([Manual dispatch from main]) --> B
   B --> C[Find changed package versions]
   C --> D[Build & Test]
   D --> E[Pack changed packages]
@@ -104,6 +129,7 @@ The publish job requests `id-token: write` and exchanges it with NuGet.org using
 | Problem                         | Cause                                | Solution                                                |
 | ------------------------------- | ------------------------------------ | ------------------------------------------------------- |
 | Workflow did not run | PR did not change a package `.csproj` | Include the intended package version changes in the PR. |
+| Automatic run failed before publication | The old run used a pre-fix workflow revision | Use manual recovery with the exact `base_sha`, `source_sha`, and `confirm_publish=true`. |
 | Restore or build fails | A dependency reference and release set are inconsistent | Update every affected `Acontplus.*` central reference and package version in the same PR. |
 | "Already published" | The package version already exists on NuGet.org | Use a new SemVer version, update the PR, and merge it. |
 | Indexing timeout | NuGet.org is slow to index | Check NuGet.org; the workflow logs the warning after retries. |
@@ -113,5 +139,7 @@ The publish job requests `id-token: write` and exchanges it with NuGet.org using
 
 ## Related
 
+- [GitHub Actions workflow syntax — `workflow_dispatch`](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+- [GitHub Docs — Manually running a workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
 - [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
 - [[Persistence-Resilience-Guide]] — Retry and circuit breaker configuration
