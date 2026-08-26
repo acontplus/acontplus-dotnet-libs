@@ -27,14 +27,14 @@ env:
   DOTNET_VERSION: "10.0.x"
   CONFIGURATION: Release
   BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || inputs.base_sha }}
-  SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.sha || inputs.source_sha }}
+  SOURCE_SHA: ${{ github.event_name == 'pull_request' && (github.event.pull_request.merge_commit_sha || github.sha) || inputs.source_sha }}
 
 permissions:
   contents: write
 
 # Prevents duplicate runs with other workflows
 concurrency:
-  group: publish-${{ github.event.pull_request.number || github.run_id }}
+  group: publish-${{ github.event.pull_request.number || inputs.source_sha || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -127,16 +127,19 @@ jobs:
 
           foreach ($file in $changedFiles) {
             if (Test-Path $file) {
-              [xml]$csproj = Get-Content $file
+              $projectXml = (Get-Content -Raw -Path $file).TrimStart([char]0xFEFF)
+              [xml]$csproj = $projectXml
               $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
               $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
 
               if ($packageId -and $version) {
                 $previousVersion = $null
                 $previousProject = git show "${baseSha}:$file" 2>$null
+                $previousExitCode = $LASTEXITCODE
 
-                if ($LASTEXITCODE -eq 0) {
-                  [xml]$previousCsproj = $previousProject
+                if ($previousExitCode -eq 0) {
+                  $previousXml = ($previousProject -join [Environment]::NewLine).TrimStart([char]0xFEFF)
+                  [xml]$previousCsproj = $previousXml
                   $previousVersion = $previousCsproj.Project.PropertyGroup.Version | Select-Object -First 1
                 }
 
@@ -316,6 +319,119 @@ jobs:
           name: nuget-${{ matrix.package.Name }}-${{ matrix.package.Version }}
           path: nupkgs/*.nupkg
           retention-days: 30
+
+  trigger-recovery:
+    name: Trigger Recovery Publish
+    needs: [check-eligibility, analyze-changes, simple-publish]
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      needs.check-eligibility.result == 'success' &&
+      (needs.analyze-changes.result == 'failure' || needs.simple-publish.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ env.SOURCE_SHA }}
+
+      - name: Check for unpublished versions
+        id: unpublished
+        shell: pwsh
+        run: |
+          $baseSha = $env:BASE_SHA
+          $sourceSha = $env:SOURCE_SHA
+          $unpublishedPackages = @()
+
+          git cat-file -e "${baseSha}^{commit}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The release base commit is not available: $baseSha"
+          }
+
+          git cat-file -e "${sourceSha}^{commit}" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            throw "The release source commit is not available: $sourceSha"
+          }
+
+          git merge-base --is-ancestor $baseSha $sourceSha
+          if ($LASTEXITCODE -ne 0) {
+            throw "The release base commit must be an ancestor of the source commit."
+          }
+
+          $changedFiles = git diff --name-only $baseSha $sourceSha | Where-Object { $_ -like "src/*/*.csproj" }
+
+          foreach ($file in $changedFiles) {
+            if (-not (Test-Path $file)) {
+              continue
+            }
+
+            $projectXml = (Get-Content -Raw -Path $file).TrimStart([char]0xFEFF)
+            [xml]$csproj = $projectXml
+            $packageId = $csproj.Project.PropertyGroup.PackageId | Select-Object -First 1
+            $version = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
+
+            if (-not $packageId -or -not $version) {
+              continue
+            }
+
+            $previousProject = git show "${baseSha}:$file" 2>$null
+            $previousExitCode = $LASTEXITCODE
+            if ($previousExitCode -eq 0) {
+              $previousXml = ($previousProject -join [Environment]::NewLine).TrimStart([char]0xFEFF)
+              [xml]$previousCsproj = $previousXml
+              $previousVersion = $previousCsproj.Project.PropertyGroup.Version | Select-Object -First 1
+              if ($previousVersion -eq $version) {
+                continue
+              }
+            }
+
+            try {
+              $url = "https://api.nuget.org/v3-flatcontainer/$($packageId.ToLower())/index.json"
+              $published = Invoke-RestMethod -Uri $url -ErrorAction Stop
+              if ($published.versions -contains "$version") {
+                Write-Host "✅ $packageId $version is already available on NuGet.org"
+                continue
+              }
+            }
+            catch {
+              Write-Host "ℹ️ $packageId is not available on NuGet.org yet"
+            }
+
+            $unpublishedPackages += "$packageId $version"
+            Write-Host "📦 Missing publication: $packageId $version"
+          }
+
+          if ($unpublishedPackages.Count -eq 0) {
+            "found=false" >> $env:GITHUB_OUTPUT
+            Write-Host "✅ No missing package versions detected; recovery dispatch is not needed."
+          }
+          else {
+            "found=true" >> $env:GITHUB_OUTPUT
+            Write-Host "⚠️ Missing package versions detected; starting one guarded recovery dispatch."
+          }
+
+      - name: Dispatch guarded recovery publish
+        if: steps.unpublished.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ env.BASE_SHA }}
+          SOURCE_SHA: ${{ env.SOURCE_SHA }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "/repos/${GITHUB_REPOSITORY}/actions/workflows/smart-publish.yml/dispatches" \
+            -f ref=main \
+            -f "inputs[base_sha]=${BASE_SHA}" \
+            -f "inputs[source_sha]=${SOURCE_SHA}" \
+            -f "inputs[confirm_publish]=true"
+
+          echo "✅ Recovery publish dispatched for ${BASE_SHA}..${SOURCE_SHA}"
 
   create-release:
     name: Create GitHub Release
