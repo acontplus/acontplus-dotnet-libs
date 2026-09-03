@@ -4,6 +4,12 @@
         <name>Acontplus.Notifications</name>
     </assembly>
     <members>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.CheckCertificateRevocation">
+            <summary>
+            Gets or sets whether to check SSL/TLS certificate revocation with the certificate authority.
+            Defaults to <see langword="true"/> to prevent MITM attacks (CWE-295).
+            </summary>
+        </member>
         <member name="T:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService">
             <summary>
             WhatsApp Cloud API service for sending messages via Meta's Graph API.

@@ -132,7 +132,7 @@ public class MailKitService : IMailKitService, IDisposable
             try
             {
                 newClient.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-                newClient.CheckCertificateRevocation = false;
+                newClient.CheckCertificateRevocation = email.CheckCertificateRevocation;
 
                 // Add timeout configurations
                 newClient.Timeout = 30000; // 30 seconds timeout
