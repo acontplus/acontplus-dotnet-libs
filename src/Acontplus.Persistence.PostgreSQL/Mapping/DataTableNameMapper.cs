@@ -10,7 +10,8 @@ public static class DataTableNameMapper
     /// </summary>
     /// <param name="cmd">The Npgsql command containing the <c>@tableNames</c> parameter.</param>
     /// <param name="ds">The data set whose tables will be renamed.</param>
-    public static async Task ProcessTableNames(NpgsqlCommand cmd, DataSet ds)
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    public static async Task ProcessTableNames(NpgsqlCommand cmd, DataSet ds, CancellationToken cancellationToken = default)
     {
         var tableNames = cmd.Parameters["@tableNames"].Value?.ToString()?.Split(',');
         if (tableNames == null) return;
@@ -18,7 +19,8 @@ public static class DataTableNameMapper
         // Parallel.ForEach is okay here as it's a CPU-bound operation on in-memory data
         await Task.Run(() =>
         {
-            Parallel.ForEach(tableNames, (tableName, _, index) =>
+            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
+            Parallel.ForEach(tableNames, parallelOptions, (tableName, _, index) =>
             {
                 if (string.IsNullOrEmpty(tableName)) return;
                 // Ensure index is within bounds to prevent ArgumentOutOfRangeException
@@ -27,6 +29,6 @@ public static class DataTableNameMapper
                     ds.Tables[(int)index].TableName = tableName;
                 }
             });
-        });
+        }, cancellationToken);
     }
 }

@@ -29,7 +29,7 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
   /// <inheritdoc/>
   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
   {
-    await DispatchDomainEventsAsync();
+    await DispatchDomainEventsAsync(cancellationToken);
     UpdateTimestamps();
     HandleSoftDeletes();
     return await base.SaveChangesAsync(cancellationToken);
@@ -38,13 +38,13 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
   /// <inheritdoc/>
   public override int SaveChanges()
   {
-    DispatchDomainEventsAsync().GetAwaiter().GetResult();
+    DispatchDomainEventsAsync(CancellationToken.None).GetAwaiter().GetResult();
     UpdateTimestamps();
     HandleSoftDeletes();
     return base.SaveChanges();
   }
 
-  private async Task DispatchDomainEventsAsync()
+  private async Task DispatchDomainEventsAsync(CancellationToken cancellationToken = default)
   {
     if (_eventDispatcher is null) return;
 
@@ -56,10 +56,14 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
     foreach (var entity in entitiesWithEvents)
     {
+      cancellationToken.ThrowIfCancellationRequested();
       var events = entity.DomainEvents.ToArray();
       entity.ClearDomainEvents();
       foreach (var domainEvent in events)
+      {
+        cancellationToken.ThrowIfCancellationRequested();
         await _eventDispatcher.Dispatch(domainEvent);
+      }
     }
   }
 

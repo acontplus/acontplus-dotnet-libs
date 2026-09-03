@@ -29,7 +29,9 @@ public static class JwtAuthenticationExtensions
 
                     // Enhanced security
                     RequireSignedTokens = true,
-                    ValidateTokenReplay = true,
+                    // Token replay validation requires an ITokenReplayCache (e.g. distributed Redis cache).
+                    // Defaults to false to avoid false sense of security unless explicitly enabled with a cache store.
+                    ValidateTokenReplay = Convert.ToBoolean(config["JwtSettings:ValidateTokenReplay"] ?? "false"),
 
                     // Configuration values
                     ValidIssuer = issuer,

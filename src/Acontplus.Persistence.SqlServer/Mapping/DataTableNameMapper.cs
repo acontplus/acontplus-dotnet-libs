@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Persistence.SqlServer.Mapping;
+namespace Acontplus.Persistence.SqlServer.Mapping;
 
 /// <summary>
 /// Provides utilities for assigning table names in a <see cref="DataSet"/> from a stored procedure output parameter.
@@ -10,7 +10,8 @@ public static class DataTableNameMapper
     /// </summary>
     /// <param name="cmd">The SQL command containing the <c>@tableNames</c> parameter.</param>
     /// <param name="ds">The data set whose tables will be renamed.</param>
-    public static async Task ProcessTableNames(SqlCommand cmd, DataSet ds)
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    public static async Task ProcessTableNames(SqlCommand cmd, DataSet ds, CancellationToken cancellationToken = default)
     {
         var tableNames = cmd.Parameters["@tableNames"].Value?.ToString()?.Split(',');
         if (tableNames == null)
@@ -21,7 +22,8 @@ public static class DataTableNameMapper
         // Parallel.ForEach is okay here as it's a CPU-bound operation on in-memory data
         await Task.Run(() =>
         {
-            Parallel.ForEach(tableNames, (tableName, _, index) =>
+            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
+            Parallel.ForEach(tableNames, parallelOptions, (tableName, _, index) =>
             {
                 if (string.IsNullOrEmpty(tableName))
                 {
@@ -34,6 +36,6 @@ public static class DataTableNameMapper
                     ds.Tables[(int)index].TableName = tableName;
                 }
             });
-        });
+        }, cancellationToken);
     }
 }

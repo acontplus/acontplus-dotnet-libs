@@ -108,7 +108,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -118,11 +118,11 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.QueryAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -133,7 +133,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -143,11 +143,11 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.QueryFirstOrDefaultAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -158,7 +158,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -168,11 +168,11 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.QuerySingleOrDefaultAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     #endregion
@@ -187,7 +187,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -197,11 +197,11 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.ExecuteAsync(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -212,7 +212,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -222,11 +222,11 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.ExecuteScalarAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     #endregion
@@ -241,7 +241,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -251,14 +251,14 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 using var multi = await connection.QueryMultipleAsync(commandDefinition);
                 var first = await multi.ReadAsync<T1>();
                 var second = await multi.ReadAsync<T2>();
                 return (first, second);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -269,7 +269,7 @@ public partial class DapperRepository : IDapperRepository
         CommandType? commandType = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -279,15 +279,15 @@ public partial class DapperRepository : IDapperRepository
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     commandType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 using var multi = await connection.QueryMultipleAsync(commandDefinition);
                 var first = await multi.ReadAsync<T1>();
                 var second = await multi.ReadAsync<T2>();
                 var third = await multi.ReadAsync<T3>();
                 return (first, second, third);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     #endregion
@@ -313,7 +313,7 @@ public partial class DapperRepository : IDapperRepository
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -339,7 +339,7 @@ LIMIT @Limit OFFSET @Offset";
                     dynamicParams,
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 using var multi = await connection.QueryMultipleAsync(commandDefinition);
                 var totalCount = await multi.ReadSingleAsync<int>();
@@ -350,8 +350,8 @@ LIMIT @Limit OFFSET @Offset";
                     totalCount,
                     pagination.PageIndex,
                     pagination.PageSize);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -361,7 +361,7 @@ LIMIT @Limit OFFSET @Offset";
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -379,7 +379,7 @@ LIMIT @Limit OFFSET @Offset";
                     dynamicParams,
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 var items = (await connection.QueryAsync<T>(commandDefinition)).ToList();
 
@@ -391,8 +391,8 @@ LIMIT @Limit OFFSET @Offset";
                     totalCount,
                     pagination.PageIndex,
                     pagination.PageSize);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     #endregion
@@ -406,7 +406,7 @@ LIMIT @Limit OFFSET @Offset";
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -419,11 +419,11 @@ LIMIT @Limit OFFSET @Offset";
                     dynamicParams,
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.QueryAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -433,7 +433,7 @@ LIMIT @Limit OFFSET @Offset";
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             return await ExecuteWithConnectionAsync(async connection =>
             {
@@ -449,11 +449,11 @@ LIMIT @Limit OFFSET @Offset";
                     dynamicParams,
                     _currentTransaction,
                     commandTimeout ?? DefaultTimeout,
-                    cancellationToken: cancellationToken);
+                    cancellationToken: ct);
 
                 return await connection.QueryAsync<T>(commandDefinition);
-            }, cancellationToken);
-        });
+            }, ct);
+        }, cancellationToken);
     }
 
     #endregion
