@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Notifications.Models;
+namespace Acontplus.Notifications.Models;
 
 public class EmailModel
 {
@@ -6,9 +6,13 @@ public class EmailModel
     public int SmtpPort { get; set; }
     public string? Username { get; set; }
     public byte[]? EncryptedPassword { get; set; } // Encrypted password
-    public string? PasswordHash { get; set; }
     public required string Password { get; set; }
     public bool? UseSsl { get; set; }
+    /// <summary>
+    /// Gets or sets whether to check SSL/TLS certificate revocation with the certificate authority.
+    /// Defaults to <see langword="true"/> to prevent MITM attacks (CWE-295).
+    /// </summary>
+    public bool CheckCertificateRevocation { get; set; } = true;
     public string? SenderName { get; set; }
     public string? SenderEmail { get; set; }
     public required string RecipientEmail { get; set; }
