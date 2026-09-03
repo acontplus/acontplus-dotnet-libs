@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- Supply Chain Security: Enable deep audit for all direct and transitive NuGet packages -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
+
+    <!-- Elevate NuGet vulnerability warnings to build errors (NU1901: Low, NU1902: Moderate, NU1903: High, NU1904: Critical) -->
+    <WarningsAsErrors>$(WarningsAsErrors);NU1902;NU1903;NU1904</WarningsAsErrors>
+  </PropertyGroup>
+</Project>

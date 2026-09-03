@@ -1,0 +1,20 @@
+# SonarQube Community Build analysis for the default branch only.
+resources:
+  repositories:
+    - repository: acontplusDevOps
+      type: git
+      name: AcontplusDevelopment/acontplus-devops
+      ref: refs/heads/main
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+jobs:
+  - template: templates/sonarqube-dotnet.yml@acontplusDevOps
+    parameters:
+      projectKey: acontplus-dotnet-libs
+      projectName: Acontplus .NET Libraries

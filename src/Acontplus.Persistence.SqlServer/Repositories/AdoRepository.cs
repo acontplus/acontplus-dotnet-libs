@@ -126,20 +126,20 @@ public class AdoRepository : IAdoRepository
     {
         parameters ??= new Dictionary<string, object>();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                return await reader.ToListAsync<T>(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                return await reader.ToListAsync<T>(ct);
             }
             catch (SqlException ex)
             {
@@ -155,7 +155,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -170,12 +170,12 @@ public class AdoRepository : IAdoRepository
         parameters ??= new Dictionary<string, object>();
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -191,11 +191,11 @@ public class AdoRepository : IAdoRepository
 
                 var ds = new DataSet();
                 using var adapter = new SqlDataAdapter(cmd);
-                await Task.Run(() => adapter.Fill(ds), cancellationToken);
+                await Task.Run(() => adapter.Fill(ds), ct);
 
                 if (options.WithTableNames)
                 {
-                    await DataTableNameMapper.ProcessTableNames(cmd, ds);
+                    await DataTableNameMapper.ProcessTableNames(cmd, ds, ct);
                 }
 
                 return ds;
@@ -214,7 +214,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -228,19 +228,19 @@ public class AdoRepository : IAdoRepository
     {
         parameters ??= new Dictionary<string, object>();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken);
+                return await cmd.ExecuteNonQueryAsync(ct);
             }
             catch (SqlException ex)
             {
@@ -256,7 +256,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -271,19 +271,19 @@ public class AdoRepository : IAdoRepository
         parameters ??= new Dictionary<string, object>();
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
 
                 return await reader.ReadAsync(cancellationToken)
                     ? await DbDataReaderMapper.MapToObject<T>(reader)
@@ -303,7 +303,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -318,19 +318,19 @@ public class AdoRepository : IAdoRepository
         parameters ??= new Dictionary<string, object>();
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
 
                 return await reader.ReadAsync(cancellationToken)
                     ? await DbDataReaderMapper.MapToObject<T>(reader)
@@ -350,7 +350,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     #region Streaming Methods
@@ -548,19 +548,19 @@ public class AdoRepository : IAdoRepository
     {
         parameters ??= new Dictionary<string, object>();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                var result = await cmd.ExecuteScalarAsync(ct);
 
                 if (result == null || result == DBNull.Value)
                 {
@@ -583,7 +583,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -659,12 +659,12 @@ public class AdoRepository : IAdoRepository
         ValidatePagination(pagination);
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -674,7 +674,7 @@ public class AdoRepository : IAdoRepository
                 var parameters = BuildFilterParameters(pagination, options);
 
                 // Get total count
-                var totalCount = await CountAsync(countSql, parameters, options, cancellationToken);
+                var totalCount = await CountAsync(countSql, parameters, options, ct);
 
                 // Build paginated query with ORDER BY and OFFSET-FETCH
                 var pagedSql = BuildPagedSql(sql, pagination);
@@ -685,8 +685,8 @@ public class AdoRepository : IAdoRepository
 
                 // Execute paged query
                 await using var cmd = CreateCommand(connection, pagedSql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                var items = await reader.ToListAsync<T>(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                var items = await reader.ToListAsync<T>(ct);
 
                 // Build result with metadata
                 var metadata = BuildPaginationMetadata(pagination, options);
@@ -707,7 +707,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -723,12 +723,12 @@ public class AdoRepository : IAdoRepository
         ValidatePagination(pagination);
         options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -742,8 +742,8 @@ public class AdoRepository : IAdoRepository
                 // Add output parameter for total count
                 CommandParameterBuilder.AddOutputParameter(cmd, "@TotalCount", SqlDbType.Int, 0);
 
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                var items = await reader.ToListAsync<T>(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                var items = await reader.ToListAsync<T>(ct);
 
                 // Close reader to get output parameters
                 await reader.CloseAsync();
@@ -773,7 +773,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     #endregion
@@ -794,12 +794,12 @@ public class AdoRepository : IAdoRepository
         ArgumentNullException.ThrowIfNull(filter);
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -813,8 +813,8 @@ public class AdoRepository : IAdoRepository
 
                 // Execute query
                 await using var cmd = CreateCommand(connection, filteredSql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                return await reader.ToListAsync<T>(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                return await reader.ToListAsync<T>(ct);
             }
             catch (SqlException ex)
             {
@@ -830,7 +830,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -847,12 +847,12 @@ public class AdoRepository : IAdoRepository
         ArgumentNullException.ThrowIfNull(filter);
         options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -862,8 +862,8 @@ public class AdoRepository : IAdoRepository
                 var spParameters = BuildStoredProcedureParameters(filter, options);
 
                 await using var cmd = CreateCommand(connection, storedProcedureName, spParameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-                return await reader.ToListAsync<T>(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                return await reader.ToListAsync<T>(ct);
             }
             catch (SqlException ex)
             {
@@ -881,7 +881,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -898,12 +898,12 @@ public class AdoRepository : IAdoRepository
         ArgumentNullException.ThrowIfNull(filter);
         options ??= new CommandOptionsDto();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -925,11 +925,11 @@ public class AdoRepository : IAdoRepository
 
                 var ds = new DataSet();
                 using var adapter = new SqlDataAdapter(cmd);
-                await Task.Run(() => adapter.Fill(ds), cancellationToken);
+                await Task.Run(() => adapter.Fill(ds), ct);
 
                 if (options.WithTableNames)
                 {
-                    await DataTableNameMapper.ProcessTableNames(cmd, ds);
+                    await DataTableNameMapper.ProcessTableNames(cmd, ds, ct);
                 }
 
                 return ds;
@@ -948,7 +948,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     #endregion
@@ -966,25 +966,25 @@ public class AdoRepository : IAdoRepository
     {
         parameters ??= new Dictionary<string, object>();
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
                 }
 
                 await using var cmd = CreateCommand(connection, sql, parameters, options);
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
 
                 var results = new List<List<T>>();
 
                 do
                 {
-                    var resultSet = await reader.ToListAsync<T>(cancellationToken);
+                    var resultSet = await reader.ToListAsync<T>(ct);
                     results.Add(resultSet);
                 } while (await reader.NextResultAsync(cancellationToken));
 
@@ -1004,7 +1004,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -1021,13 +1021,13 @@ public class AdoRepository : IAdoRepository
             return 0;
         }
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             DbTransaction? transaction = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -1050,7 +1050,7 @@ public class AdoRepository : IAdoRepository
                         cmd.Transaction = (SqlTransaction)transaction;
                     }
 
-                    totalAffected += await cmd.ExecuteNonQueryAsync(cancellationToken);
+                    totalAffected += await cmd.ExecuteNonQueryAsync(ct);
                 }
 
                 if (transaction != null)
@@ -1085,7 +1085,7 @@ public class AdoRepository : IAdoRepository
                 transaction?.Dispose();
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -1117,12 +1117,12 @@ public class AdoRepository : IAdoRepository
             return 0;
         }
 
-        return await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
             DbConnection? connectionToClose = null;
             try
             {
-                var connection = await GetOpenConnectionAsync(null, cancellationToken);
+                var connection = await GetOpenConnectionAsync(null, ct);
                 if (_currentConnection == null)
                 {
                     connectionToClose = connection;
@@ -1154,7 +1154,7 @@ public class AdoRepository : IAdoRepository
                     }
                 }
 
-                await bulkCopy.WriteToServerAsync(dataTable, cancellationToken);
+                await bulkCopy.WriteToServerAsync(dataTable, ct);
                 return dataTable.Rows.Count;
             }
             catch (SqlException ex)
@@ -1171,7 +1171,7 @@ public class AdoRepository : IAdoRepository
             {
                 connectionToClose?.Close();
             }
-        });
+        }, cancellationToken);
     }
 
     #endregion

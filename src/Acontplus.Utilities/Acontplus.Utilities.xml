@@ -1405,6 +1405,40 @@
             <returns>The validated combined path</returns>
             <exception cref="T:System.Security.SecurityException">Thrown if path traversal is detected in any segment</exception>
         </member>
+        <member name="T:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService">
+            <summary>
+            Provides secure password hashing and verification services.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService.HashPassword(System.String)">
+            <summary>
+            Computes a one-way BCrypt salted hash of the provided password.
+            </summary>
+            <param name="password">The plaintext password to hash.</param>
+            <returns>The salted BCrypt hash string.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService.VerifyPassword(System.String,System.String)">
+            <summary>
+            Verifies that a plaintext password matches an existing BCrypt hash.
+            </summary>
+            <param name="password">The plaintext password candidate.</param>
+            <param name="hashedPassword">The stored BCrypt hash string.</param>
+            <returns><see langword="true"/> if the password matches; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService.SetPassword(System.String)">
+            <summary>
+            Sets a password by generating both an encrypted reversible representation and a BCrypt hash.
+            </summary>
+            <param name="password">The plaintext password.</param>
+            <returns>A tuple containing the encrypted bytes and the BCrypt hash.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService.GetDecryptedPassword(System.Byte[])">
+            <summary>
+            Decrypts reversible password bytes into plaintext.
+            </summary>
+            <param name="encryptedPassword">The encrypted password bytes.</param>
+            <returns>The decrypted plaintext password.</returns>
+        </member>
         <member name="T:Acontplus.Utilities.Security.Interfaces.ISensitiveDataEncryptionService">
             <summary>
             Defines asynchronous methods for encrypting and decrypting sensitive data.
@@ -1427,6 +1461,42 @@
             <param name="passphrase">The passphrase (must match the one used for encryption).</param>
             <param name="encryptedData">The byte array with layout: Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</param>
             <returns>A Task containing the decrypted plaintext string.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Security.Services.DataEncryptionService">
+            <summary>
+            Provides data encryption and decryption services using ASP.NET Core Data Protection.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.DataEncryptionService.#ctor(Microsoft.AspNetCore.DataProtection.IDataProtectionProvider,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Initializes a new instance of <see cref="T:Acontplus.Utilities.Security.Services.DataEncryptionService"/>.
+            </summary>
+            <param name="provider">The data protection provider.</param>
+            <param name="configuration">Configuration containing 'DataProtection:ProtectorKey'.</param>
+        </member>
+        <member name="T:Acontplus.Utilities.Security.Services.PasswordSecurityService">
+            <summary>
+            Implements password security services using BCrypt hashing.
+            </summary>
+            <param name="dataEncryptionService">The underlying data encryption service used for legacy decryption.</param>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.PasswordSecurityService.#ctor(Acontplus.Utilities.Security.Interfaces.IDataEncryptionService)">
+            <summary>
+            Implements password security services using BCrypt hashing.
+            </summary>
+            <param name="dataEncryptionService">The underlying data encryption service used for legacy decryption.</param>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.PasswordSecurityService.HashPassword(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.PasswordSecurityService.VerifyPassword(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.PasswordSecurityService.SetPassword(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.PasswordSecurityService.GetDecryptedPassword(System.Byte[])">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Utilities.Security.Services.SensitiveDataEncryptionService">
             <summary>

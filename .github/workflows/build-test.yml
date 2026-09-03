@@ -34,6 +34,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Audit package vulnerabilities (direct and transitive)
+        run: dotnet list package --vulnerable --include-transitive
+
       - name: Build solution
         run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
 
