@@ -231,3 +231,4 @@ apps/src/Demo.Api/appsettings.Development.json
 # Include important config templates (negative patterns)
 !**/appsettings.json
 !**/appsettings.*.json.template
+/.sonarqube-results/
