@@ -7,6 +7,17 @@ public static class ReportsEndpoints
         var group = app.MapGroup("/reports")
             .WithTags("Reports");
 
+        MapRdlcEndpoints(group);
+        MapQuestPdfBasicEndpoints(group);
+        MapRdlcPrintEndpoints(group);
+        MapMiniExcelEndpoints(group);
+        MapClosedXmlEndpoints(group);
+        MapQuestPdfAdvancedEndpoints(group);
+        MapClosedXmlGroupedEndpoints(group);
+    }
+
+    private static void MapRdlcEndpoints(RouteGroupBuilder group)
+    {
         group.MapGet("/sample-invoice", async (Microsoft.Extensions.Logging.ILogger<object> logger, HttpContext httpContext, CancellationToken cancellationToken) =>
         {
             var reportService = httpContext.RequestServices.GetRequiredService<IRdlcReportService>();
@@ -167,7 +178,10 @@ public static class ReportsEndpoints
                 supportedFormats = new[] { "PDF", "EXCEL", "EXCELOPENXML", "WORDOPENXML", "HTML5", "IMAGE" }
             });
         });
+    }
 
+    private static void MapQuestPdfBasicEndpoints(RouteGroupBuilder group)
+    {
         // ── QuestPDF endpoints ────────────────────────────────────────────────────
 
         group.MapGet("/questpdf/invoice", async (
@@ -509,7 +523,10 @@ public static class ReportsEndpoints
         })
         .WithName("QuestPdfQuickTable")
         .WithDescription("Demonstrates GenerateFromDataTableAsync — the minimal single-DataTable API. Returns a landscape A4 product inventory PDF.");
+    }
 
+    private static void MapRdlcPrintEndpoints(RouteGroupBuilder group)
+    {
         group.MapPost("/test-print", async (Microsoft.Extensions.Logging.ILogger<object> logger, HttpContext httpContext, string? printerName = null, CancellationToken cancellationToken = default) =>
         {
             var printerService = httpContext.RequestServices.GetRequiredService<IRdlcPrinterService>();
@@ -615,7 +632,10 @@ public static class ReportsEndpoints
                 return Results.Problem("Print test failed", statusCode: 500);
             }
         });
+    }
 
+    private static void MapMiniExcelEndpoints(RouteGroupBuilder group)
+    {
         // ── MiniExcel endpoints ───────────────────────────────────────────────────
 
         /// <summary>
@@ -723,7 +743,10 @@ public static class ReportsEndpoints
         })
         .WithName("GetMultiSheetMiniExcel")
         .WithDescription("Exports a multi-sheet Excel workbook (Customers + Orders) via MiniExcel");
+    }
 
+    private static void MapClosedXmlEndpoints(RouteGroupBuilder group)
+    {
         // ── ClosedXML endpoints ───────────────────────────────────────────────────
 
         /// <summary>
@@ -847,7 +870,10 @@ public static class ReportsEndpoints
         })
         .WithName("GetAnnualReportClosedXml")
         .WithDescription("Exports a multi-sheet annual report workbook via ClosedXML with full corporate styling");
+    }
 
+    private static void MapQuestPdfAdvancedEndpoints(RouteGroupBuilder group)
+    {
         // ── NEW v1.8.0 endpoints ──────────────────────────────────────────────────
 
         /// <summary>
@@ -1402,7 +1428,10 @@ public static class ReportsEndpoints
         })
         .WithName("QuestPdfTwoColumnDashboard")
         .WithDescription("NEW v1.8.0 — TwoColumn section type: KPI key-value panel (left) alongside a monthly sales data table (right), side-by-side layout in landscape A4");
+    }
 
+    private static void MapClosedXmlGroupedEndpoints(RouteGroupBuilder group)
+    {
         /// <summary>
         /// Demonstrates ClosedXML with <c>ReportTitle</c>, <c>ReportSubTitle</c>,
         /// and <c>GroupHeaders</c> (band rows that span multiple columns).
@@ -1522,14 +1551,14 @@ public static class ReportsEndpoints
         t.Columns.Add("Status", typeof(string));
         t.Columns.Add("RegisteredAt", typeof(DateTime));
 
-        t.Rows.Add(1, "ABC Corporation", "contact@abc.com", "+1-555-0101", "New York", 15000.50m, "Active", new DateTime(2022, 3, 15));
-        t.Rows.Add(2, "XYZ Industries", "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, "Active", new DateTime(2021, 7, 22));
-        t.Rows.Add(3, "Tech Solutions LLC", "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, "Active", new DateTime(2023, 1, 10));
-        t.Rows.Add(4, "Global Trading Co", "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, "Premium", new DateTime(2020, 11, 5));
-        t.Rows.Add(5, "Smart Systems Inc", "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, "Active", new DateTime(2022, 8, 30));
-        t.Rows.Add(6, "Future Enterprises", "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive", new DateTime(2021, 4, 18));
-        t.Rows.Add(7, "Digital Dynamics", "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, "Active", new DateTime(2023, 5, 2));
-        t.Rows.Add(8, "Innovative Partners", "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, "Premium", new DateTime(2019, 12, 14));
+        t.Rows.Add(1, "ABC Corporation", "contact@abc.com", "+1-555-0101", "New York", 15000.50m, "Active", new DateTime(2022, 3, 15, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(2, "XYZ Industries", "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, "Active", new DateTime(2021, 7, 22, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(3, "Tech Solutions LLC", "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, "Active", new DateTime(2023, 1, 10, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(4, "Global Trading Co", "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, "Premium", new DateTime(2020, 11, 5, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(5, "Smart Systems Inc", "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, "Active", new DateTime(2022, 8, 30, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(6, "Future Enterprises", "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive", new DateTime(2021, 4, 18, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(7, "Digital Dynamics", "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, "Active", new DateTime(2023, 5, 2, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(8, "Innovative Partners", "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, "Premium", new DateTime(2019, 12, 14, 0, 0, 0, DateTimeKind.Utc));
 
         return t;
     }
@@ -1543,14 +1572,14 @@ public static class ReportsEndpoints
         t.Columns.Add("Amount", typeof(decimal));
         t.Columns.Add("Status", typeof(string));
 
-        t.Rows.Add("ORD-2026-001", "ABC Corporation", new DateTime(2026, 1, 5), 1500.00m, "Delivered");
-        t.Rows.Add("ORD-2026-002", "XYZ Industries", new DateTime(2026, 1, 12), 3200.50m, "Delivered");
-        t.Rows.Add("ORD-2026-003", "Tech Solutions LLC", new DateTime(2026, 1, 20), 850.00m, "Delivered");
-        t.Rows.Add("ORD-2026-004", "Global Trading Co", new DateTime(2026, 2, 3), 7500.00m, "In Transit");
-        t.Rows.Add("ORD-2026-005", "Smart Systems Inc", new DateTime(2026, 2, 14), 2100.75m, "Delivered");
-        t.Rows.Add("ORD-2026-006", "Future Enterprises", new DateTime(2026, 2, 18), 450.00m, "Cancelled");
-        t.Rows.Add("ORD-2026-007", "Digital Dynamics", new DateTime(2026, 2, 25), 4800.00m, "In Transit");
-        t.Rows.Add("ORD-2026-008", "Innovative Partners", new DateTime(2026, 3, 1), 9200.00m, "Processing");
+        t.Rows.Add("ORD-2026-001", "ABC Corporation", new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc), 1500.00m, "Delivered");
+        t.Rows.Add("ORD-2026-002", "XYZ Industries", new DateTime(2026, 1, 12, 0, 0, 0, DateTimeKind.Utc), 3200.50m, "Delivered");
+        t.Rows.Add("ORD-2026-003", "Tech Solutions LLC", new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc), 850.00m, "Delivered");
+        t.Rows.Add("ORD-2026-004", "Global Trading Co", new DateTime(2026, 2, 3, 0, 0, 0, DateTimeKind.Utc), 7500.00m, "In Transit");
+        t.Rows.Add("ORD-2026-005", "Smart Systems Inc", new DateTime(2026, 2, 14, 0, 0, 0, DateTimeKind.Utc), 2100.75m, "Delivered");
+        t.Rows.Add("ORD-2026-006", "Future Enterprises", new DateTime(2026, 2, 18, 0, 0, 0, DateTimeKind.Utc), 450.00m, "Cancelled");
+        t.Rows.Add("ORD-2026-007", "Digital Dynamics", new DateTime(2026, 2, 25, 0, 0, 0, DateTimeKind.Utc), 4800.00m, "In Transit");
+        t.Rows.Add("ORD-2026-008", "Innovative Partners", new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc), 9200.00m, "Processing");
 
         return t;
     }

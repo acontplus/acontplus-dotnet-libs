@@ -353,12 +353,20 @@ public static class WhatsAppDemoEndpoints
     // Helpers
     // =========================================================================
 
-    private static WhatsAppCredentials? BuildCredentials(IInlineCredentials req) =>
-        !string.IsNullOrWhiteSpace(req.PhoneNumberId) && !string.IsNullOrWhiteSpace(req.AccessToken)
-            ? WhatsAppCredentials.Inline(req.PhoneNumberId!, req.AccessToken!)
-            : !string.IsNullOrWhiteSpace(req.AccountName)
-                ? WhatsAppCredentials.FromAccount(req.AccountName!)
-                : null;
+    private static WhatsAppCredentials? BuildCredentials(IInlineCredentials req)
+    {
+        if (!string.IsNullOrWhiteSpace(req.PhoneNumberId) && !string.IsNullOrWhiteSpace(req.AccessToken))
+        {
+            return WhatsAppCredentials.Inline(req.PhoneNumberId, req.AccessToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(req.AccountName))
+        {
+            return WhatsAppCredentials.FromAccount(req.AccountName);
+        }
+
+        return null;
+    }
 
     private static IResult ToResult(WhatsAppResult result, object? extra = null) =>
         result.IsSuccess

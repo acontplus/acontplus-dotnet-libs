@@ -39,8 +39,11 @@ public static class DapperReportEndpoints
     {
         var request = pagination.ToPaginationRequest();
 
-        logger.LogInformation("Dapper: Getting paged orders - Page {Page}, Size {Size}",
-            request.PageIndex, request.PageSize);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Dapper: Getting paged orders - Page {Page}, Size {Size}",
+                request.PageIndex, request.PageSize);
+        }
 
         var result = await reportService.GetPagedOrdersAsync(request, ct);
 
@@ -73,7 +76,10 @@ public static class DapperReportEndpoints
         ILogger<Program> logger,
         CancellationToken ct)
     {
-        logger.LogInformation("Dapper: Getting orders by status {Status}", status);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Dapper: Getting orders by status {Status}", status);
+        }
 
         var orders = await reportService.GetOrdersByStatusAsync(status, ct);
 

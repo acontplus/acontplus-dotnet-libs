@@ -216,9 +216,6 @@ public static class ProgramExtensions
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseAntiforgery();
-
-        // Controllers have been converted to Minimal API endpoints
-        // app.MapControllers();
     }
 
     /// <summary>
@@ -238,8 +235,7 @@ public static class ProgramExtensions
         // ── Re-usable version groups ──────────────────────────────────────────────
         // Assign each endpoint to exactly one group to control which Swagger
         // "definition" it appears in:
-        //   v1Only   → visible under V1 only
-        //   v2Only   → visible under V2 only
+        //   v1Only      → visible under V1 only
         //   allVersions → visible under both V1 and V2
         //
         // Using an empty prefix ("") means routes keep their original paths; the
@@ -248,10 +244,6 @@ public static class ProgramExtensions
         var v1Only = app.MapGroup("")
             .WithApiVersionSet(apiVersionSet)
             .MapToApiVersion(1, 0);
-
-        var v2Only = app.MapGroup("")
-            .WithApiVersionSet(apiVersionSet)
-            .MapToApiVersion(2, 0);
 
         var allVersions = app.MapGroup("")
             .WithApiVersionSet(apiVersionSet)

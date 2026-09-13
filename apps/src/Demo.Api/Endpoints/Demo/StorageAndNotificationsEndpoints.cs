@@ -68,8 +68,8 @@ public static class StorageAndNotificationsEndpoints
             // Send email notification with template caching (v1.5.0)
             var email = new EmailModel
             {
-                SmtpServer = "not-used-for-ses", // Required by model but not used with SES
-                Password = "not-used-for-ses", // Required by model but not used with SES
+                SmtpServer = string.Empty, // Not used with SES
+                Password = string.Empty, // Not used with SES
                 SenderEmail = configuration["AWS:SES:DefaultFromEmail"] ?? "noreply@example.com",
                 RecipientEmail = "admin@example.com",
                 Subject = $"File Uploaded: {file.FileName}",
@@ -199,8 +199,8 @@ public static class StorageAndNotificationsEndpoints
         {
             var email = new EmailModel
             {
-                SmtpServer = "not-used-for-ses", // Required by model but not used with SES
-                Password = "not-used-for-ses", // Required by model but not used with SES
+                SmtpServer = string.Empty, // Not used with SES
+                Password = string.Empty, // Not used with SES
                 SenderEmail = configuration["AWS:SES:DefaultFromEmail"] ?? "noreply@example.com",
                 RecipientEmail = request.To,
                 Subject = request.Subject,
@@ -235,12 +235,15 @@ public static class StorageAndNotificationsEndpoints
         ILogger<Program> logger,
         CancellationToken ct)
     {
-        if (files == null || !files.Any())
+        if (files is not { Count: > 0 })
         {
             return Results.BadRequest("No files provided");
         }
 
-        logger.LogInformation("Starting bulk upload of {Count} files", files.Count);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Starting bulk upload of {Count} files", files.Count);
+        }
         var startTime = DateTime.UtcNow;
 
         var results = new List<object>();
@@ -251,6 +254,7 @@ public static class StorageAndNotificationsEndpoints
         // 3. Retries on transient failures
         foreach (var file in files)
         {
+            ct.ThrowIfCancellationRequested();
             try
             {
                 var s3Object = new S3ObjectCustom(configuration);

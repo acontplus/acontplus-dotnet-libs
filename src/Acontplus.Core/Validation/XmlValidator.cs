@@ -402,17 +402,19 @@ public static class XmlValidator
             // Una etiqueta XML válida empieza con letra, /, ! o ?
             // Entonces <BORNE es inválido porque después de > hay <B que no es </
 
+            var regexTimeout = TimeSpan.FromMilliseconds(500);
+
             // Patrón más específico: Busca <PALABRA> donde PALABRA no tiene espacios y está en mayúsculas
             // Esto captura <BORNE NORMAL> pero no <descripcion> ni </descripcion>
-            xml = Regex.Replace(xml, @"<([A-Z\s]+)>", "$1", RegexOptions.None);
+            xml = Regex.Replace(xml, @"<([A-Z\s]+)>", "$1", RegexOptions.None, regexTimeout);
 
             // También remover < y > sueltos que puedan quedar
             // Pero solo si NO están formando una etiqueta válida
             // Patrón: < que NO está seguido de / o letra minúscula o ! o ?
-            xml = Regex.Replace(xml, @"<(?![/a-z!?])", "&lt;", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, @"<(?![/a-z!?])", "&lt;", RegexOptions.IgnoreCase, regexTimeout);
 
             // Remover > que NO está precedido por / o letra o "
-            xml = Regex.Replace(xml, @"(?<![/a-zA-Z""])>(?!<)", "&gt;", RegexOptions.None);
+            xml = Regex.Replace(xml, @"(?<![/a-zA-Z""])>(?!<)", "&gt;", RegexOptions.None, regexTimeout);
 
             return xml;
         }
