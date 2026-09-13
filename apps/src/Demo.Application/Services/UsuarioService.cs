@@ -248,7 +248,7 @@ namespace Demo.Application.Services
                 };
 
                 return new PagedResult<UsuarioDto>(
-                    items: userDtos.Where(u => u != null).Cast<UsuarioDto>(),
+                    items: userDtos.Where(u => u != null),
                     pageIndex: pagedResult.PageIndex,
                     pageSize: pagedResult.PageSize,
                     totalCount: pagedResult.TotalCount,

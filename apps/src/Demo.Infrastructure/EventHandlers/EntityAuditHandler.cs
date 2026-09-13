@@ -25,14 +25,16 @@ public class EntityAuditHandler : IDomainEventHandler<EntityCreatedEvent>
         // - Domain invariant enforcement
         // - Updating related aggregates in the same bounded context
 
-        _logger.LogInformation(
-            "DOMAIN EVENT: {EntityType} with ID {EntityId} created at {OccurredOn}",
-            domainEvent.EntityType,
-            domainEvent.EntityId,
-            domainEvent.OccurredOn);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "DOMAIN EVENT: {EntityType} with ID {EntityId} created at {OccurredOn}",
+                domainEvent.EntityType,
+                domainEvent.EntityId,
+                domainEvent.OccurredOn);
+        }
 
-        // Example: Write to audit table (in same transaction)
-        // await _auditRepository.AddAsync(new AuditEntry { ... }, cancellationToken);
+        // In a full implementation, audit records can be persisted to a dedicated repository here.
 
         return Task.CompletedTask;
     }

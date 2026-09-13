@@ -76,9 +76,12 @@ public class OrderService : IOrderService
                 totalAmount,
                 createdOrder.CreatedAt), cancellationToken);
 
-            _logger.LogInformation(
-                "Order {OrderId} created - Domain and Application events published",
-                createdOrder.Id);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Order {OrderId} created - Domain and Application events published",
+                    createdOrder.Id);
+            }
 
             // Return result
             var result = new OrderCreatedResult(

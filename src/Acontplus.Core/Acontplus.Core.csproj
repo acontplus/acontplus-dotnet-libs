@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Core</PackageId>
-    <Version>2.3.2</Version>
+    <Version>2.3.3</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -26,16 +26,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v2.3.0: Bug fixes for domain event parameter naming (EntityCreatedEvent,
-      EntityModifiedEvent,
-      EntityRestoredEvent). JsonExtensions options changed to static readonly fields for
-      System.Text.Json
-      caching. PagedResult converted to sealed record. New IHttpClientService abstraction.
-      ICacheService
-      extended with RemoveByPrefixAsync and GetStatisticsAsync. DataValidation completed with
-      IsValidEmail, IsValidUrl, IsValidPhoneNumber. SpResponse cleaned up (Payload deprecated,
-      IsSuccess simplified to Code == 0). Full XML documentation on all public members.
-      NoWarn 1591 suppression removed. Target framework: net10.0 only.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.3.3: Bug fixes</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>

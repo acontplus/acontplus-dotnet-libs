@@ -29,8 +29,11 @@ public class OrderReportService : IOrderReportService
         PaginationRequest pagination,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting paged orders: Page {Page}, Size {Size}",
-            pagination.PageIndex, pagination.PageSize);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Getting paged orders: Page {Page}, Size {Size}",
+                pagination.PageIndex, pagination.PageSize);
+        }
 
         // Dapper handles OFFSET-FETCH pagination automatically
         var sql = @"
@@ -76,7 +79,10 @@ public class OrderReportService : IOrderReportService
         string status,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting orders by status: {Status}", status);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Getting orders by status: {Status}", status);
+        }
 
         var sql = @"
             SELECT

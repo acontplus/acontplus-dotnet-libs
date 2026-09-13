@@ -32,7 +32,10 @@ public static class DocumentoElectronicoEndpoints
 
             // Auto-detect document type and version from XML
             var xsdFileName = GetXsdFileName(xmlSriFile.XmlSri);
-            logger.LogInformation("Detected schema: {SchemaFileName}", xsdFileName);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Detected schema: {SchemaFileName}", xsdFileName);
+            }
 
             var xsdStream = ResourceHelper.GetXsdStream($"Schemas.{xsdFileName}");
             var errors = XmlValidator.Validate(xmlSriFile.XmlSri, xsdStream);
@@ -40,10 +43,13 @@ public static class DocumentoElectronicoEndpoints
             // Handle validation results
             if (errors.Count == 0)
             {
-                var docName = string.IsNullOrEmpty(xmlSriFile.CodDoc)
-                    ? "Unknown"
-                    : DocumentTypes.GetDocumentName(xmlSriFile.CodDoc);
-                logger.LogInformation("XML validation successful for {DocumentName}", docName);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    var docName = string.IsNullOrEmpty(xmlSriFile.CodDoc)
+                        ? "Unknown"
+                        : DocumentTypes.GetDocumentName(xmlSriFile.CodDoc);
+                    logger.LogInformation("XML validation successful for {DocumentName}", docName);
+                }
             }
             else
             {

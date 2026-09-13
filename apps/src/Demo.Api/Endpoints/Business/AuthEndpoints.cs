@@ -46,13 +46,18 @@ public static class AuthEndpoints
     {
         var result = await auth.RegisterAsync(request, ct);
 
-        return result.IsSuccess
-            ? Results.Created($"/api/usuario/{result.Value.UserId}",
-                ApiResponse<LoginResponse>.Success(result.Value))
-            : Results.Json(
-                ApiResponse.Failure([new ApiError(result.Error.Code, result.Error.Message)]),
-                statusCode: result.Error.Code == "USERNAME_EXISTS"
-                    ? StatusCodes.Status409Conflict
-                    : StatusCodes.Status400BadRequest);
+        if (result.IsSuccess)
+        {
+            return Results.Created($"/api/usuario/{result.Value.UserId}",
+                ApiResponse<LoginResponse>.Success(result.Value));
+        }
+
+        var statusCode = result.Error.Code == "USERNAME_EXISTS"
+            ? StatusCodes.Status409Conflict
+            : StatusCodes.Status400BadRequest;
+
+        return Results.Json(
+            ApiResponse.Failure([new ApiError(result.Error.Code, result.Error.Message)]),
+            statusCode: statusCode);
     }
 }

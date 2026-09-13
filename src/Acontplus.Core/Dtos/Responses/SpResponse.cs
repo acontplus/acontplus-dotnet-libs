@@ -22,6 +22,7 @@ public record SpResponse
     /// Retained for backward compatibility with existing procedures that still populate Payload.
     /// </summary>
     [Obsolete("Use Result instead. Payload will be removed in a future major version.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S1133", Justification = "Payload is preserved for backward compatibility until the next major release.")]
     public dynamic? Payload { get; set; }
 
     /// <summary>Human-readable message returned by the stored procedure.</summary>

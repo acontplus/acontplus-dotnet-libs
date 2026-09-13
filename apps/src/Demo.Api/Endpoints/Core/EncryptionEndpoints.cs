@@ -29,6 +29,7 @@ public static class EncryptionEndpoints
             return Results.Ok(ApiResponse.Success(hashedPassword));
         });
 
+#pragma warning disable CS0618 // Type or member is obsolete - retained for demoing legacy behavior
         group.MapPost("/setpassword", (HttpContext httpContext, SetPasswordRequest request) =>
         {
             var dataSecurityService = httpContext.RequestServices.GetRequiredService<IPasswordSecurityService>();
@@ -43,6 +44,7 @@ public static class EncryptionEndpoints
             var decryptedPassword = dataSecurityService.GetDecryptedPassword(encryptedPasswordBytes);
             return Results.Ok(ApiResponse.Success(decryptedPassword));
         });
+#pragma warning restore CS0618
 
         group.MapPost("/verifypassword", (HttpContext httpContext, VerifyPasswordRequest request) =>
         {

@@ -10,12 +10,16 @@ EXCLUDED_RULES = {
 }
 
 CANDIDATE_PATHS = [
+    '.sonarqube-results/latest/issues.json',
+    '.sonarqube-results/issues.json',
     '.sonarqube/issues.json',
     'acontplus-sonarqube-results/issues.json',
     'issues.json'
 ]
 
 def find_issues_file():
+    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
+        return os.path.abspath(sys.argv[1])
     # Look in current working dir and up to repo root
     cwd = os.getcwd()
     search_dirs = [cwd, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))]
