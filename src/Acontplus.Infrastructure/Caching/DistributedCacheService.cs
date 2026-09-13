@@ -63,7 +63,7 @@ public class DistributedCacheService : ICacheService
     }
 
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
         try
         {
@@ -75,7 +75,7 @@ public class DistributedCacheService : ICacheService
                 options.SetAbsoluteExpiration(expiration.Value);
             }
 
-            await _cache.SetStringAsync(key, jsonValue, options, cancellationToken);
+            await _cache.SetStringAsync(key, jsonValue, options, ct);
         }
         catch (Exception ex)
         {
@@ -143,16 +143,16 @@ public class DistributedCacheService : ICacheService
     }
 
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
-        var value = await GetAsync<T>(key, cancellationToken);
+        var value = await GetAsync<T>(key, ct);
         if (value != null)
         {
             return value;
         }
 
         value = await factory();
-        await SetAsync(key, value, expiration, cancellationToken);
+        await SetAsync(key, value, expiration, ct);
         return value;
     }
 

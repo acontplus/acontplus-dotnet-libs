@@ -14,7 +14,7 @@ public abstract class MappingExpressionBase
     /// Initialises a new <see cref="MappingExpressionBase"/> for the specified type pair.
     /// </summary>
     /// <param name="pair">The source-to-target type pair this expression describes.</param>
-    internal MappingExpressionBase(TypePair pair)
+    private protected MappingExpressionBase(TypePair pair)
     {
         Pair = pair;
         MemberRules = new Dictionary<string, LambdaExpression?>(StringComparer.Ordinal);

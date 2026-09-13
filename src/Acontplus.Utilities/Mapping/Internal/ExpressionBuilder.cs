@@ -146,7 +146,7 @@ internal static class ExpressionBuilder
 
         // Select the best constructor
         var (selectedCtor, argExpressions) = SelectBestConstructor(
-            pair, targetType, sourceParam, sourceProperties, ctorParamRules);
+            targetType, sourceParam, sourceProperties, ctorParamRules);
 
         // Build the NewExpression with constructor arguments
         var newExpr = Expression.New(selectedCtor, argExpressions);
@@ -242,7 +242,6 @@ internal static class ExpressionBuilder
     /// Thrown when no public constructor is fully satisfiable.
     /// </exception>
     private static (ConstructorInfo Constructor, Expression[] Arguments) SelectBestConstructor(
-        TypePair pair,
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
@@ -638,7 +637,7 @@ internal static class ExpressionBuilder
         // Default value for destination type
         var defaultValue = Expression.Default(destType);
 
-        // try { Convert.ChangeType(...) } catch { default(TDest) }
+        // Wraps Convert.ChangeType in a try-catch block falling back to default value on failure
         var tryCatch = Expression.TryCatch(
             unboxed,
             Expression.Catch(typeof(Exception), defaultValue));
@@ -671,19 +670,7 @@ internal static class ExpressionBuilder
         }
 
         // When null: assign null for nullable ref/nullable value types, default for value types
-        Expression nullValue;
-        if (IsNullableType(destType))
-        {
-            nullValue = Expression.Default(destType);
-        }
-        else if (destType.IsValueType)
-        {
-            nullValue = Expression.Default(destType);
-        }
-        else
-        {
-            nullValue = Expression.Default(destType);
-        }
+        var nullValue = Expression.Default(destType);
 
         // Ensure value expression and null value have the same type
         var typedValueExpr = EnsureType(valueExpression, destType);
@@ -1386,7 +1373,7 @@ internal static class ExpressionBuilder
 
         // Select the best constructor (same logic as BuildMappingExpression)
         var (selectedCtor, argExpressions) = SelectBestProjectionConstructor(
-            pair, targetType, sourceParam, sourceProperties, ctorParamRules);
+            targetType, sourceParam, sourceProperties, ctorParamRules);
 
         // Build the NewExpression with constructor arguments
         var newExpr = Expression.New(selectedCtor, argExpressions);
@@ -1435,7 +1422,6 @@ internal static class ExpressionBuilder
     /// as <see cref="SelectBestConstructor"/> but without delegate-based resolution.
     /// </summary>
     private static (ConstructorInfo Constructor, Expression[] Arguments) SelectBestProjectionConstructor(
-        TypePair pair,
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,

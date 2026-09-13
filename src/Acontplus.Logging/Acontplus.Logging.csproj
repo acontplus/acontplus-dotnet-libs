@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Logging</PackageId>
-    <Version>2.0.5</Version>
+    <Version>2.0.6</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -28,15 +28,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Major observability upgrade: Added full OpenTelemetry support with
-      distributed tracing (Jaeger, Dynatrace), metrics (Prometheus, Dynatrace), and OTLP
-      protocol.
-      Features ActivitySource for tracing, Meter for metrics, automatic instrumentation for ASP.NET
-      Core,
-      HTTP, and SQL. Auto-detection of ServiceName and ServiceVersion from assembly metadata.
-      Includes official Elastic.Serilog.Sinks integration for ELK stack, ECS compliance,
-      and enterprise-grade observability patterns. Optimized for cloud-native and microservices
-      architectures.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.6: Bug fixes</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>

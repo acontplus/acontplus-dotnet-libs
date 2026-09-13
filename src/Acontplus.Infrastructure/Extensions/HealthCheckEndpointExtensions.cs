@@ -67,6 +67,6 @@ public static class HealthCheckEndpointExtensions
             totalDuration = report.TotalDuration
         });
 
-        return context.Response.WriteAsync(result);
+        return context.Response.WriteAsync(result, context.RequestAborted);
     }
 }

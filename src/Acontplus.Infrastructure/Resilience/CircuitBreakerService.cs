@@ -20,6 +20,8 @@ internal record PolicyConfig
 /// </summary>
 public class CircuitBreakerService : ICircuitBreakerService
 {
+    private const string DefaultPolicyName = "default";
+
     private readonly Dictionary<string, CircuitBreakerState> _circuitStates;
     private readonly ResilienceConfiguration _config;
     private readonly ILogger<CircuitBreakerService> _logger;
@@ -30,8 +32,11 @@ public class CircuitBreakerService : ICircuitBreakerService
         IOptions<ResilienceConfiguration> config)
     {
         _logger = logger;
-        _logger.LogInformation("Initializing Infrastructure CircuitBreakerService from namespace {Namespace}",
-            typeof(CircuitBreakerService).Namespace);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Initializing Infrastructure CircuitBreakerService from namespace {Namespace}",
+                typeof(CircuitBreakerService).Namespace);
+        }
         _config = config.Value;
         _policies = new Dictionary<string, IAsyncPolicy>();
         _circuitStates = new Dictionary<string, CircuitBreakerState>();
@@ -71,16 +76,16 @@ public class CircuitBreakerService : ICircuitBreakerService
         retryPolicy.Execute(action);
     }
 
-    public CircuitBreakerState GetCircuitBreakerState(string policyName = "default") =>
+    public CircuitBreakerState GetCircuitBreakerState(string policyName = DefaultPolicyName) =>
         _circuitStates.GetValueOrDefault(policyName, CircuitBreakerState.Closed);
 
-    public void OpenCircuit(string policyName = "default")
+    public void OpenCircuit(string policyName = DefaultPolicyName)
     {
         _circuitStates[policyName] = CircuitBreakerState.Open;
         _logger.LogWarning("Circuit breaker manually opened for policy: {PolicyName}", policyName);
     }
 
-    public void CloseCircuit(string policyName = "default")
+    public void CloseCircuit(string policyName = DefaultPolicyName)
     {
         _circuitStates[policyName] = CircuitBreakerState.Closed;
         _logger.LogInformation("Circuit breaker manually closed for policy: {PolicyName}", policyName);
@@ -94,7 +99,7 @@ public class CircuitBreakerService : ICircuitBreakerService
         }
 
         // Default policy
-        _policies["default"] = CreatePolicy("default", new PolicyConfig
+        _policies[DefaultPolicyName] = CreatePolicy(DefaultPolicyName, new PolicyConfig
         {
             CircuitBreakerExceptions = Math.Max(1, _config.CircuitBreaker.ExceptionsAllowedBeforeBreaking),
             CircuitBreakerDuration = Math.Max(10, _config.CircuitBreaker.DurationOfBreakSeconds),
@@ -212,11 +217,11 @@ public class CircuitBreakerService : ICircuitBreakerService
 
     private IAsyncPolicy GetPolicy(string? policyName)
     {
-        var name = policyName ?? "default";
+        var name = policyName ?? DefaultPolicyName;
         if (!_policies.ContainsKey(name))
         {
             _logger.LogWarning("Policy {PolicyName} not found, using default", name);
-            name = "default";
+            name = DefaultPolicyName;
         }
 
         return _policies[name];

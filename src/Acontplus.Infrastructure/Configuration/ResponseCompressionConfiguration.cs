@@ -18,7 +18,7 @@ public class ResponseCompressionConfiguration
     /// <summary>
     ///     List of MIME types to compress. If empty, defaults to common compressible types.
     /// </summary>
-    public List<string> MimeTypes { get; set; } = new();
+    public List<string> MimeTypes { get; set; } = [];
 
     /// <summary>
     ///     Enable Brotli compression provider.

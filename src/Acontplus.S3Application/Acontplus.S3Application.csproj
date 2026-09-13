@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.S3Application</PackageId>
-    <Version>2.0.19</Version>
+    <Version>2.0.20</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -21,11 +21,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>BREAKING CHANGE v2.0.0: Major scalability improvements with connection
-      pooling, Polly retry policies with exponential backoff, rate limiting (100 req/s default),
-      configurable resilience options, proper IDisposable implementation, structured logging, and
-      thread-safe operations. Requires IOptions&lt;S3StorageOptions&gt; and
-      ILogger&lt;S3StorageService&gt; in DI. Use AddS3Storage() extension for registration.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.20: Updating dependencies</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>

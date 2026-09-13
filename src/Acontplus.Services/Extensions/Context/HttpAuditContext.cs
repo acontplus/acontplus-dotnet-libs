@@ -4,16 +4,10 @@ namespace Acontplus.Services.Extensions.Context;
 /// Resolves audit identity from the current HTTP request context and JWT claims.
 /// Register as <c>Scoped</c> so each request gets a fresh snapshot of the caller's identity.
 /// </summary>
-public sealed class HttpAuditContext : IAuditContext
+public sealed class HttpAuditContext(IHttpContextAccessor accessor, IUserContext userContext) : IAuditContext
 {
-    private readonly IHttpContextAccessor _accessor;
-    private readonly IUserContext _userContext;
-
-    public HttpAuditContext(IHttpContextAccessor accessor, IUserContext userContext)
-    {
-        _accessor = accessor ?? throw new ArgumentNullException(nameof(accessor));
-        _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
-    }
+    private readonly IHttpContextAccessor _accessor = accessor ?? throw new ArgumentNullException(nameof(accessor));
+    private readonly IUserContext _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
 
     /// <inheritdoc />
     public int? UserId => SafeGet(() => _userContext.GetUserId());

@@ -55,7 +55,7 @@ public class TracingHelper
     /// </summary>
     /// <param name="key">The tag key.</param>
     /// <param name="value">The tag value.</param>
-    public void AddTag(string key, object? value)
+    public static void AddTag(string key, object? value)
     {
         Activity.Current?.SetTag(key, value);
     }
@@ -64,7 +64,7 @@ public class TracingHelper
     /// Records an exception in the current activity.
     /// </summary>
     /// <param name="exception">The exception to record.</param>
-    public void RecordException(Exception exception)
+    public static void RecordException(Exception exception)
     {
         var activity = Activity.Current;
         if (activity != null)
@@ -77,7 +77,7 @@ public class TracingHelper
     /// Adds an event to the current activity.
     /// </summary>
     /// <param name="name">The event name.</param>
-    public void AddEvent(string name)
+    public static void AddEvent(string name)
     {
         Activity.Current?.AddEvent(new ActivityEvent(name));
     }

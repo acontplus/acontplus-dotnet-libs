@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Barcode</PackageId>
-    <Version>1.2.10</Version>
+    <Version>1.2.11</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -22,9 +22,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with ZXing.Net integration, SkiaSharp rendering, support for
-      multiple barcode formats (QR, Code128, Code39, EAN, UPC, PDF417, DataMatrix), custom styling
-      options, and high-performance cross-platform image generation.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.2.11: Updating dependencies</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>

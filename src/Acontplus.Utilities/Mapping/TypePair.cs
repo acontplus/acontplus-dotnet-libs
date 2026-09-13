@@ -4,25 +4,18 @@ namespace Acontplus.Utilities.Mapping;
 /// Identifies a unique mapping route from <see cref="SourceType"/> to <see cref="TargetType"/>.
 /// Implemented as a value type to allow efficient use as a dictionary key.
 /// </summary>
-public readonly struct TypePair : IEquatable<TypePair>
+/// <param name="sourceType">The source CLR type.</param>
+/// <param name="targetType">The target CLR type.</param>
+/// <exception cref="ArgumentNullException">
+/// Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
+/// </exception>
+public readonly struct TypePair(Type sourceType, Type targetType) : IEquatable<TypePair>
 {
     /// <summary>The source CLR type.</summary>
-    public Type SourceType { get; }
+    public Type SourceType { get; } = sourceType ?? throw new ArgumentNullException(nameof(sourceType));
 
     /// <summary>The target CLR type.</summary>
-    public Type TargetType { get; }
-
-    /// <summary>Initialises a new <see cref="TypePair"/>.</summary>
-    /// <param name="sourceType">The source CLR type.</param>
-    /// <param name="targetType">The target CLR type.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
-    /// </exception>
-    public TypePair(Type sourceType, Type targetType)
-    {
-        SourceType = sourceType ?? throw new ArgumentNullException(nameof(sourceType));
-        TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
-    }
+    public Type TargetType { get; } = targetType ?? throw new ArgumentNullException(nameof(targetType));
 
     /// <inheritdoc />
     public bool Equals(TypePair other) =>

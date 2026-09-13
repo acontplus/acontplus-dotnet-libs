@@ -16,10 +16,8 @@ public static class EventBusExtensions
     /// </summary>
     /// <param name="services">The service collection to add the event bus to.</param>
     /// <returns>The service collection for method chaining.</returns>
-    public static IServiceCollection AddInMemoryEventBus(this IServiceCollection services)
-    {
-        return services.AddInMemoryEventBus(_ => { });
-    }
+    public static IServiceCollection AddInMemoryEventBus(this IServiceCollection services) =>
+        services.AddInMemoryEventBus(_ => { });
 
     /// <summary>
     /// Adds the in-memory event bus as a singleton service with configuration options.
