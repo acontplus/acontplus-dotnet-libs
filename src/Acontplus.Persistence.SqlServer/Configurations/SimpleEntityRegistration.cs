@@ -161,6 +161,12 @@ public static class SimpleEntityRegistration
     }
 
     /// <summary>
+    ///     Registers entities with default conventions and base configuration.
+    /// </summary>
+    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
+        RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
+
+    /// <summary>
     ///     Helper method to check if a type has an Id property (for simple entities)
     /// </summary>
     private static bool HasIdProperty(Type entityType)
@@ -177,12 +183,6 @@ public static class SimpleEntityRegistration
         var idProperty = entityType.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
         return idProperty?.PropertyType ?? typeof(int);
     }
-
-    /// <summary>
-    ///     Registers entities with default conventions and base configuration.
-    /// </summary>
-    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
 
     /// <summary>
     ///     Registers entities, explicitly setting schemas for specified types.

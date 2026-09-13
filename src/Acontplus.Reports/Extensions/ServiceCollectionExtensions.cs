@@ -11,6 +11,8 @@ namespace Acontplus.Reports.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
+    private const string ReportsSectionName = "Reports";
+
     /// <summary>
     /// Adds report generation services to the service collection
     /// </summary>
@@ -20,7 +22,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddReportServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Configure options from configuration
-        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection(ReportsSectionName));
 
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
@@ -91,7 +93,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddQuestPdfReportService(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection(ReportsSectionName));
         services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
         return services;
     }
@@ -117,7 +119,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection(ReportsSectionName));
         services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
         return services;
     }
@@ -142,7 +144,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<Configuration.ReportOptions>(configuration.GetSection("Reports"));
+        services.Configure<Configuration.ReportOptions>(configuration.GetSection(ReportsSectionName));
         services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
         return services;
     }

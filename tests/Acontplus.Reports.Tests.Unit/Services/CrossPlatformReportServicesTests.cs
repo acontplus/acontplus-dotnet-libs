@@ -56,8 +56,11 @@ public sealed class CrossPlatformReportServicesTests
         using var response = await service.GenerateFromDataTableAsync(
             "summary",
             CreateSalesTable(),
-            worksheetName: "Sales",
-            headerStyle: AdvancedExcelHeaderStyle.CorporateBlue(),
+            options: new ClosedXmlDataTableOptions
+            {
+                WorksheetName = "Sales",
+                HeaderStyle = AdvancedExcelHeaderStyle.CorporateBlue()
+            },
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("summary.xlsx", response.FileDownloadName);

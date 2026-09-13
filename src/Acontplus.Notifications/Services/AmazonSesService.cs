@@ -448,7 +448,10 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
             entry.SlidingExpiration = TimeSpan.FromMinutes(30);
             entry.Priority = CacheItemPriority.Normal;
 
-            _logger.LogDebug("Loading and caching template: {TemplateName}", templateName);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Loading and caching template: {TemplateName}", templateName);
+            }
             return await File.ReadAllTextAsync(templatePath, ct).ConfigureAwait(false);
         });
 
@@ -459,28 +462,17 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         // Process logo if provided
         if (!string.IsNullOrEmpty(logo))
         {
-            ProcessLogoInTemplate(templateData, logo, ct);
+            ProcessLogoInTemplate(templateData, logo);
         }
 
         return ProcessTemplate(templateContent ?? throw new InvalidOperationException("Template content is null"), templateData);
     }
 
-    private void ProcessLogoInTemplate(IDictionary<string, object> templateData, string logo, CancellationToken ct)
+    private void ProcessLogoInTemplate(IDictionary<string, object> templateData, string logo)
     {
-        //if (string.IsNullOrEmpty(_mediaImagesPath)) return;
-
-        //var logoPath = Path.Combine(_mediaImagesPath, "Logos", logo);
-        //if (!File.Exists(logoPath)) return;
-
         try
         {
-            //var logoBytes = await File.ReadAllBytesAsync(logoPath, ct).ConfigureAwait(false);
-            //var logoBase64 = Convert.ToBase64String(logoBytes);
-            //var logoMimeType = GetMimeType(logoPath);
-            //var logoDataUri = $"data:{logoMimeType};base64,{logoBase64}";
             templateData["imgLogo"] = logo;
-
-            //_logger.LogDebug("Logo processed successfully: {LogoPath} -> {MimeType}", logoPath, logoMimeType);
         }
         catch (Exception ex)
         {

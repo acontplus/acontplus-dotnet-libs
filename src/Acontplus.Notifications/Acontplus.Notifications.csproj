@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Notifications</PackageId>
-    <Version>1.6.9</Version>
+    <Version>1.6.10</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -25,14 +25,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v1.6.0: WhatsApp Cloud API (Meta Graph API v23.0) — text, templates (full
-      component support), media (image/document/audio/video/sticker), location, interactive messages
-      (buttons/list/CTA), reactions, read receipts, media upload, HMAC-SHA256 webhook validation,
-      and multi-tenant named accounts.
-      v1.5.0: Added template caching with IMemoryCache (30min sliding expiration)
-      for improved performance on high-frequency templates. Reduces I/O operations and speeds up
-      email rendering. Backward compatible - optional IMemoryCache injection in AmazonSesService
-      constructor.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.6.10: Minor bug fixes and performance improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

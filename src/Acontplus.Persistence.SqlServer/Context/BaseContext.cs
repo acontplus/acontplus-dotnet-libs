@@ -164,33 +164,55 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
   {
     foreach (var entityType in builder.Model.GetEntityTypes())
     {
-      foreach (var property in entityType.GetProperties()
-                 .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
+      ConfigureEntityTypeDateTimeProperties(builder, entityType);
+    }
+  }
+
+  private static void ConfigureEntityTypeDateTimeProperties(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType)
+  {
+    foreach (var property in entityType.GetProperties())
+    {
+      if (property.ClrType == typeof(DateTime))
       {
-        if (property.ClrType == typeof(DateTime))
-        {
-          builder.Entity(entityType.ClrType)
-            .Property<DateTime>(property.Name)
-            .HasConversion(
-              v => v.Kind == DateTimeKind.Unspecified
-                ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
-                : v.ToUniversalTime(),
-              v => v);
-        }
-        else
-        {
-          builder.Entity(entityType.ClrType)
-            .Property<DateTime?>(property.Name)
-            .HasConversion(
-              v => v.HasValue
-                ? v.Value.Kind == DateTimeKind.Unspecified
-                  ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
-                  : v.Value.ToUniversalTime()
-                : (DateTime?)null,
-              v => v);
-        }
+        ConfigureDateTimeProperty(builder, entityType, property.Name);
+      }
+      else if (property.ClrType == typeof(DateTime?))
+      {
+        ConfigureNullableDateTimeProperty(builder, entityType, property.Name);
       }
     }
+  }
+
+  private static void ConfigureDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
+  {
+    builder.Entity(entityType.ClrType)
+      .Property<DateTime>(propertyName)
+      .HasConversion(
+        v => v.Kind == DateTimeKind.Unspecified
+          ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
+          : v.ToUniversalTime(),
+        v => v);
+  }
+
+  private static void ConfigureNullableDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
+  {
+    builder.Entity(entityType.ClrType)
+      .Property<DateTime?>(propertyName)
+      .HasConversion(
+        v => ConvertToUtc(v),
+        v => v);
+  }
+
+  private static DateTime? ConvertToUtc(DateTime? value)
+  {
+    if (!value.HasValue)
+    {
+      return null;
+    }
+
+    return value.Value.Kind == DateTimeKind.Unspecified
+      ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)
+      : value.Value.ToUniversalTime();
   }
 
   /// <summary>

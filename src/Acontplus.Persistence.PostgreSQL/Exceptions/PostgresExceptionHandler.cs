@@ -12,11 +12,9 @@ public static class PostgresExceptionHandler
     /// </summary>
     /// <param name="ex">The Npgsql exception to evaluate.</param>
     /// <returns><c>true</c> if the error is transient and the operation can be retried.</returns>
-    public static bool IsTransientException(NpgsqlException ex)
-    {
+    public static bool IsTransientException(NpgsqlException ex) =>
         // 40001: serialization_failure, 40P01: deadlock_detected, 23505: unique_violation, 23503: foreign_key_violation
-        return ex.SqlState is "40001" or "40P01" or "23505" or "23503" || (ex.SqlState?.StartsWith("08") ?? false);
-    }
+        ex.SqlState is "40001" or "40P01" or "23505" or "23503" || (ex.SqlState?.StartsWith("08", StringComparison.Ordinal) ?? false);
 
     /// <summary>
     /// Maps a <see cref="NpgsqlException"/> to a <see cref="SqlErrorInfo"/> domain error descriptor.
@@ -90,11 +88,15 @@ public static class PostgresExceptionHandler
         [CallerMemberName] string caller = "")
     {
         var errorInfo = MapSqlException(ex);
-        var sqlStateHashCode = ex.SqlState?.GetHashCode() ?? 0;
-        logger.Log(GetLogLevel(errorInfo.ErrorType),
-            new EventId(sqlStateHashCode, errorInfo.Code),
-            "Postgres Error in {Operation} called from {Caller}: {ErrorType} - {Message}",
-            operation, caller, errorInfo.ErrorType, errorInfo.Message);
+        var logLevel = GetLogLevel(errorInfo.ErrorType);
+        if (logger.IsEnabled(logLevel))
+        {
+            var sqlStateHashCode = ex.SqlState?.GetHashCode(StringComparison.Ordinal) ?? 0;
+            logger.Log(logLevel,
+                new EventId(sqlStateHashCode, errorInfo.Code),
+                "Postgres Error in {Operation} called from {Caller}: {ErrorType} - {Message}",
+                operation, caller, errorInfo.ErrorType, errorInfo.Message);
+        }
         if (logger.IsEnabled(LogLevel.Debug))
         {
             logger.LogDebug("Postgres Error Details: {Details}", new

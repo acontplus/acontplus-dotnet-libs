@@ -13,6 +13,7 @@ namespace Acontplus.Reports.Documents;
 /// </summary>
 internal sealed class DynamicReportDocument : IDocument
 {
+    private const string ColorWhite = "#FFFFFF";
     private readonly QuestPdfReportRequest _request;
 
     public DynamicReportDocument(QuestPdfReportRequest request)
@@ -74,29 +75,38 @@ internal sealed class DynamicReportDocument : IDocument
 
         if (header is null)
         {
-            // Default minimal title header
-            container
-                .BorderBottom(1)
-                .BorderColor(theme.BorderColor)
-                .PaddingBottom(6)
-                .Column(col =>
-                {
-                    col.Item()
-                        .Text(_request.Title)
-                        .FontSize(_request.Settings.TitleFontSize)
-                        .Bold()
-                        .FontColor(theme.AccentColor);
-
-                    if (!string.IsNullOrWhiteSpace(_request.SubTitle))
-                        col.Item()
-                            .Text(_request.SubTitle)
-                            .FontSize(_request.Settings.SectionTitleFontSize)
-                            .FontColor(theme.TextColor)
-                            .Italic();
-                });
+            ComposeDefaultPageHeader(container, theme);
             return;
         }
 
+        ComposeCustomPageHeader(container, header, theme);
+    }
+
+    private void ComposeDefaultPageHeader(IContainer container, QuestPdfColorTheme theme)
+    {
+        container
+            .BorderBottom(1)
+            .BorderColor(theme.BorderColor)
+            .PaddingBottom(6)
+            .Column(col =>
+            {
+                col.Item()
+                    .Text(_request.Title)
+                    .FontSize(_request.Settings.TitleFontSize)
+                    .Bold()
+                    .FontColor(theme.AccentColor);
+
+                if (!string.IsNullOrWhiteSpace(_request.SubTitle))
+                    col.Item()
+                        .Text(_request.SubTitle)
+                        .FontSize(_request.Settings.SectionTitleFontSize)
+                        .FontColor(theme.TextColor)
+                        .Italic();
+            });
+    }
+
+    private static void ComposeCustomPageHeader(IContainer container, QuestPdfHeaderFooterOptions header, QuestPdfColorTheme theme)
+    {
         var bg = header.BackgroundColor ?? "transparent";
         var hasBg = bg != "transparent";
 
@@ -109,20 +119,7 @@ internal sealed class DynamicReportDocument : IDocument
 
         wrapper.Row(row =>
         {
-            if (header.LogoBytes is { Length: > 0 })
-            {
-                row.AutoItem()
-                    .MaxHeight(header.LogoMaxHeight)
-                    .PaddingRight(8)
-                    .Image(new MemoryStream(header.LogoBytes)).FitHeight();
-            }
-            else if (!string.IsNullOrWhiteSpace(header.LogoPath) && IsValidLogoPath(header.LogoPath) && File.Exists(header.LogoPath))
-            {
-                row.AutoItem()
-                    .MaxHeight(header.LogoMaxHeight)
-                    .PaddingRight(8)
-                    .Image(header.LogoPath).FitHeight();
-            }
+            ComposeHeaderLogo(row, header);
 
             row.RelativeItem().Column(col =>
             {
@@ -130,7 +127,7 @@ internal sealed class DynamicReportDocument : IDocument
                     col.Item()
                         .Text(header.LeftText)
                         .FontSize(header.FontSize)
-                        .FontColor(hasBg ? "#FFFFFF" : theme.TextColor);
+                        .FontColor(hasBg ? ColorWhite : theme.TextColor);
             });
 
             if (!string.IsNullOrWhiteSpace(header.CenterText))
@@ -138,15 +135,33 @@ internal sealed class DynamicReportDocument : IDocument
                     .AlignCenter()
                     .Text(header.CenterText)
                     .FontSize(header.FontSize)
-                    .FontColor(hasBg ? "#FFFFFF" : theme.TextColor);
+                    .FontColor(hasBg ? ColorWhite : theme.TextColor);
 
             if (!string.IsNullOrWhiteSpace(header.RightText))
                 row.AutoItem()
                     .AlignRight()
                     .Text(header.RightText)
                     .FontSize(header.FontSize)
-                    .FontColor(hasBg ? "#FFFFFF" : theme.TextColor);
+                    .FontColor(hasBg ? ColorWhite : theme.TextColor);
         });
+    }
+
+    private static void ComposeHeaderLogo(RowDescriptor row, QuestPdfHeaderFooterOptions header)
+    {
+        if (header.LogoBytes is { Length: > 0 })
+        {
+            row.AutoItem()
+                .MaxHeight(header.LogoMaxHeight)
+                .PaddingRight(8)
+                .Image(new MemoryStream(header.LogoBytes)).FitHeight();
+        }
+        else if (!string.IsNullOrWhiteSpace(header.LogoPath) && IsValidLogoPath(header.LogoPath) && File.Exists(header.LogoPath))
+        {
+            row.AutoItem()
+                .MaxHeight(header.LogoMaxHeight)
+                .PaddingRight(8)
+                .Image(header.LogoPath).FitHeight();
+        }
     }
 
     // ── Content ──────────────────────────────────────────────────────────────
@@ -271,92 +286,116 @@ internal sealed class DynamicReportDocument : IDocument
                     def.RelativeColumn(col.RelativeWidth ?? (1f / columns.Count * totalWeight));
             });
 
-            // Header — optional band row first, then individual column headers
-            table.Header(header =>
-            {
-                // Band / group header row (e.g. Kardex: Entradas | Salidas | Saldo)
-                if (groupHeaders.Count > 0)
-                {
-                    foreach (var grp in groupHeaders)
-                    {
-                        var span = (uint)Math.Max(1, Math.Min(grp.ColumnSpan, columns.Count));
-                        header.Cell()
-                            .ColumnSpan(span)
-                            .Background(theme.AccentColor)
-                            .Border(1)
-                            .BorderColor(theme.HeaderBackground)
-                            .Padding(4)
-                            .AlignCenter()
-                            .Text(grp.Header ?? string.Empty)
-                            .FontSize(s.TableHeaderFontSize)
-                            .Bold()
-                            .FontColor("#FFFFFF");
-                    }
-                }
-
-                // Normal column header row
-                foreach (var col in columns)
-                {
-                    header.Cell()
-                        .Background(theme.HeaderBackground)
-                        .Padding(5)
-                        .AlignElement(col.Alignment)
-                        .Text(col.Header ?? col.ColumnName)
-                        .FontSize(s.TableHeaderFontSize)
-                        .Bold()
-                        .FontColor(theme.HeaderForeground);
-                }
-            });
+            table.Header(header => RenderTableHeader(header, groupHeaders, columns, theme, s));
 
             // Data rows
-            var rowIndex = 0;
-            foreach (DataRow row in dt.Rows)
-            {
-                var isAlternate = rowIndex % 2 == 1;
-                var bg = isAlternate ? theme.AlternateRowBackground : theme.RowBackground;
-
-                foreach (var col in columns)
-                {
-                    var rawValue = row[col.ColumnName];
-                    var displayValue = FormatCellValue(rawValue, col.Format);
-
-                    var cell = table.Cell()
-                        .Background(bg)
-                        .BorderBottom(1)
-                        .BorderColor(theme.BorderColor)
-                        .Padding(4);
-
-                    var textElem = cell
-                        .AlignElement(col.Alignment)
-                        .Text(displayValue)
-                        .FontSize(s.FontSize)
-                        .FontColor(theme.TextColor);
-
-                    if (col.IsBold)
-                        textElem.Bold();
-                }
-
-                rowIndex++;
-            }
+            RenderTableRows(table, dt, columns, theme, s);
 
             // Optional totals row
             if (section.ShowTotalsRow && columns.Any(c => c.AggregateType != QuestPdfAggregateType.None))
             {
-                foreach (var col in columns)
-                {
-                    var agg = ComputeAggregate(dt, col);
-
-                    table.Cell()
-                        .Background(theme.TotalsBackground)
-                        .Padding(4)
-                        .AlignElement(col.Alignment)
-                        .Text(agg)
-                        .FontSize(s.FontSize)
-                        .Bold()
-                        .FontColor(theme.TotalsTextColor);
-                }
+                RenderTableTotals(table, dt, columns, theme, s);
             }
         });
+    }
+
+    private static void RenderTableHeader(
+        TableCellDescriptor header,
+        List<QuestPdfTableColumn> groupHeaders,
+        List<QuestPdfTableColumn> columns,
+        QuestPdfColorTheme theme,
+        QuestPdfDocumentSettings s)
+    {
+        if (groupHeaders.Count > 0)
+        {
+            foreach (var grp in groupHeaders)
+            {
+                var span = (uint)Math.Max(1, Math.Min(grp.ColumnSpan, columns.Count));
+                header.Cell()
+                    .ColumnSpan(span)
+                    .Background(theme.AccentColor)
+                    .Border(1)
+                    .BorderColor(theme.HeaderBackground)
+                    .Padding(4)
+                    .AlignCenter()
+                    .Text(grp.Header ?? string.Empty)
+                    .FontSize(s.TableHeaderFontSize)
+                    .Bold()
+                    .FontColor(ColorWhite);
+            }
+        }
+
+        foreach (var col in columns)
+        {
+            header.Cell()
+                .Background(theme.HeaderBackground)
+                .Padding(5)
+                .AlignElement(col.Alignment)
+                .Text(col.Header ?? col.ColumnName)
+                .FontSize(s.TableHeaderFontSize)
+                .Bold()
+                .FontColor(theme.HeaderForeground);
+        }
+    }
+
+    private static void RenderTableRows(
+        TableDescriptor table,
+        DataTable dt,
+        List<QuestPdfTableColumn> columns,
+        QuestPdfColorTheme theme,
+        QuestPdfDocumentSettings s)
+    {
+        var rowIndex = 0;
+        foreach (DataRow row in dt.Rows)
+        {
+            var isAlternate = rowIndex % 2 == 1;
+            var bg = isAlternate ? theme.AlternateRowBackground : theme.RowBackground;
+
+            foreach (var col in columns)
+            {
+                var rawValue = row[col.ColumnName];
+                var displayValue = FormatCellValue(rawValue, col.Format);
+
+                var cell = table.Cell()
+                    .Background(bg)
+                    .BorderBottom(1)
+                    .BorderColor(theme.BorderColor)
+                    .Padding(4);
+
+                var textElem = cell
+                    .AlignElement(col.Alignment)
+                    .Text(displayValue)
+                    .FontSize(s.FontSize)
+                    .FontColor(theme.TextColor);
+
+                if (col.IsBold)
+                    textElem.Bold();
+            }
+
+            rowIndex++;
+        }
+    }
+
+    private static void RenderTableTotals(
+        TableDescriptor table,
+        DataTable dt,
+        List<QuestPdfTableColumn> columns,
+        QuestPdfColorTheme theme,
+        QuestPdfDocumentSettings s)
+    {
+        foreach (var col in columns)
+        {
+            var agg = ComputeAggregate(dt, col);
+
+            table.Cell()
+                .Background(theme.TotalsBackground)
+                .Padding(4)
+                .AlignElement(col.Alignment)
+                .Text(agg)
+                .FontSize(s.FontSize)
+                .Bold()
+                .FontColor(theme.TotalsTextColor);
+        }
     }
 
     // ── Section: Text ────────────────────────────────────────────────────────
@@ -636,8 +675,6 @@ internal sealed class DynamicReportDocument : IDocument
 
         var inv = section.InvoiceHeader;
         var theme = _request.Settings.ColorTheme;
-        var s = _request.Settings;
-
         container.Column(mainCol =>
         {
             // Row 1: company info (left) + SRI authorization box (right)
@@ -645,21 +682,21 @@ internal sealed class DynamicReportDocument : IDocument
             {
                 row.RelativeItem(inv.LeftPanelRatio)
                    .PaddingRight(4)
-                   .Element(c => ComposeInvoiceCompanyBlock(c, inv, theme, s));
+                   .Element(c => ComposeInvoiceCompanyBlock(c, inv, theme));
 
                 row.RelativeItem(inv.RightPanelRatio)
-                   .Element(c => ComposeInvoiceAuthBox(c, inv, theme, s));
+                   .Element(c => ComposeInvoiceAuthBox(c, inv, theme));
             });
 
             // Row 2: buyer information
             mainCol.Item().PaddingTop(4)
-                   .Element(c => ComposeInvoiceBuyerBlock(c, inv, theme, s));
+                   .Element(c => ComposeInvoiceBuyerBlock(c, inv, theme));
         });
     }
 
     private static void ComposeInvoiceCompanyBlock(
         IContainer container, QuestPdfInvoiceHeader inv,
-        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+        QuestPdfColorTheme theme)
     {
         container.Column(col =>
         {
@@ -670,55 +707,45 @@ internal sealed class DynamicReportDocument : IDocument
                 col.Item().MaxHeight(inv.LogoMaxHeight).MaxWidth(inv.LogoMaxHeight * 4).AlignLeft()
                    .Image(inv.LogoPath).FitArea();
 
-            if (!string.IsNullOrWhiteSpace(inv.CompanyName))
-                col.Item().Text(inv.CompanyName)
-                   .FontSize(inv.FontSize + 1).Bold().FontColor(theme.TextColor);
-
-            if (!string.IsNullOrWhiteSpace(inv.TradeName))
-                col.Item().Text(inv.TradeName)
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
-
-            if (!string.IsNullOrWhiteSpace(inv.CompanyAddress))
-                col.Item().Text(inv.CompanyAddress)
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
-
-            if (!string.IsNullOrWhiteSpace(inv.BranchAddress))
-                col.Item().Text(inv.BranchAddress)
-                   .FontSize(inv.FontSize).FontColor(theme.MutedTextColor);
+            AddTextItemIfNotEmpty(col, inv.CompanyName, inv.FontSize + 1, theme.TextColor, isBold: true);
+            AddTextItemIfNotEmpty(col, inv.TradeName, inv.FontSize, theme.TextColor);
+            AddTextItemIfNotEmpty(col, inv.CompanyAddress, inv.FontSize, theme.TextColor);
+            AddTextItemIfNotEmpty(col, inv.BranchAddress, inv.FontSize, theme.MutedTextColor);
 
             if (!string.IsNullOrWhiteSpace(inv.CompanyPhone))
-                col.Item().Text($"Tel: {inv.CompanyPhone}")
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                AddTextItemIfNotEmpty(col, $"Tel: {inv.CompanyPhone}", inv.FontSize, theme.TextColor);
 
-            if (!string.IsNullOrWhiteSpace(inv.CompanyEmail))
-                col.Item().Text(inv.CompanyEmail)
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
-
-            if (!string.IsNullOrWhiteSpace(inv.CompanyActivity))
-                col.Item().Text(inv.CompanyActivity)
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+            AddTextItemIfNotEmpty(col, inv.CompanyEmail, inv.FontSize, theme.TextColor);
+            AddTextItemIfNotEmpty(col, inv.CompanyActivity, inv.FontSize, theme.TextColor);
 
             if (!string.IsNullOrWhiteSpace(inv.ContribuyenteEspecial))
-                col.Item().Text($"Contribuyente Especial: {inv.ContribuyenteEspecial}")
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                AddTextItemIfNotEmpty(col, $"Contribuyente Especial: {inv.ContribuyenteEspecial}", inv.FontSize, theme.TextColor);
 
             if (!string.IsNullOrWhiteSpace(inv.ObligadoContabilidad))
-                col.Item().Text($"Obligado a llevar Contabilidad: {inv.ObligadoContabilidad}")
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                AddTextItemIfNotEmpty(col, $"Obligado a llevar Contabilidad: {inv.ObligadoContabilidad}", inv.FontSize, theme.TextColor);
 
             if (!string.IsNullOrWhiteSpace(inv.ContribuyenteRimpe))
-                col.Item().Text($"Contribuyente RIMPE: {inv.ContribuyenteRimpe}")
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                AddTextItemIfNotEmpty(col, $"Contribuyente RIMPE: {inv.ContribuyenteRimpe}", inv.FontSize, theme.TextColor);
 
             if (!string.IsNullOrWhiteSpace(inv.AgenteRetencion))
-                col.Item().Text($"Agente de Retenci\u00f3n: {inv.AgenteRetencion}")
-                   .FontSize(inv.FontSize).FontColor(theme.TextColor);
+                AddTextItemIfNotEmpty(col, $"Agente de Retención: {inv.AgenteRetencion}", inv.FontSize, theme.TextColor);
         });
+    }
+
+    private static void AddTextItemIfNotEmpty(
+        ColumnDescriptor col, string? text,
+        float fontSize, string fontColor, bool isBold = false)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var item = col.Item().Text(text).FontSize(fontSize).FontColor(fontColor);
+        if (isBold)
+            item.Bold();
     }
 
     private static void ComposeInvoiceAuthBox(
         IContainer container, QuestPdfInvoiceHeader inv,
-        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+        QuestPdfColorTheme theme)
     {
         container
             .Border(1)
@@ -763,7 +790,7 @@ internal sealed class DynamicReportDocument : IDocument
 
     private static void ComposeInvoiceBuyerBlock(
         IContainer container, QuestPdfInvoiceHeader inv,
-        QuestPdfColorTheme theme, QuestPdfDocumentSettings s)
+        QuestPdfColorTheme theme)
     {
         container
             .Border(1)
@@ -846,36 +873,47 @@ internal sealed class DynamicReportDocument : IDocument
 
         if (footer is null)
         {
-            if (!s.ShowPageNumbers && !s.ShowTimestamp)
-                return;
-
-            container
-                .BorderTop(1)
-                .BorderColor(theme.BorderColor)
-                .PaddingTop(4)
-                .Row(row =>
-                {
-                    if (s.ShowTimestamp)
-                        row.RelativeItem()
-                            .Text(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm UTC"))
-                            .FontSize(7)
-                            .FontColor(theme.FooterTextColor);
-
-                    if (s.ShowPageNumbers)
-                        row.RelativeItem()
-                            .AlignRight()
-                            .Text(text =>
-                            {
-                                text.Span("Page ").FontSize(7).FontColor(theme.FooterTextColor);
-                                text.CurrentPageNumber().FontSize(7).FontColor(theme.FooterTextColor);
-                                text.Span(" of ").FontSize(7).FontColor(theme.FooterTextColor);
-                                text.TotalPages().FontSize(7).FontColor(theme.FooterTextColor);
-                            });
-                });
+            ComposeDefaultPageFooter(container, s, theme);
             return;
         }
 
-        // Custom footer
+        ComposeCustomPageFooter(container, footer, s, theme);
+    }
+
+    private static void ComposeDefaultPageFooter(IContainer container, QuestPdfDocumentSettings s, QuestPdfColorTheme theme)
+    {
+        if (!s.ShowPageNumbers && !s.ShowTimestamp)
+            return;
+
+        container
+            .BorderTop(1)
+            .BorderColor(theme.BorderColor)
+            .PaddingTop(4)
+            .Row(row =>
+            {
+                if (s.ShowTimestamp)
+                    row.RelativeItem()
+                        .Text(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm UTC"))
+                        .FontSize(7)
+                        .FontColor(theme.FooterTextColor);
+
+                if (s.ShowPageNumbers)
+                    row.RelativeItem()
+                        .AlignRight()
+                        .Text(text =>
+                        {
+                            text.Span("Page ").FontSize(7).FontColor(theme.FooterTextColor);
+                            text.CurrentPageNumber().FontSize(7).FontColor(theme.FooterTextColor);
+                            text.Span(" of ").FontSize(7).FontColor(theme.FooterTextColor);
+                            text.TotalPages().FontSize(7).FontColor(theme.FooterTextColor);
+                        });
+            });
+    }
+
+    private static void ComposeCustomPageFooter(
+        IContainer container, QuestPdfHeaderFooterOptions footer,
+        QuestPdfDocumentSettings s, QuestPdfColorTheme theme)
+    {
         var hasBg = !string.IsNullOrWhiteSpace(footer.BackgroundColor);
         var wrapper = hasBg
             ? container.Background(footer.BackgroundColor!).Padding(6)
@@ -887,32 +925,38 @@ internal sealed class DynamicReportDocument : IDocument
                 row.RelativeItem()
                     .Text(footer.LeftText)
                     .FontSize(footer.FontSize)
-                    .FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
+                    .FontColor(hasBg ? ColorWhite : theme.FooterTextColor);
 
             if (!string.IsNullOrWhiteSpace(footer.CenterText))
                 row.RelativeItem()
                     .AlignCenter()
                     .Text(footer.CenterText)
                     .FontSize(footer.FontSize)
-                    .FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
+                    .FontColor(hasBg ? ColorWhite : theme.FooterTextColor);
 
             if (!string.IsNullOrWhiteSpace(footer.RightText) || s.ShowPageNumbers)
                 row.AutoItem()
                     .AlignRight()
-                    .Text(text =>
-                    {
-                        if (!string.IsNullOrWhiteSpace(footer.RightText))
-                            text.Span(footer.RightText!).FontSize(footer.FontSize).FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
-
-                        if (s.ShowPageNumbers)
-                        {
-                            text.Span("  Page ").FontSize(footer.FontSize).FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
-                            text.CurrentPageNumber().FontSize(footer.FontSize).FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
-                            text.Span("/").FontSize(footer.FontSize).FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
-                            text.TotalPages().FontSize(footer.FontSize).FontColor(hasBg ? "#FFFFFF" : theme.FooterTextColor);
-                        }
-                    });
+                    .Text(text => RenderFooterPageNumbers(text, footer, s, hasBg, theme));
         });
+    }
+
+    private static void RenderFooterPageNumbers(
+        TextDescriptor text, QuestPdfHeaderFooterOptions footer,
+        QuestPdfDocumentSettings s, bool hasBg, QuestPdfColorTheme theme)
+    {
+        var fontColor = hasBg ? ColorWhite : theme.FooterTextColor;
+
+        if (!string.IsNullOrWhiteSpace(footer.RightText))
+            text.Span(footer.RightText).FontSize(footer.FontSize).FontColor(fontColor);
+
+        if (s.ShowPageNumbers)
+        {
+            text.Span("  Page ").FontSize(footer.FontSize).FontColor(fontColor);
+            text.CurrentPageNumber().FontSize(footer.FontSize).FontColor(fontColor);
+            text.Span("/").FontSize(footer.FontSize).FontColor(fontColor);
+            text.TotalPages().FontSize(footer.FontSize).FontColor(fontColor);
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

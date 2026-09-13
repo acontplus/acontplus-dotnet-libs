@@ -1111,33 +1111,36 @@ public class ReportController : ControllerBase
         var response = await _excel.GenerateFromDataTableAsync(
             fileDownloadName: "financial-report",
             data: data,
-            columns:
-            [
-                new AdvancedExcelColumnDefinition
-                {
-                    ColumnName = "Period",
-                    Header     = "Period",
-                    Width      = 15,
-                    Alignment  = ExcelHorizontalAlignment.Center
-                },
-                new AdvancedExcelColumnDefinition
-                {
-                    ColumnName    = "Revenue",
-                    Header        = "Revenue (USD)",
-                    NumberFormat  = "$#,##0.00",
-                    Alignment     = ExcelHorizontalAlignment.Right,
-                    AggregateType = ExcelAggregateType.Sum
-                },
-                new AdvancedExcelColumnDefinition
-                {
-                    ColumnName    = "Expenses",
-                    Header        = "Expenses (USD)",
-                    NumberFormat  = "$#,##0.00",
-                    Alignment     = ExcelHorizontalAlignment.Right,
-                    AggregateType = ExcelAggregateType.Sum
-                }
-            ],
-            headerStyle: AdvancedExcelHeaderStyle.CorporateBlue(),
+            options: new ClosedXmlDataTableOptions
+            {
+                Columns =
+                [
+                    new AdvancedExcelColumnDefinition
+                    {
+                        ColumnName = "Period",
+                        Header     = "Period",
+                        Width      = 15,
+                        Alignment  = ExcelHorizontalAlignment.Center
+                    },
+                    new AdvancedExcelColumnDefinition
+                    {
+                        ColumnName    = "Revenue",
+                        Header        = "Revenue (USD)",
+                        NumberFormat  = "$#,##0.00",
+                        Alignment     = ExcelHorizontalAlignment.Right,
+                        AggregateType = ExcelAggregateType.Sum
+                    },
+                    new AdvancedExcelColumnDefinition
+                    {
+                        ColumnName    = "Expenses",
+                        Header        = "Expenses (USD)",
+                        NumberFormat  = "$#,##0.00",
+                        Alignment     = ExcelHorizontalAlignment.Right,
+                        AggregateType = ExcelAggregateType.Sum
+                    }
+                ],
+                HeaderStyle = AdvancedExcelHeaderStyle.CorporateBlue()
+            },
             cancellationToken: ct);
 
         return File(response.FileContents, response.ContentType, response.FileDownloadName);

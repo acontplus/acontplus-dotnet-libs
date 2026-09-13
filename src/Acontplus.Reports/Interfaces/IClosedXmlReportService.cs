@@ -35,26 +35,12 @@ public interface IClosedXmlReportService
     /// </summary>
     /// <param name="fileDownloadName">Desired download file name (extension appended if absent).</param>
     /// <param name="data">Source data table.</param>
-    /// <param name="columns">
-    /// Optional per-column rich formatting descriptors.
-    /// <see langword="null"/> exports all columns with default styles.
-    /// </param>
-    /// <param name="worksheetName">Sheet tab name (default: <c>"Sheet1"</c>).</param>
-    /// <param name="autoFilter">Enable AutoFilter on the header row (default: <see langword="true"/>).</param>
-    /// <param name="freezeHeaderRow">Freeze the header row (default: <see langword="true"/>).</param>
-    /// <param name="headerStyle">
-    /// Header row style override.
-    /// <see langword="null"/> uses <see cref="AdvancedExcelHeaderStyle.CorporateBlue"/>.
-    /// </param>
+    /// <param name="options">Optional export configuration options.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns><see cref="ReportResponse"/> with the workbook bytes.</returns>
     Task<ReportResponse> GenerateFromDataTableAsync(
         string fileDownloadName,
         DataTable data,
-        IEnumerable<AdvancedExcelColumnDefinition>? columns = null,
-        string worksheetName = "Sheet1",
-        bool autoFilter = true,
-        bool freezeHeaderRow = true,
-        AdvancedExcelHeaderStyle? headerStyle = null,
+        ClosedXmlDataTableOptions? options = null,
         CancellationToken cancellationToken = default);
 }

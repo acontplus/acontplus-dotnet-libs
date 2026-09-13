@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.PostgreSQL</PackageId>
-    <Version>1.4.5</Version>
+    <Version>1.4.6</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -20,9 +20,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Enhanced with contemporary repository patterns, Entity Framework Core
-      integration, Npgsql support, advanced error handling, connection resilience with Polly, and
-      enterprise-ready PostgreSQL data access patterns.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.4.6: Minor bug fixes and performance improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>

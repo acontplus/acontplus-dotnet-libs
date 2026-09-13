@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Acontplus.Core.Enums;
 using Acontplus.Persistence.Common.Configuration;
 using Dapper;
@@ -18,6 +19,8 @@ namespace Acontplus.Persistence.PostgreSQL.Repositories;
 /// <item><description>PostgreSQL-specific optimizations (LIMIT-OFFSET pagination)</description></item>
 /// </list>
 /// </remarks>
+[SuppressMessage("SonarQube", "csharpsquid:S2077",
+    Justification = "Dynamic SQL for pagination and sanitized procedure names; all filter values and pagination arguments are bound via Dapper DynamicParameters.")]
 public partial class DapperRepository : IDapperRepository
 {
     private readonly IConfiguration _configuration;

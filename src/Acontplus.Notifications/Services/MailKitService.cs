@@ -28,6 +28,7 @@ public class MailKitService : IMailKitService, IDisposable
     private readonly ConcurrentDictionary<string, int> _authAttemptCount = new();
     private readonly TimeSpan _minAuthInterval;
     private readonly int _maxAuthAttemptsPerHour;
+    private static readonly char[] EmailSeparators = [',', ';', '|'];
 
     public MailKitService(IConfiguration configuration, ILogger<MailKitService> logger)
     {
@@ -226,7 +227,9 @@ public class MailKitService : IMailKitService, IDisposable
         }
     }
 
-    public async Task<bool> SendAsync(EmailModel email, CancellationToken ct)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged with contextual recipient information before rethrowing to caller.")]
+    public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
         SmtpClient? smtpClient = null;
@@ -235,98 +238,7 @@ public class MailKitService : IMailKitService, IDisposable
         {
             return await _retryPolicy.ExecuteAsync(async () =>
             {
-                using var message = new MimeMessage();
-
-                message.To.Clear();
-                message.From.Add(new MailboxAddress(email.SenderName, email.SenderEmail!));
-                message.Sender = new MailboxAddress(email.SenderName, email.SenderEmail!);
-
-                var delimiters = new char[] { ',', ';', '|' };
-                var receiver = email.RecipientEmail.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string mailAddress in receiver)
-                    message.To.Add(MailboxAddress.Parse(mailAddress.Trim()));
-
-                if (!string.IsNullOrEmpty(email.Cc))
-                {
-                    var cc = email.Cc.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string mailAddress in cc)
-                        message.Cc.Add(MailboxAddress.Parse(mailAddress.Trim()));
-                }
-
-                var body = new BodyBuilder();
-                message.Subject = email.Subject;
-
-                if (!email.IsHtml)
-                {
-                    var pathToHtmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", email.Template ?? string.Empty);
-                    if (!File.Exists(pathToHtmlFile))
-                    {
-                        _logger.LogError("Email template file not found: {PathToHtmlFile}", pathToHtmlFile);
-                        throw new FileNotFoundException($"Email template file not found: {pathToHtmlFile}");
-                    }
-
-                    var htmlString = await File.ReadAllTextAsync(pathToHtmlFile, ct);
-                    var emailBody = ProcessTemplate(htmlString,
-                        JsonExtensions.DeserializeOptimized<IDictionary<string, object>>(email.Body)!);
-
-                    body.HtmlBody = emailBody;
-
-                    var mediaImagesPath = _configuration.GetSection("Media").GetSection("Images").Value;
-                    if (string.IsNullOrEmpty(mediaImagesPath))
-                    {
-                        _logger.LogWarning("Configuration 'Media:Images' is not set. Skipping logo embedding.");
-                    }
-                    else
-                    {
-                        var pathLogo = Path.Combine(mediaImagesPath, "Logos", email.Logo ?? string.Empty);
-                        if (File.Exists(pathLogo))
-                        {
-                            var image = await body.LinkedResources.AddAsync(pathLogo, ct);
-                            image.ContentId = MimeUtils.GenerateMessageId();
-                            body.HtmlBody = body.HtmlBody.Replace("[img-logo]", $"cid:{image.ContentId}");
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Email logo file not found: {PathLogo}", pathLogo);
-                        }
-                    }
-                }
-                else
-                {
-                    body.HtmlBody = email.Body;
-                }
-
-                if (email.Files is { Count: > 0 })
-                {
-                    foreach (var formFile in email.Files)
-                    {
-                        // Skip files with missing FileName or Content
-                        if (string.IsNullOrEmpty(formFile.FileName) || formFile.Content == null)
-                        {
-                            _logger.LogWarning("Skipping attachment with missing FileName or Content");
-                            continue;
-                        }
-
-                        var extension = Path.GetExtension(formFile.FileName)?.ToLowerInvariant();
-                        switch (extension)
-                        {
-                            case ".pdf":
-                                body.Attachments.Add(formFile.FileName, formFile.Content,
-                                    MimeKit.ContentType.Parse(MediaTypeNames.Application.Pdf));
-                                break;
-                            case ".xml":
-                                body.Attachments.Add(formFile.FileName, formFile.Content,
-                                    MimeKit.ContentType.Parse(MediaTypeNames.Application.Xml));
-                                break;
-                            default:
-                                body.Attachments.Add(formFile.FileName, formFile.Content,
-                                    MimeKit.ContentType.Parse(MediaTypeNames.Application.Octet));
-                                break;
-                        }
-                    }
-                }
-
-                message.Body = body.ToMessageBody();
+                using var message = await BuildMimeMessageAsync(email, ct);
 
                 smtpClient = await GetConnectedSmtpClientAsync(email, ct);
                 await smtpClient.SendAsync(message, ct);
@@ -347,7 +259,7 @@ public class MailKitService : IMailKitService, IDisposable
                 try
                 {
                     if (smtpClient.IsConnected)
-                        smtpClient.Disconnect(quit: true, ct);
+                        await smtpClient.DisconnectAsync(quit: true, ct);
                 }
                 catch (Exception disconnectEx)
                 {
@@ -371,6 +283,119 @@ public class MailKitService : IMailKitService, IDisposable
             {
                 smtpClient.Dispose();
             }
+        }
+    }
+
+    private async Task<MimeMessage> BuildMimeMessageAsync(EmailModel email, CancellationToken ct)
+    {
+        var message = new MimeMessage();
+        AddRecipients(message, email);
+        message.Subject = email.Subject;
+        message.Body = await BuildBodyEntityAsync(email, ct);
+        return message;
+    }
+
+    private static void AddRecipients(MimeMessage message, EmailModel email)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail);
+        message.To.Clear();
+        message.From.Add(new MailboxAddress(email.SenderName, email.SenderEmail));
+        message.Sender = new MailboxAddress(email.SenderName, email.SenderEmail);
+
+        var receiver = email.RecipientEmail.Split(EmailSeparators, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var mailAddress in receiver)
+        {
+            message.To.Add(MailboxAddress.Parse(mailAddress.Trim()));
+        }
+
+        if (!string.IsNullOrEmpty(email.Cc))
+        {
+            var cc = email.Cc.Split(EmailSeparators, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var mailAddress in cc)
+            {
+                message.Cc.Add(MailboxAddress.Parse(mailAddress.Trim()));
+            }
+        }
+    }
+
+    private async Task<MimeEntity> BuildBodyEntityAsync(EmailModel email, CancellationToken ct)
+    {
+        var body = new BodyBuilder();
+        if (!email.IsHtml)
+        {
+            await BuildTemplateHtmlBodyAsync(body, email, ct);
+        }
+        else
+        {
+            body.HtmlBody = email.Body;
+        }
+
+        AddAttachments(body, email.Files);
+        return body.ToMessageBody();
+    }
+
+    private async Task BuildTemplateHtmlBodyAsync(BodyBuilder body, EmailModel email, CancellationToken ct)
+    {
+        var pathToHtmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", email.Template ?? string.Empty);
+        if (!File.Exists(pathToHtmlFile))
+        {
+            _logger.LogError("Email template file not found: {PathToHtmlFile}", pathToHtmlFile);
+            throw new FileNotFoundException($"Email template file not found: {pathToHtmlFile}");
+        }
+
+        var htmlString = await File.ReadAllTextAsync(pathToHtmlFile, ct);
+        var templateData = JsonExtensions.DeserializeOptimized<IDictionary<string, object>>(email.Body) ?? new Dictionary<string, object>();
+        body.HtmlBody = ProcessTemplate(htmlString, templateData);
+
+        await AttachTemplateLogoAsync(body, email.Logo, ct);
+    }
+
+    private async Task AttachTemplateLogoAsync(BodyBuilder body, string? logo, CancellationToken ct)
+    {
+        var mediaImagesPath = _configuration.GetSection("Media").GetSection("Images").Value;
+        if (string.IsNullOrEmpty(mediaImagesPath))
+        {
+            _logger.LogWarning("Configuration 'Media:Images' is not set. Skipping logo embedding.");
+            return;
+        }
+
+        var pathLogo = Path.Combine(mediaImagesPath, "Logos", logo ?? string.Empty);
+        if (File.Exists(pathLogo))
+        {
+            var image = await body.LinkedResources.AddAsync(pathLogo, ct);
+            image.ContentId = MimeUtils.GenerateMessageId();
+            body.HtmlBody = body.HtmlBody?.Replace("[img-logo]", $"cid:{image.ContentId}", StringComparison.Ordinal);
+        }
+        else
+        {
+            _logger.LogWarning("Email logo file not found: {PathLogo}", pathLogo);
+        }
+    }
+
+    private void AddAttachments(BodyBuilder body, IList<FileModel>? files)
+    {
+        if (files is not { Count: > 0 })
+        {
+            return;
+        }
+
+        foreach (var formFile in files)
+        {
+            if (string.IsNullOrEmpty(formFile.FileName) || formFile.Content == null)
+            {
+                _logger.LogWarning("Skipping attachment with missing FileName or Content");
+                continue;
+            }
+
+            var extension = Path.GetExtension(formFile.FileName)?.ToLowerInvariant();
+            var contentType = extension switch
+            {
+                ".pdf" => MediaTypeNames.Application.Pdf,
+                ".xml" => MediaTypeNames.Application.Xml,
+                _ => MediaTypeNames.Application.Octet
+            };
+
+            body.Attachments.Add(formFile.FileName, formFile.Content, MimeKit.ContentType.Parse(contentType));
         }
     }
 
@@ -401,20 +426,31 @@ public class MailKitService : IMailKitService, IDisposable
 
     public void Dispose()
     {
-        while (_smtpClientPool.TryTake(out var client))
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            try
+            while (_smtpClientPool.TryTake(out var client))
             {
-                if (client.IsConnected)
-                    client.Disconnect(quit: true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Error disconnecting SMTP client during disposal");
-            }
-            finally
-            {
-                client.Dispose();
+                try
+                {
+                    if (client.IsConnected)
+                    {
+                        client.Disconnect(quit: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Error disconnecting SMTP client during disposal");
+                }
+                finally
+                {
+                    client.Dispose();
+                }
             }
         }
     }

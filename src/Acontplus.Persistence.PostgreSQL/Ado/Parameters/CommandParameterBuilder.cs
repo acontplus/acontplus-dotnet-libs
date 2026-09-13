@@ -42,8 +42,6 @@ public static class CommandParameterBuilder
     /// <param name="command">The Npgsql command containing the parameter.</param>
     /// <param name="parameterName">The name of the parameter to retrieve.</param>
     /// <returns>The parameter value, or <c>null</c>.</returns>
-    public static object? GetParameter(NpgsqlCommand command, string parameterName)
-    {
-        return command.Parameters[parameterName].Value;
-    }
+    public static object? GetParameter(NpgsqlCommand command, string parameterName) =>
+        command.Parameters[parameterName].Value;
 }

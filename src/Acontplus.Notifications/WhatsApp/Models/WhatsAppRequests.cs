@@ -96,6 +96,8 @@ public sealed record WhatsAppTemplateComponent
     /// </summary>
     public int? Index { get; init; }
 
+    private const string ComponentTypeHeader = "header";
+
     // -------------------------------------------------------------------------
     // Factory helpers
     // -------------------------------------------------------------------------
@@ -112,7 +114,7 @@ public sealed record WhatsAppTemplateComponent
     public static WhatsAppTemplateComponent HeaderText(string text) =>
         new()
         {
-            Type = "header",
+            Type = ComponentTypeHeader,
             Parameters = [WhatsAppTemplateParameter.FromText(text)]
         };
 
@@ -120,7 +122,7 @@ public sealed record WhatsAppTemplateComponent
     public static WhatsAppTemplateComponent HeaderImage(string linkOrId, bool isId = false) =>
         new()
         {
-            Type = "header",
+            Type = ComponentTypeHeader,
             Parameters = [WhatsAppTemplateParameter.FromImage(linkOrId, isId)]
         };
 
@@ -128,7 +130,7 @@ public sealed record WhatsAppTemplateComponent
     public static WhatsAppTemplateComponent HeaderDocument(string linkOrId, string? filename = null, bool isId = false) =>
         new()
         {
-            Type = "header",
+            Type = ComponentTypeHeader,
             Parameters = [WhatsAppTemplateParameter.FromDocument(linkOrId, filename, isId)]
         };
 
@@ -136,7 +138,7 @@ public sealed record WhatsAppTemplateComponent
     public static WhatsAppTemplateComponent HeaderVideo(string linkOrId, bool isId = false) =>
         new()
         {
-            Type = "header",
+            Type = ComponentTypeHeader,
             Parameters = [WhatsAppTemplateParameter.FromVideo(linkOrId, isId)]
         };
 
