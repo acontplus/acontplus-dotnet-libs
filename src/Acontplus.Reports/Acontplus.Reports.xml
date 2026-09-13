@@ -351,6 +351,38 @@
             Defaults to a lighter variant of <see cref="P:Acontplus.Reports.Dtos.AdvancedExcelWorksheetDefinition.HeaderStyle"/> when <see langword="null"/>.
             </summary>
         </member>
+        <member name="T:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions">
+            <summary>
+            Options for configuring single-sheet Excel export from a <see cref="T:System.Data.DataTable"/> via ClosedXML.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions.Columns">
+            <summary>
+            Optional per-column rich formatting descriptors.
+            When <see langword="null"/>, all columns are exported with default styles.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions.WorksheetName">
+            <summary>
+            Sheet tab name (default: <c>"Sheet1"</c>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions.AutoFilter">
+            <summary>
+            Enable Excel AutoFilter drop-downs on the header row (default: <see langword="true"/>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions.FreezeHeaderRow">
+            <summary>
+            Freeze the header row so it stays visible while scrolling (default: <see langword="true"/>).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ClosedXmlDataTableOptions.HeaderStyle">
+            <summary>
+            Header row style override.
+            When <see langword="null"/>, uses <see cref="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.CorporateBlue"/>.
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Dtos.ExcelColumnDefinition">
             <summary>
             Column descriptor for simple Excel generation (MiniExcel).
@@ -1250,24 +1282,14 @@
             <param name="cancellationToken">Token to cancel the operation.</param>
             <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes and MIME metadata.</returns>
         </member>
-        <member name="M:Acontplus.Reports.Interfaces.IClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition},System.String,System.Boolean,System.Boolean,Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle,System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Reports.Interfaces.IClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,Acontplus.Reports.Dtos.ClosedXmlDataTableOptions,System.Threading.CancellationToken)">
             <summary>
             Convenience shortcut that wraps a single <see cref="T:System.Data.DataTable"/>
             into a formatted single-sheet workbook.
             </summary>
             <param name="fileDownloadName">Desired download file name (extension appended if absent).</param>
             <param name="data">Source data table.</param>
-            <param name="columns">
-            Optional per-column rich formatting descriptors.
-            <see langword="null"/> exports all columns with default styles.
-            </param>
-            <param name="worksheetName">Sheet tab name (default: <c>"Sheet1"</c>).</param>
-            <param name="autoFilter">Enable AutoFilter on the header row (default: <see langword="true"/>).</param>
-            <param name="freezeHeaderRow">Freeze the header row (default: <see langword="true"/>).</param>
-            <param name="headerStyle">
-            Header row style override.
-            <see langword="null"/> uses <see cref="M:Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle.CorporateBlue"/>.
-            </param>
+            <param name="options">Optional export configuration options.</param>
             <param name="cancellationToken">Token to cancel the operation.</param>
             <returns><see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> with the workbook bytes.</returns>
         </member>
@@ -1404,7 +1426,7 @@
         <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.GenerateAsync(Acontplus.Reports.Dtos.AdvancedExcelReportRequest,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,System.Collections.Generic.IEnumerable{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition},System.String,System.Boolean,System.Boolean,Acontplus.Reports.Dtos.AdvancedExcelHeaderStyle,System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.GenerateFromDataTableAsync(System.String,System.Data.DataTable,Acontplus.Reports.Dtos.ClosedXmlDataTableOptions,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Reports.Services.ClosedXmlReportService.BuildEffectiveColumns(System.Data.DataTable,System.Collections.Generic.List{Acontplus.Reports.Dtos.AdvancedExcelColumnDefinition})">

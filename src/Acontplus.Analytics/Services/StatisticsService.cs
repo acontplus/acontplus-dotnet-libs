@@ -9,6 +9,8 @@ namespace Acontplus.Analytics.Services;
 /// <typeparam name="TRealTime">Real-time statistics DTO type</typeparam>
 /// <typeparam name="TAggregated">Aggregated statistics DTO type</typeparam>
 /// <typeparam name="TTrend">Trend analysis DTO type</typeparam>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2436",
+    Justification = "Generic statistics abstraction requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
 public class StatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
     : Interfaces.IStatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
     where TDashboard : class

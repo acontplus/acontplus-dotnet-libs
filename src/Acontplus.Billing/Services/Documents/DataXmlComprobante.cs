@@ -181,7 +181,7 @@ public class DataXmlComprobante
         ce.CreateInfoComp(codDoc, infoFac);
     }
 
-    public void GetInfoAdicional(ComprobanteElectronico comp, XmlNode? infoAdi)
+    public static void GetInfoAdicional(ComprobanteElectronico comp, XmlNode? infoAdi)
     {
         if (infoAdi == null) return;
 
@@ -196,7 +196,7 @@ public class DataXmlComprobante
         comp.CreateAdditionalInfo(infoAdicionals);
     }
 
-    private void GetInfoFactura(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoFactura)
+    private static void GetInfoFactura(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoFactura)
     {
         var infoFac = new InfoFactura();
         infoFac.FechaEmision = nodeInfoFactura.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty;
@@ -237,7 +237,7 @@ public class DataXmlComprobante
         ce.CreateInfoComp(codDoc, infoFac);
     }
 
-    private void GetTotalTaxes(string codDoc, object obj, XmlNode? impuestos)
+    private static void GetTotalTaxes(string codDoc, object obj, XmlNode? impuestos)
     {
         if (impuestos == null) return;
 
@@ -274,7 +274,7 @@ public class DataXmlComprobante
         }
     }
 
-    private void GetInvoicePayments(InfoFactura comp, XmlNode? payments)
+    private static void GetInvoicePayments(InfoFactura comp, XmlNode? payments)
     {
         if (payments == null) return;
 
@@ -292,7 +292,7 @@ public class DataXmlComprobante
         comp.CreatePayments(pagos);
     }
 
-    private void GetDetails(ComprobanteElectronico comp, XmlNode? details)
+    private static void GetDetails(ComprobanteElectronico comp, XmlNode? details)
     {
         if (details == null) return;
 
@@ -352,7 +352,7 @@ public class DataXmlComprobante
         comp.CreateDetails(detalles);
     }
 
-    private void GetInfoCompRetencion(string? versionComp, ComprobanteElectronico ce, XmlNode? nodeInfoCompRetencion)
+    private static void GetInfoCompRetencion(string? versionComp, ComprobanteElectronico ce, XmlNode? nodeInfoCompRetencion)
     {
         if (nodeInfoCompRetencion != null)
         {
@@ -385,7 +385,7 @@ public class DataXmlComprobante
         }
     }
 
-    private void GetImpuestoRetencion(ComprobanteElectronico comp, XmlNode? impuestosRet)
+    private static void GetImpuestoRetencion(ComprobanteElectronico comp, XmlNode? impuestosRet)
     {
         if (impuestosRet == null) return;
 
@@ -409,7 +409,7 @@ public class DataXmlComprobante
         comp.CreateRetencionTaxes(impuestos);
     }
 
-    private void GetDocSustento(ComprobanteElectronico ce, XmlNode? nodeDocsSustento)
+    private static void GetDocSustento(ComprobanteElectronico ce, XmlNode? nodeDocsSustento)
     {
         if (nodeDocsSustento == null) return;
 
@@ -466,7 +466,7 @@ public class DataXmlComprobante
         ce.CreateDocSustentos(docsSustento);
     }
 
-    private void GetImpuestoDocSustento(DocSustento doc, XmlNode? nodeImpuestos)
+    private static void GetImpuestoDocSustento(DocSustento doc, XmlNode? nodeImpuestos)
     {
         if (nodeImpuestos == null) return;
 
@@ -483,7 +483,7 @@ public class DataXmlComprobante
         doc.CreateTax(impuestos);
     }
 
-    private void GetRetenciones(DocSustento doc, XmlNode? nodeRetenciones, ComprobanteElectronico ce)
+    private static void GetRetenciones(DocSustento doc, XmlNode? nodeRetenciones, ComprobanteElectronico ce)
     {
         if (nodeRetenciones == null) return;
 
@@ -520,7 +520,7 @@ public class DataXmlComprobante
         doc.CreateRetencion(retenciones);
     }
 
-    private void GetReembolsos(DocSustento doc, XmlNode? nodeReemb)
+    private static void GetReembolsos(DocSustento doc, XmlNode? nodeReemb)
     {
         if (nodeReemb == null) return;
 
@@ -547,7 +547,7 @@ public class DataXmlComprobante
         doc.CreateReembolsos(reembolsos);
     }
 
-    private void GetImpuestosReembolsos(ReembolsoDetalle reembolsoDetalles, XmlNode? impuestosReembolso)
+    private static void GetImpuestosReembolsos(ReembolsoDetalle reembolsoDetalles, XmlNode? impuestosReembolso)
     {
         if (impuestosReembolso == null) return;
 
@@ -564,7 +564,7 @@ public class DataXmlComprobante
         reembolsoDetalles.CreateTax(impuestos);
     }
 
-    private void GetRetencionPayments(DocSustento doc, XmlNode? payments)
+    private static void GetRetencionPayments(DocSustento doc, XmlNode? payments)
     {
         if (payments == null) return;
 
@@ -573,7 +573,7 @@ public class DataXmlComprobante
         doc.CreatePayments(pagos);
     }
 
-    private void GetInfoLiquidacionCompra(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoLiquidacion)
+    private static void GetInfoLiquidacionCompra(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoLiquidacion)
     {
         var infoLiq = new InfoLiquidacionCompra
         {
@@ -602,7 +602,7 @@ public class DataXmlComprobante
         ce.CreateInfoComp(codDoc, infoLiq);
     }
 
-    private void GetLiquidacionPayments(InfoLiquidacionCompra info, XmlNode? payments)
+    private static void GetLiquidacionPayments(InfoLiquidacionCompra info, XmlNode? payments)
     {
         if (payments == null) return;
 
@@ -618,7 +618,7 @@ public class DataXmlComprobante
         info.CreatePayments(pagos);
     }
 
-    private void GetLiquidacionReembolsos(InfoLiquidacionCompra info, XmlNode? nodeReembolsos)
+    private static void GetLiquidacionReembolsos(InfoLiquidacionCompra info, XmlNode? nodeReembolsos)
     {
         if (nodeReembolsos == null) return;
 
@@ -645,7 +645,7 @@ public class DataXmlComprobante
         info.CreateReembolsos(reembolsos);
     }
 
-    private void GetInfoNotaDebito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaDebito)
+    private static void GetInfoNotaDebito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaDebito)
     {
         var infoNd = new InfoNotaDebito
         {
@@ -671,7 +671,7 @@ public class DataXmlComprobante
         ce.CreateInfoComp(codDoc, infoNd);
     }
 
-    private void GetMotivosNotaDebito(ComprobanteElectronico comp, XmlNode nodeMotivos)
+    private static void GetMotivosNotaDebito(ComprobanteElectronico comp, XmlNode nodeMotivos)
     {
         if (nodeMotivos == null) return;
 
@@ -685,7 +685,7 @@ public class DataXmlComprobante
         comp.InfoNotaDebito?.CreateMotivos(motivos);
     }
 
-    private void GetNotaDebitoPayments(InfoNotaDebito info, XmlNode? payments)
+    private static void GetNotaDebitoPayments(InfoNotaDebito info, XmlNode? payments)
     {
         if (payments == null) return;
 
@@ -701,7 +701,7 @@ public class DataXmlComprobante
         info.CreatePayments(pagos);
     }
 
-    private void GetInfoGuiaRemision(ComprobanteElectronico ce, XmlNode nodeInfoGuiaRemision)
+    private static void GetInfoGuiaRemision(ComprobanteElectronico ce, XmlNode nodeInfoGuiaRemision)
     {
         var infoGr = new InfoGuiaRemision
         {
@@ -721,7 +721,7 @@ public class DataXmlComprobante
         ce.CreateInfoComp("06", infoGr);
     }
 
-    private void GetDestinatarios(ComprobanteElectronico comp, XmlNode nodeDestinatarios)
+    private static void GetDestinatarios(ComprobanteElectronico comp, XmlNode nodeDestinatarios)
     {
         if (nodeDestinatarios == null) return;
 
@@ -750,7 +750,7 @@ public class DataXmlComprobante
         comp.CreateDestinatarios(destinatarios);
     }
 
-    private void GetDetallesDestinatario(Destinatario destinatario, XmlNode? nodeDetalles)
+    private static void GetDetallesDestinatario(Destinatario destinatario, XmlNode? nodeDetalles)
     {
         if (nodeDetalles == null) return;
 

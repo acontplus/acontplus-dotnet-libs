@@ -50,14 +50,14 @@
                 custom schema/table names, and optional specific entity configurations.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.IsAssignableToGenericType(System.Type,System.Type)">
-            <summary>
-                Helper method to check if a type is assignable to a generic type definition
-            </summary>
-        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
             <summary>
                 Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.IsAssignableToGenericType(System.Type,System.Type)">
+            <summary>
+                Helper method to check if a type is assignable to a generic type definition
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
@@ -150,6 +150,11 @@
                 custom schema/table names, and optional specific entity configurations.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
+            <summary>
+                Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.HasIdProperty(System.Type)">
             <summary>
                 Helper method to check if a type has an Id property (for simple entities)
@@ -158,11 +163,6 @@
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.GetIdPropertyType(System.Type)">
             <summary>
                 Helper method to get the type of the Id property
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
-            <summary>
-                Registers entities with default conventions and base configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">

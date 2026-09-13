@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Reports</PackageId>
-    <Version>1.7.15</Version>
+    <Version>1.8.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -24,12 +24,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v1.7.0: Added dual Excel report generation engines — MiniExcel
-      (IMiniExcelReportService) for high-performance, stream-based bulk exports with minimal memory
-      overhead, and ClosedXML (IClosedXmlReportService) for advanced richly formatted workbooks with
-      corporate header styles, freeze panes, AutoFilter, alternating row shading, aggregate formula
-      totals rows, multi-sheet workbooks, and workbook metadata. Both engines include concurrency
-      control, timeout protection, and full DI integration.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.8.0: Minor bug fixes and performance improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

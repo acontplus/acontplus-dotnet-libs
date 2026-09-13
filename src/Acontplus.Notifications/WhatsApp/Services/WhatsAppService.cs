@@ -25,6 +25,11 @@ public sealed class WhatsAppService : IWhatsAppService
         PropertyNameCaseInsensitive = true
     };
 
+    private const string MessagingProductKey = "messaging_product";
+    private const string WhatsAppProduct = "whatsapp";
+    private const string RecipientTypeKey = "recipient_type";
+    private const string IndividualRecipientType = "individual";
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<WhatsAppService> _logger;
     private readonly WhatsAppOptions _options;
@@ -54,8 +59,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = "text",
             ["text"] = new JsonObject
@@ -94,8 +99,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = "template",
             ["template"] = template
@@ -139,8 +144,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = typeName,
             [typeName] = mediaObj
@@ -168,7 +173,7 @@ public sealed class WhatsAppService : IWhatsAppService
             streamContent.Headers.ContentType = new MediaTypeHeaderValue(upload.ContentType);
 
             multipart.Add(streamContent, "file", upload.FileName);
-            multipart.Add(new StringContent("whatsapp"), "messaging_product");
+            multipart.Add(new StringContent(WhatsAppProduct), MessagingProductKey);
             multipart.Add(new StringContent(upload.ContentType), "type");
 
             _logger.LogInformation(
@@ -223,8 +228,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = "location",
             ["location"] = location
@@ -243,8 +248,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = "interactive",
             ["interactive"] = BuildInteractiveNode(request)
@@ -265,8 +270,8 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
-            ["recipient_type"] = "individual",
+            [MessagingProductKey] = WhatsAppProduct,
+            [RecipientTypeKey] = IndividualRecipientType,
             ["to"] = phone,
             ["type"] = "reaction",
             ["reaction"] = new JsonObject
@@ -289,7 +294,7 @@ public sealed class WhatsAppService : IWhatsAppService
 
         var payload = new JsonObject
         {
-            ["messaging_product"] = "whatsapp",
+            [MessagingProductKey] = WhatsAppProduct,
             ["status"] = "read",
             ["message_id"] = messageId
         };
@@ -573,7 +578,7 @@ public sealed class WhatsAppService : IWhatsAppService
             WhatsAppInteractiveType.Button => "button",
             WhatsAppInteractiveType.List => "list",
             WhatsAppInteractiveType.CtaUrl => "cta_url",
-            _ => throw new ArgumentOutOfRangeException(nameof(request.InteractiveType))
+            _ => throw new ArgumentOutOfRangeException(nameof(request), request.InteractiveType, "Unsupported interactive type.")
         };
 
         var node = new JsonObject

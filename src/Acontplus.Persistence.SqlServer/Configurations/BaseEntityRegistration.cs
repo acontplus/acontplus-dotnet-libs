@@ -161,6 +161,12 @@ public static class BaseEntityRegistration
     }
 
     /// <summary>
+    ///     Registers entities with default conventions and base configuration.
+    /// </summary>
+    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
+        RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
+
+    /// <summary>
     ///     Helper method to check if a type is assignable to a generic type definition
     /// </summary>
     private static bool IsAssignableToGenericType(Type givenType, Type genericType)
@@ -182,12 +188,6 @@ public static class BaseEntityRegistration
         var baseType = givenType.BaseType;
         return baseType != null && IsAssignableToGenericType(baseType, genericType);
     }
-
-    /// <summary>
-    ///     Registers entities with default conventions and base configuration.
-    /// </summary>
-    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
 
     /// <summary>
     ///     Registers entities, explicitly setting schemas for specified types.

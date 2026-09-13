@@ -766,17 +766,20 @@ public static class ReportsEndpoints
                 var response = await excel.GenerateFromDataTableAsync(
                     fileDownloadName: "sales-report",
                     data: BuildSampleOrdersTable(),
-                    columns:
-                    [
-                        new AdvancedExcelColumnDefinition { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
-                        new AdvancedExcelColumnDefinition { ColumnName = "Customer",  Header = "Customer", Width = 28 },
-                        new AdvancedExcelColumnDefinition { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd", Alignment = ExcelHorizontalAlignment.Center },
-                        new AdvancedExcelColumnDefinition { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",  Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
-                        new AdvancedExcelColumnDefinition { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
-                    ],
-                    autoFilter: true,
-                    freezeHeaderRow: true,
-                    headerStyle: AdvancedExcelHeaderStyle.CorporateBlue(),
+                    options: new ClosedXmlDataTableOptions
+                    {
+                        Columns =
+                        [
+                            new AdvancedExcelColumnDefinition { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
+                            new AdvancedExcelColumnDefinition { ColumnName = "Customer",  Header = "Customer", Width = 28 },
+                            new AdvancedExcelColumnDefinition { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd", Alignment = ExcelHorizontalAlignment.Center },
+                            new AdvancedExcelColumnDefinition { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",  Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
+                            new AdvancedExcelColumnDefinition { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
+                        ],
+                        AutoFilter = true,
+                        FreezeHeaderRow = true,
+                        HeaderStyle = AdvancedExcelHeaderStyle.CorporateBlue()
+                    },
                     cancellationToken: cancellationToken);
 
                 logger.LogInformation("ClosedXML sales report generated ({Size:N0} bytes)", response.FileContents.Length);

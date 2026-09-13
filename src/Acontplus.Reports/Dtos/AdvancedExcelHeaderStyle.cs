@@ -6,6 +6,9 @@ namespace Acontplus.Reports.Dtos;
 /// </summary>
 public class AdvancedExcelHeaderStyle
 {
+    private const string HexWhite = "FFFFFF";
+    private const string HexDarkBlue = "1F3864";
+
     /// <summary>
     /// Cell background colour as a 6-char HTML hex string (default: <c>"4472C4"</c> — Microsoft Blue).
     /// </summary>
@@ -14,7 +17,7 @@ public class AdvancedExcelHeaderStyle
     /// <summary>
     /// Font colour as a 6-char HTML hex string (default: <c>"FFFFFF"</c> — White).
     /// </summary>
-    public string FontColor { get; set; } = "FFFFFF";
+    public string FontColor { get; set; } = HexWhite;
 
     /// <summary>Font size in points (default: <c>11</c>)</summary>
     public double FontSize { get; set; } = 11;
@@ -32,15 +35,15 @@ public class AdvancedExcelHeaderStyle
 
     /// <summary>Returns a dark-green header style</summary>
     public static AdvancedExcelHeaderStyle DarkGreen() =>
-        new() { BackgroundColor = "375623", FontColor = "FFFFFF" };
+        new() { BackgroundColor = "375623", FontColor = HexWhite };
 
     /// <summary>Returns a charcoal/dark-grey header style</summary>
     public static AdvancedExcelHeaderStyle DarkGrey() =>
-        new() { BackgroundColor = "404040", FontColor = "FFFFFF" };
+        new() { BackgroundColor = "404040", FontColor = HexWhite };
 
     /// <summary>Returns a subtle light-blue header suitable for pastel themes</summary>
     public static AdvancedExcelHeaderStyle LightBlue() =>
-        new() { BackgroundColor = "BDD7EE", FontColor = "1F3864" };
+        new() { BackgroundColor = "BDD7EE", FontColor = HexDarkBlue };
 
     /// <summary>
     /// Returns a large-font title style (white background, dark text, centered, not bold).
@@ -49,8 +52,8 @@ public class AdvancedExcelHeaderStyle
     public static AdvancedExcelHeaderStyle Title() =>
         new()
         {
-            BackgroundColor = "FFFFFF",
-            FontColor = "1F3864",
+            BackgroundColor = HexWhite,
+            FontColor = HexDarkBlue,
             FontSize = 14,
             Bold = true,
             HorizontalAlignment = ExcelHorizontalAlignment.Center
@@ -64,7 +67,7 @@ public class AdvancedExcelHeaderStyle
         new()
         {
             BackgroundColor = "2E74B5",
-            FontColor = "FFFFFF",
+            FontColor = HexWhite,
             FontSize = 10,
             Bold = true,
             HorizontalAlignment = ExcelHorizontalAlignment.Center

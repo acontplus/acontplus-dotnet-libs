@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -12,6 +13,10 @@ namespace Acontplus.Billing.Services.Signing;
 /// the MITyCLibXADES output: RSA-SHA1, SHA-1 digests, and three references
 /// (SignedProperties | KeyInfo | comprobante).
 /// </summary>
+[SuppressMessage("SonarQube", "csharpsquid:S5332",
+    Justification = "W3C and ETSI XMLDSIG namespace URIs are protocol specifications mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("SonarQube", "csharpsquid:S4790",
+    Justification = "SHA-1 hashing algorithm is strictly required by the SRI Ecuador electronic invoicing XAdES-BES specification.")]
 public sealed class SriSigner : ISriSigner
 {
     private const string DsNs = "http://www.w3.org/2000/09/xmldsig#";
@@ -26,9 +31,9 @@ public sealed class SriSigner : ISriSigner
     {
         // Validate eagerly on the calling thread before entering Task.Run so that
         // ArgumentException is thrown synchronously (consistent with TPL conventions).
-        ArgumentException.ThrowIfNullOrWhiteSpace(xmlUnsigned, nameof(xmlUnsigned));
-        ArgumentException.ThrowIfNullOrWhiteSpace(pfxPassword, nameof(pfxPassword));
-        ArgumentNullException.ThrowIfNull(pfxBytes, nameof(pfxBytes));
+        ArgumentException.ThrowIfNullOrWhiteSpace(xmlUnsigned);
+        ArgumentException.ThrowIfNullOrWhiteSpace(pfxPassword);
+        ArgumentNullException.ThrowIfNull(pfxBytes);
 
         if (string.IsNullOrWhiteSpace(claveAcceso) || claveAcceso.Length != 49)
             throw new ArgumentException(
@@ -36,15 +41,14 @@ public sealed class SriSigner : ISriSigner
 
         // Offload CPU-bound work to the thread pool so the calling thread
         // (ASP.NET request thread, Hangfire worker, etc.) is never blocked.
-        return Task.Run(() => SignCore(xmlUnsigned, pfxPassword, pfxBytes, claveAcceso), ct);
+        return Task.Run(() => SignCore(xmlUnsigned, pfxPassword, pfxBytes), ct);
     }
 
     /// <summary>Performs the synchronous XAdES-BES signing work.</summary>
-    private static string SignCore(string xmlUnsigned, string pfxPassword, byte[] pfxBytes,
-                                   string claveAcceso)
+    private static string SignCore(string xmlUnsigned, string pfxPassword, byte[] pfxBytes)
     {
         // EphemeralKeySet: key stays in memory, never persisted to disk or Windows key store.
-        // Exportable is intentionally omitted — we only sign and read the public key;
+        // The Exportable flag is intentionally omitted — we only sign and read the public key;
         // we never call ExportRSAPrivateKey(). Omitting it also prevents PBES2/AES-256
         // PKCS#12 files (used by Huanataca and other modern CAs) from triggering a
         // key re-wrap operation that can fail on Linux/OpenSSL.
@@ -90,7 +94,7 @@ public sealed class SriSigner : ISriSigner
         objEl.SetAttribute("Id", objId);
         var qpEl = sigDoc.CreateElement("etsi", "QualifyingProperties", EtsiNs);
         qpEl.SetAttribute("Target", $"#{sigId}");
-        var spEl = BuildSignedProperties(sigDoc, cert, sigId, spId, certId, refId);
+        var spEl = BuildSignedProperties(sigDoc, cert, spId, refId);
         qpEl.AppendChild(spEl);
         objEl.AppendChild(qpEl);
         sigEl.AppendChild(objEl);
@@ -184,7 +188,7 @@ public sealed class SriSigner : ISriSigner
     }
 
     private static XmlElement BuildSignedProperties(XmlDocument d, X509Certificate2 cert,
-        string sigId, string spId, string certId, string refId)
+        string spId, string refId)
     {
         var sp = d.CreateElement("etsi", "SignedProperties", EtsiNs);
         sp.SetAttribute("Id", spId);

@@ -54,11 +54,9 @@ public static class SqlServerExceptionHandler
     /// </summary>
     /// <param name="ex">The SQL exception to evaluate.</param>
     /// <returns><c>true</c> if the error is transient.</returns>
-    public static bool IsTransientException(SqlException ex)
-    {
+    public static bool IsTransientException(SqlException ex) =>
         // Special case for transient authentication errors
-        return (ex.Number == 18456 && ex.Class == 14) || ErrorRanges.TransientErrors.Contains(ex.Number);
-    }
+        (ex.Number == 18456 && ex.Class == 14) || ErrorRanges.TransientErrors.Contains(ex.Number);
 
     /// <summary>
     /// Maps a <see cref="SqlException"/> to a <see cref="SqlErrorInfo"/> domain error descriptor.
@@ -92,12 +90,10 @@ public static class SqlServerExceptionHandler
                 ex);
     }
 
-    private static bool IsCustomStoredProcedureError(int errorNumber)
-    {
+    private static bool IsCustomStoredProcedureError(int errorNumber) =>
         // Accept both RAISERROR (13000+) and THROW (50000+) ranges
-        return (errorNumber >= ErrorRanges.RaiserrorMin && errorNumber < ErrorRanges.ThrowMin) ||
-               (errorNumber >= ErrorRanges.ThrowMin && errorNumber <= ErrorRanges.MaxError);
-    }
+        (errorNumber >= ErrorRanges.RaiserrorMin && errorNumber < ErrorRanges.ThrowMin) ||
+        (errorNumber >= ErrorRanges.ThrowMin && errorNumber <= ErrorRanges.MaxError);
 
     private static SqlErrorInfo HandleCustomStoredProcedureError(SqlException ex)
     {
@@ -147,11 +143,15 @@ public static class SqlServerExceptionHandler
         [CallerMemberName] string caller = "")
     {
         var errorInfo = MapSqlException(ex);
+        var logLevel = GetLogLevel(errorInfo.ErrorType);
 
-        logger.Log(GetLogLevel(errorInfo.ErrorType),
-            new EventId(ex.Number, errorInfo.Code),
-            "SQL Error in {Operation} called from {Caller}: {ErrorType} - {Message}",
-            operation, caller, errorInfo.ErrorType, errorInfo.Message);
+        if (logger.IsEnabled(logLevel))
+        {
+            logger.Log(logLevel,
+                new EventId(ex.Number, errorInfo.Code),
+                "SQL Error in {Operation} called from {Caller}: {ErrorType} - {Message}",
+                operation, caller, errorInfo.ErrorType, errorInfo.Message);
+        }
 
         if (logger.IsEnabled(LogLevel.Debug))
         {

@@ -146,9 +146,9 @@ public class DocumentConverter : IDocumentConverter
     {
         var infoTrib = data.CodDoc switch
         {
-            "01" => @"<h6>
+            "01" when data.InfoFactura is { } f => @"<h6>
                                         <label>Dirección Sucursal: </label>
-                                        " + data.InfoFactura!.DirEstablecimiento + @"
+                                        " + f.DirEstablecimiento + @"
                                     </h6>
                                     <br>
                                     <h6>
@@ -156,15 +156,15 @@ public class DocumentConverter : IDocumentConverter
                                             Contribuyente
                                             Especial Nro.
                                         </label>
-                                        " + data.InfoFactura!.ContribuyenteEspecial + @"
+                                        " + f.ContribuyenteEspecial + @"
                                     </h6>
                                     <h6>
                                         <label>OBLIGADO A LLEVAR CONTABILIDAD </label>
-                                        " + data.InfoFactura!.ObligadoContabilidad + @"
+                                        " + f.ObligadoContabilidad + @"
                                     </h6>",
-            "04" => @"<h5>
+            "04" when data.InfoNotaCredito is { } nc => @"<h5>
                                         <label>Dirección Sucursal: </label>
-                                        " + data.InfoNotaCredito!.DirEstablecimiento + @"
+                                        " + nc.DirEstablecimiento + @"
                                     </h5>
                                     <br>
                                     <h5 ng-show="""">
@@ -172,15 +172,15 @@ public class DocumentConverter : IDocumentConverter
                                             Contribuyente
                                             Especial Nro.
                                         </label>
-                                        " + data.InfoNotaCredito!.ContribuyenteEspecial + @"
+                                        " + nc.ContribuyenteEspecial + @"
                                     </h5>
                                     <h5>
                                         <label>OBLIGADO A LLEVAR CONTABILIDAD </label>
-                                        " + data.InfoNotaCredito!.ObligadoContabilidad + @"
+                                        " + nc.ObligadoContabilidad + @"
                                     </h5>",
-            "07" => @"<h5>
+            "07" when data.InfoCompRetencion is { } cr => @"<h5>
                                         <label>Dirección Sucursal: </label>
-                                        " + data.InfoCompRetencion!.DirEstablecimiento + @"
+                                        " + cr.DirEstablecimiento + @"
                                     </h5>
                                     <br>
                                     <h5 ng-show="""">
@@ -188,11 +188,11 @@ public class DocumentConverter : IDocumentConverter
                                             Contribuyente
                                             Especial Nro.
                                         </label>
-                                        " + data.InfoCompRetencion!.ContribuyenteEspecial + @"
+                                        " + cr.ContribuyenteEspecial + @"
                                     </h5>
                                     <h5>
                                         <label>OBLIGADO A LLEVAR CONTABILIDAD </label>
-                                        " + data.InfoCompRetencion!.ObligadoContabilidad + @"
+                                        " + cr.ObligadoContabilidad + @"
                                     </h5>",
             _ => string.Empty
         };
@@ -205,7 +205,7 @@ public class DocumentConverter : IDocumentConverter
         var infoComp = string.Empty;
         switch (data.CodDoc)
         {
-            case "01":
+            case "01" when data.InfoFactura is { } f:
                 infoComp = @" <div class=""row"">
                         <div class=""col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12"">
                             <div class=""card border border-dark rounded"">
@@ -214,22 +214,22 @@ public class DocumentConverter : IDocumentConverter
                                         <div class=""col-xl-8 col-lg-8 col-md-8 col-sm-8 col-8"">
                                             <h5>
                                                 <label>Razón Social / Nombres y Apellidos: </label>
-                                                " + data.InfoFactura!.RazonSocialComprador + @"
+                                                " + f.RazonSocialComprador + @"
                                             </h5>
                                             <br>
                                             <h5>
                                                 <label>Fecha Emisión: </label>
-                                                " + data.InfoFactura!.FechaEmision + @"
+                                                " + f.FechaEmision + @"
                                             </h5>
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
                                                 <label>Identificación: </label>
-                                                " + data.InfoFactura!.IdentificacionComprador + @"
+                                                " + f.IdentificacionComprador + @"
                                             </h5><br>
 
                                                 <h5> <label>Guía Remisión: </label>
-                                                " + data.InfoFactura!.GuiaRemision + @"
+                                                " + f.GuiaRemision + @"
                                             </h5>
                                         </div>
                                     </div>
@@ -242,7 +242,7 @@ public class DocumentConverter : IDocumentConverter
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
-                                                " + data.InfoFactura!.DireccionComprador + @"
+                                                " + f.DireccionComprador + @"
                                             </h5>
                                         </div>
                                     </div>                                 </div>
@@ -269,7 +269,7 @@ public class DocumentConverter : IDocumentConverter
                                     </div>";
                 ;
                 break;
-            case "04":
+            case "04" when data.InfoNotaCredito is { } nc:
                 infoComp = @" <div class=""row"">
                         <div class=""col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12"">
                             <div class=""card border border-dark rounded"">
@@ -278,18 +278,18 @@ public class DocumentConverter : IDocumentConverter
                                         <div class=""col-xl-8 col-lg-8 col-md-8 col-sm-8 col-8"">
                                             <h5>
                                                 <label>Razón Social / Nombres y Apellidos: </label>
-                                                " + data.InfoNotaCredito!.RazonSocialComprador + @"
+                                                " + nc.RazonSocialComprador + @"
                                             </h5>
                                             <br>
                                             <h5>
                                                 <label>Fecha Emisión: </label>
-                                                " + data.InfoNotaCredito!.FechaEmision + @"
+                                                " + nc.FechaEmision + @"
                                             </h5>
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
                                                 <label>Identificación: </label>
-                                                " + data.InfoNotaCredito!.IdentificacionComprador + @"
+                                                " + nc.IdentificacionComprador + @"
                                             </h5>
                                         </div>
                                     </div>
@@ -298,16 +298,16 @@ public class DocumentConverter : IDocumentConverter
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
                                                 <label>Comprobante que se modifica: </label>
+                                             </h5>
+                                        </div>
+                                        <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
+                                            <h5>
+                                                " + nc.CodDocModificado + @"
                                             </h5>
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
-                                                " + data.InfoNotaCredito!.CodDocModificado + @"
-                                            </h5>
-                                        </div>
-                                        <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
-                                            <h5>
-                                                " + data.InfoNotaCredito!.NumDocModificado + @"
+                                                " + nc.NumDocModificado + @"
                                             </h5>
                                         </div>
                                     </div>
@@ -320,7 +320,7 @@ public class DocumentConverter : IDocumentConverter
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
-                                                " + data.InfoNotaCredito!.FechaEmisionDocSustento + @"
+                                                " + nc.FechaEmisionDocSustento + @"
                                             </h5>
                                         </div>
                                     </div>
@@ -332,7 +332,7 @@ public class DocumentConverter : IDocumentConverter
                                         </div>
                                         <div class=""col-xl-4 col-lg-4 col-md-4 col-sm-4 col-4"">
                                             <h5>
-                                                " + data.InfoNotaCredito!.Motivo + @"
+                                                " + nc.Motivo + @"
                                             </h5>
                                         </div>
                                     </div>

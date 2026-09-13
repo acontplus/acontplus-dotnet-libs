@@ -14,6 +14,10 @@ namespace Acontplus.Reports.Dtos;
 /// </summary>
 public static class QuestPdfColorThemes
 {
+    private const string ColorWhite = "#FFFFFF";
+    private const string ColorMutedGrey = "#8c8c8c";
+    private const string ColorDark = "#252525";
+
     // ── Acontplus brand ───────────────────────────────────────────────────────
 
     /// <summary>
@@ -23,17 +27,17 @@ public static class QuestPdfColorThemes
     public static QuestPdfColorTheme AcontplusDefault() => new()
     {
         HeaderBackground = "#d61672",   // --acontplus-primary
-        HeaderForeground = "#FFFFFF",
-        RowBackground = "#FFFFFF",
+        HeaderForeground = ColorWhite,
+        RowBackground = ColorWhite,
         AlternateRowBackground = "#fdf2f8", // --acontplus-light
         TotalsBackground = "#fce7f3",   // rose-100
         TotalsTextColor = "#831843",   // --acontplus-dark
         AccentColor = "#d61672",   // --acontplus-primary
         SecondaryAccentColor = "#ffa901",   // --acontplus-accent
-        TextColor = "#252525",   // --foreground
-        MutedTextColor = "#8c8c8c",   // --muted-foreground
+        TextColor = ColorDark,   // --foreground
+        MutedTextColor = ColorMutedGrey,   // --muted-foreground
         KvKeyColor = "#be185d",   // --acontplus-primary-dark
-        FooterTextColor = "#8c8c8c",   // --muted-foreground
+        FooterTextColor = ColorMutedGrey,   // --muted-foreground
         BorderColor = "#eaeaea",   // --border
         SuccessColor = "#10b981",   // --acontplus-success
         WarningColor = "#f59e0b",   // --acontplus-warning
@@ -47,17 +51,17 @@ public static class QuestPdfColorThemes
     public static QuestPdfColorTheme AcontplusAmber() => new()
     {
         HeaderBackground = "#ffa901",   // --acontplus-accent
-        HeaderForeground = "#252525",   // dark text on amber header
-        RowBackground = "#FFFFFF",
+        HeaderForeground = ColorDark,   // dark text on amber header
+        RowBackground = ColorWhite,
         AlternateRowBackground = "#fffbeb", // amber-50
         TotalsBackground = "#fef3c7",   // amber-100
         TotalsTextColor = "#92400e",   // amber-800
         AccentColor = "#d61672",   // --acontplus-primary (cross-accent)
         SecondaryAccentColor = "#ffc303",   // --acontplus-accent-light
-        TextColor = "#252525",
-        MutedTextColor = "#8c8c8c",
+        TextColor = ColorDark,
+        MutedTextColor = ColorMutedGrey,
         KvKeyColor = "#b45309",   // amber-700
-        FooterTextColor = "#8c8c8c",
+        FooterTextColor = ColorMutedGrey,
         BorderColor = "#fde68a",   // amber-200
         SuccessColor = "#10b981",
         WarningColor = "#f59e0b",
@@ -73,8 +77,8 @@ public static class QuestPdfColorThemes
     public static QuestPdfColorTheme Corporate() => new()
     {
         HeaderBackground = "#1E3A5F",   // deep navy
-        HeaderForeground = "#FFFFFF",
-        RowBackground = "#FFFFFF",
+        HeaderForeground = ColorWhite,
+        RowBackground = ColorWhite,
         AlternateRowBackground = "#F5F7FA", // slate-50
         TotalsBackground = "#E8EEFA",   // indigo-50
         TotalsTextColor = "#1E3A5F",
@@ -97,8 +101,8 @@ public static class QuestPdfColorThemes
     public static QuestPdfColorTheme Ocean() => new()
     {
         HeaderBackground = "#0077B6",   // deep sky-blue
-        HeaderForeground = "#FFFFFF",
-        RowBackground = "#FFFFFF",
+        HeaderForeground = ColorWhite,
+        RowBackground = ColorWhite,
         AlternateRowBackground = "#E0F7FA", // cyan-50
         TotalsBackground = "#B2EBF2",   // cyan-100
         TotalsTextColor = "#00363D",   // dark teal
@@ -121,8 +125,8 @@ public static class QuestPdfColorThemes
     public static QuestPdfColorTheme Monochrome() => new()
     {
         HeaderBackground = "#334155",   // slate-700 (--secondary-foreground)
-        HeaderForeground = "#FFFFFF",
-        RowBackground = "#FFFFFF",
+        HeaderForeground = ColorWhite,
+        RowBackground = ColorWhite,
         AlternateRowBackground = "#F8FAFC", // slate-50
         TotalsBackground = "#E2E8F0",   // slate-200
         TotalsTextColor = "#0F172A",   // slate-900

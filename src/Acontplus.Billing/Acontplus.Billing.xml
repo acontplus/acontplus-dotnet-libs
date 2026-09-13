@@ -100,7 +100,7 @@
         <member name="M:Acontplus.Billing.Services.Signing.SriSigner.SignAsync(System.String,System.String,System.Byte[],System.String,System.Threading.CancellationToken)">
             <inheritdoc/>
         </member>
-        <member name="M:Acontplus.Billing.Services.Signing.SriSigner.SignCore(System.String,System.String,System.Byte[],System.String)">
+        <member name="M:Acontplus.Billing.Services.Signing.SriSigner.SignCore(System.String,System.String,System.Byte[])">
             <summary>Performs the synchronous XAdES-BES signing work.</summary>
         </member>
         <member name="M:Acontplus.Billing.Services.Signing.SriSigner.Elem(System.Xml.XmlDocument,System.String,System.String,System.String,System.String,System.String)">

@@ -107,14 +107,12 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
     public Task<ReportResponse> GenerateFromDataTableAsync(
         string fileDownloadName,
         DataTable data,
-        IEnumerable<AdvancedExcelColumnDefinition>? columns = null,
-        string worksheetName = "Sheet1",
-        bool autoFilter = true,
-        bool freezeHeaderRow = true,
-        AdvancedExcelHeaderStyle? headerStyle = null,
+        ClosedXmlDataTableOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(data);
+
+        options ??= new ClosedXmlDataTableOptions();
 
         var request = new AdvancedExcelReportRequest
         {
@@ -123,12 +121,12 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
             [
                 new AdvancedExcelWorksheetDefinition
                 {
-                    Name = worksheetName,
+                    Name = options.WorksheetName,
                     Data = data,
-                    Columns = columns?.ToList(),
-                    AutoFilter = autoFilter,
-                    FreezeHeaderRow = freezeHeaderRow,
-                    HeaderStyle = headerStyle
+                    Columns = options.Columns?.ToList(),
+                    AutoFilter = options.AutoFilter,
+                    FreezeHeaderRow = options.FreezeHeaderRow,
+                    HeaderStyle = options.HeaderStyle
                 }
             ]
         };

@@ -23,6 +23,7 @@ public class AdoRepository : IAdoRepository
     private DbConnection? _currentConnection;
 
     // Fields for sharing connection/transaction with UnitOfWork
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(500);
     private DbTransaction? _currentTransaction;
 
     // Lazy retry policy - created on first use with current configuration
@@ -120,9 +121,9 @@ public class AdoRepository : IAdoRepository
     /// </summary>
     public async Task<List<T>> QueryAsync<T>(
         string sql,
-        Dictionary<string, object>? parameters,
-        CommandOptionsDto? options,
-        CancellationToken cancellationToken)
+        Dictionary<string, object>? parameters = null,
+        CommandOptionsDto? options = null,
+        CancellationToken cancellationToken = default)
     {
         parameters ??= new Dictionary<string, object>();
 
@@ -153,7 +154,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -163,9 +164,9 @@ public class AdoRepository : IAdoRepository
     /// </summary>
     public async Task<DataSet> GetDataSetAsync(
         string sql,
-        Dictionary<string, object>? parameters,
-        CommandOptionsDto? options,
-        CancellationToken cancellationToken)
+        Dictionary<string, object>? parameters = null,
+        CommandOptionsDto? options = null,
+        CancellationToken cancellationToken = default)
     {
         parameters ??= new Dictionary<string, object>();
         options ??= new CommandOptionsDto();
@@ -212,7 +213,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -222,9 +223,9 @@ public class AdoRepository : IAdoRepository
     /// </summary>
     public async Task<int> ExecuteNonQueryAsync(
         string sql,
-        Dictionary<string, object>? parameters,
-        CommandOptionsDto? options,
-        CancellationToken cancellationToken)
+        Dictionary<string, object>? parameters = null,
+        CommandOptionsDto? options = null,
+        CancellationToken cancellationToken = default)
     {
         parameters ??= new Dictionary<string, object>();
 
@@ -254,7 +255,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -301,7 +302,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -348,7 +349,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -450,7 +451,7 @@ public class AdoRepository : IAdoRepository
                 await cmd.DisposeAsync();
             }
 
-            connectionToClose?.Close();
+            await CloseConnectionSafelyAsync(connectionToClose);
         }
     }
 
@@ -581,7 +582,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -705,7 +706,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -771,7 +772,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -828,7 +829,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -879,7 +880,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -946,7 +947,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -1002,7 +1003,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -1083,7 +1084,7 @@ public class AdoRepository : IAdoRepository
             finally
             {
                 transaction?.Dispose();
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -1169,7 +1170,7 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                connectionToClose?.Close();
+                await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
     }
@@ -1443,7 +1444,8 @@ public class AdoRepository : IAdoRepository
             sql,
             @"\s+ORDER\s+BY\s+[^;]+$",
             string.Empty,
-            RegexOptions.IgnoreCase | RegexOptions.Multiline).Trim();
+            RegexOptions.IgnoreCase | RegexOptions.Multiline,
+            RegexTimeout).Trim();
 
         // Fallback: if cleanSql is empty or just whitespace, use original sql
         if (string.IsNullOrWhiteSpace(cleanSql))
@@ -1499,7 +1501,7 @@ public class AdoRepository : IAdoRepository
 
         // Layer 1: Strict pattern matching - only allow safe characters
         var pattern = @"^[a-zA-Z0-9_\.]+$";
-        if (!Regex.IsMatch(columnName, pattern))
+        if (!Regex.IsMatch(columnName, pattern, RegexOptions.None, RegexTimeout))
         {
             _logger.LogWarning("Potential SQL injection attempt detected in sort column: {ColumnName}", columnName);
             throw new ArgumentException(
@@ -1534,7 +1536,7 @@ public class AdoRepository : IAdoRepository
         foreach (var keyword in dangerousKeywords)
         {
             var keywordPattern = $"\\b{Regex.Escape(keyword)}\\b";
-            if (Regex.IsMatch(upperColumn, keywordPattern, RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(upperColumn, keywordPattern, RegexOptions.IgnoreCase, RegexTimeout))
             {
                 _logger.LogWarning("SQL keyword detected in sort column: {ColumnName} contains {Keyword}", columnName,
                     keyword);
@@ -1556,7 +1558,7 @@ public class AdoRepository : IAdoRepository
 
         foreach (var injectionPattern in injectionPatterns)
         {
-            if (Regex.IsMatch(upperColumn, injectionPattern, RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(upperColumn, injectionPattern, RegexOptions.IgnoreCase, RegexTimeout))
             {
                 _logger.LogWarning("SQL injection pattern detected in sort column: {ColumnName}", columnName);
                 throw new ArgumentException($"Column name contains suspicious SQL pattern: {columnName}",
@@ -1615,6 +1617,14 @@ public class AdoRepository : IAdoRepository
         }
 
         return dataTable;
+    }
+
+    private static async Task CloseConnectionSafelyAsync(DbConnection? connection)
+    {
+        if (connection != null)
+        {
+            await connection.CloseAsync();
+        }
     }
 
     #endregion
