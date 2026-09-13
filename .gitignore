@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # Acontplus .NET Libraries - Git Ignore Configuration
 # Updated: November 2025
 ################################################################################
@@ -232,3 +232,5 @@ apps/src/Demo.Api/appsettings.Development.json
 !**/appsettings.json
 !**/appsettings.*.json.template
 /.sonarqube-results/
+/.scannerwork/
+/.sonarqube/

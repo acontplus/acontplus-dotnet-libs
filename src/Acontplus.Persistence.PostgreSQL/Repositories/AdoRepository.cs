@@ -1451,13 +1451,12 @@ public class AdoRepository : IAdoRepository
             @"@@",
         };
 
-        foreach (var injectionPattern in injectionPatterns)
+        var matchedPattern = injectionPatterns.FirstOrDefault(p =>
+            Regex.IsMatch(upperColumn, p, RegexOptions.IgnoreCase, RegexTimeout));
+        if (matchedPattern != null)
         {
-            if (Regex.IsMatch(upperColumn, injectionPattern, RegexOptions.IgnoreCase, RegexTimeout))
-            {
-                _logger.LogWarning("SQL injection pattern detected in sort column: {ColumnName}", columnName);
-                throw new ArgumentException($"Column name contains suspicious SQL pattern: {columnName}", nameof(columnName));
-            }
+            _logger.LogWarning("SQL injection pattern detected in sort column: {ColumnName}", columnName);
+            throw new ArgumentException($"Column name contains suspicious SQL pattern: {columnName}", nameof(columnName));
         }
 
         return columnName;

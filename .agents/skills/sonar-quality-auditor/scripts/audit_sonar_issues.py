@@ -36,7 +36,7 @@ def is_excluded_component(component, rule):
         return True
     if '/migrations/' in comp_lower:
         return True
-    if comp_lower.endswith('.html') or comp_lower.endswith('.json'):
+    if comp_lower.endswith(('.html', '.json')):
         return True
     if rule in EXCLUDED_RULES:
         return True

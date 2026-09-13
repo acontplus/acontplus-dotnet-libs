@@ -972,7 +972,7 @@ Used by `Type = InvoiceHeader` — models the standard SRI Ecuador electronic in
 
 ---
 
-## � Excel Report Generation
+## 📊 Excel Report Generation
 
 The library ships two complementary Excel engines. Both are **fully cross-platform** (Windows ✅ · Linux ✅ · macOS ✅ · Docker ✅) with no GDI+ or COM dependencies. Choose based on your requirements:
 
@@ -1291,7 +1291,7 @@ new AdvancedExcelWorksheetDefinition
 
 ---
 
-## �📚 Advanced Configuration
+## 📚 Advanced Configuration
 
 ### Configuration Options Reference
 

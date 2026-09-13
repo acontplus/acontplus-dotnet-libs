@@ -869,7 +869,7 @@ public interface IHttpClientService
 // Implementation provided in Acontplus.Infrastructure
 ```
 
-### �️ **Cache Abstraction**
+### ⚡ **Cache Abstraction**
 
 ```csharp
 // Located in Acontplus.Core.Abstractions.Infrastructure.Caching
