@@ -197,10 +197,9 @@ if [ "$EXPORT_ONLY" != "true" ]; then
     sleep $INTERVAL
     WAITED=$((WAITED + INTERVAL))
     echo -ne "  Esperando... ($WAITED/$MAX_WAIT s)\r"
-
-    CE_STATUS=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/ce/component?component=$PROJECT_KEY" || echo "{}")
-    IS_BUSY=$(node -e "try { const d = JSON.parse(process.argv[1]); console.log((d.current || (d.queue && d.queue.length > 0)) ? 'true' : 'false'); } catch { console.log('false'); }" "$CE_STATUS")
-    if [ "$IS_BUSY" = "false" ] && [ $WAITED -ge 5 ]; then
+    ANALYSIS_RES=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/project_analyses/search?project=$PROJECT_KEY&ps=1" || echo "{}")
+    TOTAL=$(node -e "try { const d = JSON.parse(process.argv[1]); console.log(d.paging?.total || 0); } catch { console.log(0); }" "$ANALYSIS_RES")
+    if [ "$TOTAL" -gt 0 ]; then
       PROCESSED=true
       break
     fi
