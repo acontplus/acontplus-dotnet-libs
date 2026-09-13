@@ -241,18 +241,16 @@ public class MailKitService : IMailKitService, IDisposable
                 using var message = await BuildMimeMessageAsync(email, ct);
 
                 smtpClient = await GetConnectedSmtpClientAsync(email, ct);
-                await smtpClient.SendAsync(message, ct);
-
-                _logger.LogInformation("Email sent successfully to {RecipientEmail} with subject '{Subject}'.",
-                    email.RecipientEmail, email.Subject);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Email sent successfully to {RecipientEmail} with subject '{Subject}'.",
+                        email.RecipientEmail, email.Subject);
+                }
                 return true;
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {RecipientEmail} with subject '{Subject}'.",
-                email.RecipientEmail, email.Subject);
-
             // Don't return failed clients to pool
             if (smtpClient != null)
             {
@@ -271,7 +269,9 @@ public class MailKitService : IMailKitService, IDisposable
                     smtpClient = null;
                 }
             }
-            throw;
+
+            throw new InvalidOperationException(
+                $"Failed to send email to {email.RecipientEmail} with subject '{email.Subject}'.", ex);
         }
         finally
         {

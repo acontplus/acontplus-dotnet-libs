@@ -12,6 +12,7 @@ PROJECT_KEY=""
 PROJECT_NAME=""
 AUTO_EXPORT=false
 EXPORT_ONLY=false
+USE_DOTNET_SCANNER=true
 
 get_repository_name() {
   local remote_url repository_name
@@ -36,6 +37,9 @@ for arg in "$@"; do
     --export-only|-x)
       EXPORT_ONLY=true
       AUTO_EXPORT=true
+      ;;
+    --cli)
+      USE_DOTNET_SCANNER=false
       ;;
     *)
       if [ -z "$TOKEN" ]; then
@@ -82,18 +86,27 @@ command -v node >/dev/null 2>&1 || { echo "❌ Node.js no encontrado"; exit 1; }
 echo "  ✓ Node.js $(node -v)"
 
 # Scanner
+export PATH="$PATH:$HOME/.dotnet/tools"
+
 if [ "$EXPORT_ONLY" = "true" ]; then
   echo "  ↪ Modo exportación: se usarán los resultados existentes"
 else
-  SCANNER_BIN=""
-  if [ -f "./node_modules/.bin/sonar-scanner-npm" ]; then
-    SCANNER_BIN="./node_modules/.bin/sonar-scanner-npm"
-  elif command -v sonar-scanner >/dev/null 2>&1; then
-    SCANNER_BIN="sonar-scanner"
+  if [ "$USE_DOTNET_SCANNER" = "true" ] && command -v dotnet-sonarscanner >/dev/null 2>&1 && command -v dotnet >/dev/null 2>&1; then
+    DOTNET_SCANNER_VER=$( (dotnet-sonarscanner 2>&1 || true) | head -n 1 | tr -d '\r')
+    echo "  ✓ .NET SDK $(dotnet --version)"
+    echo "  ✓ Scanner tool: dotnet-sonarscanner ($DOTNET_SCANNER_VER)"
   else
-    SCANNER_BIN="npx @sonar/scan"
+    USE_DOTNET_SCANNER=false
+    SCANNER_BIN=""
+    if [ -f "./node_modules/.bin/sonar-scanner-npm" ]; then
+      SCANNER_BIN="./node_modules/.bin/sonar-scanner-npm"
+    elif command -v sonar-scanner >/dev/null 2>&1; then
+      SCANNER_BIN="sonar-scanner"
+    else
+      SCANNER_BIN="npx @sonar/scan"
+    fi
+    echo "  ✓ Scanner tool: $SCANNER_BIN"
   fi
-  echo "  ✓ Scanner tool: $SCANNER_BIN"
 fi
 
 # Check SonarQube server reachable
@@ -107,7 +120,7 @@ fi
 echo "OK ✓"
 
 # Check Token
-AUTH_HEADER="Authorization: Basic $(echo -n "${TOKEN}:" | base64)"
+AUTH_HEADER="Authorization: Basic $(echo -n "${TOKEN}:" | base64 | tr -d '\r\n')"
 VALID_RES=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/authentication/validate" || echo "{}")
 IS_VALID=$(node -e "try { const d = JSON.parse(process.argv[1]); console.log(d.valid === true ? 'true' : 'false'); } catch { console.log('false'); }" "$VALID_RES")
 if [ "$IS_VALID" != "true" ]; then
@@ -131,12 +144,45 @@ if [ "$EXPORT_ONLY" != "true" ]; then
   fi
 
   # 3. Ejecutar Sonar Scanner
-  echo -e "\n── Ejecutando escaneo con Sonar Scanner"
-  $SCANNER_BIN \
-    -Dsonar.host.url="$SERVER_URL" \
-    -Dsonar.token="$TOKEN" \
-    -Dsonar.projectKey="$PROJECT_KEY" \
-    -Dsonar.projectName="$PROJECT_NAME"
+  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  EXCLUSIONS="**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.pdf,**/*.pfx,**/*.snk,**/*.dll,**/*.exe,**/*.zip,**/bin/**,**/obj/**,**/.sonarqube-results/**,**/nupkgs/**,**/TestResults/**,**/.agents/**"
+
+  if [ "$USE_DOTNET_SCANNER" = "true" ]; then
+    if [ -f "$REPO_ROOT/sonar-project.properties" ]; then
+      echo "⚠️ Eliminando sonar-project.properties (incompatible con dotnet-sonarscanner)"
+      rm -f "$REPO_ROOT/sonar-project.properties"
+    fi
+
+    echo -e "\n── Ejecutando dotnet-sonarscanner begin"
+    dotnet-sonarscanner begin \
+      /k:"$PROJECT_KEY" \
+      /n:"$PROJECT_NAME" \
+      /d:sonar.host.url="$SERVER_URL" \
+      /d:sonar.token="$TOKEN" \
+      /d:sonar.scm.provider="git" \
+      /d:sonar.sourceEncoding="UTF-8" \
+      /d:sonar.projectBaseDir="$REPO_ROOT" \
+      /d:sonar.exclusions="$EXCLUSIONS" \
+      /d:sonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**" \
+      /d:sonar.python.version="3"
+
+    echo -e "\n── Compilando solución (dotnet build Release)"
+    dotnet build "$REPO_ROOT/acontplus-dotnet-libs.slnx" --configuration Release
+
+    echo -e "\n── Ejecutando dotnet-sonarscanner end"
+    dotnet-sonarscanner end /d:sonar.token="$TOKEN"
+  else
+    echo -e "\n── Ejecutando escaneo con Sonar Scanner CLI"
+    $SCANNER_BIN \
+      -Dsonar.host.url="$SERVER_URL" \
+      -Dsonar.token="$TOKEN" \
+      -Dsonar.projectKey="$PROJECT_KEY" \
+      -Dsonar.projectName="$PROJECT_NAME" \
+      -Dsonar.sourceEncoding="UTF-8" \
+      -Dsonar.projectBaseDir="$REPO_ROOT" \
+      -Dsonar.exclusions="$EXCLUSIONS" \
+      -Dsonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**"
+  fi
 
   echo "  ✓ Escaneo completado y enviado a SonarQube"
 
@@ -152,9 +198,9 @@ if [ "$EXPORT_ONLY" != "true" ]; then
     WAITED=$((WAITED + INTERVAL))
     echo -ne "  Esperando... ($WAITED/$MAX_WAIT s)\r"
 
-    ANALYSIS_RES=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/project_analyses/search?project=$PROJECT_KEY&ps=1" || echo "{}")
-    TOTAL=$(node -e "try { const d = JSON.parse(process.argv[1]); console.log(d.paging?.total || 0); } catch { console.log(0); }" "$ANALYSIS_RES")
-    if [ "$TOTAL" -gt 0 ]; then
+    CE_STATUS=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/ce/component?component=$PROJECT_KEY" || echo "{}")
+    IS_BUSY=$(node -e "try { const d = JSON.parse(process.argv[1]); console.log((d.current || (d.queue && d.queue.length > 0)) ? 'true' : 'false'); } catch { console.log('false'); }" "$CE_STATUS")
+    if [ "$IS_BUSY" = "false" ] && [ $WAITED -ge 5 ]; then
       PROCESSED=true
       break
     fi
@@ -240,7 +286,7 @@ if [ "$DO_EXPORT" = "true" ]; then
   echo "OK ✓"
 
   echo -n "  ⏳ Descargando problemas (issues.json) ... "
-  fetch_and_save "$SERVER_URL/api/issues/search?componentKeys=$PROJECT_KEY&resolved=false&ps=500" "$EXPORT_DIR/issues.json"
+  fetch_and_save "$SERVER_URL/api/issues/search?projects=$PROJECT_KEY&resolved=false&ps=500" "$EXPORT_DIR/issues.json"
   echo "OK ✓"
 
   echo -n "  ⏳ Descargando detalle de duplicaciones (duplications.json) ... "

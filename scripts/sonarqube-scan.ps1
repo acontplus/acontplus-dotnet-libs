@@ -167,12 +167,31 @@ else {
 
 Write-Step "sonarscanner begin"
 
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$slnx = Join-Path $repoRoot "acontplus-dotnet-libs.slnx"
+if (-not (Test-Path $slnx)) {
+    $slnx = Join-Path $PSScriptRoot "acontplus-dotnet-libs.slnx"
+}
+
+$propsFile = Join-Path $repoRoot "sonar-project.properties"
+if (Test-Path $propsFile) {
+    Write-Host "⚠️ Eliminando sonar-project.properties (incompatible con dotnet-sonarscanner)" -ForegroundColor Yellow
+    Remove-Item $propsFile -Force -ErrorAction SilentlyContinue
+}
+
+$exclusions = "**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.pdf,**/*.pfx,**/*.snk,**/*.dll,**/*.exe,**/*.zip,**/bin/**,**/obj/**,**/.sonarqube-results/**,**/nupkgs/**,**/TestResults/**,**/.agents/**"
+
 $beginArgs = @(
     "/k:$ProjectKey",
     "/n:$ProjectName",
     "/d:sonar.host.url=$ServerUrl",
     "/d:sonar.token=$Token",
-    "/d:sonar.scm.provider=git"
+    "/d:sonar.scm.provider=git",
+    "/d:sonar.sourceEncoding=UTF-8",
+    "/d:sonar.projectBaseDir=$repoRoot",
+    "/d:sonar.exclusions=$exclusions",
+    "/d:sonar.cpd.exclusions=**/Migrations/**,**/tests/**,**/bin/**,**/obj/**",
+    "/d:sonar.python.version=3"
 )
 
 dotnet-sonarscanner begin @beginArgs
@@ -186,7 +205,6 @@ Write-Ok "Begin completado"
 
 Write-Step "dotnet build (Release)"
 
-$slnx = Join-Path $PSScriptRoot "acontplus-dotnet-libs.slnx"
 if (-not (Test-Path $slnx)) {
     Write-Fail "No se encontró el archivo de solución: $slnx"
     Write-Host "  Ejecuta el script desde la raíz del repositorio." -ForegroundColor Yellow

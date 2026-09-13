@@ -49,7 +49,7 @@ public sealed class SriSigner : ISriSigner
     {
         // EphemeralKeySet: key stays in memory, never persisted to disk or Windows key store.
         // The Exportable flag is intentionally omitted — we only sign and read the public key;
-        // we never call ExportRSAPrivateKey(). Omitting it also prevents PBES2/AES-256
+        // we never export the RSA private key. Omitting it also prevents PBES2/AES-256
         // PKCS#12 files (used by Huanataca and other modern CAs) from triggering a
         // key re-wrap operation that can fail on Linux/OpenSSL.
         using var cert = X509CertificateLoader.LoadPkcs12(pfxBytes, pfxPassword,

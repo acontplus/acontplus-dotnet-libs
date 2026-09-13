@@ -109,41 +109,45 @@ internal sealed class DynamicReportDocument : IDocument
     {
         var bg = header.BackgroundColor ?? "transparent";
         var hasBg = bg != "transparent";
+        var textColor = hasBg ? ColorWhite : theme.TextColor;
 
         var wrapper = hasBg
             ? container.Background(bg).Padding(8)
-            : container.PaddingBottom(6);
-
-        if (header.ShowBorderBottom && !hasBg)
-            wrapper = container.BorderBottom(1).BorderColor(theme.BorderColor).PaddingBottom(6);
+            : header.ShowBorderBottom
+                ? container.BorderBottom(1).BorderColor(theme.BorderColor).PaddingBottom(6)
+                : container.PaddingBottom(6);
 
         wrapper.Row(row =>
         {
             ComposeHeaderLogo(row, header);
-
-            row.RelativeItem().Column(col =>
-            {
-                if (!string.IsNullOrWhiteSpace(header.LeftText))
-                    col.Item()
-                        .Text(header.LeftText)
-                        .FontSize(header.FontSize)
-                        .FontColor(hasBg ? ColorWhite : theme.TextColor);
-            });
-
-            if (!string.IsNullOrWhiteSpace(header.CenterText))
-                row.RelativeItem()
-                    .AlignCenter()
-                    .Text(header.CenterText)
-                    .FontSize(header.FontSize)
-                    .FontColor(hasBg ? ColorWhite : theme.TextColor);
-
-            if (!string.IsNullOrWhiteSpace(header.RightText))
-                row.AutoItem()
-                    .AlignRight()
-                    .Text(header.RightText)
-                    .FontSize(header.FontSize)
-                    .FontColor(hasBg ? ColorWhite : theme.TextColor);
+            ComposeHeaderContent(row, header, textColor);
         });
+    }
+
+    private static void ComposeHeaderContent(RowDescriptor row, QuestPdfHeaderFooterOptions header, string textColor)
+    {
+        row.RelativeItem().Column(col =>
+        {
+            if (!string.IsNullOrWhiteSpace(header.LeftText))
+                col.Item()
+                    .Text(header.LeftText)
+                    .FontSize(header.FontSize)
+                    .FontColor(textColor);
+        });
+
+        if (!string.IsNullOrWhiteSpace(header.CenterText))
+            row.RelativeItem()
+                .AlignCenter()
+                .Text(header.CenterText)
+                .FontSize(header.FontSize)
+                .FontColor(textColor);
+
+        if (!string.IsNullOrWhiteSpace(header.RightText))
+            row.AutoItem()
+                .AlignRight()
+                .Text(header.RightText)
+                .FontSize(header.FontSize)
+                .FontColor(textColor);
     }
 
     private static void ComposeHeaderLogo(RowDescriptor row, QuestPdfHeaderFooterOptions header)

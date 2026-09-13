@@ -2,6 +2,18 @@ namespace Demo.Api.Endpoints.Business;
 
 public static class ReportsEndpoints
 {
+    private const string CustomerAbc = "ABC Corporation";
+    private const string CustomerXyz = "XYZ Industries";
+    private const string CustomerTechSolutions = "Tech Solutions LLC";
+    private const string CustomerGlobalTrading = "Global Trading Co";
+    private const string CustomerSmartSystems = "Smart Systems Inc";
+    private const string CustomerFutureEnterprises = "Future Enterprises";
+    private const string CustomerDigitalDynamics = "Digital Dynamics";
+    private const string CustomerInnovativePartners = "Innovative Partners";
+    private const string StatusActive = "Active";
+    private const string StatusPremium = "Premium";
+    private const string StatusDelivered = "Delivered";
+
     public static void MapReportsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/reports")
@@ -65,7 +77,7 @@ public static class ReportsEndpoints
                 invoiceHeaderTable.Rows.Add(
                     "INV-2024-001",
                     DateTime.Now.ToString("yyyy-MM-dd"),
-                    "ABC Corporation",
+                    CustomerAbc,
                     "123 Business St, Suite 100, City, Country",
                     "1234567890001",
                     1000.00m,
@@ -144,14 +156,14 @@ public static class ReportsEndpoints
                 customersTable.Columns.Add("Status", typeof(string));
 
                 // Add sample data
-                customersTable.Rows.Add(1, "ABC Corporation", "contact@abc.com", "+1-555-0101", "New York", 15000.50m, "Active");
-                customersTable.Rows.Add(2, "XYZ Industries", "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, "Active");
-                customersTable.Rows.Add(3, "Tech Solutions LLC", "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, "Active");
-                customersTable.Rows.Add(4, "Global Trading Co", "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, "Premium");
-                customersTable.Rows.Add(5, "Smart Systems Inc", "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, "Active");
-                customersTable.Rows.Add(6, "Future Enterprises", "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive");
-                customersTable.Rows.Add(7, "Digital Dynamics", "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, "Active");
-                customersTable.Rows.Add(8, "Innovative Partners", "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, "Premium");
+                customersTable.Rows.Add(1, CustomerAbc, "contact@abc.com", "+1-555-0101", "New York", 15000.50m, StatusActive);
+                customersTable.Rows.Add(2, CustomerXyz, "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, StatusActive);
+                customersTable.Rows.Add(3, CustomerTechSolutions, "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, StatusActive);
+                customersTable.Rows.Add(4, CustomerGlobalTrading, "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, StatusPremium);
+                customersTable.Rows.Add(5, CustomerSmartSystems, "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, StatusActive);
+                customersTable.Rows.Add(6, CustomerFutureEnterprises, "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive");
+                customersTable.Rows.Add(7, CustomerDigitalDynamics, "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, StatusActive);
+                customersTable.Rows.Add(8, CustomerInnovativePartners, "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, StatusPremium);
 
                 data.Tables.Add(customersTable);
 
@@ -190,9 +202,7 @@ public static class ReportsEndpoints
             CancellationToken cancellationToken) =>
         {
             var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
-            try
-            {
-                logger.LogInformation("Generating QuestPDF sample invoice");
+            logger.LogInformation("Generating QuestPDF sample invoice");
 
                 // ── Line items DataTable ──────────────────────────────────────────
                 var lineItems = new DataTable("LineItems");
@@ -247,7 +257,7 @@ public static class ReportsEndpoints
                                 ["Invoice No."]    = "INV-2026-0042",
                                 ["Issue Date"]     = "2026-03-01",
                                 ["Due Date"]       = "2026-03-31",
-                                ["Customer"]       = "ABC Corporation",
+                                ["Customer"]       = CustomerAbc,
                                 ["Tax ID"]         = "1234567890001",
                                 ["Address"]        = "123 Business St, Suite 100, New York, USA",
                                 ["Payment Terms"]  = "Net 30"
@@ -303,17 +313,7 @@ public static class ReportsEndpoints
                     ]
                 };
 
-                var response = await pdf.GenerateAsync(request, cancellationToken);
-
-                logger.LogInformation("QuestPDF invoice generated — {Bytes} bytes", response.FileContents.Length);
-
-                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error generating QuestPDF invoice");
-                return Results.Problem("Failed to generate QuestPDF invoice", statusCode: 500);
-            }
+                return await GenerateQuestPdfReportAsync(pdf, request, logger, "QuestPDF invoice", cancellationToken);
         })
         .WithName("QuestPdfSampleInvoice")
         .WithDescription("Generates a full multi-section A4 invoice PDF using QuestPDF (key-value summary, data table with aggregate totals, text summary, custom payment block)");
@@ -324,9 +324,7 @@ public static class ReportsEndpoints
             CancellationToken cancellationToken) =>
         {
             var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
-            try
-            {
-                logger.LogInformation("Generating QuestPDF sales report");
+            logger.LogInformation("Generating QuestPDF sales report");
 
                 // ── Customers DataTable ───────────────────────────────────────────
                 var customers = new DataTable("Customers");
@@ -337,14 +335,14 @@ public static class ReportsEndpoints
                 customers.Columns.Add("Revenue", typeof(decimal));
                 customers.Columns.Add("Orders", typeof(int));
 
-                customers.Rows.Add(1, "ABC Corporation", "New York", "Enterprise", 45000.50m, 12);
-                customers.Rows.Add(2, "XYZ Industries", "Los Angeles", "SMB", 23500.75m, 8);
-                customers.Rows.Add(3, "Tech Solutions LLC", "San Francisco", "Startup", 8900.00m, 5);
-                customers.Rows.Add(4, "Global Trading Co", "Chicago", "Enterprise", 78200.25m, 20);
-                customers.Rows.Add(5, "Smart Systems Inc", "Boston", "SMB", 12300.00m, 6);
-                customers.Rows.Add(6, "Future Enterprises", "Seattle", "Startup", 5600.80m, 3);
-                customers.Rows.Add(7, "Digital Dynamics", "Miami", "SMB", 19800.50m, 9);
-                customers.Rows.Add(8, "Innovative Partners", "Denver", "Enterprise", 31200.00m, 11);
+                customers.Rows.Add(1, CustomerAbc, "New York", "Enterprise", 45000.50m, 12);
+                customers.Rows.Add(2, CustomerXyz, "Los Angeles", "SMB", 23500.75m, 8);
+                customers.Rows.Add(3, CustomerTechSolutions, "San Francisco", "Startup", 8900.00m, 5);
+                customers.Rows.Add(4, CustomerGlobalTrading, "Chicago", "Enterprise", 78200.25m, 20);
+                customers.Rows.Add(5, CustomerSmartSystems, "Boston", "SMB", 12300.00m, 6);
+                customers.Rows.Add(6, CustomerFutureEnterprises, "Seattle", "Startup", 5600.80m, 3);
+                customers.Rows.Add(7, CustomerDigitalDynamics, "Miami", "SMB", 19800.50m, 9);
+                customers.Rows.Add(8, CustomerInnovativePartners, "Denver", "Enterprise", 31200.00m, 11);
                 customers.Rows.Add(9, "CloudFirst Inc", "Austin", "Startup", 6450.00m, 4);
                 customers.Rows.Add(10, "Data Architects", "Portland", "SMB", 14700.00m, 7);
 
@@ -353,21 +351,16 @@ public static class ReportsEndpoints
                 monthlySales.Columns.Add("Month", typeof(string));
                 monthlySales.Columns.Add("Revenue", typeof(decimal));
                 monthlySales.Columns.Add("Orders", typeof(int));
-                monthlySales.Columns.Add("Avg", typeof(decimal));
 
-                monthlySales.Rows.Add("Oct 2025", 38500.00m, 21, 1833.33m);
-                monthlySales.Rows.Add("Nov 2025", 51200.00m, 28, 1828.57m);
-                monthlySales.Rows.Add("Dec 2025", 62300.00m, 34, 1832.35m);
-                monthlySales.Rows.Add("Jan 2026", 44100.00m, 25, 1764.00m);
-                monthlySales.Rows.Add("Feb 2026", 57800.00m, 31, 1864.52m);
-                monthlySales.Rows.Add("Mar 2026", 18500.00m, 11, 1681.82m);
+                monthlySales.Rows.Add("October",  128500.00m, 42);
+                monthlySales.Rows.Add("November", 145200.50m, 51);
+                monthlySales.Rows.Add("December", 189750.25m, 67);
 
                 var request = new QuestPdfReportRequest
                 {
-                    Title = "Sales Report — Q1 2026",
-                    SubTitle = "Generated: 2026-03-01  |  Period: October 2025 – March 2026",
-                    FileDownloadName = "SalesReport_Q1_2026",
-
+                    Title = "QUARTERLY SALES PERFORMANCE REPORT",
+                    SubTitle = "Q4 2025 — Commercial Division  |  Generated automatically",
+                    FileDownloadName = "SalesReport_Q4_2025",
                     Settings = new QuestPdfDocumentSettings
                     {
                         PageSize = QuestPdfPageSize.A4,
@@ -376,57 +369,34 @@ public static class ReportsEndpoints
                         ShowPageNumbers = true,
                         ColorTheme = QuestPdfColorThemes.Corporate()
                     },
-
                     Sections =
                     [
-                        // KPI summary
+                        // 1. KPI panel (TwoColumn: left key-values, right top month summary)
                         new QuestPdfSection
                         {
-                            SectionTitle = "Period KPIs",
+                            SectionTitle = "Executive Summary — Key Performance Indicators",
                             Type         = QuestPdfSectionType.KeyValueSummary,
                             KeyValues    = new Dictionary<string, string>
                             {
-                                ["Total Revenue"]        = "$245,652.80",
-                                ["Total Orders"]         = "85",
-                                ["Average Order Value"]  = "$2,890.03",
-                                ["New Customers"]        = "4",
-                                ["Top Segment"]          = "Enterprise ($154,400.75)",
-                                ["Top City"]             = "Chicago ($78,200.25)"
+                                ["Period"]               = "Q4 2025 (Oct – Dec)",
+                                ["Total Revenue"]        = "$463,450.75",
+                                ["Total Orders"]         = "160",
+                                ["Average Order Value"]  = "$2,896.57",
+                                ["Top Sales Region"]     = "North America ($284K)",
+                                ["Active Accounts"]      = "48 enterprise clients"
                             }
                         },
 
-                        // Monthly breakdown table
+                        // 2. Customers grid with totals row (DataTable)
                         new QuestPdfSection
                         {
-                            SectionTitle  = "Monthly Revenue Breakdown",
-                            Type          = QuestPdfSectionType.DataTable,
-                            Data          = monthlySales,
-                            ShowTotalsRow = true,
-                            Columns       =
-                            [
-                                new QuestPdfTableColumn { ColumnName = "Month",   Header = "Month",           RelativeWidth = 2f },
-                                new QuestPdfTableColumn { ColumnName = "Revenue", Header = "Revenue (USD)",   RelativeWidth = 2f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
-                                    AggregateType = QuestPdfAggregateType.Sum, IsBold = true },
-                                new QuestPdfTableColumn { ColumnName = "Orders",  Header = "Orders",          RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right,
-                                    AggregateType = QuestPdfAggregateType.Sum },
-                                new QuestPdfTableColumn { ColumnName = "Avg",     Header = "Avg. Order (USD)",RelativeWidth = 2f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
-                                    AggregateType = QuestPdfAggregateType.Average }
-                            ]
-                        },
-
-                        // Customer breakdown table
-                        new QuestPdfSection
-                        {
-                            SectionTitle  = "Top Customers",
+                            SectionTitle  = "Top Accounts by Revenue",
                             Type          = QuestPdfSectionType.DataTable,
                             Data          = customers,
                             ShowTotalsRow = true,
                             Columns       =
                             [
-                                new QuestPdfTableColumn { ColumnName = "Id",           Header = "#",            RelativeWidth = 0.4f },
+                                new QuestPdfTableColumn { ColumnName = "Id",           Header = "#",            RelativeWidth = 0.5f },
                                 new QuestPdfTableColumn { ColumnName = "CustomerName", Header = "Customer",     RelativeWidth = 3f   },
                                 new QuestPdfTableColumn { ColumnName = "City",         Header = "City",         RelativeWidth = 1.5f },
                                 new QuestPdfTableColumn { ColumnName = "Segment",      Header = "Segment",      RelativeWidth = 1.2f },
@@ -441,17 +411,7 @@ public static class ReportsEndpoints
                     ]
                 };
 
-                var response = await pdf.GenerateAsync(request, cancellationToken);
-
-                logger.LogInformation("QuestPDF sales report generated — {Bytes} bytes", response.FileContents.Length);
-
-                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error generating QuestPDF sales report");
-                return Results.Problem("Failed to generate QuestPDF sales report", statusCode: 500);
-            }
+                return await GenerateQuestPdfReportAsync(pdf, request, logger, "QuestPDF sales report", cancellationToken);
         })
         .WithName("QuestPdfSalesReport")
         .WithDescription("Generates a landscape A4 quarterly sales report PDF using QuestPDF with two data-table sections and a KPI key-value panel");
@@ -1133,95 +1093,84 @@ public static class ReportsEndpoints
             CancellationToken cancellationToken) =>
         {
             var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
-            try
+            logger.LogInformation("Generating QuestPDF master-detail report");
+
+            // Master: orders
+            var orders = new DataTable("Orders");
+            orders.Columns.Add("OrderId", typeof(string));
+            orders.Columns.Add("Customer", typeof(string));
+            orders.Columns.Add("OrderDate", typeof(string));
+            orders.Columns.Add("Total", typeof(decimal));
+
+            orders.Rows.Add("ORD-001", CustomerAbc, "2026-01-05", 2180.00m);
+            orders.Rows.Add("ORD-002", CustomerXyz, "2026-01-12", 3200.50m);
+            orders.Rows.Add("ORD-003", CustomerTechSolutions, "2026-01-20", 850.00m);
+
+            // Detail: line items with foreign key OrderId
+            var lines = new DataTable("Lines");
+            lines.Columns.Add("OrderId", typeof(string));
+            lines.Columns.Add("LineNo", typeof(int));
+            lines.Columns.Add("Description", typeof(string));
+            lines.Columns.Add("Qty", typeof(int));
+            lines.Columns.Add("Price", typeof(decimal));
+            lines.Columns.Add("Amount", typeof(decimal));
+
+            lines.Rows.Add("ORD-001", 1, "Web Development", 20, 85m, 1700.00m);
+            lines.Rows.Add("ORD-001", 2, "Domain Registration", 1, 30m, 30.00m);
+            lines.Rows.Add("ORD-001", 3, "SSL Certificate", 1, 50m, 50.00m);
+            lines.Rows.Add("ORD-001", 4, "Hosting – 12 months", 1, 400m, 400.00m);
+            lines.Rows.Add("ORD-002", 1, "ERP Licence – Enterprise", 1, 2500m, 2500.00m);
+            lines.Rows.Add("ORD-002", 2, "Setup & Migration", 1, 700m, 700.00m);
+            lines.Rows.Add("ORD-003", 1, "Technical Support – 10 hrs", 10, 85m, 850.00m);
+
+            var request = new QuestPdfReportRequest
             {
-                logger.LogInformation("Generating QuestPDF master-detail report");
-
-                // Master: orders
-                var orders = new DataTable("Orders");
-                orders.Columns.Add("OrderId", typeof(string));
-                orders.Columns.Add("Customer", typeof(string));
-                orders.Columns.Add("OrderDate", typeof(string));
-                orders.Columns.Add("Total", typeof(decimal));
-
-                orders.Rows.Add("ORD-001", "ABC Corporation", "2026-01-05", 2180.00m);
-                orders.Rows.Add("ORD-002", "XYZ Industries", "2026-01-12", 3200.50m);
-                orders.Rows.Add("ORD-003", "Tech Solutions LLC", "2026-01-20", 850.00m);
-
-                // Detail: line items with foreign key OrderId
-                var lines = new DataTable("Lines");
-                lines.Columns.Add("OrderId", typeof(string));
-                lines.Columns.Add("LineNo", typeof(int));
-                lines.Columns.Add("Description", typeof(string));
-                lines.Columns.Add("Qty", typeof(int));
-                lines.Columns.Add("Price", typeof(decimal));
-                lines.Columns.Add("Amount", typeof(decimal));
-
-                lines.Rows.Add("ORD-001", 1, "Web Development", 20, 85m, 1700.00m);
-                lines.Rows.Add("ORD-001", 2, "Domain Registration", 1, 30m, 30.00m);
-                lines.Rows.Add("ORD-001", 3, "SSL Certificate", 1, 50m, 50.00m);
-                lines.Rows.Add("ORD-001", 4, "Hosting – 12 months", 1, 400m, 400.00m);
-                lines.Rows.Add("ORD-002", 1, "ERP Licence – Enterprise", 1, 2500m, 2500.00m);
-                lines.Rows.Add("ORD-002", 2, "Setup & Migration", 1, 700m, 700.00m);
-                lines.Rows.Add("ORD-003", 1, "Technical Support – 10 hrs", 10, 85m, 850.00m);
-
-                var request = new QuestPdfReportRequest
+                Title = "Order Statement",
+                SubTitle = "Period: January 2026",
+                FileDownloadName = "order-statement-jan-2026",
+                Settings = new QuestPdfDocumentSettings
                 {
-                    Title = "Order Statement",
-                    SubTitle = "Period: January 2026",
-                    FileDownloadName = "order-statement-jan-2026",
-                    Settings = new QuestPdfDocumentSettings
+                    PageSize = QuestPdfPageSize.A4,
+                    FontSize = 9f,
+                    ColorTheme = QuestPdfColorThemes.AcontplusDefault()
+                },
+                Sections =
+                [
+                    new QuestPdfSection
                     {
-                        PageSize = QuestPdfPageSize.A4,
-                        FontSize = 9f,
-                        ColorTheme = QuestPdfColorThemes.AcontplusDefault()
-                    },
-                    Sections =
-                    [
-                        new QuestPdfSection
-                        {
-                            SectionTitle       = "Orders with Line Items",
-                            Type               = QuestPdfSectionType.MasterDetail,
-                            Data               = orders,
-                            MasterKeyColumn    = "OrderId",
-                            DetailKeyColumn    = "OrderId",
-                            DetailData         = lines,
-                            DetailSectionTitle = "Line Items",
-                            ShowDetailTotalsRow = true,
-                            Columns            =
-                            [
-                                new QuestPdfTableColumn { ColumnName = "OrderId",   Header = "Order #",  RelativeWidth = 1.2f },
-                                new QuestPdfTableColumn { ColumnName = "Customer",  Header = "Customer", RelativeWidth = 3f   },
-                                new QuestPdfTableColumn { ColumnName = "OrderDate", Header = "Date",     RelativeWidth = 1.5f },
-                                new QuestPdfTableColumn { ColumnName = "Total",     Header = "Total",    RelativeWidth = 1.2f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2" }
-                            ],
-                            DetailColumns =
-                            [
-                                new QuestPdfTableColumn { ColumnName = "LineNo",      Header = "#",       RelativeWidth = 0.5f },
-                                new QuestPdfTableColumn { ColumnName = "Description", Header = "Detail",  RelativeWidth = 4f   },
-                                new QuestPdfTableColumn { ColumnName = "Qty",         Header = "Qty",     RelativeWidth = 0.8f,
-                                    Alignment = QuestPdfColumnAlignment.Right },
-                                new QuestPdfTableColumn { ColumnName = "Price",       Header = "Price",   RelativeWidth = 1.2f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2" },
-                                new QuestPdfTableColumn { ColumnName = "Amount",      Header = "Amount",  RelativeWidth = 1.2f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
-                                    AggregateType = QuestPdfAggregateType.Sum, IsBold = true }
-                            ]
-                        }
-                    ]
-                };
+                        SectionTitle       = "Orders with Line Items",
+                        Type               = QuestPdfSectionType.MasterDetail,
+                        Data               = orders,
+                        MasterKeyColumn    = "OrderId",
+                        DetailKeyColumn    = "OrderId",
+                        DetailData         = lines,
+                        DetailSectionTitle = "Line Items",
+                        ShowDetailTotalsRow = true,
+                        Columns            =
+                        [
+                            new QuestPdfTableColumn { ColumnName = "OrderId",   Header = "Order #",  RelativeWidth = 1.2f },
+                            new QuestPdfTableColumn { ColumnName = "Customer",  Header = "Customer", RelativeWidth = 3f   },
+                            new QuestPdfTableColumn { ColumnName = "OrderDate", Header = "Date",     RelativeWidth = 1.5f },
+                            new QuestPdfTableColumn { ColumnName = "Total",     Header = "Total",    RelativeWidth = 1.2f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2" }
+                        ],
+                        DetailColumns =
+                        [
+                            new QuestPdfTableColumn { ColumnName = "LineNo",      Header = "#",       RelativeWidth = 0.5f },
+                            new QuestPdfTableColumn { ColumnName = "Description", Header = "Detail",  RelativeWidth = 4f   },
+                            new QuestPdfTableColumn { ColumnName = "Qty",         Header = "Qty",     RelativeWidth = 0.8f,
+                                Alignment = QuestPdfColumnAlignment.Right },
+                            new QuestPdfTableColumn { ColumnName = "Price",       Header = "Price",   RelativeWidth = 1.2f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2" },
+                            new QuestPdfTableColumn { ColumnName = "Amount",      Header = "Amount",  RelativeWidth = 1.2f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                AggregateType = QuestPdfAggregateType.Sum, IsBold = true }
+                        ]
+                    }
+                ]
+            };
 
-                var response = await pdf.GenerateAsync(request, cancellationToken);
-
-                logger.LogInformation("Master-detail PDF generated — {Bytes} bytes", response.FileContents.Length);
-                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error generating master-detail report");
-                return Results.Problem("Failed to generate master-detail report", statusCode: 500);
-            }
+            return await GenerateQuestPdfReportAsync(pdf, request, logger, "Master-detail report", cancellationToken);
         })
         .WithName("QuestPdfMasterDetailReport")
         .WithDescription("NEW v1.8.0 — Demonstrates MasterDetail section type: orders (master) each with a filtered line-items sub-table (detail), keyed by OrderId");
@@ -1237,103 +1186,74 @@ public static class ReportsEndpoints
             CancellationToken cancellationToken) =>
         {
             var pdf = httpContext.RequestServices.GetRequiredService<IQuestPdfReportService>();
-            try
+            logger.LogInformation("Generating QuestPDF Kardex (grouped-header) report");
+
+            var kardex = BuildSampleKardexTable();
+
+            var request = new QuestPdfReportRequest
             {
-                logger.LogInformation("Generating QuestPDF Kardex (grouped-header) report");
-
-                var kardex = new DataTable("Kardex");
-                kardex.Columns.Add("Date", typeof(string));
-                kardex.Columns.Add("DocType", typeof(string));
-                kardex.Columns.Add("DocNumber", typeof(string));
-                kardex.Columns.Add("InQty", typeof(decimal));
-                kardex.Columns.Add("InCost", typeof(decimal));
-                kardex.Columns.Add("InTotal", typeof(decimal));
-                kardex.Columns.Add("OutQty", typeof(decimal));
-                kardex.Columns.Add("OutCost", typeof(decimal));
-                kardex.Columns.Add("OutTotal", typeof(decimal));
-                kardex.Columns.Add("BalQty", typeof(decimal));
-                kardex.Columns.Add("BalCost", typeof(decimal));
-                kardex.Columns.Add("BalTotal", typeof(decimal));
-
-                kardex.Rows.Add("2026-01-01", "SALDO INICIAL", "", 0m, 0m, 0m, 0m, 0m, 0m, 100m, 15m, 1500m);
-                kardex.Rows.Add("2026-01-05", "COMP", "C-001-000001", 50m, 15m, 750m, 0m, 0m, 0m, 150m, 15m, 2250m);
-                kardex.Rows.Add("2026-01-08", "VENTA", "F-001-000023", 0m, 0m, 0m, 30m, 15m, 450m, 120m, 15m, 1800m);
-                kardex.Rows.Add("2026-01-15", "VENTA", "F-001-000031", 0m, 0m, 0m, 20m, 15m, 300m, 100m, 15m, 1500m);
-                kardex.Rows.Add("2026-01-22", "COMP", "C-001-000012", 80m, 16m, 1280m, 0m, 0m, 0m, 180m, 15.44m, 2780m);
-
-                var request = new QuestPdfReportRequest
+                Title = "KARDEX — PRD-007 SSD 1TB NVMe",
+                SubTitle = "Período: Enero 2026  |  Método de costeo: Promedio Ponderado",
+                FileDownloadName = "Kardex_PRD-007_Ene2026",
+                Settings = new QuestPdfDocumentSettings
                 {
-                    Title = "KARDEX — PRD-007 SSD 1TB NVMe",
-                    SubTitle = "Período: Enero 2026  |  Método de costeo: Promedio Ponderado",
-                    FileDownloadName = "Kardex_PRD-007_Ene2026",
-                    Settings = new QuestPdfDocumentSettings
+                    PageSize = QuestPdfPageSize.A4,
+                    Orientation = QuestPdfPageOrientation.Landscape,
+                    FontSize = 8f,
+                    ShowPageNumbers = true,
+                    ColorTheme = QuestPdfColorThemes.AcontplusAmber()
+                },
+                Sections =
+                [
+                    new QuestPdfSection
                     {
-                        PageSize = QuestPdfPageSize.A4,
-                        Orientation = QuestPdfPageOrientation.Landscape,
-                        FontSize = 8f,
-                        ShowPageNumbers = true,
-                        ColorTheme = QuestPdfColorThemes.AcontplusAmber()
-                    },
-                    Sections =
-                    [
-                        new QuestPdfSection
-                        {
-                            SectionTitle  = "Movimientos",
-                            Type          = QuestPdfSectionType.DataTable,
-                            Data          = kardex,
-                            ShowTotalsRow = true,
-                            Columns       =
-                            [
-                                // Regular columns
-                                new QuestPdfTableColumn { ColumnName = "Date",      Header = "Fecha",    RelativeWidth = 1.5f },
-                                new QuestPdfTableColumn { ColumnName = "DocType",   Header = "Tipo",     RelativeWidth = 1.3f },
-                                new QuestPdfTableColumn { ColumnName = "DocNumber", Header = "Documento",RelativeWidth = 2f   },
+                        SectionTitle  = "Movimientos",
+                        Type          = QuestPdfSectionType.DataTable,
+                        Data          = kardex,
+                        ShowTotalsRow = true,
+                        Columns       =
+                        [
+                            // Regular columns
+                            new QuestPdfTableColumn { ColumnName = "Date",      Header = "Fecha",    RelativeWidth = 1.5f },
+                            new QuestPdfTableColumn { ColumnName = "DocType",   Header = "Tipo",     RelativeWidth = 1.3f },
+                            new QuestPdfTableColumn { ColumnName = "DocNumber", Header = "Documento",RelativeWidth = 2f   },
 
-                                // Band header: Entradas (spans 3 data columns)
-                                new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "ENTRADAS", ColumnSpan = 3 },
-                                new QuestPdfTableColumn { ColumnName = "InQty",   Header = "Cant.",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N2",
-                                    AggregateType = QuestPdfAggregateType.Sum },
-                                new QuestPdfTableColumn { ColumnName = "InCost",  Header = "P.Unit", RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
-                                new QuestPdfTableColumn { ColumnName = "InTotal", Header = "Total",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
-                                    AggregateType = QuestPdfAggregateType.Sum },
+                            // Band header: Entradas (spans 3 data columns)
+                            new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "ENTRADAS", ColumnSpan = 3 },
+                            new QuestPdfTableColumn { ColumnName = "InQty",   Header = "Cant.",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N2",
+                                AggregateType = QuestPdfAggregateType.Sum },
+                            new QuestPdfTableColumn { ColumnName = "InCost",  Header = "P.Unit", RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
+                            new QuestPdfTableColumn { ColumnName = "InTotal", Header = "Total",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                AggregateType = QuestPdfAggregateType.Sum },
 
-                                // Band header: Salidas (spans 3 data columns)
-                                new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "SALIDAS", ColumnSpan = 3 },
-                                new QuestPdfTableColumn { ColumnName = "OutQty",   Header = "Cant.",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N2",
-                                    AggregateType = QuestPdfAggregateType.Sum },
-                                new QuestPdfTableColumn { ColumnName = "OutCost",  Header = "P.Unit", RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
-                                new QuestPdfTableColumn { ColumnName = "OutTotal", Header = "Total",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
-                                    AggregateType = QuestPdfAggregateType.Sum },
+                            // Band header: Salidas (spans 3 data columns)
+                            new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "SALIDAS", ColumnSpan = 3 },
+                            new QuestPdfTableColumn { ColumnName = "OutQty",   Header = "Cant.",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N2",
+                                AggregateType = QuestPdfAggregateType.Sum },
+                            new QuestPdfTableColumn { ColumnName = "OutCost",  Header = "P.Unit", RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
+                            new QuestPdfTableColumn { ColumnName = "OutTotal", Header = "Total",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2",
+                                AggregateType = QuestPdfAggregateType.Sum },
 
-                                // Band header: Saldo (spans 3 data columns)
-                                new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "SALDO", ColumnSpan = 3 },
-                                new QuestPdfTableColumn { ColumnName = "BalQty",   Header = "Cant.",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N2" },
-                                new QuestPdfTableColumn { ColumnName = "BalCost",  Header = "P.Unit", RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
-                                new QuestPdfTableColumn { ColumnName = "BalTotal", Header = "Total",  RelativeWidth = 1f,
-                                    Alignment = QuestPdfColumnAlignment.Right, Format = "C2", IsBold = true }
-                            ]
-                        }
-                    ]
-                };
+                            // Band header: Saldo (spans 3 data columns)
+                            new QuestPdfTableColumn { ColumnName = string.Empty, IsGroupHeader = true, Header = "SALDO", ColumnSpan = 3 },
+                            new QuestPdfTableColumn { ColumnName = "BalQty",   Header = "Cant.",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N2" },
+                            new QuestPdfTableColumn { ColumnName = "BalCost",  Header = "P.Unit", RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "N4" },
+                            new QuestPdfTableColumn { ColumnName = "BalTotal", Header = "Total",  RelativeWidth = 1f,
+                                Alignment = QuestPdfColumnAlignment.Right, Format = "C2", IsBold = true }
+                        ]
+                    }
+                ]
+            };
 
-                var response = await pdf.GenerateAsync(request, cancellationToken);
-
-                logger.LogInformation("Kardex PDF generated — {Bytes} bytes", response.FileContents.Length);
-                return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error generating Kardex PDF");
-                return Results.Problem("Failed to generate Kardex PDF", statusCode: 500);
-            }
+            return await GenerateQuestPdfReportAsync(pdf, request, logger, "Kardex report", cancellationToken);
         })
         .WithName("QuestPdfKardex")
         .WithDescription("NEW v1.8.0 — DataTable with grouped column headers (IsGroupHeader + ColumnSpan), Kardex-style: Entradas | Salidas | Saldo band rows above individual column headers");
@@ -1450,25 +1370,7 @@ public static class ReportsEndpoints
             {
                 logger.LogInformation("Generating ClosedXML grouped-header Kardex report");
 
-                var kardex = new DataTable("Kardex");
-                kardex.Columns.Add("Date", typeof(string));
-                kardex.Columns.Add("DocType", typeof(string));
-                kardex.Columns.Add("DocNumber", typeof(string));
-                kardex.Columns.Add("InQty", typeof(decimal));
-                kardex.Columns.Add("InCost", typeof(decimal));
-                kardex.Columns.Add("InTotal", typeof(decimal));
-                kardex.Columns.Add("OutQty", typeof(decimal));
-                kardex.Columns.Add("OutCost", typeof(decimal));
-                kardex.Columns.Add("OutTotal", typeof(decimal));
-                kardex.Columns.Add("BalQty", typeof(decimal));
-                kardex.Columns.Add("BalCost", typeof(decimal));
-                kardex.Columns.Add("BalTotal", typeof(decimal));
-
-                kardex.Rows.Add("2026-01-01", "SALDO INICIAL", "", 0m, 0m, 0m, 0m, 0m, 0m, 100m, 15.00m, 1500m);
-                kardex.Rows.Add("2026-01-05", "COMP", "C-001-000001", 50m, 15m, 750m, 0m, 0m, 0m, 150m, 15.00m, 2250m);
-                kardex.Rows.Add("2026-01-08", "VENTA", "F-001-000023", 0m, 0m, 0m, 30m, 15m, 450m, 120m, 15.00m, 1800m);
-                kardex.Rows.Add("2026-01-15", "VENTA", "F-001-000031", 0m, 0m, 0m, 20m, 15m, 300m, 100m, 15.00m, 1500m);
-                kardex.Rows.Add("2026-01-22", "COMP", "C-001-000012", 80m, 16m, 1280m, 0m, 0m, 0m, 180m, 15.44m, 2780m);
+                var kardex = BuildSampleKardexTable();
 
                 var request = new AdvancedExcelReportRequest
                 {
@@ -1554,14 +1456,14 @@ public static class ReportsEndpoints
         t.Columns.Add("Status", typeof(string));
         t.Columns.Add("RegisteredAt", typeof(DateTime));
 
-        t.Rows.Add(1, "ABC Corporation", "contact@abc.com", "+1-555-0101", "New York", 15000.50m, "Active", new DateTime(2022, 3, 15, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(2, "XYZ Industries", "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, "Active", new DateTime(2021, 7, 22, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(3, "Tech Solutions LLC", "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, "Active", new DateTime(2023, 1, 10, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(4, "Global Trading Co", "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, "Premium", new DateTime(2020, 11, 5, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(5, "Smart Systems Inc", "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, "Active", new DateTime(2022, 8, 30, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(6, "Future Enterprises", "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive", new DateTime(2021, 4, 18, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(7, "Digital Dynamics", "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, "Active", new DateTime(2023, 5, 2, 0, 0, 0, DateTimeKind.Utc));
-        t.Rows.Add(8, "Innovative Partners", "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, "Premium", new DateTime(2019, 12, 14, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(1, CustomerAbc, "contact@abc.com", "+1-555-0101", "New York", 15000.50m, StatusActive, new DateTime(2022, 3, 15, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(2, CustomerXyz, "info@xyz.com", "+1-555-0102", "Los Angeles", 23500.75m, StatusActive, new DateTime(2021, 7, 22, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(3, CustomerTechSolutions, "hello@techsol.com", "+1-555-0103", "San Francisco", 8900.00m, StatusActive, new DateTime(2023, 1, 10, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(4, CustomerGlobalTrading, "sales@global.com", "+1-555-0104", "Chicago", 45000.25m, StatusPremium, new DateTime(2020, 11, 5, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(5, CustomerSmartSystems, "contact@smart.com", "+1-555-0105", "Boston", 12300.00m, StatusActive, new DateTime(2022, 8, 30, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(6, CustomerFutureEnterprises, "info@future.com", "+1-555-0106", "Seattle", 5600.80m, "Inactive", new DateTime(2021, 4, 18, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(7, CustomerDigitalDynamics, "hello@digital.com", "+1-555-0107", "Miami", 19800.50m, StatusActive, new DateTime(2023, 5, 2, 0, 0, 0, DateTimeKind.Utc));
+        t.Rows.Add(8, CustomerInnovativePartners, "contact@innov.com", "+1-555-0108", "Denver", 31200.00m, StatusPremium, new DateTime(2019, 12, 14, 0, 0, 0, DateTimeKind.Utc));
 
         return t;
     }
@@ -1575,15 +1477,60 @@ public static class ReportsEndpoints
         t.Columns.Add("Amount", typeof(decimal));
         t.Columns.Add("Status", typeof(string));
 
-        t.Rows.Add("ORD-2026-001", "ABC Corporation", new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc), 1500.00m, "Delivered");
-        t.Rows.Add("ORD-2026-002", "XYZ Industries", new DateTime(2026, 1, 12, 0, 0, 0, DateTimeKind.Utc), 3200.50m, "Delivered");
-        t.Rows.Add("ORD-2026-003", "Tech Solutions LLC", new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc), 850.00m, "Delivered");
-        t.Rows.Add("ORD-2026-004", "Global Trading Co", new DateTime(2026, 2, 3, 0, 0, 0, DateTimeKind.Utc), 7500.00m, "In Transit");
-        t.Rows.Add("ORD-2026-005", "Smart Systems Inc", new DateTime(2026, 2, 14, 0, 0, 0, DateTimeKind.Utc), 2100.75m, "Delivered");
-        t.Rows.Add("ORD-2026-006", "Future Enterprises", new DateTime(2026, 2, 18, 0, 0, 0, DateTimeKind.Utc), 450.00m, "Cancelled");
-        t.Rows.Add("ORD-2026-007", "Digital Dynamics", new DateTime(2026, 2, 25, 0, 0, 0, DateTimeKind.Utc), 4800.00m, "In Transit");
-        t.Rows.Add("ORD-2026-008", "Innovative Partners", new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc), 9200.00m, "Processing");
+        t.Rows.Add("ORD-2026-001", CustomerAbc, new DateTime(2026, 1, 5, 0, 0, 0, DateTimeKind.Utc), 1500.00m, StatusDelivered);
+        t.Rows.Add("ORD-2026-002", CustomerXyz, new DateTime(2026, 1, 12, 0, 0, 0, DateTimeKind.Utc), 3200.50m, StatusDelivered);
+        t.Rows.Add("ORD-2026-003", CustomerTechSolutions, new DateTime(2026, 1, 20, 0, 0, 0, DateTimeKind.Utc), 850.00m, StatusDelivered);
+        t.Rows.Add("ORD-2026-004", CustomerGlobalTrading, new DateTime(2026, 2, 3, 0, 0, 0, DateTimeKind.Utc), 7500.00m, "In Transit");
+        t.Rows.Add("ORD-2026-005", CustomerSmartSystems, new DateTime(2026, 2, 14, 0, 0, 0, DateTimeKind.Utc), 2100.75m, StatusDelivered);
+        t.Rows.Add("ORD-2026-006", CustomerFutureEnterprises, new DateTime(2026, 2, 18, 0, 0, 0, DateTimeKind.Utc), 450.00m, "Cancelled");
+        t.Rows.Add("ORD-2026-007", CustomerDigitalDynamics, new DateTime(2026, 2, 25, 0, 0, 0, DateTimeKind.Utc), 4800.00m, "In Transit");
+        t.Rows.Add("ORD-2026-008", CustomerInnovativePartners, new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc), 9200.00m, "Processing");
 
         return t;
+    }
+
+    private static DataTable BuildSampleKardexTable()
+    {
+        var kardex = new DataTable("Kardex");
+        kardex.Columns.Add("Date", typeof(string));
+        kardex.Columns.Add("DocType", typeof(string));
+        kardex.Columns.Add("DocNumber", typeof(string));
+        kardex.Columns.Add("InQty", typeof(decimal));
+        kardex.Columns.Add("InCost", typeof(decimal));
+        kardex.Columns.Add("InTotal", typeof(decimal));
+        kardex.Columns.Add("OutQty", typeof(decimal));
+        kardex.Columns.Add("OutCost", typeof(decimal));
+        kardex.Columns.Add("OutTotal", typeof(decimal));
+        kardex.Columns.Add("BalQty", typeof(decimal));
+        kardex.Columns.Add("BalCost", typeof(decimal));
+        kardex.Columns.Add("BalTotal", typeof(decimal));
+
+        kardex.Rows.Add("2026-01-01", "SALDO INICIAL", "", 0m, 0m, 0m, 0m, 0m, 0m, 100m, 15m, 1500m);
+        kardex.Rows.Add("2026-01-05", "COMP", "C-001-000001", 50m, 15m, 750m, 0m, 0m, 0m, 150m, 15m, 2250m);
+        kardex.Rows.Add("2026-01-08", "VENTA", "F-001-000023", 0m, 0m, 0m, 30m, 15m, 450m, 120m, 15m, 1800m);
+        kardex.Rows.Add("2026-01-15", "VENTA", "F-001-000031", 0m, 0m, 0m, 20m, 15m, 300m, 100m, 15m, 1500m);
+        kardex.Rows.Add("2026-01-22", "COMP", "C-001-000012", 80m, 16m, 1280m, 0m, 0m, 0m, 180m, 15.44m, 2780m);
+
+        return kardex;
+    }
+
+    private static async Task<IResult> GenerateQuestPdfReportAsync(
+        IQuestPdfReportService pdf,
+        QuestPdfReportRequest request,
+        Microsoft.Extensions.Logging.ILogger logger,
+        string reportName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await pdf.GenerateAsync(request, cancellationToken);
+            logger.LogInformation("{ReportName} generated — {Bytes} bytes", reportName, response.FileContents.Length);
+            return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error generating {ReportName}", reportName);
+            return Results.Problem($"Failed to generate {reportName}", statusCode: 500);
+        }
     }
 }

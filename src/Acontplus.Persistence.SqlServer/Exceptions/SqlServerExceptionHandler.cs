@@ -92,8 +92,8 @@ public static class SqlServerExceptionHandler
 
     private static bool IsCustomStoredProcedureError(int errorNumber) =>
         // Accept both RAISERROR (13000+) and THROW (50000+) ranges
-        (errorNumber >= ErrorRanges.RaiserrorMin && errorNumber < ErrorRanges.ThrowMin) ||
-        (errorNumber >= ErrorRanges.ThrowMin && errorNumber <= ErrorRanges.MaxError);
+        errorNumber is (>= ErrorRanges.RaiserrorMin and < ErrorRanges.ThrowMin) or
+                       (>= ErrorRanges.ThrowMin and <= ErrorRanges.MaxError);
 
     private static SqlErrorInfo HandleCustomStoredProcedureError(SqlException ex)
     {
