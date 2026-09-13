@@ -43,7 +43,7 @@ public abstract class MappingProfile
     protected MappingExpression<TSource, TTarget> CreateMap<TSource, TTarget>()
     {
         var pair = new TypePair(typeof(TSource), typeof(TTarget));
-        var expression = new MappingExpression<TSource, TTarget>(pair, Registrations);
+        var expression = new MappingExpression<TSource, TTarget>(pair);
 
         // Overwrite any previous registration for the same pair (requirement 3.1)
         Registrations[pair] = expression;

@@ -77,7 +77,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         {
             ArgumentNullException.ThrowIfNull(ids);
             var idList = ids.ToList();
-            if (!idList.Any())
+            if (idList.Count == 0)
             {
                 return Array.Empty<TEntity>();
             }
@@ -535,7 +535,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         {
             ArgumentNullException.ThrowIfNull(entities);
             var entityList = entities.ToList();
-            if (!entityList.Any())
+            if (entityList.Count == 0)
             {
                 return Task.FromResult(Enumerable.Empty<TEntity>());
             }

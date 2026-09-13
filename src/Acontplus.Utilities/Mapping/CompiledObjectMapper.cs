@@ -74,7 +74,7 @@ public sealed class CompiledObjectMapper : IObjectMapper
     /// <inheritdoc />
     public TTarget Map<TSource, TTarget>(TSource source, TTarget destination)
     {
-        ArgumentNullException.ThrowIfNull(destination, nameof(destination));
+        ArgumentNullException.ThrowIfNull(destination);
 
         if (source is null)
             return destination;
@@ -105,7 +105,7 @@ public sealed class CompiledObjectMapper : IObjectMapper
     /// <inheritdoc />
     public IQueryable<TTarget> ProjectTo<TSource, TTarget>(IQueryable<TSource> source)
     {
-        ArgumentNullException.ThrowIfNull(source, nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         var pair = new TypePair(typeof(TSource), typeof(TTarget));
 

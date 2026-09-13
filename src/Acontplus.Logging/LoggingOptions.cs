@@ -203,7 +203,7 @@ public class TracingOptions
     /// <summary>
     /// Gets or sets additional activity sources to include in tracing.
     /// </summary>
-    public List<string> AdditionalSources { get; set; } = new();
+    public List<string> AdditionalSources { get; set; } = [];
 }
 
 /// <summary>
@@ -254,7 +254,7 @@ public class MetricsOptions
     /// <summary>
     /// Gets or sets additional meters to include in metrics collection.
     /// </summary>
-    public List<string> AdditionalMeters { get; set; } = new();
+    public List<string> AdditionalMeters { get; set; } = [];
 }
 
 /// <summary>

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Utilities</PackageId>
-    <Version>2.2.2</Version>
+    <Version>2.2.3</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -21,9 +21,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>Redesigned ObjectMapper with compiled Expression-tree delegates; removed
-      static shim; added IObjectMapper DI registration via AddObjectMapper(); added
-      ToPaginationRequest() and ToFilterRequest() extension methods replacing Mapster dependency.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.2.3: Bug fixes</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>

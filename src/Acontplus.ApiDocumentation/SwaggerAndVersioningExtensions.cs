@@ -114,10 +114,10 @@ public static class ApiDocumentationExtensions
                 return;
             }
 
-            foreach (var description in descriptions.Reverse())
+            foreach (var groupName in descriptions.Reverse().Select(d => d.GroupName))
             {
-                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
-                    description.GroupName.ToUpperInvariant());
+                options.SwaggerEndpoint($"/swagger/{groupName}/swagger.json",
+                    groupName.ToUpperInvariant());
             }
         });
 
@@ -154,10 +154,10 @@ public static class ApiDocumentationExtensions
 
         app.UseSwaggerUI(options =>
         {
-            foreach (var description in descriptions.Reverse())
+            foreach (var groupName in descriptions.Reverse().Select(d => d.GroupName))
             {
-                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
-                    description.GroupName.ToUpperInvariant());
+                options.SwaggerEndpoint($"/swagger/{groupName}/swagger.json",
+                    groupName.ToUpperInvariant());
             }
         });
 

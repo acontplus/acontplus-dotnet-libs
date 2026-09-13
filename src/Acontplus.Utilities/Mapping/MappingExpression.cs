@@ -13,19 +13,13 @@ public sealed class MappingExpression<TSource, TTarget> : MappingExpressionBase
 {
     /// <summary>
     /// Initialises a new <see cref="MappingExpression{TSource, TTarget}"/> for the
-    /// specified type pair, linked to the owning profile's registration dictionary.
+    /// specified type pair.
     /// </summary>
     /// <param name="pair">The source-to-target type pair this expression describes.</param>
-    /// <param name="registrations">
-    /// The owning profile's registration dictionary, used for reverse-map registration.
-    /// </param>
-    internal MappingExpression(TypePair pair, Dictionary<TypePair, MappingExpressionBase> registrations)
+    internal MappingExpression(TypePair pair)
         : base(pair)
     {
-        _registrations = registrations;
     }
-
-    private readonly Dictionary<TypePair, MappingExpressionBase> _registrations;
 
     /// <summary>
     /// Maps a destination member via a source member expression.

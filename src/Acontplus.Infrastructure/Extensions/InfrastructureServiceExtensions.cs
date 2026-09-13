@@ -5,6 +5,19 @@ namespace Acontplus.Infrastructure.Extensions;
 /// </summary>
 public static class InfrastructureServiceExtensions
 {
+    private const string ResponseCompressionSectionName = "ResponseCompression";
+
+    private static readonly string[] DefaultCompressionMimeTypes =
+    [
+        "application/json",
+        "application/xml",
+        "text/plain",
+        "text/css",
+        "application/javascript",
+        "text/javascript",
+        "application/json-patch+json"
+    ];
+
     /// <summary>
     ///     Adds all infrastructure services (caching, resilience, HTTP client factory, health checks, response compression).
     /// </summary>
@@ -199,33 +212,19 @@ public static class InfrastructureServiceExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var compressionConfig = configuration.GetSection("ResponseCompression").Get<ResponseCompressionConfiguration>()
+        var compressionConfig = configuration.GetSection(ResponseCompressionSectionName).Get<ResponseCompressionConfiguration>()
                                 ?? new ResponseCompressionConfiguration();
 
-        services.Configure<ResponseCompressionConfiguration>(configuration.GetSection("ResponseCompression"));
+        services.Configure<ResponseCompressionConfiguration>(configuration.GetSection(ResponseCompressionSectionName));
 
         services.AddResponseCompression(options =>
         {
             options.EnableForHttps = compressionConfig.EnableForHttps;
 
             // Set default MIME types if none specified
-            if (compressionConfig.MimeTypes.Count == 0)
-            {
-                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-                {
-                    "application/json",
-                    "application/xml",
-                    "text/plain",
-                    "text/css",
-                    "application/javascript",
-                    "text/javascript",
-                    "application/json-patch+json"
-                }).ToList();
-            }
-            else
-            {
-                options.MimeTypes = compressionConfig.MimeTypes;
-            }
+            options.MimeTypes = compressionConfig.MimeTypes.Count == 0
+                ? ResponseCompressionDefaults.MimeTypes.Concat(DefaultCompressionMimeTypes).ToList()
+                : compressionConfig.MimeTypes;
 
             // Add compression providers in order of preference (Brotli first for better compression)
             if (compressionConfig.EnableBrotli)

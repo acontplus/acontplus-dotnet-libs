@@ -607,7 +607,7 @@
             <see cref="T:System.InvalidOperationException"/> if a rule names a non-existent parameter.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
             <summary>
             Selects the best public constructor for the target type based on the number of
             satisfiable parameters. A constructor is "fully satisfiable" when ALL its parameters
@@ -850,10 +850,10 @@
             Produces a pure expression tree with a <see cref="T:System.Linq.Expressions.NewExpression"/> containing named arguments.
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestProjectionConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
+        <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestProjectionConstructor(System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
             <summary>
             Selects the best public constructor for projection, applying the same resolution rules
-            as <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(Acontplus.Utilities.Mapping.TypePair,System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})"/> but without delegate-based resolution.
+            as <see cref="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.SelectBestConstructor(System.Type,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})"/> but without delegate-based resolution.
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.Internal.ExpressionBuilder.ResolveProjectionConstructorParameter(System.Reflection.ParameterInfo,System.Linq.Expressions.ParameterExpression,System.Reflection.PropertyInfo[],System.Collections.Generic.Dictionary{System.String,System.Linq.Expressions.LambdaExpression})">
@@ -1086,15 +1086,12 @@
             <typeparam name="TSource">The source type to map from.</typeparam>
             <typeparam name="TTarget">The target type to map to.</typeparam>
         </member>
-        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.#ctor(Acontplus.Utilities.Mapping.TypePair,System.Collections.Generic.Dictionary{Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.MappingExpressionBase})">
+        <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.#ctor(Acontplus.Utilities.Mapping.TypePair)">
             <summary>
             Initialises a new <see cref="T:Acontplus.Utilities.Mapping.MappingExpression`2"/> for the
-            specified type pair, linked to the owning profile's registration dictionary.
+            specified type pair.
             </summary>
             <param name="pair">The source-to-target type pair this expression describes.</param>
-            <param name="registrations">
-            The owning profile's registration dictionary, used for reverse-map registration.
-            </param>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.MappingExpression`2.ForMember``1(System.Linq.Expressions.Expression{System.Func{`1,``0}},System.Linq.Expressions.Expression{System.Func{`0,``0}})">
             <summary>
@@ -1283,20 +1280,28 @@
             Identifies a unique mapping route from <see cref="P:Acontplus.Utilities.Mapping.TypePair.SourceType"/> to <see cref="P:Acontplus.Utilities.Mapping.TypePair.TargetType"/>.
             Implemented as a value type to allow efficient use as a dictionary key.
             </summary>
+            <param name="sourceType">The source CLR type.</param>
+            <param name="targetType">The target CLR type.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
+            </exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Mapping.TypePair.#ctor(System.Type,System.Type)">
+            <summary>
+            Identifies a unique mapping route from <see cref="P:Acontplus.Utilities.Mapping.TypePair.SourceType"/> to <see cref="P:Acontplus.Utilities.Mapping.TypePair.TargetType"/>.
+            Implemented as a value type to allow efficient use as a dictionary key.
+            </summary>
+            <param name="sourceType">The source CLR type.</param>
+            <param name="targetType">The target CLR type.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
+            </exception>
         </member>
         <member name="P:Acontplus.Utilities.Mapping.TypePair.SourceType">
             <summary>The source CLR type.</summary>
         </member>
         <member name="P:Acontplus.Utilities.Mapping.TypePair.TargetType">
             <summary>The target CLR type.</summary>
-        </member>
-        <member name="M:Acontplus.Utilities.Mapping.TypePair.#ctor(System.Type,System.Type)">
-            <summary>Initialises a new <see cref="T:Acontplus.Utilities.Mapping.TypePair"/>.</summary>
-            <param name="sourceType">The source CLR type.</param>
-            <param name="targetType">The target CLR type.</param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown when <paramref name="sourceType"/> or <paramref name="targetType"/> is <c>null</c>.
-            </exception>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.TypePair.Equals(Acontplus.Utilities.Mapping.TypePair)">
             <inheritdoc />

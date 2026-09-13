@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.Common</PackageId>
-    <Version>2.1.5</Version>
+    <Version>2.1.6</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -23,11 +23,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>
-      Enhanced with contemporary repository patterns, multi-provider support,
-      connection string management, context factory patterns, and enterprise-ready abstractions for
-      SQL Server, PostgreSQL, and other database providers.
-    </PackageReleaseNotes>
+    <PackageReleaseNotes>v2.1.6: Bug fixes</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
