@@ -400,45 +400,9 @@ public class DocumentConverter : IDocumentConverter
         {
             foreach (var item in infoFactura.TotalImpuestos)
             {
-                if (item.Codigo == "2" && item.CodigoPorcentaje is "2" or "4")
-                {
-                    var label = item.CodigoPorcentaje == "2" ? "SubTotal Iva 12%" : "SubTotal Iva 15%";
-                    subtotal12 += Convert.ToDouble(item.BaseImponible);
-                    sb.Append($@"<tr><td class=""text-right""><strong>{label}</strong></td><td class=""text-right"">{Convert.ToString(subtotal12, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-                else if (item.Codigo == "2" && item.CodigoPorcentaje == "0")
-                {
-                    subtotalIva0 += Convert.ToDouble(item.BaseImponible);
-                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Iva 0%</strong></td><td class=""text-right"">{Convert.ToString(subtotalIva0, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-                else if (item.Codigo == "2" && item.CodigoPorcentaje == "6")
-                {
-                    subtotalNoObjetoIva += Convert.ToDouble(item.BaseImponible);
-                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal No Objeto Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalNoObjetoIva, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-                else if (item.Codigo == "2" && item.CodigoPorcentaje == "7")
-                {
-                    subtotalExcentoIva += Convert.ToDouble(item.BaseImponible);
-                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Excento Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalExcentoIva, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-
+                AppendSubtotalImpuestoHtml(sb, item, ref subtotal12, ref subtotalIva0, ref subtotalNoObjetoIva, ref subtotalExcentoIva);
                 sb.Append($@"<tr><td class=""text-right""><strong>Total Sin Impuestos</strong></td><td class=""text-right"">{infoFactura.TotalSinImpuestos}</td></tr>");
-
-                if (item.Codigo == "3")
-                {
-                    ice += Convert.ToDouble(item.Valor);
-                    sb.Append($@"<tr><td class=""text-right""><strong>ICE</strong></td><td class=""text-right"">{Convert.ToString(ice, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-                else if (item.Codigo == "2" && item.CodigoPorcentaje == "2")
-                {
-                    iva12 += Convert.ToDouble(item.Valor);
-                    sb.Append($@"<tr><td class=""text-right""><strong>IVA 12%</strong></td><td class=""text-right"">{Convert.ToString(iva12, CultureInfo.InvariantCulture)}</td></tr>");
-                }
-                else if (item.Codigo == "5")
-                {
-                    irbpnr += Convert.ToDouble(item.Valor);
-                    sb.Append($@"<tr><td class=""text-right""><strong>IRBPNR</strong></td><td class=""text-right"">{Convert.ToString(irbpnr, CultureInfo.InvariantCulture)}</td></tr>");
-                }
+                AppendSpecificTaxHtml(sb, item, ref ice, ref iva12, ref irbpnr);
             }
         }
 
@@ -446,6 +410,66 @@ public class DocumentConverter : IDocumentConverter
         sb.Append($@" <tr><td class=""text-right""><strong>Valor Total</strong></td><td class=""text-right"">{infoFactura.ImporteTotal}</td></tr>");
 
         return sb.ToString();
+    }
+
+    private static void AppendSubtotalImpuestoHtml(
+        StringBuilder sb,
+        TotalImpuesto item,
+        ref double subtotal12,
+        ref double subtotalIva0,
+        ref double subtotalNoObjetoIva,
+        ref double subtotalExcentoIva)
+    {
+        if (item.Codigo != "2")
+        {
+            return;
+        }
+
+        if (item.CodigoPorcentaje is "2" or "4")
+        {
+            var label = item.CodigoPorcentaje == "2" ? "SubTotal Iva 12%" : "SubTotal Iva 15%";
+            subtotal12 += Convert.ToDouble(item.BaseImponible);
+            sb.Append($@"<tr><td class=""text-right""><strong>{label}</strong></td><td class=""text-right"">{Convert.ToString(subtotal12, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+        else if (item.CodigoPorcentaje == "0")
+        {
+            subtotalIva0 += Convert.ToDouble(item.BaseImponible);
+            sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Iva 0%</strong></td><td class=""text-right"">{Convert.ToString(subtotalIva0, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+        else if (item.CodigoPorcentaje == "6")
+        {
+            subtotalNoObjetoIva += Convert.ToDouble(item.BaseImponible);
+            sb.Append($@"<tr><td class=""text-right""><strong>SubTotal No Objeto Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalNoObjetoIva, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+        else if (item.CodigoPorcentaje == "7")
+        {
+            subtotalExcentoIva += Convert.ToDouble(item.BaseImponible);
+            sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Excento Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalExcentoIva, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+    }
+
+    private static void AppendSpecificTaxHtml(
+        StringBuilder sb,
+        TotalImpuesto item,
+        ref double ice,
+        ref double iva12,
+        ref double irbpnr)
+    {
+        if (item.Codigo == "3")
+        {
+            ice += Convert.ToDouble(item.Valor);
+            sb.Append($@"<tr><td class=""text-right""><strong>ICE</strong></td><td class=""text-right"">{Convert.ToString(ice, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+        else if (item.Codigo == "2" && item.CodigoPorcentaje == "2")
+        {
+            iva12 += Convert.ToDouble(item.Valor);
+            sb.Append($@"<tr><td class=""text-right""><strong>IVA 12%</strong></td><td class=""text-right"">{Convert.ToString(iva12, CultureInfo.InvariantCulture)}</td></tr>");
+        }
+        else if (item.Codigo == "5")
+        {
+            irbpnr += Convert.ToDouble(item.Valor);
+            sb.Append($@"<tr><td class=""text-right""><strong>IRBPNR</strong></td><td class=""text-right"">{Convert.ToString(irbpnr, CultureInfo.InvariantCulture)}</td></tr>");
+        }
     }
 
     private static byte[] LoadLogoImageBytes(System.Reflection.Assembly assembly)

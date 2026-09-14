@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace Acontplus.Notifications.Helpers;
 
-public class AwsSesSmtpCredentialConverter
+public static class AwsSesSmtpCredentialConverter
 {
     public static (string smtpUsername, string smtpPassword) ConvertIamToSmtpCredentials(
         string iamAccessKey,

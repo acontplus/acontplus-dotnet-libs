@@ -11,6 +11,17 @@ public static class ExceptionTestEndpoints
         var group = app.MapGroup("/exception-test")
             .WithTags("Exception Test");
 
+        MapClientErrors(group);
+        MapServerErrors(group);
+        MapSqlErrors(group);
+        MapStandardErrors(group);
+        MapComplexScenarios(group);
+        MapSuccessCases(group);
+        MapRandomAndDocumentation(group);
+    }
+
+    private static void MapClientErrors(RouteGroupBuilder group)
+    {
         #region Client Errors (4xx) - DomainException Examples
 
         group.MapPost("/validation-error", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -193,7 +204,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapServerErrors(RouteGroupBuilder group)
+    {
         #region Server Errors (5xx) - DomainException Examples
 
         group.MapGet("/internal-error", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -312,7 +326,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapSqlErrors(RouteGroupBuilder group)
+    {
         #region SQL Exception Examples
 
         group.MapDelete("/sql/foreign-key-violation", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -386,7 +403,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapStandardErrors(RouteGroupBuilder group)
+    {
         #region Standard .NET Exceptions
 
         group.MapPost("/standard/argument-null", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -441,7 +461,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapComplexScenarios(RouteGroupBuilder group)
+    {
         #region Complex Scenarios
 
         group.MapGet("/complex/nested", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -553,7 +576,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapSuccessCases(RouteGroupBuilder group)
+    {
         #region Success Cases for Comparison
 
         group.MapGet("/success", () =>
@@ -636,14 +662,20 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapRandomAndDocumentation(RouteGroupBuilder group)
+    {
         #region Random Exception Generator
 
         group.MapGet("/random", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
         {
             var random = Random.Shared.Next(1, 16);
 
-            logger.LogInformation("Throwing random exception type: {Type}", random);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Throwing random exception type: {Type}", random);
+            }
 
             return random switch
             {
@@ -670,7 +702,10 @@ public static class ExceptionTestEndpoints
         {
             var random = Random.Shared.Next(1, 11);
 
-            logger.LogInformation("Random Result pattern response type: {Type}", random);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Random Result pattern response type: {Type}", random);
+            }
 
             return random switch
             {

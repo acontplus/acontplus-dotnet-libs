@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace Acontplus.S3Application.Models;
@@ -8,7 +8,6 @@ namespace Acontplus.S3Application.Models;
 /// </summary>
 public sealed class S3ObjectCustom : IDisposable
 {
-    private readonly IConfiguration _configuration;
     private bool _disposed;
 
     /// <summary>
@@ -52,7 +51,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="configuration">The application configuration containing S3 and AWS settings.</param>
     public S3ObjectCustom(IConfiguration configuration)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
 
         // Use unified AWS:S3 configuration with fallback to legacy keys
         BucketName = configuration["AWS:S3:DefaultBucketName"]

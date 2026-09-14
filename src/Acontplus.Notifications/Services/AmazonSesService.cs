@@ -42,7 +42,6 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
     private readonly int _batchSize;
     private readonly TimeSpan _batchDelay;
     private readonly string? _defaultFromEmail;
-    private readonly string? _mediaImagesPath;
     private readonly string? _templatesPath;
 
     public AmazonSesService(
@@ -58,7 +57,6 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         // Initialize SES v2 client with configuration
         var sesRegion = _configuration.GetValue("AWS:SES:Region", "us-east-1");
         _defaultFromEmail = _configuration.GetValue<string>("AWS:SES:DefaultFromEmail");
-        _mediaImagesPath = _configuration.GetValue<string>("Media:ImagesPath");
         _templatesPath = _configuration.GetValue<string>("Templates:Path") ??
                          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates");
 

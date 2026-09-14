@@ -47,8 +47,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
         _retryPolicy = CreateRetryPolicy();
 
-        _logger.LogInformation("S3StorageService initialized with MaxRequestsPerSecond: {MaxRequestsPerSecond}, Timeout: {Timeout}s",
-            _options.MaxRequestsPerSecond, _options.TimeoutSeconds);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("S3StorageService initialized with MaxRequestsPerSecond: {MaxRequestsPerSecond}, Timeout: {Timeout}s",
+                _options.MaxRequestsPerSecond, _options.TimeoutSeconds);
+        }
     }
 
     /// <summary>
@@ -73,7 +76,10 @@ public class S3StorageService : IS3StorageService, IDisposable
                 ? new AmazonS3Client(new BasicAWSCredentials(credentials.Key, credentials.Secret), config)
                 : new AmazonS3Client(config); // Uses default credential chain (IAM roles, etc.)
 
-            _logger.LogDebug("Created new S3 client for region: {Region}", region);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Created new S3 client for region: {Region}", region);
+            }
             return client;
         });
     }
@@ -126,8 +132,11 @@ public class S3StorageService : IS3StorageService, IDisposable
                 var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
                 if (timeToWait > TimeSpan.Zero)
                 {
-                    _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}ms",
-                        _requestTimestamps.Count, _options.MaxRequestsPerSecond, timeToWait.TotalMilliseconds);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}ms",
+                            _requestTimestamps.Count, _options.MaxRequestsPerSecond, timeToWait.TotalMilliseconds);
+                    }
 
                     await Task.Delay(timeToWait, ct);
                     CleanupOldTimestamps();
@@ -427,16 +436,22 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 await client.GetObjectMetadataAsync(request);
 
-                _logger.LogDebug("Object exists: {Key} in bucket {Bucket}",
-                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Object exists: {Key} in bucket {Bucket}",
+                        s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+                }
 
                 return true;
             });
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogDebug(ex, "Object not found: {Key} in bucket {Bucket}",
-                s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(ex, "Object not found: {Key} in bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
             return false;
         }
         catch (Exception ex)
@@ -476,8 +491,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 var presignedUrl = await Task.Run(() => client.GetPreSignedURL(request));
 
-                _logger.LogInformation("Generated presigned URL for {Key} valid for {Minutes} minutes",
-                    s3ObjectCustom.S3ObjectKey, expirationInMinutes);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Generated presigned URL for {Key} valid for {Minutes} minutes",
+                        s3ObjectCustom.S3ObjectKey, expirationInMinutes);
+                }
 
                 return new S3Response
                 {

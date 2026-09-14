@@ -28,11 +28,11 @@ public class DistributedCacheService : ICacheService
         }
     }
 
-    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         try
         {
-            var value = await _cache.GetStringAsync(key, cancellationToken);
+            var value = await _cache.GetStringAsync(key, ct);
             return string.IsNullOrEmpty(value) ? default : JsonSerializer.Deserialize<T>(value);
         }
         catch (Exception ex)
@@ -95,11 +95,11 @@ public class DistributedCacheService : ICacheService
         }
     }
 
-    public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+    public async Task RemoveAsync(string key, CancellationToken ct = default)
     {
         try
         {
-            await _cache.RemoveAsync(key, cancellationToken);
+            await _cache.RemoveAsync(key, ct);
         }
         catch (Exception ex)
         {

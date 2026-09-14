@@ -5,6 +5,10 @@ namespace Acontplus.Services.Middleware;
 /// </summary>
 public class ApiExceptionMiddleware
 {
+    private const string CategoryValidation = "validation";
+    private const string SeverityWarning = "warning";
+    private const string SeverityError = "error";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ApiExceptionMiddleware> _logger;
     private readonly ExceptionHandlingOptions _options;
@@ -52,9 +56,9 @@ public class ApiExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex, string correlationId, string tenantId)
     {
-        context.Response.ContentType = "application/json";
-
         await LogException(ex, correlationId, tenantId, context);
+
+        context.Response.ContentType = "application/json";
 
         var response = ex switch
         {
@@ -65,7 +69,7 @@ public class ApiExceptionMiddleware
         };
 
         context.Response.StatusCode = int.Parse(response.Code);
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions), context.RequestAborted);
     }
 
     private static ApiResponse HandleValidationException(ValidationException ex, string correlationId, string tenantId)
@@ -76,8 +80,8 @@ public class ApiExceptionMiddleware
                     Code: ex.ErrorCode,
                     Message: message,
                     Target: e.Key,
-                    Category: "validation",
-                    Severity: "warning")))
+                    Category: CategoryValidation,
+                    Severity: SeverityWarning)))
             .ToList();
 
         return ApiResponse.Failure(
@@ -225,7 +229,7 @@ public class ApiExceptionMiddleware
             });
 
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions), context.RequestAborted);
     }
 
     private async Task LogException(Exception ex, string correlationId, string tenantId, HttpContext context)
@@ -332,13 +336,13 @@ public class ApiExceptionMiddleware
 
     private static string GetErrorCategory(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.BadRequest => "validation",
-        HttpStatusCode.UnprocessableEntity => "validation",
+        HttpStatusCode.BadRequest => CategoryValidation,
+        HttpStatusCode.UnprocessableEntity => CategoryValidation,
         HttpStatusCode.Unauthorized => "authentication",
         HttpStatusCode.Forbidden => "authorization",
         HttpStatusCode.NotFound => "not_found",
         HttpStatusCode.Conflict => "conflict",
-        HttpStatusCode.MethodNotAllowed => "validation",
+        HttpStatusCode.MethodNotAllowed => CategoryValidation,
         HttpStatusCode.TooManyRequests => "performance",
         HttpStatusCode.RequestTimeout => "performance",
         HttpStatusCode.GatewayTimeout => "performance",
@@ -347,12 +351,12 @@ public class ApiExceptionMiddleware
 
     private static string GetErrorSeverity(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.BadRequest => "warning",
-        HttpStatusCode.UnprocessableEntity => "warning",
-        HttpStatusCode.NotFound => "warning",
-        HttpStatusCode.Conflict => "warning",
-        HttpStatusCode.MethodNotAllowed => "warning",
-        _ => (int)statusCode >= 500 ? "error" : "warning"
+        HttpStatusCode.BadRequest => SeverityWarning,
+        HttpStatusCode.UnprocessableEntity => SeverityWarning,
+        HttpStatusCode.NotFound => SeverityWarning,
+        HttpStatusCode.Conflict => SeverityWarning,
+        HttpStatusCode.MethodNotAllowed => SeverityWarning,
+        _ => (int)statusCode >= 500 ? SeverityError : SeverityWarning
     };
 
     private static Dictionary<string, object>? GetSafeDebugInfo(Exception ex)

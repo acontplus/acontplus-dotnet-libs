@@ -81,13 +81,6 @@ public static class SerilogExtensions
     // The private helper methods (ConfigureLocalLogging, ConfigureS3Logging, ConfigureDatabaseLogging)
     // remain largely the same, as they correctly take LoggerConfiguration.
     // Ensure you use Serilog.Debugging.SelfLog.WriteLine for errors within these config methods.
-    private static string GetEnvironmentName(IConfiguration configuration)
-    {
-        return Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ??
-               Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
-               Environments.Production;
-    }
-
     private static void ConfigureLocalLogging(LoggerConfiguration loggerConfiguration, LoggingOptions options, ITextFormatter formatter)
     {
         var rollingInterval = Enum.Parse<RollingInterval>(options.RollingInterval, true);

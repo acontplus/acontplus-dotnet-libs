@@ -93,7 +93,7 @@ public class DataXmlComprobante
         }
     }
 
-    private void ProcessFactura(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessFactura(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeFact = xmlComp.GetElementsByTagName("factura")[0];
         comp.VersionComp = nodeFact?.Attributes?[TagVersion]?.Value ?? string.Empty;
@@ -104,7 +104,7 @@ public class DataXmlComprobante
         GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
     }
 
-    private void ProcessLiquidacionCompra(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessLiquidacionCompra(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeLiq = xmlComp.GetElementsByTagName("liquidacionCompra")[0];
         comp.VersionComp = nodeLiq?.Attributes?[TagVersion]?.Value ?? string.Empty;
@@ -126,7 +126,7 @@ public class DataXmlComprobante
         GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
     }
 
-    private void ProcessNotaDebito(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessNotaDebito(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeNd = xmlComp.GetElementsByTagName("notaDebito")[0];
         comp.VersionComp = nodeNd?.Attributes?[TagVersion]?.Value ?? string.Empty;
@@ -138,7 +138,7 @@ public class DataXmlComprobante
         if (nodeMotivos != null) GetMotivosNotaDebito(comp, nodeMotivos);
     }
 
-    private void ProcessGuiaRemision(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessGuiaRemision(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeGr = xmlComp.GetElementsByTagName("guiaRemision")[0];
         comp.VersionComp = nodeGr?.Attributes?[TagVersion]?.Value ?? string.Empty;
@@ -150,7 +150,7 @@ public class DataXmlComprobante
         if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
     }
 
-    private void ProcessComprobanteRetencion(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessComprobanteRetencion(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeRet = xmlComp.GetElementsByTagName("comprobanteRetencion")[0];
         comp.VersionComp = nodeRet?.Attributes?[TagVersion]?.Value ?? string.Empty;

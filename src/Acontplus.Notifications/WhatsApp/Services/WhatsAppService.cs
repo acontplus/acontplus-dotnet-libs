@@ -21,7 +21,6 @@ public sealed class WhatsAppService(
 {
     // Named HttpClient — matches the name used in AddWhatsAppService() DI registration.
     internal const string HttpClientName = "WhatsApp";
-    private const string ApiBaseUrl = "https://graph.facebook.com";
     private const string MessagingProductKey = "messaging_product";
     private const string WhatsAppProduct = "whatsapp";
     private const string RecipientTypeKey = "recipient_type";

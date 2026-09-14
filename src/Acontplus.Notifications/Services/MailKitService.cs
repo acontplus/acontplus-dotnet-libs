@@ -29,6 +29,12 @@ public class MailKitService : IMailKitService, IDisposable
     private readonly TimeSpan _minAuthInterval;
     private readonly int _maxAuthAttemptsPerHour;
     private static readonly char[] EmailSeparators = [',', ';', '|'];
+    private static readonly JsonSerializerOptions TemplateJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
 
     public MailKitService(IConfiguration configuration, ILogger<MailKitService> logger)
     {
@@ -401,13 +407,7 @@ public class MailKitService : IMailKitService, IDisposable
 
     private static string ProcessTemplate(string template, IDictionary<string, object> data)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        };
-        var reportData = JsonExtensions.DeserializeOptimized<ExpandoObject>(JsonSerializer.Serialize(data, options));
+        var reportData = JsonExtensions.DeserializeOptimized<ExpandoObject>(JsonSerializer.Serialize(data, TemplateJsonOptions));
 
         var scriptObject = new ScriptObject();
         foreach (var prop in reportData)

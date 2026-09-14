@@ -1,5 +1,9 @@
 namespace Acontplus.Utilities.IO;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S1192",
+    Justification = "MIME type registry dictionary contains intentional standard MIME type literals")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S1192",
+    Justification = "MIME type registry dictionary contains intentional standard MIME type literals")]
 public static class MimeTypeMap
 {
     private static readonly Lazy<IDictionary<string, string>> Mappings = new(BuildMappings);

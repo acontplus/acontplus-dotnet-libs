@@ -1,12 +1,15 @@
-﻿using static System.Text.RegularExpressions.Regex;
+using System.Text.RegularExpressions;
 
 namespace Acontplus.Utilities.IO;
 
 /// <summary>
 /// Provides extension methods for file name sanitization and file data conversion.
 /// </summary>
-public static class FileExtensions
+public static partial class FileExtensions
 {
+    [GeneratedRegex(@"[^A-Za-z0-9_. ]+", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex InvalidFileNameCharactersRegex();
+
     /// <summary>
     /// Removes invalid characters from a file name and trims whitespace.
     /// </summary>
@@ -14,7 +17,7 @@ public static class FileExtensions
     /// <returns>A sanitized file name containing only valid characters.</returns>
     public static string SanitizeFileName(string fileName)
     {
-        var response = Replace(fileName.Trim(), "[^A-Za-z0-9_. ]+", "");
+        var response = InvalidFileNameCharactersRegex().Replace(fileName.Trim(), "");
         return response.Replace(" ", string.Empty);
     }
 

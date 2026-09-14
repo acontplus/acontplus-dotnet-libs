@@ -34,7 +34,7 @@ public class RdlcPrinterService : IRdlcPrinterService
 
         var printJobId = Guid.NewGuid().ToString("N")[..8];
 
-        if (_options.EnableDetailedLogging)
+        if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
         {
             _logger.LogInformation(
                 "Starting print job {PrintJobId} for printer {PrinterName}, copies: {Copies}, format: {Format}",
@@ -58,7 +58,7 @@ public class RdlcPrinterService : IRdlcPrinterService
 
                 var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
 
-                if (_options.EnableDetailedLogging)
+                if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(
                         "Print job {PrintJobId} completed successfully in {Duration}ms",
@@ -261,7 +261,7 @@ public class RdlcPrinterService : IRdlcPrinterService
 
         printDoc.EndPrint += (_, _) =>
         {
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Print job {PrintJobId}: Printed {PageCount} pages", printJobId, currentPage);
             }
@@ -319,7 +319,7 @@ public class RdlcPrinterService : IRdlcPrinterService
         // Optimize for thermal/matricial printers
         if (IsLikelyThermalPrinter(rdlcPrinter.PrinterName))
         {
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation(
                     "Print job {PrintJobId}: Detected thermal printer, applying optimizations",
@@ -334,7 +334,7 @@ public class RdlcPrinterService : IRdlcPrinterService
         }
         else if (IsLikelyMatricialPrinter(rdlcPrinter.PrinterName))
         {
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation(
                     "Print job {PrintJobId}: Detected matricial printer, applying optimizations",
@@ -422,7 +422,7 @@ public class RdlcPrinterService : IRdlcPrinterService
         }
     }
 
-    private async Task<string?> FindLogoPathAsync(RdlcPrinterDto rdlcPrinter, CancellationToken cancellationToken)
+    private static async Task<string?> FindLogoPathAsync(RdlcPrinterDto rdlcPrinter, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(rdlcPrinter.LogoDirectory) || !Directory.Exists(rdlcPrinter.LogoDirectory))
         {

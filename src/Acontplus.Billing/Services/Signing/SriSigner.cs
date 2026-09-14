@@ -21,7 +21,11 @@ namespace Acontplus.Billing.Services.Signing;
     Justification = "SHA-1 hashing algorithm is strictly required by the SRI Ecuador electronic invoicing XAdES-BES specification.")]
 [SuppressMessage("Security", "S5332:HttpsUrlsShouldBeUsed",
     Justification = "W3C and ETSI XMLDSIG namespace URIs are protocol specifications mandated by SRI Ecuador XAdES-BES.")]
-[SuppressMessage("Major Code Smell", "csharpsquid:S1075",
+[SuppressMessage("Minor Code Smell", "S1075:URIs should not be hardcoded",
+    Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("SonarQube", "S1075",
+    Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("SonarQube", "csharpsquid:S1075",
     Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
 public sealed class SriSigner : ISriSigner
 {
