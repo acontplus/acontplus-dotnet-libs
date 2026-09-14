@@ -651,7 +651,11 @@
             </summary>
         </member>
         <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.#ctor(System.Net.Http.IHttpClientFactory,Microsoft.Extensions.Logging.ILogger{Acontplus.Notifications.WhatsApp.Services.WhatsAppService},Microsoft.Extensions.Options.IOptions{Acontplus.Notifications.WhatsApp.Models.WhatsAppOptions})">
-            <summary>Creates a new <see cref="T:Acontplus.Notifications.WhatsApp.Services.WhatsAppService"/> instance.</summary>
+            <summary>
+            WhatsApp Cloud API service implementation targeting Meta Graph API v23.0.
+            Registered as a singleton; uses <see cref="T:System.Net.Http.IHttpClientFactory"/> for thread-safe,
+            lifecycle-managed HTTP connections with built-in resilience (retry + circuit breaker).
+            </summary>
         </member>
         <member name="M:Acontplus.Notifications.WhatsApp.Services.WhatsAppService.SendTextAsync(Acontplus.Notifications.WhatsApp.Models.SendWhatsAppTextRequest,System.Threading.CancellationToken)">
             <inheritdoc/>

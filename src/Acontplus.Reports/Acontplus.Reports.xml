@@ -1180,6 +1180,11 @@
             Exception thrown when report size exceeds maximum allowed
             </summary>
         </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportSizeExceededException.#ctor(System.Int64,System.Int64)">
+            <summary>
+            Exception thrown when report size exceeds maximum allowed
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportTimeoutException">
             <summary>
             Exception thrown when report generation times out

@@ -172,7 +172,7 @@ namespace Acontplus.Reports.Services
             }
 
             // Log the resolved path for security auditing
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Resolved report path: {ResolvedPath} (requested: {RequestedPath})",
                     resolvedPath, reportProps.ReportPath);
@@ -205,9 +205,21 @@ namespace Acontplus.Reports.Services
             }
         }
 
-        private void AddReportParameters(LocalReport lr, DataSet parameters, DataSet data)
+        private static void AddReportParameters(LocalReport lr, DataSet parameters, DataSet data)
         {
-            var firstDataSource = data.Tables[0];
+            AddBarcodeParameter(lr, data.Tables[0]);
+
+            if (parameters.Tables.Contains("ReportParams") && parameters.Tables["ReportParams"]!.Rows.Count > 0)
+            {
+                foreach (DataRow item in parameters.Tables["ReportParams"]!.Rows)
+                {
+                    AddReportParamRow(lr, item);
+                }
+            }
+        }
+
+        private static void AddBarcodeParameter(LocalReport lr, DataTable firstDataSource)
+        {
             if (firstDataSource.Columns.Contains("codigoAutorizacion"))
             {
                 var barcodeConfig = new BarcodeConfig
@@ -221,32 +233,28 @@ namespace Acontplus.Reports.Services
                     byteBarcode.Length)));
                 lr.SetParameters(new ReportParameter("mimeTypeBarcode", "image/png"));
             }
+        }
 
-            if (parameters.Tables.Contains("ReportParams") && parameters.Tables["ReportParams"]!.Rows.Count > 0)
+        private static void AddReportParamRow(LocalReport lr, DataRow item)
+        {
+            var paramValue = "";
+            if (Convert.ToBoolean(item["isPicture"]))
             {
-                foreach (DataRow item in parameters.Tables["ReportParams"]!.Rows)
+                paramValue = item.Field<bool>("isCompressed")
+                    ? FileExtensions.GetBase64FromByte(
+                        CompressionUtils.DecompressGZip((byte[])item["paramValue"]))
+                    : FileExtensions.GetBase64FromByte((byte[])item["paramValue"]);
+            }
+            else
+            {
+                var paramBytes = item.Field<byte[]>("paramValue");
+                if (paramBytes != null)
                 {
-                    var paramValue = "";
-                    if (Convert.ToBoolean(item["isPicture"]))
-                    {
-                        paramValue = item.Field<bool>("isCompressed")
-                            ? FileExtensions.GetBase64FromByte(
-                                CompressionUtils.DecompressGZip((byte[])item["paramValue"]))
-                            : FileExtensions.GetBase64FromByte((byte[])item["paramValue"]);
-                        lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
-                    }
-                    else
-                    {
-                        var paramBytes = item.Field<byte[]>("paramValue");
-                        if (paramBytes != null)
-                        {
-                            paramValue = Encoding.UTF8.GetString(paramBytes);
-                        }
-                    }
-
-                    lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
+                    paramValue = Encoding.UTF8.GetString(paramBytes);
                 }
             }
+
+            lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
         }
 
         private ReportResponse BuildReportResponse(ReportPropsDto reportProps, byte[] fileReport)

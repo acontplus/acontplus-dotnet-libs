@@ -14,24 +14,25 @@ public class DetailsParser : IDetailsParser
 
         foreach (XmlNode item in nodeDetails)
         {
-            var detail = new Detalle { IdDetalle = idDetalle };
-
-            detail.CodigoPrincipal = comprobante.CodDoc == "01"
-                ? item.SelectSingleNode("codigoPrincipal")?.InnerText ?? string.Empty
-                : item.SelectSingleNode("codigoInterno")?.InnerText ?? string.Empty;
-
-            detail.CodigoAuxiliar = item.SelectSingleNode("codigoAuxiliar")?.InnerText ?? string.Empty;
-            detail.Descripcion = item.SelectSingleNode("descripcion")?.InnerText ?? string.Empty;
-            detail.Cantidad = item.SelectSingleNode("cantidad")?.InnerText ?? string.Empty;
-            detail.PrecioUnitario = item.SelectSingleNode("precioUnitario")?.InnerText ?? string.Empty;
-            detail.Descuento = item.SelectSingleNode("descuento")?.InnerText ?? string.Empty;
-            detail.PrecioTotalSinImpuesto = item.SelectSingleNode("precioTotalSinImpuesto")?.InnerText ?? string.Empty;
-            detail.Impuestos = item.SelectSingleNode("impuestos") == null
-                ? string.Empty
-                : item.SelectNodes("impuestos")?[0]?.OuterXml ?? string.Empty;
-            detail.DetallesAdicionales = item.SelectSingleNode("detallesAdicionales") == null
-                ? string.Empty
-                : item.SelectNodes("detallesAdicionales")?[0]?.OuterXml ?? string.Empty;
+            var detail = new Detalle
+            {
+                IdDetalle = idDetalle,
+                CodigoPrincipal = comprobante.CodDoc == "01"
+                    ? item.SelectSingleNode("codigoPrincipal")?.InnerText ?? string.Empty
+                    : item.SelectSingleNode("codigoInterno")?.InnerText ?? string.Empty,
+                CodigoAuxiliar = item.SelectSingleNode("codigoAuxiliar")?.InnerText ?? string.Empty,
+                Descripcion = item.SelectSingleNode("descripcion")?.InnerText ?? string.Empty,
+                Cantidad = item.SelectSingleNode("cantidad")?.InnerText ?? string.Empty,
+                PrecioUnitario = item.SelectSingleNode("precioUnitario")?.InnerText ?? string.Empty,
+                Descuento = item.SelectSingleNode("descuento")?.InnerText ?? string.Empty,
+                PrecioTotalSinImpuesto = item.SelectSingleNode("precioTotalSinImpuesto")?.InnerText ?? string.Empty,
+                Impuestos = item.SelectSingleNode("impuestos") == null
+                    ? string.Empty
+                    : item.SelectNodes("impuestos")?[0]?.OuterXml ?? string.Empty,
+                DetallesAdicionales = item.SelectSingleNode("detallesAdicionales") == null
+                    ? string.Empty
+                    : item.SelectNodes("detallesAdicionales")?[0]?.OuterXml ?? string.Empty
+            };
 
             // Process tax information
             var taxNodes = item.SelectNodes("impuestos");

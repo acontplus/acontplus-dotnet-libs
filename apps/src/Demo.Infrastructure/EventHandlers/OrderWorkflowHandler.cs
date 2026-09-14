@@ -7,22 +7,19 @@ namespace Demo.Infrastructure.EventHandlers;
 /// Background service that orchestrates order workflow by listening to multiple event types.
 /// Infrastructure layer - implements workflow automation.
 /// </summary>
-public class OrderWorkflowHandler : BackgroundService
+public class OrderWorkflowHandler(
+    IEventSubscriber eventSubscriber,
+    IEventPublisher eventPublisher,
+    ILogger<OrderWorkflowHandler> logger) : BackgroundService
 {
-    private readonly IEventSubscriber _eventSubscriber;
-    private readonly IEventPublisher _eventPublisher;
-    private readonly ILogger<OrderWorkflowHandler> _logger;
+    private readonly IEventPublisher _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
+    private readonly IEventSubscriber _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
+    private readonly ILogger<OrderWorkflowHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public OrderWorkflowHandler(
-        IEventSubscriber eventSubscriber,
-        IEventPublisher eventPublisher,
-        ILogger<OrderWorkflowHandler> logger)
-    {
-        _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
-        _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("OrderWorkflowHandler started.");

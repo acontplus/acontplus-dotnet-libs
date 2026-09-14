@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Acontplus.Utilities.Security.Interfaces;
 
 /// <summary>
@@ -26,6 +28,7 @@ public interface IPasswordSecurityService
     /// <param name="password">The plaintext password.</param>
     /// <returns>A tuple containing the encrypted bytes and the BCrypt hash.</returns>
     [Obsolete("Reversible password storage is deprecated for security reasons (OWASP Password Storage Cheat Sheet / Sonar S5344 / CWE-256). Passwords must never be reversible. Use HashPassword instead.")]
+    [SuppressMessage("SonarQube", "S1133", Justification = "Preserved for backwards compatibility with legacy database schemas until next major release.")]
     (byte[] EncryptedPassword, string PasswordHash) SetPassword(string password);
 
     /// <summary>
@@ -34,6 +37,6 @@ public interface IPasswordSecurityService
     /// <param name="encryptedPassword">The encrypted password bytes.</param>
     /// <returns>The decrypted plaintext password.</returns>
     [Obsolete("Reversible password storage is deprecated for security reasons (OWASP Password Storage Cheat Sheet / Sonar S5344 / CWE-256). Storing reversible passwords exposes all credentials if keys are compromised.")]
+    [SuppressMessage("SonarQube", "S1133", Justification = "Preserved for backwards compatibility with legacy database schemas until next major release.")]
     string GetDecryptedPassword(byte[] encryptedPassword);
 }
-

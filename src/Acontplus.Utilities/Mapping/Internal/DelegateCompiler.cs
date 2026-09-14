@@ -14,10 +14,7 @@ internal static class DelegateCompiler
     /// A <see cref="LambdaExpression"/> previously built by <see cref="ExpressionBuilder"/>.
     /// </param>
     /// <returns>The compiled delegate ready for invocation.</returns>
-    internal static Delegate Compile(LambdaExpression expression)
-    {
-        return expression.Compile();
-    }
+    internal static Delegate Compile(LambdaExpression expression) => expression.Compile();
 
     /// <summary>
     /// Builds and compiles a delegate for a convention-based <see cref="TypePair"/>
@@ -34,7 +31,7 @@ internal static class DelegateCompiler
             pair,
             config: null,
             registry,
-            new HashSet<TypePair>());
+            []);
 
         return expression.Compile();
     }

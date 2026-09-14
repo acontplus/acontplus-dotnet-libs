@@ -7,19 +7,17 @@ namespace Demo.Infrastructure.EventHandlers;
 /// Background service that listens to OrderCreatedEvent and sends email notifications.
 /// Infrastructure layer - implements cross-cutting concerns.
 /// </summary>
-public class OrderNotificationHandler : BackgroundService
+public class OrderNotificationHandler(
+    IEventSubscriber eventSubscriber,
+    ILogger<OrderNotificationHandler> logger) : BackgroundService
 {
-    private readonly IEventSubscriber _eventSubscriber;
-    private readonly ILogger<OrderNotificationHandler> _logger;
+    private readonly IEventSubscriber _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
+    private readonly ILogger<OrderNotificationHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public OrderNotificationHandler(
-        IEventSubscriber eventSubscriber,
-        ILogger<OrderNotificationHandler> logger)
-    {
-        _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("OrderNotificationHandler started. Listening for OrderCreatedEvent...");

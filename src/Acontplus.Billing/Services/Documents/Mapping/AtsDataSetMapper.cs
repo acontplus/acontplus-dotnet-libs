@@ -179,8 +179,6 @@ public class AtsDataSetMapper
 
     // Helper method to safely get a string value from a DataRow column
     // Handles cases where the column might not exist or the value is DBNull
-    private static string? GetColumnValueOrDefault(DataRow dr, string columnName)
-    {
-        return dr.Table.Columns.Contains(columnName) && dr[columnName] != DBNull.Value ? dr[columnName].ToString() : null;
-    }
+    private static string? GetColumnValueOrDefault(DataRow dr, string columnName) =>
+        dr.Table.Columns.Contains(columnName) && dr[columnName] != DBNull.Value ? dr[columnName].ToString() : null;
 }

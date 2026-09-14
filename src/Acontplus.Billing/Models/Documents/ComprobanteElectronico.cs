@@ -48,35 +48,17 @@ public class ComprobanteElectronico
         }
     }
 
-    public void CreateDetails(object? obj)
-    {
-        Detalles = obj as List<Detalle>;
-    }
+    public void CreateDetails(object? obj) => Detalles = obj as List<Detalle>;
 
-    public void CreateTaxes(object? obj)
-    {
-        Impuestos = obj as List<Impuesto>;
-    }
+    public void CreateTaxes(object? obj) => Impuestos = obj as List<Impuesto>;
 
-    public void CreateRetencionTaxes(object? obj)
-    {
-        ImpuestosRetencion = obj as List<ImpuestoRetencion>;
-    }
+    public void CreateRetencionTaxes(object? obj) => ImpuestosRetencion = obj as List<ImpuestoRetencion>;
 
-    public void CreateDocSustentos(object? obj)
-    {
-        DocSustentos = obj as List<DocSustento>;
-    }
+    public void CreateDocSustentos(object? obj) => DocSustentos = obj as List<DocSustento>;
 
-    public void CreateAdditionalInfo(object? obj)
-    {
-        InfoAdicional = obj as List<InfoAdicional>;
-    }
+    public void CreateAdditionalInfo(object? obj) => InfoAdicional = obj as List<InfoAdicional>;
 
-    public void CreateDestinatarios(object? obj)
-    {
-        Destinatarios = obj as List<Destinatario>;
-    }
+    public void CreateDestinatarios(object? obj) => Destinatarios = obj as List<Destinatario>;
 }
 
 public class InfoTributaria
@@ -113,15 +95,9 @@ public class InfoFactura
     public List<TotalImpuesto>? TotalImpuestos { get; set; }
     public List<Pago>? Pagos { get; set; }
 
-    public void CreateTotalTaxes(object? obj)
-    {
-        TotalImpuestos = obj as List<TotalImpuesto>;
-    }
+    public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
 
-    public void CreatePayments(object? obj)
-    {
-        Pagos = obj as List<Pago>;
-    }
+    public void CreatePayments(object? obj) => Pagos = obj as List<Pago>;
 }
 
 public class TotalImpuesto
@@ -203,10 +179,7 @@ public class InfoNotaCredito
     public string Motivo { get; set; } = string.Empty;
     public List<TotalImpuesto>? TotalImpuestos { get; set; }
 
-    public void CreateTotalTaxes(object? obj)
-    {
-        TotalImpuestos = obj as List<TotalImpuesto>;
-    }
+    public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
 }
 
 public class InfoCompRetencion
@@ -261,25 +234,13 @@ public class DocSustento
     public List<ReembolsoDetalle>? Reembolsos { get; set; }
     public List<Pago>? Pagos { get; set; }
 
-    public void CreateTax(object? obj)
-    {
-        Impuestos = obj as List<ImpuestoDocSustento>;
-    }
+    public void CreateTax(object? obj) => Impuestos = obj as List<ImpuestoDocSustento>;
 
-    public void CreateRetencion(object? obj)
-    {
-        Retenciones = obj as List<Retencion>;
-    }
+    public void CreateRetencion(object? obj) => Retenciones = obj as List<Retencion>;
 
-    public void CreateReembolsos(object? obj)
-    {
-        Reembolsos = obj as List<ReembolsoDetalle>;
-    }
+    public void CreateReembolsos(object? obj) => Reembolsos = obj as List<ReembolsoDetalle>;
 
-    public void CreatePayments(object? obj)
-    {
-        Pagos = obj as List<Pago>;
-    }
+    public void CreatePayments(object? obj) => Pagos = obj as List<Pago>;
 }
 
 public class ImpuestoDocSustento
@@ -301,15 +262,9 @@ public class Retencion
     public List<Dividendo>? Dividendos { get; set; }
     public List<CompraCajBanano>? BananasBox { get; set; }
 
-    public void CreateDividendo(object? obj)
-    {
-        Dividendos = obj as List<Dividendo>;
-    }
+    public void CreateDividendo(object? obj) => Dividendos = obj as List<Dividendo>;
 
-    public void CreateBananaBox(object? obj)
-    {
-        BananasBox = obj as List<CompraCajBanano>;
-    }
+    public void CreateBananaBox(object? obj) => BananasBox = obj as List<CompraCajBanano>;
 }
 
 public class Dividendo
@@ -339,10 +294,7 @@ public class ReembolsoDetalle
     public string NumeroAutorizacionDocReemb { get; set; } = string.Empty;
     public List<DetalleImpuesto>? ImpuestosReembolso { get; set; }
 
-    public void CreateTax(object? obj)
-    {
-        ImpuestosReembolso = obj as List<DetalleImpuesto>;
-    }
+    public void CreateTax(object? obj) => ImpuestosReembolso = obj as List<DetalleImpuesto>;
 }
 
 public class DetalleImpuesto
@@ -382,20 +334,11 @@ public class InfoLiquidacionCompra
     public List<Pago>? Pagos { get; set; }
     public List<ReembolsoDetalle>? Reembolsos { get; set; }
 
-    public void CreateTotalTaxes(object? obj)
-    {
-        TotalImpuestos = obj as List<TotalImpuesto>;
-    }
+    public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
 
-    public void CreatePayments(object? obj)
-    {
-        Pagos = obj as List<Pago>;
-    }
+    public void CreatePayments(object? obj) => Pagos = obj as List<Pago>;
 
-    public void CreateReembolsos(object? obj)
-    {
-        Reembolsos = obj as List<ReembolsoDetalle>;
-    }
+    public void CreateReembolsos(object? obj) => Reembolsos = obj as List<ReembolsoDetalle>;
 }
 
 public class InfoNotaDebito
@@ -418,20 +361,11 @@ public class InfoNotaDebito
     public List<MotivoNotaDebito>? Motivos { get; set; }
     public List<Pago>? Pagos { get; set; }
 
-    public void CreateTotalTaxes(object? obj)
-    {
-        TotalImpuestos = obj as List<TotalImpuesto>;
-    }
+    public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
 
-    public void CreateMotivos(object? obj)
-    {
-        Motivos = obj as List<MotivoNotaDebito>;
-    }
+    public void CreateMotivos(object? obj) => Motivos = obj as List<MotivoNotaDebito>;
 
-    public void CreatePayments(object? obj)
-    {
-        Pagos = obj as List<Pago>;
-    }
+    public void CreatePayments(object? obj) => Pagos = obj as List<Pago>;
 }
 
 public class MotivoNotaDebito
@@ -470,10 +404,7 @@ public class Destinatario
     public string FechaEmisionDocSustento { get; set; } = string.Empty;
     public List<DetalleDestinatario>? Detalles { get; set; }
 
-    public void CreateDetalles(object? obj)
-    {
-        Detalles = obj as List<DetalleDestinatario>;
-    }
+    public void CreateDetalles(object? obj) => Detalles = obj as List<DetalleDestinatario>;
 }
 
 public class DetalleDestinatario
@@ -484,10 +415,7 @@ public class DetalleDestinatario
     public string Cantidad { get; set; } = string.Empty;
     public List<DetalleAdicional>? DetallesAdicionales { get; set; }
 
-    public void CreateDetallesAdicionales(object? obj)
-    {
-        DetallesAdicionales = obj as List<DetalleAdicional>;
-    }
+    public void CreateDetallesAdicionales(object? obj) => DetallesAdicionales = obj as List<DetalleAdicional>;
 }
 
 public class DetalleAdicional

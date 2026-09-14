@@ -68,25 +68,29 @@ public static class PictureHelper
                     return imageFormat.extension;
                 }
 
-                // special handling for SVGs starting with XML tag
-                var readCount = imageFormat.magic.Count; // skip XML tag
-                var maxReadCount = 1024;
-
-                do
-                {
-                    if (array.IsImage(Svg_small, readCount) || array.IsImage(Svg_capital, readCount))
-                    {
-                        return imageFormat.extension;
-                    }
-
-                    readCount++;
-                } while (readCount < maxReadCount && readCount < array.Length - 1);
-
-                return null;
+                return MatchesSvgXml(array, imageFormat.magic.Count) ? imageFormat.extension : null;
             }
         }
 
         return null;
+    }
+
+    private static bool MatchesSvgXml(byte[] array, int startOffset)
+    {
+        var readCount = startOffset; // skip XML tag
+        const int maxReadCount = 1024;
+
+        do
+        {
+            if (array.IsImage(Svg_small, readCount) || array.IsImage(Svg_capital, readCount))
+            {
+                return true;
+            }
+
+            readCount++;
+        } while (readCount < maxReadCount && readCount < array.Length - 1);
+
+        return false;
     }
 
     private static bool IsImage(this byte[] array, List<byte> comparer, int offset = 0)

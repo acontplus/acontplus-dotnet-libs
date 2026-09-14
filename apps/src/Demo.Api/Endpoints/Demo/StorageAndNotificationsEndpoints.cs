@@ -48,8 +48,11 @@ public static class StorageAndNotificationsEndpoints
             var s3Object = new S3ObjectCustom(configuration);
             await s3Object.Initialize("demo-uploads/", file);
 
-            logger.LogInformation("Uploading file {FileName} ({Size} bytes) to S3",
-                file.FileName, file.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Uploading file {FileName} ({Size} bytes) to S3",
+                    file.FileName, file.Length);
+            }
 
             var uploadResponse = await s3Service.UploadAsync(s3Object);
 
@@ -63,7 +66,10 @@ public static class StorageAndNotificationsEndpoints
             var urlResponse = await s3Service.GetPresignedUrlAsync(s3Object, expirationInMinutes: 60);
             var downloadUrl = urlResponse.FileName;
 
-            logger.LogInformation("File uploaded successfully. Presigned URL: {Url}", downloadUrl);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("File uploaded successfully. Presigned URL: {Url}", downloadUrl);
+            }
 
             // Send email notification with template caching (v1.5.0)
             var email = new EmailModel
@@ -127,8 +133,8 @@ public static class StorageAndNotificationsEndpoints
         // Validate and sanitize fileName to prevent path traversal
         if (string.IsNullOrWhiteSpace(fileName) ||
             fileName.Contains("..") ||
-            fileName.Contains("/") ||
-            fileName.Contains("\\") ||
+            fileName.Contains('/') ||
+            fileName.Contains('\\') ||
             Path.GetInvalidFileNameChars().Any(fileName.Contains))
         {
             return Results.BadRequest(new { message = "Invalid file name" });

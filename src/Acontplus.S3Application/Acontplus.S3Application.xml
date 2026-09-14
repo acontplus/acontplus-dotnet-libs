@@ -341,5 +341,11 @@
             Disposes all pooled S3 clients and releases resources.
             </summary>
         </member>
+        <member name="M:Acontplus.S3Application.Services.S3StorageService.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and optionally managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources.</param>
+        </member>
     </members>
 </doc>

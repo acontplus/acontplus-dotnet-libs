@@ -118,8 +118,18 @@ public static class OpenTelemetryExtensions
             builder.AddSource(source);
         }
 
-        // Add automatic instrumentation
-        if (options.Tracing.EnableAspNetCoreInstrumentation)
+        ConfigureTracingInstrumentation(builder, options.Tracing);
+        ConfigureTracingExporters(builder, options, hasDynatrace);
+
+        // Configure sampling and processing
+        builder.SetSampler(new AlwaysOnSampler());
+    }
+
+    private static void ConfigureTracingInstrumentation(
+        TracerProviderBuilder builder,
+        TracingOptions tracing)
+    {
+        if (tracing.EnableAspNetCoreInstrumentation)
         {
             builder.AddAspNetCoreInstrumentation(opts =>
             {
@@ -136,7 +146,7 @@ public static class OpenTelemetryExtensions
             });
         }
 
-        if (options.Tracing.EnableHttpClientInstrumentation)
+        if (tracing.EnableHttpClientInstrumentation)
         {
             builder.AddHttpClientInstrumentation(opts =>
             {
@@ -152,22 +162,25 @@ public static class OpenTelemetryExtensions
             });
         }
 
-        if (options.Tracing.EnableSqlClientInstrumentation)
+        if (tracing.EnableSqlClientInstrumentation)
         {
             builder.AddSqlClientInstrumentation(opts =>
             {
                 opts.RecordException = true;
             });
         }
+    }
 
-        // Configure exporters
+    private static void ConfigureTracingExporters(
+        TracerProviderBuilder builder,
+        OpenTelemetryOptions options,
+        bool hasDynatrace)
+    {
         if (options.Tracing.EnableConsoleExporter)
         {
             builder.AddConsoleExporter();
         }
 
-        // When Dynatrace is also configured, UseOtlpExporter cannot be used globally.
-        // Add OTLP per-signal here so both OTLP and Dynatrace exporters are active.
         if (hasDynatrace && options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
         {
             builder.AddOtlpExporter(otlpOptions =>
@@ -179,7 +192,6 @@ public static class OpenTelemetryExtensions
             });
         }
 
-        // Dynatrace: Uses OTLP protocol with specific headers
         if (options.Tracing.EnableDynatraceExporter && !string.IsNullOrEmpty(options.Tracing.DynatraceEndpoint))
         {
             builder.AddOtlpExporter(otlpOptions =>
@@ -187,16 +199,12 @@ public static class OpenTelemetryExtensions
                 otlpOptions.Endpoint = new Uri(options.Tracing.DynatraceEndpoint);
                 otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
 
-                // Add Dynatrace API token header if provided
                 if (!string.IsNullOrEmpty(options.Tracing.DynatraceApiToken))
                 {
                     otlpOptions.Headers = $"Authorization=Api-Token {options.Tracing.DynatraceApiToken}";
                 }
             });
         }
-
-        // Configure sampling and processing
-        builder.SetSampler(new AlwaysOnSampler());
     }
 
     /// <summary>

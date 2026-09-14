@@ -302,10 +302,12 @@
             Example helper class demonstrating how to use ActivitySource for distributed tracing.
             This class can be injected via DI and used throughout your application.
             </summary>
+            <param name="activitySource">The activity source for creating traces.</param>
         </member>
         <member name="M:Acontplus.Logging.TracingHelper.#ctor(System.Diagnostics.ActivitySource)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Logging.TracingHelper"/> class.
+            Example helper class demonstrating how to use ActivitySource for distributed tracing.
+            This class can be injected via DI and used throughout your application.
             </summary>
             <param name="activitySource">The activity source for creating traces.</param>
         </member>
@@ -359,10 +361,12 @@
             Example helper class demonstrating how to use Meter for custom metrics.
             This class can be injected via DI and used throughout your application.
             </summary>
+            <param name="meter">The meter for creating metrics.</param>
         </member>
         <member name="M:Acontplus.Logging.MetricsHelper.#ctor(System.Diagnostics.Metrics.Meter)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Logging.MetricsHelper"/> class.
+            Example helper class demonstrating how to use Meter for custom metrics.
+            This class can be injected via DI and used throughout your application.
             </summary>
             <param name="meter">The meter for creating metrics.</param>
         </member>

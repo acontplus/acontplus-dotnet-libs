@@ -18,6 +18,10 @@ public static class InfrastructureServiceExtensions
         "application/json-patch+json"
     ];
 
+    private static readonly string[] CacheHealthTags = ["ready", "cache"];
+    private static readonly string[] CircuitBreakerHealthTags = ["ready", "resilience"];
+    private static readonly string[] SelfHealthTags = ["live", "ready"];
+
     /// <summary>
     ///     Adds all infrastructure services (caching, resilience, HTTP client factory, health checks, response compression).
     /// </summary>
@@ -180,7 +184,7 @@ public static class InfrastructureServiceExtensions
         {
             healthChecksBuilder.AddCheck<CacheHealthCheck>(
                 "cache",
-                tags: new[] { "ready", "cache" });
+                tags: CacheHealthTags);
             anyCheckAdded = true;
         }
 
@@ -189,7 +193,7 @@ public static class InfrastructureServiceExtensions
         {
             healthChecksBuilder.AddCheck<CircuitBreakerHealthCheck>(
                 "circuit-breaker",
-                tags: new[] { "ready", "resilience" });
+                tags: CircuitBreakerHealthTags);
             anyCheckAdded = true;
         }
 
@@ -199,7 +203,7 @@ public static class InfrastructureServiceExtensions
         {
             healthChecksBuilder.AddCheck<SelfHealthCheck>(
                 "self",
-                tags: new[] { "live", "ready" });
+                tags: SelfHealthTags);
         }
 
         return services;

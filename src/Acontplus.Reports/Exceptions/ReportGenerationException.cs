@@ -37,17 +37,11 @@ public class ReportGenerationException : Exception
 /// <summary>
 /// Exception thrown when report size exceeds maximum allowed
 /// </summary>
-public class ReportSizeExceededException : ReportGenerationException
+public class ReportSizeExceededException(long reportSize, long maxSize)
+    : ReportGenerationException($"Report size ({reportSize} bytes) exceeds maximum allowed size ({maxSize} bytes)")
 {
-    public long ReportSize { get; }
-    public long MaxSize { get; }
-
-    public ReportSizeExceededException(long reportSize, long maxSize)
-        : base($"Report size ({reportSize} bytes) exceeds maximum allowed size ({maxSize} bytes)")
-    {
-        ReportSize = reportSize;
-        MaxSize = maxSize;
-    }
+    public long ReportSize { get; } = reportSize;
+    public long MaxSize { get; } = maxSize;
 }
 
 /// <summary>

@@ -62,7 +62,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
             Moneda = nodeInfoFactura.SelectSingleNode("moneda")?.InnerText ?? string.Empty
         };
 
-        ParseTotalTaxes(comprobante.CodDoc, infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
+        ParseTotalTaxes(infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
 
         var pagosNode = nodeInfoFactura.SelectSingleNode("pagos");
         if (pagosNode != null)
@@ -73,7 +73,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
         comprobante.CreateInfoComp(comprobante.CodDoc, infoFac);
     }
 
-    private void ParseTotalTaxes(string codDoc, InfoFactura infoFac, XmlNode? impuestos)
+    private static void ParseTotalTaxes(InfoFactura infoFac, XmlNode? impuestos)
     {
         if (impuestos == null) return;
 

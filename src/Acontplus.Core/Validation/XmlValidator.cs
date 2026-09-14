@@ -420,7 +420,6 @@ public static class XmlValidator
         }
         catch (Exception)
         {
-            //Log.Error(ex, "Error limpiando contenido XML");
             return xml;
         }
     }

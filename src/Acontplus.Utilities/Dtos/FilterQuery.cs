@@ -45,15 +45,12 @@ public record FilterQuery(
 
         // Parse filters from query parameters
         var filters = new Dictionary<string, object>();
-        foreach (var queryParam in context.Request.Query)
+        foreach (var queryParam in context.Request.Query.Where(q => q.Key.StartsWith(filtersKey + "[")))
         {
-            if (queryParam.Key.StartsWith(filtersKey + "["))
-            {
-                var filterName = queryParam.Key.Substring(
-                    filtersKey.Length + 1,
-                    queryParam.Key.Length - filtersKey.Length - 2);
-                filters[filterName] = queryParam.Value.ToString();
-            }
+            var filterName = queryParam.Key.Substring(
+                filtersKey.Length + 1,
+                queryParam.Key.Length - filtersKey.Length - 2);
+            filters[filterName] = queryParam.Value.ToString();
         }
 
         var result = new FilterQuery
@@ -61,7 +58,7 @@ public record FilterQuery(
             SortBy = context.Request.Query[sortByKey],
             SortDirection = sortDirection,
             SearchTerm = context.Request.Query[searchTermKey],
-            Filters = filters.Any() ? filters : null
+            Filters = filters.Count > 0 ? filters : null
         };
 
         return ValueTask.FromResult<FilterQuery?>(result);

@@ -446,14 +446,16 @@
             Optimized for PostgreSQL with high-performance, scalable operations.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Provides ADO.NET data access operations with retry policy and optional transaction sharing.
+            Enhanced with PostgreSQL error handling, domain error mapping, and flexible filter parameter strategies.
+            Optimized for PostgreSQL with high-performance, scalable operations.
+            </summary>
+        </member>
         <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.RetryPolicy">
             <summary>
             Lazy-loaded retry policy based on configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
-            <summary>
-            Constructor for AdoRepository with resilience configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SetTransaction(System.Data.Common.DbTransaction)">
@@ -624,7 +626,7 @@
             Uses PostgreSQL naming conventions (lowercase with underscores).
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest)">
             <summary>
             Builds pagination metadata for PagedResult.
             </summary>
@@ -633,6 +635,19 @@
             <summary>
             Converts a string to snake_case for PostgreSQL naming conventions.
             </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SnakeCaseRegex">
+            <remarks>
+            Pattern:<br/>
+            <code>([a-z0-9])([A-Z])</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ 1st capture group.<br/>
+                ○ Match a character in the set [0-9a-z].<br/>
+            ○ 2nd capture group.<br/>
+                ○ Match a character in the set [A-Z].<br/>
+            </code>
+            </remarks>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildFilteredSql(System.String,Acontplus.Core.Dtos.Requests.FilterRequest)">
             <summary>
@@ -660,6 +675,21 @@
             </list>
             </remarks>
         </member>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Dapper-based repository implementation for PostgreSQL.
+            Provides simplified data access with automatic object mapping.
+            </summary>
+            <remarks>
+            This implementation uses Dapper for lightweight ORM functionality with:
+            <list type="bullet">
+            <item><description>Automatic type mapping</description></item>
+            <item><description>Retry policies with exponential backoff</description></item>
+            <item><description>Transaction support via Unit of Work</description></item>
+            <item><description>PostgreSQL-specific optimizations (LIMIT-OFFSET pagination)</description></item>
+            </list>
+            </remarks>
+        </member>
         <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.RetryPolicy">
             <summary>
             Lazy-loaded retry policy based on configuration.
@@ -668,11 +698,6 @@
         <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.DefaultTimeout">
             <summary>
             Gets the default command timeout from configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
-            <summary>
-            Constructor for DapperRepository with resilience configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
@@ -767,11 +792,9 @@
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.#ctor(`0,Acontplus.Core.Abstractions.Persistence.IAdoRepository,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork{`0}})">
             <summary>
-            Initializes a new <see cref="T:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1"/>.
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
             </summary>
-            <param name="context">The EF Core database context.</param>
-            <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
-            <param name="logger">Optional logger instance.</param>
+            <typeparam name="TContext">The EF Core database context type.</typeparam>
         </member>
         <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.CurrentDbTransaction">
             <inheritdoc/>
@@ -873,66 +896,98 @@
             Obtener la hora actual del servidor
             </summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0">
-            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeColumnNameRegex method.</summary>
+        <member name="T:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SnakeCaseRegex method.</summary>
         </member>
-        <member name="F:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.Instance">
+        <member name="F:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.Instance">
             <summary>Cached, thread-safe singleton instance.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.#ctor">
+        <member name="M:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.#ctor">
             <summary>Initializes the instance.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory">
+        <member name="T:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory">
             <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.CreateInstance">
+        <member name="M:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory.CreateInstance">
             <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner">
+        <member name="T:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory.Runner">
             <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
             <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
             <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if a possible match was found; false if no more matches are possible.</returns>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SnakeCaseRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
             <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1">
-            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeFunctionNameRegex method.</summary>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeColumnNameRegex method.</summary>
         </member>
-        <member name="F:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.Instance">
+        <member name="F:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.Instance">
             <summary>Cached, thread-safe singleton instance.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.#ctor">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.#ctor">
             <summary>Initializes the instance.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory">
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory">
             <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.CreateInstance">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.CreateInstance">
             <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner">
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner">
             <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
             <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
             <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if a possible match was found; false if no more matches are possible.</returns>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeFunctionNameRegex method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
             <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if the regular expression matches at the current position; otherwise, false.</returns>

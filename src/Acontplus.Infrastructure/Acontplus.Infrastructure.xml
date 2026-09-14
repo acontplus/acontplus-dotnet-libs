@@ -14,6 +14,11 @@
                 In-memory cache service implementation using IMemoryCache.
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.#ctor(Microsoft.Extensions.Caching.Memory.IMemoryCache,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Caching.MemoryCacheService},Microsoft.Extensions.Options.IOptions{Acontplus.Infrastructure.Configuration.CacheConfiguration})">
+            <summary>
+                In-memory cache service implementation using IMemoryCache.
+            </summary>
+        </member>
         <member name="T:Acontplus.Infrastructure.Configuration.CacheConfiguration">
             <summary>
                 Configuration for caching services.
@@ -356,6 +361,11 @@
                 Factory for creating HTTP clients with resilience patterns (circuit breaker, retry, timeout).
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.Http.ResilientHttpClientFactory.#ctor(System.Net.Http.IHttpClientFactory,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Http.ResilientHttpClientFactory},Microsoft.Extensions.Options.IOptions{Acontplus.Infrastructure.Configuration.ResilienceConfiguration})">
+            <summary>
+                Factory for creating HTTP clients with resilience patterns (circuit breaker, retry, timeout).
+            </summary>
+        </member>
         <member name="M:Acontplus.Infrastructure.Http.ResilientHttpClientFactory.CreateClient(System.String)">
             <summary>
                 Creates an HTTP client with standard resilience policies.
@@ -402,6 +412,13 @@
             Runs synchronously in the same transaction/Unit of Work as the operation that raised the event.
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.Messaging.DomainEventDispatcher.#ctor(System.IServiceProvider,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Messaging.DomainEventDispatcher})">
+            <summary>
+            Domain Event Dispatcher for synchronous event handling within transactions.
+            Dispatches domain events to registered handlers (IDomainEventHandler implementations).
+            Runs synchronously in the same transaction/Unit of Work as the operation that raised the event.
+            </summary>
+        </member>
         <member name="M:Acontplus.Infrastructure.Messaging.DomainEventDispatcher.Dispatch(Acontplus.Core.Domain.Common.Events.IDomainEvent)">
             <summary>
             Dispatches a domain event to all registered handlers synchronously.
@@ -440,9 +457,10 @@
         </member>
         <member name="M:Acontplus.Infrastructure.Messaging.InMemoryEventBus.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Messaging.InMemoryEventBus})">
             <summary>
-            Initializes a new instance of the InMemoryEventBus.
+            In-memory event bus implementation using System.Threading.Channels for high-performance,
+            scalable event-driven architecture. Suitable for horizontal and vertical scaling scenarios.
+            Thread-safe and optimized for high workload throughput.
             </summary>
-            <param name="logger">Logger for diagnostic and troubleshooting information.</param>
         </member>
         <member name="M:Acontplus.Infrastructure.Messaging.InMemoryEventBus.PublishAsync``1(``0,System.Threading.CancellationToken)">
             <inheritdoc />
@@ -474,6 +492,11 @@
             </summary>
         </member>
         <member name="T:Acontplus.Infrastructure.Resilience.RetryPolicyService">
+            <summary>
+                Retry policy service providing retry patterns for operations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.RetryPolicyService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Resilience.RetryPolicyService},Microsoft.Extensions.Options.IOptions{Acontplus.Infrastructure.Configuration.ResilienceConfiguration})">
             <summary>
                 Retry policy service providing retry patterns for operations.
             </summary>

@@ -14,36 +14,28 @@ namespace Acontplus.Notifications.WhatsApp.Services;
 /// Registered as a singleton; uses <see cref="IHttpClientFactory"/> for thread-safe,
 /// lifecycle-managed HTTP connections with built-in resilience (retry + circuit breaker).
 /// </summary>
-public sealed class WhatsAppService : IWhatsAppService
+public sealed class WhatsAppService(
+    IHttpClientFactory httpClientFactory,
+    ILogger<WhatsAppService> logger,
+    IOptions<WhatsAppOptions> options) : IWhatsAppService
 {
     // Named HttpClient — matches the name used in AddWhatsAppService() DI registration.
     internal const string HttpClientName = "WhatsApp";
+    private const string ApiBaseUrl = "https://graph.facebook.com";
+    private const string MessagingProductKey = "messaging_product";
+    private const string WhatsAppProduct = "whatsapp";
+    private const string RecipientTypeKey = "recipient_type";
+    private const string IndividualRecipientType = "individual";
+
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly ILogger<WhatsAppService> _logger = logger;
+    private readonly WhatsAppOptions _options = options.Value;
 
     // Reused serializer options: case-insensitive for deserialization + null-skip for serialization.
     private static readonly JsonSerializerOptions DeserializeOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
-
-    private const string MessagingProductKey = "messaging_product";
-    private const string WhatsAppProduct = "whatsapp";
-    private const string RecipientTypeKey = "recipient_type";
-    private const string IndividualRecipientType = "individual";
-
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<WhatsAppService> _logger;
-    private readonly WhatsAppOptions _options;
-
-    /// <summary>Creates a new <see cref="WhatsAppService"/> instance.</summary>
-    public WhatsAppService(
-        IHttpClientFactory httpClientFactory,
-        ILogger<WhatsAppService> logger,
-        IOptions<WhatsAppOptions> options)
-    {
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-        _options = options.Value;
-    }
 
     // =========================================================================
     // Public API
@@ -176,9 +168,12 @@ public sealed class WhatsAppService : IWhatsAppService
             multipart.Add(new StringContent(WhatsAppProduct), MessagingProductKey);
             multipart.Add(new StringContent(upload.ContentType), "type");
 
-            _logger.LogInformation(
-                "WhatsApp: uploading media '{FileName}' ({ContentType}) via PhoneNumberId={PhoneNumberId}",
-                upload.FileName, upload.ContentType, creds.PhoneNumberId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "WhatsApp: uploading media '{FileName}' ({ContentType}) via PhoneNumberId={PhoneNumberId}",
+                    upload.FileName, upload.ContentType, creds.PhoneNumberId);
+            }
 
             using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
             using var req = BuildHttpRequest(HttpMethod.Post, $"{creds.PhoneNumberId}/media", creds, multipart);
@@ -191,7 +186,10 @@ public sealed class WhatsAppService : IWhatsAppService
                 var parsed = JsonSerializer.Deserialize<MetaMediaUploadResponse>(body, DeserializeOptions);
                 if (!string.IsNullOrEmpty(parsed?.id))
                 {
-                    _logger.LogInformation("WhatsApp: media uploaded — MediaId={MediaId}", parsed.id);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("WhatsApp: media uploaded — MediaId={MediaId}", parsed.id);
+                    }
                     return parsed.id;
                 }
             }
@@ -310,7 +308,10 @@ public sealed class WhatsAppService : IWhatsAppService
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogDebug("WhatsApp: message {MessageId} marked as read", messageId);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("WhatsApp: message {MessageId} marked as read", messageId);
+                }
                 return true;
             }
 
@@ -379,9 +380,12 @@ public sealed class WhatsAppService : IWhatsAppService
         {
             var json = payload.ToJsonString();
 
-            _logger.LogDebug(
-                "WhatsApp: sending '{Type}' message via PhoneNumberId={PhoneNumberId}",
-                messageType, creds.PhoneNumberId);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "WhatsApp: sending '{Type}' message via PhoneNumberId={PhoneNumberId}",
+                    messageType, creds.PhoneNumberId);
+            }
 
             using var httpClient = _httpClientFactory.CreateClient(HttpClientName);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -397,9 +401,12 @@ public sealed class WhatsAppService : IWhatsAppService
                 var msgId = apiResponse.messages[0].id!;
                 var waId = apiResponse.contacts?.FirstOrDefault()?.wa_id;
 
-                _logger.LogInformation(
-                    "WhatsApp: '{Type}' sent — MessageId={MessageId} To={WaId}",
-                    messageType, msgId, waId);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "WhatsApp: '{Type}' sent — MessageId={MessageId} To={WaId}",
+                        messageType, msgId, waId);
+                }
 
                 return WhatsAppResult.Success(msgId, waId);
             }
@@ -418,9 +425,9 @@ public sealed class WhatsAppService : IWhatsAppService
                 err?.fbtrace_id,
                 err?.error_user_title ?? err?.error_user_msg);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (ct.IsCancellationRequested)
         {
-            _logger.LogWarning("WhatsApp: '{Type}' send was cancelled", messageType);
+            _logger.LogWarning(ex, "WhatsApp: '{Type}' send was cancelled", messageType);
             return WhatsAppResult.Failure(-1, "Operation cancelled.");
         }
         catch (HttpRequestException ex)
@@ -598,7 +605,7 @@ public sealed class WhatsAppService : IWhatsAppService
             WhatsAppInteractiveType.Button => BuildButtonAction(request.ReplyButtons),
             WhatsAppInteractiveType.List => BuildListAction(request.ListButtonLabel, request.ListSections),
             WhatsAppInteractiveType.CtaUrl => BuildCtaUrlAction(request.CtaDisplayText, request.CtaUrl),
-            _ => new JsonObject()
+            _ => []
         };
 
         return node;

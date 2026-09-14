@@ -43,27 +43,20 @@ public record FilterRequest
     /// Useful for converting to stored procedure parameters or other filter formats.
     /// </summary>
     /// <returns>Dictionary of filters or null if no filters exist</returns>
-    public Dictionary<string, object>? BuildFilters()
-    {
-        return Filters == null || !Filters.Any() ? null : Filters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-    }
+    public Dictionary<string, object>? BuildFilters() =>
+        Filters == null || Filters.Count == 0 ? null : Filters.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
     /// <summary>
     /// Builds a dictionary of filters with custom key prefix (e.g., "@" for SQL parameters).
     /// </summary>
     /// <param name="prefix">Prefix to add to filter keys</param>
     /// <returns>Dictionary of filters with prefixed keys or null if no filters exist</returns>
-    public Dictionary<string, object>? BuildFiltersWithPrefix(string prefix)
-    {
-        return Filters == null || !Filters.Any() ? null : Filters.ToDictionary(kvp => prefix + kvp.Key, kvp => kvp.Value);
-    }
+    public Dictionary<string, object>? BuildFiltersWithPrefix(string prefix) =>
+        Filters == null || Filters.Count == 0 ? null : Filters.ToDictionary(kvp => prefix + kvp.Key, kvp => kvp.Value);
 
     /// <summary>
     /// Builds a dictionary of filters with "@" prefix for SQL parameters.
     /// </summary>
     /// <returns>Dictionary of filters with "@" prefix or null if no filters exist</returns>
-    public Dictionary<string, object>? BuildSqlParameters()
-    {
-        return BuildFiltersWithPrefix("@");
-    }
+    public Dictionary<string, object>? BuildSqlParameters() => BuildFiltersWithPrefix("@");
 }

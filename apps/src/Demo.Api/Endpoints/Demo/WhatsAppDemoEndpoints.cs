@@ -110,6 +110,10 @@ public static class WhatsAppDemoEndpoints
         return ToResult(result);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "Minimal API multipart form endpoint binds multiple form fields and services directly.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S107",
+        Justification = "Minimal API multipart form endpoint binds multiple form fields and services directly.")]
     private static async Task<IResult> SendDocumentTemplate(
         IFormFile file,
         [FromForm] string to,
@@ -344,9 +348,9 @@ public static class WhatsAppDemoEndpoints
             req.RawBody,
             req.AppSecret);
 
-        return Task.FromResult(isValid
+        return Task.FromResult<IResult>(isValid
             ? Results.Ok(new { valid = true, message = "Signature is valid." })
-            : (IResult)Results.UnprocessableEntity(new { valid = false, message = "Invalid signature. Check AppSecret and that the body is the raw UTF-8 string." }));
+            : Results.UnprocessableEntity(new { valid = false, message = "Invalid signature. Check AppSecret and that the body is the raw UTF-8 string." }));
     }
 
     // =========================================================================

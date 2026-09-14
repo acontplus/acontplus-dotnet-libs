@@ -162,8 +162,6 @@ public static class ServiceCollectionExtensions
     }
 
     [SupportedOSPlatform("windows6.1")]
-    private static void AddPrinterServiceIfSupported(IServiceCollection services)
-    {
+    private static void AddPrinterServiceIfSupported(IServiceCollection services) =>
         services.TryAddScoped<IRdlcPrinterService, Services.RdlcPrinterService>();
-    }
 }

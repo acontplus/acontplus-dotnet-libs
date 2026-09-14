@@ -13,18 +13,17 @@ namespace Demo.Infrastructure.EventHandlers;
 /// This solves the problem: "I need two inserts where second depends on first's ID"
 /// Uses IUnitOfWork to get repositories - no need for explicit DI registration.
 /// </summary>
-public class OrderLineItemsCreationHandler : IDomainEventHandler<EntityCreatedEvent>
+public class OrderLineItemsCreationHandler(
+    IUnitOfWork unitOfWork,
+    ILogger<OrderLineItemsCreationHandler> logger) : IDomainEventHandler<EntityCreatedEvent>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<OrderLineItemsCreationHandler> _logger;
+    private readonly ILogger<OrderLineItemsCreationHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
 
-    public OrderLineItemsCreationHandler(
-        IUnitOfWork unitOfWork,
-        ILogger<OrderLineItemsCreationHandler> logger)
-    {
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to trigger transaction rollback.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to trigger transaction rollback.")]
     public async Task HandleAsync(EntityCreatedEvent domainEvent, CancellationToken cancellationToken = default)
     {
         // Only handle Order creation events

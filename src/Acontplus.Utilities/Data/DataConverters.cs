@@ -144,11 +144,8 @@ public static class DataConverters
         }
     }
 
-    public static string SerializeDictionary(Dictionary<string, object> data
-    )
-    {
-        return data.SerializeOptimized();
-    }
+    public static string SerializeDictionary(Dictionary<string, object> data) => data.SerializeOptimized();
+
     /// <summary>
     /// Helper method to sanitize values for serialization
     /// </summary>
@@ -188,7 +185,7 @@ public static class DataConverters
         }
 
         // Handle generic collections but preserve their actual values
-        if (value is IEnumerable collection && value is not string)
+        if (value is IEnumerable collection and not string)
         {
             var result = new List<object?>();
             foreach (var item in collection)

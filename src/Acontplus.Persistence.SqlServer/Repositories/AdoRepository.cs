@@ -14,12 +14,17 @@ namespace Acontplus.Persistence.SqlServer.Repositories;
 ///     Provides ADO.NET data access operations with retry policy and optional transaction sharing.
 ///     Enhanced with SQL Server error handling, domain error mapping, and flexible filter parameter strategies.
 /// </summary>
-public class AdoRepository : IAdoRepository
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+    Justification = "Repository methods log detailed diagnostic context before rethrowing database exceptions.")]
+public class AdoRepository(
+    IConfiguration configuration,
+    ILogger<AdoRepository> logger,
+    IOptions<PersistenceResilienceOptions> resilienceOptions) : IAdoRepository
 {
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration _configuration = configuration;
     private readonly ConcurrentDictionary<string, string> _connectionStrings = new();
-    private readonly ILogger<AdoRepository> _logger;
-    private readonly PersistenceResilienceOptions _resilienceOptions;
+    private readonly ILogger<AdoRepository> _logger = logger;
+    private readonly PersistenceResilienceOptions _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
     private DbConnection? _currentConnection;
 
     // Fields for sharing connection/transaction with UnitOfWork
@@ -85,19 +90,6 @@ public class AdoRepository : IAdoRepository
     }
 
     /// <summary>
-    ///     Constructor for AdoRepository with resilience configuration.
-    /// </summary>
-    public AdoRepository(
-        IConfiguration configuration,
-        ILogger<AdoRepository> logger,
-        IOptions<PersistenceResilienceOptions> resilienceOptions)
-    {
-        _configuration = configuration;
-        _logger = logger;
-        _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
-    }
-
-    /// <summary>
     ///     Sets the current database transaction from the Unit of Work.
     /// </summary>
     public void SetTransaction(DbTransaction transaction) => _currentTransaction = transaction;
@@ -125,7 +117,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default)
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
@@ -168,7 +160,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default)
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
         options ??= new CommandOptionsDto();
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
@@ -227,7 +219,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default)
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
@@ -269,7 +261,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
         options ??= new CommandOptionsDto();
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
@@ -316,7 +308,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
         options ??= new CommandOptionsDto();
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
@@ -365,7 +357,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
         DbConnection? connectionToClose = null;
         SqlCommand? cmd = null;
         DbDataReader? reader = null;
@@ -381,60 +373,14 @@ public class AdoRepository : IAdoRepository
             cmd = CreateCommand(connection, sql, parameters, options);
             reader = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, cancellationToken);
 
-            var type = typeof(T);
-            var isRecord = type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any()
-                           && type.BaseType == typeof(object);
-
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanWrite || (isRecord && p.CanRead))
-                .ToArray();
-
-            var columnMap = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
-            for (var i = 0; i < reader.FieldCount; i++)
-            {
-                var columnName = reader.GetName(i);
-                if (string.IsNullOrEmpty(columnName))
-                {
-                    continue;
-                }
-
-                var property = properties.FirstOrDefault(p =>
-                    string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));
-                if (property != null)
-                {
-                    columnMap[columnName] = property;
-                }
-            }
+            var columnMap = BuildColumnPropertyMap<T>(reader);
 
             while (await reader.ReadAsync(cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var instance = Activator.CreateInstance<T>();
 
-                foreach (var kvp in columnMap)
-                {
-                    var ordinal = reader.GetOrdinal(kvp.Key);
-                    if (await reader.IsDBNullAsync(ordinal, cancellationToken))
-                    {
-                        continue;
-                    }
-
-                    var value = reader.GetValue(ordinal);
-                    var property = kvp.Value;
-                    var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-
-                    try
-                    {
-                        var convertedValue = propertyType.IsEnum ? Enum.ToObject(propertyType, value) :
-                            propertyType == typeof(Guid) ? value is string strGuid ? Guid.Parse(strGuid) : (Guid)value :
-                            Convert.ChangeType(value, propertyType);
-                        property.SetValue(instance, convertedValue);
-                    }
-                    catch
-                    {
-                        /* Skip properties that fail to map */
-                    }
-                }
+                PopulateInstanceFromReader(instance, reader, columnMap);
 
                 yield return instance;
             }
@@ -453,6 +399,80 @@ public class AdoRepository : IAdoRepository
 
             await CloseConnectionSafelyAsync(connectionToClose);
         }
+    }
+
+    private static Dictionary<string, PropertyInfo> BuildColumnPropertyMap<T>(DbDataReader reader)
+    {
+        var type = typeof(T);
+        var isRecord = type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Length > 0
+                       && type.BaseType == typeof(object);
+
+        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanWrite || (isRecord && p.CanRead))
+            .ToArray();
+
+        var columnMap = new Dictionary<string, PropertyInfo>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            var columnName = reader.GetName(i);
+            if (string.IsNullOrEmpty(columnName))
+            {
+                continue;
+            }
+
+            var property = properties.FirstOrDefault(p =>
+                string.Equals(p.Name, columnName, StringComparison.OrdinalIgnoreCase));
+            if (property != null)
+            {
+                columnMap[columnName] = property;
+            }
+        }
+
+        return columnMap;
+    }
+
+    private static void PopulateInstanceFromReader<T>(
+        T instance,
+        DbDataReader reader,
+        Dictionary<string, PropertyInfo> columnMap)
+    {
+        foreach (var kvp in columnMap)
+        {
+            var ordinal = reader.GetOrdinal(kvp.Key);
+            if (reader.IsDBNull(ordinal))
+            {
+                continue;
+            }
+
+            var value = reader.GetValue(ordinal);
+            var property = kvp.Value;
+            var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+            try
+            {
+                var convertedValue = ConvertPropertyValue(value, propertyType);
+                property.SetValue(instance, convertedValue);
+            }
+            catch
+            {
+                /* Skip properties that fail to map */
+            }
+        }
+    }
+
+    private static object? ConvertPropertyValue(object value, Type propertyType)
+    {
+        if (propertyType.IsEnum)
+        {
+            return Enum.ToObject(propertyType, value);
+        }
+
+        if (propertyType == typeof(Guid))
+        {
+            return value is string strGuid ? Guid.Parse(strGuid) : (Guid)value;
+        }
+
+        return Convert.ChangeType(value, propertyType);
     }
 
     #endregion
@@ -690,7 +710,7 @@ public class AdoRepository : IAdoRepository
                 var items = await reader.ToListAsync<T>(ct);
 
                 // Build result with metadata
-                var metadata = BuildPaginationMetadata(pagination, options);
+                var metadata = BuildPaginationMetadata(pagination);
 
                 return new PagedResult<T>(items, pagination.PageIndex, pagination.PageSize, totalCount, metadata);
             }
@@ -754,7 +774,7 @@ public class AdoRepository : IAdoRepository
                     : 0;
 
                 // Build result with metadata
-                var metadata = BuildPaginationMetadata(pagination, options);
+                var metadata = BuildPaginationMetadata(pagination);
 
                 return new PagedResult<T>(items, pagination.PageIndex, pagination.PageSize, totalCount, metadata);
             }
@@ -766,7 +786,7 @@ public class AdoRepository : IAdoRepository
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Unexpected error executing GetPagedFromStoredProcedureAsync for '{storedProcedureName}'.",
+                    "Unexpected error executing GetPagedFromStoredProcedureAsync for '{StoredProcedureName}'.",
                     storedProcedureName);
                 throw;
             }
@@ -874,7 +894,7 @@ public class AdoRepository : IAdoRepository
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Unexpected error executing GetFilteredFromStoredProcedureAsync for '{storedProcedureName}'.",
+                    "Unexpected error executing GetFilteredFromStoredProcedureAsync for '{StoredProcedureName}'.",
                     storedProcedureName);
                 throw;
             }
@@ -965,7 +985,7 @@ public class AdoRepository : IAdoRepository
         CommandOptionsDto? options = null,
         CancellationToken cancellationToken = default)
     {
-        parameters ??= new Dictionary<string, object>();
+        parameters ??= [];
 
         return await RetryPolicy.ExecuteAsync(async (ct) =>
         {
@@ -1017,7 +1037,7 @@ public class AdoRepository : IAdoRepository
         CancellationToken cancellationToken = default)
     {
         var commandList = commands.ToList();
-        if (!commandList.Any())
+        if (commandList.Count == 0)
         {
             return 0;
         }
@@ -1040,19 +1060,7 @@ public class AdoRepository : IAdoRepository
                     transaction = await connection.BeginTransactionAsync(cancellationToken);
                 }
 
-                var totalAffected = 0;
-
-                foreach (var (sql, parameters) in commandList)
-                {
-                    var cmdParams = parameters ?? new Dictionary<string, object>();
-                    await using var cmd = CreateCommand(connection, sql, cmdParams, options);
-                    if (transaction != null)
-                    {
-                        cmd.Transaction = (SqlTransaction)transaction;
-                    }
-
-                    totalAffected += await cmd.ExecuteNonQueryAsync(ct);
-                }
+                var totalAffected = await ExecuteBatchCommandsInternalAsync(connection, transaction, commandList, options, ct);
 
                 if (transaction != null)
                 {
@@ -1083,10 +1091,37 @@ public class AdoRepository : IAdoRepository
             }
             finally
             {
-                transaction?.Dispose();
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
                 await CloseConnectionSafelyAsync(connectionToClose);
             }
         }, cancellationToken);
+    }
+
+    private async Task<int> ExecuteBatchCommandsInternalAsync(
+        DbConnection connection,
+        DbTransaction? transaction,
+        List<(string Sql, Dictionary<string, object>? Parameters)> commandList,
+        CommandOptionsDto? options,
+        CancellationToken ct)
+    {
+        var totalAffected = 0;
+        foreach (var (sql, parameters) in commandList)
+        {
+            var cmdParams = parameters ?? [];
+            await using var cmd = CreateCommand(connection, sql, cmdParams, options);
+            if (transaction != null)
+            {
+                cmd.Transaction = (SqlTransaction)transaction;
+            }
+
+            totalAffected += await cmd.ExecuteNonQueryAsync(ct);
+        }
+
+        return totalAffected;
     }
 
     /// <summary>
@@ -1138,22 +1173,7 @@ public class AdoRepository : IAdoRepository
                     EnableStreaming = true
                 };
 
-                // Add column mappings
-                if (columnMappings != null)
-                {
-                    foreach (var mapping in columnMappings)
-                    {
-                        bulkCopy.ColumnMappings.Add(mapping.Key, mapping.Value);
-                    }
-                }
-                else
-                {
-                    // Auto-map columns by name
-                    foreach (DataColumn column in dataTable.Columns)
-                    {
-                        bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-                    }
-                }
+                ConfigureSqlBulkCopyMappings(bulkCopy, dataTable, columnMappings);
 
                 await bulkCopy.WriteToServerAsync(dataTable, ct);
                 return dataTable.Rows.Count;
@@ -1175,6 +1195,27 @@ public class AdoRepository : IAdoRepository
         }, cancellationToken);
     }
 
+    private static void ConfigureSqlBulkCopyMappings(
+        SqlBulkCopy bulkCopy,
+        DataTable dataTable,
+        Dictionary<string, string>? columnMappings)
+    {
+        if (columnMappings != null)
+        {
+            foreach (var mapping in columnMappings)
+            {
+                bulkCopy.ColumnMappings.Add(mapping.Key, mapping.Value);
+            }
+        }
+        else
+        {
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            }
+        }
+    }
+
     #endregion
 
     #region Flexible Filter Parameter Builders
@@ -1185,37 +1226,16 @@ public class AdoRepository : IAdoRepository
     ///     - UseJsonFilters = false (default): Individual parameters for raw SQL queries
     ///     - UseJsonFilters = true: JSON serialized parameters for stored procedures
     /// </summary>
-    private Dictionary<string, object> BuildFilterParameters(FilterRequest filter, CommandOptionsDto options)
+    private static Dictionary<string, object> BuildFilterParameters(FilterRequest filter, CommandOptionsDto options)
     {
         var result = new Dictionary<string, object>();
 
-        // Add search term if provided
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
-            result["@SearchTerm"] = $"%{filter.SearchTerm}%"; // For LIKE queries
+            result["@SearchTerm"] = $"%{filter.SearchTerm}%";
         }
 
-        // Apply flexible filter strategy
-        if (options.UseJsonFilters ?? true)
-        {
-            // JSON approach - single parameter for stored procedures
-            result["@Filters"] = (filter.Filters != null && filter.Filters.Any())
-                ? filter.Filters.SerializeWithCamelCaseKeys()
-                : DBNull.Value;
-        }
-        else
-        {
-            // Individual parameters approach - for raw SQL queries
-            if (filter.Filters != null && filter.Filters.Any())
-            {
-                foreach (var kvp in filter.Filters)
-                {
-                    var paramName = kvp.Key.StartsWith("@") ? kvp.Key : $"@{kvp.Key}";
-                    result[paramName] = kvp.Value;
-                }
-            }
-        }
-
+        PopulateFilters(result, filter.Filters, options.UseJsonFilters ?? true);
         return result;
     }
 
@@ -1223,37 +1243,16 @@ public class AdoRepository : IAdoRepository
     ///     Builds query parameters from PaginationRequest using flexible strategy.
     ///     Strategy is determined by CommandOptionsDto.UseJsonFilters flag.
     /// </summary>
-    private Dictionary<string, object> BuildFilterParameters(PaginationRequest pagination, CommandOptionsDto options)
+    private static Dictionary<string, object> BuildFilterParameters(PaginationRequest pagination, CommandOptionsDto options)
     {
         var result = new Dictionary<string, object>();
 
-        // Add search term if provided
         if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
         {
-            result["@SearchTerm"] = $"%{pagination.SearchTerm}%"; // For LIKE queries
+            result["@SearchTerm"] = $"%{pagination.SearchTerm}%";
         }
 
-        // Apply flexible filter strategy
-        if (options.UseJsonFilters ?? true)
-        {
-            // JSON approach - single parameter for stored procedures
-            result["@Filters"] = (pagination.Filters != null && pagination.Filters.Any())
-                ? pagination.Filters.SerializeWithCamelCaseKeys()
-                : DBNull.Value;
-        }
-        else
-        {
-            // Individual parameters approach - for raw SQL queries
-            if (pagination.Filters != null && pagination.Filters.Any())
-            {
-                foreach (var kvp in pagination.Filters)
-                {
-                    var paramName = kvp.Key.StartsWith("@") ? kvp.Key : $"@{kvp.Key}";
-                    result[paramName] = kvp.Value;
-                }
-            }
-        }
-
+        PopulateFilters(result, pagination.Filters, options.UseJsonFilters ?? true);
         return result;
     }
 
@@ -1265,42 +1264,18 @@ public class AdoRepository : IAdoRepository
     {
         var spParameters = new Dictionary<string, object>();
 
-        // Add sort parameters if provided
         if (!string.IsNullOrWhiteSpace(filter.SortBy))
         {
             spParameters["@SortBy"] = ValidateAndSanitizeSortColumn(filter.SortBy);
             spParameters["@SortDirection"] = filter.SortDirection.ToString();
         }
 
-        // Add search term if provided
         if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
             spParameters["@SearchTerm"] = filter.SearchTerm;
         }
 
-        // Default to JSON for stored procedures unless explicitly set to false
-        var useJsonForSp = options.UseJsonFilters ?? true;
-
-        if (useJsonForSp)
-        {
-            // JSON approach - recommended for stored procedures
-            spParameters["@Filters"] = (filter.Filters != null && filter.Filters.Any())
-                ? filter.Filters.SerializeWithCamelCaseKeys()
-                : DBNull.Value;
-        }
-        else
-        {
-            // Individual parameters approach - if explicitly requested
-            if (filter.Filters != null && filter.Filters.Any())
-            {
-                foreach (var kvp in filter.Filters)
-                {
-                    var paramName = kvp.Key.StartsWith("@") ? kvp.Key : $"@{kvp.Key}";
-                    spParameters[paramName] = kvp.Value;
-                }
-            }
-        }
-
+        PopulateFilters(spParameters, filter.Filters, options.UseJsonFilters ?? true);
         return spParameters;
     }
 
@@ -1317,49 +1292,54 @@ public class AdoRepository : IAdoRepository
             ["@PageSize"] = pagination.PageSize
         };
 
-        // Add sort parameters if provided
         if (!string.IsNullOrWhiteSpace(pagination.SortBy))
         {
             spParameters["@SortBy"] = ValidateAndSanitizeSortColumn(pagination.SortBy);
             spParameters["@SortDirection"] = pagination.SortDirection.ToString();
         }
 
-        // Add search term if provided
         if (!string.IsNullOrWhiteSpace(pagination.SearchTerm))
         {
             spParameters["@SearchTerm"] = pagination.SearchTerm;
         }
 
-        // Default to JSON for stored procedures unless explicitly set to false
-        var useJsonForSp = options.UseJsonFilters ?? true;
+        PopulateFilters(spParameters, pagination.Filters, options.UseJsonFilters ?? true);
+        return spParameters;
+    }
 
-        if (useJsonForSp)
+    private static void PopulateFilters(
+        Dictionary<string, object> parameters,
+        IReadOnlyDictionary<string, object>? filters,
+        bool useJsonFilters)
+    {
+        if (filters == null || filters.Count == 0)
         {
-            // JSON approach - recommended for stored procedures
-            spParameters["@Filters"] = (pagination.Filters != null && pagination.Filters.Any())
-                ? pagination.Filters.SerializeWithCamelCaseKeys()
-                : DBNull.Value;
+            if (useJsonFilters)
+            {
+                parameters["@Filters"] = DBNull.Value;
+            }
+
+            return;
+        }
+
+        if (useJsonFilters)
+        {
+            parameters["@Filters"] = filters.SerializeWithCamelCaseKeys();
         }
         else
         {
-            // Individual parameters approach - if explicitly requested
-            if (pagination.Filters != null && pagination.Filters.Any())
+            foreach (var kvp in filters)
             {
-                foreach (var kvp in pagination.Filters)
-                {
-                    var paramName = kvp.Key.StartsWith("@") ? kvp.Key : $"@{kvp.Key}";
-                    spParameters[paramName] = kvp.Value;
-                }
+                var paramName = kvp.Key.StartsWith('@') ? kvp.Key : $"@{kvp.Key}";
+                parameters[paramName] = kvp.Value;
             }
         }
-
-        return spParameters;
     }
 
     /// <summary>
     ///     Builds pagination metadata for PagedResult.
     /// </summary>
-    private Dictionary<string, object> BuildPaginationMetadata(PaginationRequest pagination, CommandOptionsDto options)
+    private static Dictionary<string, object> BuildPaginationMetadata(PaginationRequest pagination)
     {
         var metadata = new Dictionary<string, object>
         {
@@ -1379,35 +1359,6 @@ public class AdoRepository : IAdoRepository
             metadata[PaginationMetadataKeys.FilterCount] = pagination.Filters.Count;
         }
 
-        // Add strategy info in development environments (optional)
-        // metadata["filterStrategy"] = options.UseJsonFilters ? "JSON" : "Individual";
-
-        return metadata;
-    }
-
-    /// <summary>
-    ///     Builds pagination metadata for FilterRequest (non-paginated).
-    /// </summary>
-    private Dictionary<string, object> BuildFilterMetadata(FilterRequest filter, CommandOptionsDto options)
-    {
-        var metadata = new Dictionary<string, object>
-        {
-            ["hasFilters"] = filter.Filters?.Any() ?? false,
-            ["hasSearch"] = !string.IsNullOrWhiteSpace(filter.SearchTerm),
-            ["sortBy"] = filter.SortBy ?? string.Empty,
-            ["sortDirection"] = filter.SortDirection.ToString()
-        };
-
-        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
-        {
-            metadata["searchTerm"] = filter.SearchTerm;
-        }
-
-        if (filter.Filters?.Any() == true)
-        {
-            metadata["filterCount"] = filter.Filters.Count;
-        }
-
         return metadata;
     }
 
@@ -1423,14 +1374,11 @@ public class AdoRepository : IAdoRepository
         var builder = new StringBuilder(sql);
 
         // Add ORDER BY if not present and if SortBy is provided
-        if (!sql.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
+        if (!sql.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(filter.SortBy))
         {
-            if (!string.IsNullOrEmpty(filter.SortBy))
-            {
-                var safeSortBy = ValidateAndSanitizeSortColumn(filter.SortBy);
-                var direction = filter.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
-                builder.Append($" ORDER BY [{safeSortBy}] {direction}");
-            }
+            var safeSortBy = ValidateAndSanitizeSortColumn(filter.SortBy);
+            var direction = filter.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
+            builder.Append($" ORDER BY [{safeSortBy}] {direction}");
         }
 
         return builder.ToString();
@@ -1568,7 +1516,7 @@ public class AdoRepository : IAdoRepository
         return columnName;
     }
 
-    private void ValidatePagination(PaginationRequest pagination)
+    private static void ValidatePagination(PaginationRequest pagination)
     {
         ArgumentNullException.ThrowIfNull(pagination);
         if (pagination.PageIndex < 1)
@@ -1576,13 +1524,13 @@ public class AdoRepository : IAdoRepository
             throw new ArgumentException("PageIndex must be greater than 0", nameof(pagination));
         }
 
-        if (pagination.PageSize < 1 || pagination.PageSize > 10000)
+        if (pagination.PageSize is < 1 or > 10000)
         {
             throw new ArgumentException("PageSize must be between 1 and 10000", nameof(pagination));
         }
     }
 
-    private DataTable ConvertToDataTable<T>(IEnumerable<T> data, Dictionary<string, string>? columnMappings)
+    private static DataTable ConvertToDataTable<T>(IEnumerable<T> data, Dictionary<string, string>? columnMappings)
     {
         var dataTable = new DataTable();
         var properties = typeof(T).GetProperties();

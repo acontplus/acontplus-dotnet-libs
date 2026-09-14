@@ -29,8 +29,8 @@ public class RdlcPrinterService : IRdlcPrinterService
 
     public async Task<bool> PrintAsync(RdlcPrinterDto rdlcPrinter, RdlcPrintRequestDto printRequest, CancellationToken cancellationToken = default)
     {
-        if (rdlcPrinter == null) throw new ArgumentNullException(nameof(rdlcPrinter));
-        if (printRequest == null) throw new ArgumentNullException(nameof(printRequest));
+        ArgumentNullException.ThrowIfNull(rdlcPrinter);
+        ArgumentNullException.ThrowIfNull(printRequest);
 
         var printJobId = Guid.NewGuid().ToString("N")[..8];
 
@@ -96,96 +96,29 @@ public class RdlcPrinterService : IRdlcPrinterService
         string printJobId,
         CancellationToken cancellationToken)
     {
-        // Resource Management: Properly track all disposable resources
         List<Stream>? streams = null;
         PrintDocument? printDoc = null;
         List<DataTable>? dataTablesToDispose = null;
 
         try
         {
-            streams = new List<Stream>();
             using var lr = new LocalReport();
 
-            // Validate and construct secure report path - always enforce security
-            string reportPath;
-            if (!_options.EnableStrictPathValidation)
-            {
-                // CWE-22 Prevention: Path traversal attacks must be prevented in all environments
-                _logger.LogCritical("SECURITY ERROR: Strict path validation is disabled. This is a critical security vulnerability (CWE-22).");
-                throw new SecurityException(
-                    "Strict path validation must be enabled to prevent path traversal attacks (CWE-22). " +
-                    "Set ReportOptions.EnableStrictPathValidation = true in your configuration.");
-            }
-
-            // Ensure ReportsDirectory and FileName are provided
-            if (string.IsNullOrWhiteSpace(rdlcPrinter.ReportsDirectory))
-            {
-                throw new InvalidReportPathException("ReportsDirectory cannot be null or empty");
-            }
-            if (string.IsNullOrWhiteSpace(rdlcPrinter.FileName))
-            {
-                throw new InvalidReportPathException("FileName cannot be null or empty");
-            }
-
-            try
-            {
-                var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rdlcPrinter.ReportsDirectory);
-                reportPath = PathSecurityValidator.ValidateAndResolvePath(baseDirectory, rdlcPrinter.FileName);
-
-                // Validate file extension
-                if (_options.AllowedReportExtensions.Length > 0)
-                {
-                    PathSecurityValidator.ValidateFileExtension(reportPath, _options.AllowedReportExtensions);
-                }
-            }
-            catch (SecurityException ex)
-            {
-                throw InvalidReportPathException.FromSecurityException(ex, rdlcPrinter.FileName);
-            }
-
+            var reportPath = ResolveReportPath(rdlcPrinter);
             await LoadReportDefinitionAsync(lr, reportPath, cancellationToken);
 
-            // Add data sources
-            // Resource Management: Track DataTables for proper disposal
-            dataTablesToDispose = new List<DataTable>();
-            if (printRequest.DataSources != null)
-            {
-                foreach (var item in printRequest.DataSources)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+            dataTablesToDispose = [];
+            AddDataSources(lr, printRequest, dataTablesToDispose, cancellationToken);
 
-                    var dataTable = DataConverters.JsonToDataTable(
-                        JsonExtensions.SerializeOptimized(item.Value));
-                    dataTablesToDispose.Add(dataTable);
-                    lr.DataSources.Add(new ReportDataSource(item.Key, dataTable));
-                }
-            }
-
-            // Set parameters
             await SetReportParametersAsync(lr, rdlcPrinter, printRequest, cancellationToken);
 
-            // Render to streams
-            lr.Render(rdlcPrinter.Format, rdlcPrinter.DeviceInfo, (_, _, _, _, _) =>
-            {
-                var stream = new MemoryStream();
-                streams.Add(stream);
-                return stream;
-            }, out _);
-
-            foreach (var stream in streams)
-            {
-                stream.Position = 0;
-            }
-
-            if (streams == null || streams.Count == 0)
+            streams = RenderStreams(lr, rdlcPrinter);
+            if (streams.Count == 0)
             {
                 throw new ReportGenerationException("No streams generated for printing");
             }
 
-            // Validate printer
-            printDoc = new PrintDocument();
-            printDoc.PrinterSettings.PrinterName = rdlcPrinter.PrinterName;
-
+            printDoc = new PrintDocument { PrinterSettings = { PrinterName = rdlcPrinter.PrinterName } };
             if (!printDoc.PrinterSettings.IsValid)
             {
                 _logger.LogWarning(
@@ -194,136 +127,186 @@ public class RdlcPrinterService : IRdlcPrinterService
                 return false;
             }
 
-            // Configure printer settings for thermal/matricial printers
             ConfigurePrinterSettings(printDoc, rdlcPrinter, printJobId);
-
-            // Set up print handler
-            var currentPage = 0;
-            var hasErrors = false;
-
-            printDoc.PrintPage += (sender, e) =>
-            {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    if (currentPage < streams.Count && e.Graphics != null)
-                    {
-                        using var pageImage = new Metafile(streams[currentPage]);
-
-                        // Optimize for thermal printers - use bounds properly
-                        var bounds = e.MarginBounds;
-                        if (e.PageSettings.Landscape)
-                        {
-                            bounds = new System.Drawing.Rectangle(
-                                e.PageBounds.X,
-                                e.PageBounds.Y,
-                                e.PageBounds.Height,
-                                e.PageBounds.Width);
-                        }
-
-                        e.Graphics.DrawImage(pageImage, bounds);
-                        currentPage++;
-                        e.HasMorePages = currentPage < streams.Count;
-                    }
-                    else
-                    {
-                        e.HasMorePages = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex,
-                        "Print job {PrintJobId}: Error rendering page {PageNumber}",
-                        printJobId, currentPage + 1);
-                    hasErrors = true;
-                    e.HasMorePages = false;
-                }
-            };
-
-            printDoc.EndPrint += (sender, e) =>
-            {
-                try
-                {
-                    // Note: Stream cleanup is handled in the finally block
-                    // This event just logs completion
-                    if (_options.EnableDetailedLogging)
-                    {
-                        _logger.LogInformation(
-                            "Print job {PrintJobId}: Printed {PageCount} pages",
-                            printJobId, currentPage);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex,
-                        "Print job {PrintJobId}: Error during EndPrint event",
-                        printJobId);
-                }
-            };
-
-            printDoc.QueryPageSettings += (sender, e) =>
-            {
-                // Allow dynamic page settings for thermal printers
-                if (e.PageSettings != null && rdlcPrinter.Format == "Image")
-                {
-                    // Thermal printers often need specific settings
-                    e.PageSettings.Margins = new System.Drawing.Printing.Margins(0, 0, 0, 0);
-                }
-            };
-
-            // Execute print
-            printDoc.Print();
-
-            return !hasErrors;
+            return ExecutePrintJob(printDoc, streams, rdlcPrinter, printJobId, cancellationToken);
         }
         finally
         {
-            // Resource Management: Ensure all resources are properly disposed
-            // Dispose streams
-            if (streams != null)
+            DisposePrintResources(streams, dataTablesToDispose, printDoc, printJobId);
+        }
+    }
+
+    private string ResolveReportPath(RdlcPrinterDto rdlcPrinter)
+    {
+        if (!_options.EnableStrictPathValidation)
+        {
+            _logger.LogCritical("SECURITY ERROR: Strict path validation is disabled. This is a critical security vulnerability (CWE-22).");
+            throw new SecurityException(
+                "Strict path validation must be enabled to prevent path traversal attacks (CWE-22). " +
+                "Set ReportOptions.EnableStrictPathValidation = true in your configuration.");
+        }
+
+        if (string.IsNullOrWhiteSpace(rdlcPrinter.ReportsDirectory))
+        {
+            throw new InvalidReportPathException("ReportsDirectory cannot be null or empty");
+        }
+        if (string.IsNullOrWhiteSpace(rdlcPrinter.FileName))
+        {
+            throw new InvalidReportPathException("FileName cannot be null or empty");
+        }
+
+        try
+        {
+            var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, rdlcPrinter.ReportsDirectory);
+            var reportPath = PathSecurityValidator.ValidateAndResolvePath(baseDirectory, rdlcPrinter.FileName);
+
+            if (_options.AllowedReportExtensions.Length > 0)
             {
-                foreach (var stream in streams)
-                {
-                    try
-                    {
-                        stream?.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error disposing stream in print job {PrintJobId}", printJobId);
-                    }
-                }
-                streams.Clear();
+                PathSecurityValidator.ValidateFileExtension(reportPath, _options.AllowedReportExtensions);
             }
 
-            // Dispose DataTables
-            if (dataTablesToDispose != null)
-            {
-                foreach (var dt in dataTablesToDispose)
-                {
-                    try
-                    {
-                        dt?.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error disposing DataTable in print job {PrintJobId}", printJobId);
-                    }
-                }
-                dataTablesToDispose.Clear();
-            }
+            return reportPath;
+        }
+        catch (SecurityException ex)
+        {
+            throw InvalidReportPathException.FromSecurityException(ex, rdlcPrinter.FileName);
+        }
+    }
 
-            // Dispose PrintDocument
+    private static void AddDataSources(
+        LocalReport lr,
+        RdlcPrintRequestDto printRequest,
+        List<DataTable> dataTablesToDispose,
+        CancellationToken cancellationToken)
+    {
+        if (printRequest.DataSources == null)
+        {
+            return;
+        }
+
+        foreach (var item in printRequest.DataSources)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var dataTable = DataConverters.JsonToDataTable(JsonExtensions.SerializeOptimized(item.Value));
+            dataTablesToDispose.Add(dataTable);
+            lr.DataSources.Add(new ReportDataSource(item.Key, dataTable));
+        }
+    }
+
+    private static List<Stream> RenderStreams(LocalReport lr, RdlcPrinterDto rdlcPrinter)
+    {
+        var streams = new List<Stream>();
+        lr.Render(rdlcPrinter.Format, rdlcPrinter.DeviceInfo, (_, _, _, _, _) =>
+        {
+            var stream = new MemoryStream();
+            streams.Add(stream);
+            return stream;
+        }, out _);
+
+        foreach (var stream in streams)
+        {
+            stream.Position = 0;
+        }
+
+        return streams;
+    }
+
+    private bool ExecutePrintJob(
+        PrintDocument printDoc,
+        List<Stream> streams,
+        RdlcPrinterDto rdlcPrinter,
+        string printJobId,
+        CancellationToken cancellationToken)
+    {
+        var currentPage = 0;
+        var hasErrors = false;
+
+        printDoc.PrintPage += (_, e) =>
+        {
             try
             {
-                printDoc?.Dispose();
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (currentPage < streams.Count && e.Graphics != null)
+                {
+                    using var pageImage = new Metafile(streams[currentPage]);
+                    var bounds = e.MarginBounds;
+                    if (e.PageSettings.Landscape)
+                    {
+                        bounds = new System.Drawing.Rectangle(
+                            e.PageBounds.X,
+                            e.PageBounds.Y,
+                            e.PageBounds.Height,
+                            e.PageBounds.Width);
+                    }
+
+                    e.Graphics.DrawImage(pageImage, bounds);
+                    currentPage++;
+                    e.HasMorePages = currentPage < streams.Count;
+                }
+                else
+                {
+                    e.HasMorePages = false;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error disposing PrintDocument in print job {PrintJobId}", printJobId);
+                _logger.LogError(ex,
+                    "Print job {PrintJobId}: Error rendering page {PageNumber}",
+                    printJobId, currentPage + 1);
+                hasErrors = true;
+                e.HasMorePages = false;
             }
+        };
+
+        printDoc.EndPrint += (_, _) =>
+        {
+            if (_options.EnableDetailedLogging)
+            {
+                _logger.LogInformation("Print job {PrintJobId}: Printed {PageCount} pages", printJobId, currentPage);
+            }
+        };
+
+        printDoc.QueryPageSettings += (_, e) =>
+        {
+            if (e.PageSettings != null && rdlcPrinter.Format == "Image")
+            {
+                e.PageSettings.Margins = new System.Drawing.Printing.Margins(0, 0, 0, 0);
+            }
+        };
+
+        printDoc.Print();
+        return !hasErrors;
+    }
+
+    private void DisposePrintResources(
+        List<Stream>? streams,
+        List<DataTable>? dataTables,
+        PrintDocument? printDoc,
+        string printJobId)
+    {
+        if (streams != null)
+        {
+            foreach (var stream in streams)
+            {
+                try { stream.Dispose(); }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error disposing stream in print job {PrintJobId}", printJobId); }
+            }
+            streams.Clear();
         }
+
+        if (dataTables != null)
+        {
+            foreach (var dt in dataTables)
+            {
+                try { dt.Dispose(); }
+                catch (Exception ex) { _logger.LogWarning(ex, "Error disposing DataTable in print job {PrintJobId}", printJobId); }
+            }
+            dataTables.Clear();
+        }
+
+        try { printDoc?.Dispose(); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Error disposing PrintDocument in print job {PrintJobId}", printJobId); }
     }
 
     private void ConfigurePrinterSettings(PrintDocument printDoc, RdlcPrinterDto rdlcPrinter, string printJobId)

@@ -461,14 +461,15 @@
                 Enhanced with SQL Server error handling, domain error mapping, and flexible filter parameter strategies.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+                Provides ADO.NET data access operations with retry policy and optional transaction sharing.
+                Enhanced with SQL Server error handling, domain error mapping, and flexible filter parameter strategies.
+            </summary>
+        </member>
         <member name="P:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.RetryPolicy">
             <summary>
                 Lazy-loaded retry policy based on configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
-            <summary>
-                Constructor for AdoRepository with resilience configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.SetTransaction(System.Data.Common.DbTransaction)">
@@ -637,14 +638,9 @@
                 Automatically uses JSON strategy for stored procedures unless explicitly overridden.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest)">
             <summary>
                 Builds pagination metadata for PagedResult.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.BuildFilterMetadata(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-                Builds pagination metadata for FilterRequest (non-paginated).
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.BuildFilteredSql(System.String,Acontplus.Core.Dtos.Requests.FilterRequest)">
@@ -674,6 +670,21 @@
             </list>
             </remarks>
         </member>
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Dapper-based repository implementation for SQL Server.
+            Provides simplified data access with automatic object mapping.
+            </summary>
+            <remarks>
+            This implementation uses Dapper for lightweight ORM functionality with:
+            <list type="bullet">
+            <item><description>Automatic type mapping</description></item>
+            <item><description>Retry policies with exponential backoff</description></item>
+            <item><description>Transaction support via Unit of Work</description></item>
+            <item><description>SQL Server-specific optimizations</description></item>
+            </list>
+            </remarks>
+        </member>
         <member name="P:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.RetryPolicy">
             <summary>
             Lazy-loaded retry policy based on configuration.
@@ -682,11 +693,6 @@
         <member name="P:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.DefaultTimeout">
             <summary>
             Gets the default command timeout from configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.SqlServer.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
-            <summary>
-            Constructor for DapperRepository with resilience configuration.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Repositories.DapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">

@@ -3,24 +3,17 @@ namespace Acontplus.Infrastructure.Caching;
 /// <summary>
 ///     In-memory cache service implementation using IMemoryCache.
 /// </summary>
-public sealed class MemoryCacheService : ICacheService
+public sealed class MemoryCacheService(
+    IMemoryCache memoryCache,
+    ILogger<MemoryCacheService> logger,
+    IOptions<CacheConfiguration> config) : ICacheService
 {
-    private readonly CacheConfiguration _config;
+    private readonly CacheConfiguration _config = config.Value;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
-    private readonly ILogger<MemoryCacheService> _logger;
-    private readonly IMemoryCache _memoryCache;
+    private readonly ILogger<MemoryCacheService> _logger = logger;
+    private readonly IMemoryCache _memoryCache = memoryCache;
     private long _hits;
     private long _misses;
-
-    public MemoryCacheService(
-        IMemoryCache memoryCache,
-        ILogger<MemoryCacheService> logger,
-        IOptions<CacheConfiguration> config)
-    {
-        _memoryCache = memoryCache;
-        _logger = logger;
-        _config = config.Value;
-    }
 
     public T? Get<T>(string key)
     {
@@ -162,7 +155,7 @@ public sealed class MemoryCacheService : ICacheService
 
             Interlocked.Increment(ref _misses);
             var value = await factory();
-            Set(key, value, expiration);
+            await SetAsync(key, value, expiration, ct);
             return value;
         }
         finally

@@ -231,7 +231,7 @@ public class MailKitService : IMailKitService, IDisposable
         Justification = "Exception is logged with contextual recipient information before rethrowing to caller.")]
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail);
         SmtpClient? smtpClient = null;
 
         try
@@ -419,10 +419,8 @@ public class MailKitService : IMailKitService, IDisposable
         return templateTo.Render(scriptObject, member => LowerFirstCharacter(member.Name));
     }
 
-    private static string LowerFirstCharacter(string value)
-    {
-        return value.Length > 1 ? char.ToLower(value[0]) + value.Substring(1) : value;
-    }
+    private static string LowerFirstCharacter(string value) =>
+        value.Length > 1 ? char.ToLowerInvariant(value[0]) + value[1..] : value;
 
     public void Dispose()
     {

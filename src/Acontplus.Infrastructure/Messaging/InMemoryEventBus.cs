@@ -9,22 +9,17 @@ namespace Acontplus.Infrastructure.Messaging;
 /// scalable event-driven architecture. Suitable for horizontal and vertical scaling scenarios.
 /// Thread-safe and optimized for high workload throughput.
 /// </summary>
-public sealed class InMemoryEventBus : IEventBus, IDisposable
+public sealed class InMemoryEventBus(ILogger<InMemoryEventBus> logger) : IEventBus, IDisposable
 {
     private readonly ConcurrentDictionary<Type, Channel<object>> _channels = new();
-    private readonly ILogger<InMemoryEventBus> _logger;
+    private readonly ILogger<InMemoryEventBus> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private bool _disposed;
 
-    /// <summary>
-    /// Initializes a new instance of the InMemoryEventBus.
-    /// </summary>
-    /// <param name="logger">Logger for diagnostic and troubleshooting information.</param>
-    public InMemoryEventBus(ILogger<InMemoryEventBus> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to notify caller of event publishing failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to notify caller of event publishing failure.")]
     public async Task PublishAsync<T>(T eventData, CancellationToken cancellationToken = default) where T : class
     {
         ObjectDisposedException.ThrowIf(_disposed, this);

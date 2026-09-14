@@ -2,6 +2,41 @@ namespace Demo.Api.Endpoints.Demo;
 
 public static class BusinessExceptionTestEndpoints
 {
+    private const string MsgCustomerRetrieved = "Customer retrieved successfully";
+
+    private static readonly string[] BasicExtensionMethods =
+    [
+        "ToActionResult() - Basic conversion with default message",
+        "ToActionResult(message) - With custom success message",
+        "ToActionResult(message, correlationId) - With message and correlation ID",
+        "ToActionResultAsync() - Async version"
+    ];
+
+    private static readonly string[] CrudExtensionMethods =
+    [
+        "ToGetActionResult() - 200 OK with data or 204 NoContent if null",
+        "ToCreatedActionResult(locationUri) - 201 Created with Location header",
+        "ToPutActionResult() - 200 OK with data or 204 NoContent",
+        "ToDeleteActionResult() - 204 NoContent on success or 404 NotFound"
+    ];
+
+    private static readonly string[] AdvancedExtensionMethods =
+    [
+        "SuccessWithWarnings - Include warnings in successful response",
+        "ApiResponse.Success() - Full control over response structure",
+        "Custom metadata - Add custom fields to response"
+    ];
+
+    private static readonly string[] ArchitectureNotes =
+    [
+        "All exceptions thrown from services are caught by ApiExceptionMiddleware",
+        "ResultApiExtensions provide consistent response format for success cases",
+        "CRUD methods (ToGetActionResult, ToCreatedActionResult, etc.) handle REST semantics automatically",
+        "DomainException types preserve their ErrorType and ErrorCode",
+        "Both exception throwing and Result pattern produce identical response formats",
+        "Use exception throwing for simpler code, Result pattern for expected failures"
+    ];
+
     public static void MapBusinessExceptionTestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/business-exception-test")
@@ -19,15 +54,15 @@ public static class BusinessExceptionTestEndpoints
 
         group.MapGet("/not-found-from-service/{id:int}", async ([FromServices] IBusinessExceptionTestService service, [FromServices] Microsoft.Extensions.Logging.ILogger<object> logger, int id) =>
         {
-            logger.LogInformation("Calling service to get customer ID: {Id}", id);
+            if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Calling service to get customer ID: {Id}", id); }
 
             var result = await service.GetCustomerAsync(id);
-            return result.ToMinimalApiResult("Customer retrieved successfully");
+            return result.ToMinimalApiResult(MsgCustomerRetrieved);
         });
 
         group.MapPost("/conflict-from-service", async ([FromServices] IBusinessExceptionTestService service, [FromServices] Microsoft.Extensions.Logging.ILogger<object> logger, CustomerRequest request) =>
         {
-            logger.LogInformation("Calling service to create customer with email: {Email}", request.Email);
+            if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Calling service to create customer with email: {Email}", request.Email); }
 
             var result = await service.CreateCustomerAsync(request.Email!);
             return result.ToMinimalApiResult("Customer created successfully");
@@ -58,7 +93,7 @@ public static class BusinessExceptionTestEndpoints
             logger.LogInformation("Calling service with try-catch wrapper");
 
             var result = await service.GetCustomerAsync(id);
-            return result.ToMinimalApiResult("Customer retrieved successfully");
+            return result.ToMinimalApiResult(MsgCustomerRetrieved);
         });
 
         group.MapPost("/wrapped-with-context", async ([FromServices] IBusinessExceptionTestService service, [FromServices] Microsoft.Extensions.Logging.ILogger<object> logger, CustomerRequest request) =>
@@ -78,7 +113,7 @@ public static class BusinessExceptionTestEndpoints
             logger.LogInformation("Testing deep call stack exception propagation");
 
             var result = await service.GetCustomerWithDeepStackAsync(id);
-            return result.ToMinimalApiResult("Customer retrieved successfully");
+            return result.ToMinimalApiResult(MsgCustomerRetrieved);
         });
 
         #endregion
@@ -108,20 +143,20 @@ public static class BusinessExceptionTestEndpoints
         group.MapGet("/success/{id:int}", async (IBusinessExceptionTestService service, int id) =>
         {
             var result = await service.GetValidCustomerAsync(id);
-            return result.ToMinimalApiResult("Customer retrieved successfully");
+            return result.ToMinimalApiResult(MsgCustomerRetrieved);
         });
 
         group.MapGet("/success-with-correlation/{id:int}", async (IBusinessExceptionTestService service, int id, HttpContext context) =>
         {
             var result = await service.GetValidCustomerAsync(id);
             var correlationId = context.TraceIdentifier;
-            return result.ToMinimalApiResult("Customer retrieved successfully", correlationId);
+            return result.ToMinimalApiResult(MsgCustomerRetrieved, correlationId);
         });
 
         group.MapGet("/success-async/{id:int}", async (IBusinessExceptionTestService service, int id) =>
         {
             var task = service.GetValidCustomerAsync(id);
-            return await task.ToMinimalApiResultAsync("Customer retrieved successfully");
+            return await task.ToMinimalApiResultAsync(MsgCustomerRetrieved);
         });
 
         group.MapGet("/crud/get/{id:int}", async (IBusinessExceptionTestService service, int id) =>
@@ -215,7 +250,7 @@ public static class BusinessExceptionTestEndpoints
         group.MapGet("/compare/exception/{id:int}", async (IBusinessExceptionTestService service, int id) =>
         {
             var result = await service.GetCustomerAsync(id);
-            return result.ToMinimalApiResult("Customer retrieved successfully");
+            return result.ToMinimalApiResult(MsgCustomerRetrieved);
         });
 
         group.MapGet("/compare/result/{id:int}", async (IBusinessExceptionTestService service, int id) =>
@@ -274,23 +309,9 @@ public static class BusinessExceptionTestEndpoints
                 },
                 resultApiExtensionMethods = new
                 {
-                    basic = new[] {
-                        "ToActionResult() - Basic conversion with default message",
-                        "ToActionResult(message) - With custom success message",
-                        "ToActionResult(message, correlationId) - With message and correlation ID",
-                        "ToActionResultAsync() - Async version"
-                    },
-                    crud = new[] {
-                        "ToGetActionResult() - 200 OK with data or 204 NoContent if null",
-                        "ToCreatedActionResult(locationUri) - 201 Created with Location header",
-                        "ToPutActionResult() - 200 OK with data or 204 NoContent",
-                        "ToDeleteActionResult() - 204 NoContent on success or 404 NotFound"
-                    },
-                    advanced = new[] {
-                        "SuccessWithWarnings - Include warnings in successful response",
-                        "ApiResponse.Success() - Full control over response structure",
-                        "Custom metadata - Add custom fields to response"
-                    }
+                    basic = BasicExtensionMethods,
+                    crud = CrudExtensionMethods,
+                    advanced = AdvancedExtensionMethods
                 },
                 responseFormats = new
                 {
@@ -301,7 +322,7 @@ public static class BusinessExceptionTestEndpoints
                         {
                             success = true,
                             code = "200",
-                            message = "Customer retrieved successfully",
+                            message = MsgCustomerRetrieved,
                             data = new { id = 1, name = "John Doe", email = "john@example.com", status = "Active" },
                             correlationId = "abc-123-def",
                             timestamp = "2024-01-15T10:30:00Z"
@@ -349,14 +370,7 @@ public static class BusinessExceptionTestEndpoints
                         }
                     }
                 },
-                notes = new[] {
-                    "All exceptions thrown from services are caught by ApiExceptionMiddleware",
-                    "ResultApiExtensions provide consistent response format for success cases",
-                    "CRUD methods (ToGetActionResult, ToCreatedActionResult, etc.) handle REST semantics automatically",
-                    "DomainException types preserve their ErrorType and ErrorCode",
-                    "Both exception throwing and Result pattern produce identical response formats",
-                    "Use exception throwing for simpler code, Result pattern for expected failures"
-                }
+                notes = ArchitectureNotes
             });
         });
 

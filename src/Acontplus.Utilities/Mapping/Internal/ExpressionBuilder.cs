@@ -128,6 +128,8 @@ internal static class ExpressionBuilder
     /// Thrown when no public constructor is fully satisfiable or when a <c>ForCtorParam</c>
     /// rule references a non-existent parameter.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters", Justification = "Internal expression tree builder requires type mapping metadata and configuration context.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S107", Justification = "Internal expression tree builder requires type mapping metadata and configuration context.")]
     private static LambdaExpression BuildConstructorMappingExpression(
         TypePair pair,
         ParameterExpression sourceParam,
@@ -258,37 +260,19 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            var parameters = ctor.GetParameters();
-            var args = new Expression[parameters.Length];
-            var allSatisfied = true;
-            var currentUnsatisfied = new List<string>();
+            var (allSatisfied, args, currentUnsatisfied) = TryResolveConstructorArguments(
+                ctor, sourceParam, sourceProperties, ctorParamRules);
+            var paramCount = ctor.GetParameters().Length;
 
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var param = parameters[i];
-                var argExpr = ResolveConstructorParameter(
-                    param, sourceParam, sourceProperties, ctorParamRules);
-
-                if (argExpr is not null)
-                {
-                    args[i] = argExpr;
-                }
-                else
-                {
-                    allSatisfied = false;
-                    currentUnsatisfied.Add(param.Name ?? $"arg{i}");
-                }
-            }
-
-            if (allSatisfied && parameters.Length > bestParamCount)
+            if (allSatisfied && paramCount > bestParamCount)
             {
                 bestCtor = ctor;
                 bestArgs = args;
-                bestParamCount = parameters.Length;
+                bestParamCount = paramCount;
             }
 
             // Track the constructor with most parameters for error message
-            if (!allSatisfied && (unsatisfiedParams is null || parameters.Length > (unsatisfiedParams.Count + bestParamCount)))
+            if (!allSatisfied && (unsatisfiedParams is null || paramCount > (unsatisfiedParams.Count + bestParamCount)))
             {
                 unsatisfiedParams = currentUnsatisfied;
             }
@@ -305,6 +289,37 @@ internal static class ExpressionBuilder
         }
 
         return (bestCtor, bestArgs);
+    }
+
+    private static (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied) TryResolveConstructorArguments(
+        ConstructorInfo ctor,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules)
+    {
+        var parameters = ctor.GetParameters();
+        var args = new Expression[parameters.Length];
+        var allSatisfied = true;
+        var currentUnsatisfied = new List<string>();
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var param = parameters[i];
+            var argExpr = ResolveConstructorParameter(
+                param, sourceParam, sourceProperties, ctorParamRules);
+
+            if (argExpr is not null)
+            {
+                args[i] = argExpr;
+            }
+            else
+            {
+                allSatisfied = false;
+                currentUnsatisfied.Add(param.Name ?? $"arg{i}");
+            }
+        }
+
+        return (allSatisfied, args, currentUnsatisfied);
     }
 
     /// <summary>
@@ -1152,6 +1167,8 @@ internal static class ExpressionBuilder
     /// resolves the compiled mapping delegate from the registry. The <c>Lazy</c> ensures the delegate
     /// is fetched exactly once, on first invocation (which occurs after <c>Build()</c> completes).
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields", Justification = "Accesses internal MapperRegistry.GetOrAdd within same assembly for runtime expression compilation.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S3011", Justification = "Accesses internal MapperRegistry.GetOrAdd within same assembly for runtime expression compilation.")]
     private static object CreateLazyRegistryResolver(
         MapperRegistry registry,
         TypePair pair,
@@ -1436,36 +1453,19 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            var parameters = ctor.GetParameters();
-            var args = new Expression[parameters.Length];
-            var allSatisfied = true;
-            var currentUnsatisfied = new List<string>();
+            var (allSatisfied, args, currentUnsatisfied) = TryResolveProjectionConstructorArguments(
+                ctor, sourceParam, sourceProperties, ctorParamRules);
+            var paramCount = ctor.GetParameters().Length;
 
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var param = parameters[i];
-                var argExpr = ResolveProjectionConstructorParameter(
-                    param, sourceParam, sourceProperties, ctorParamRules);
-
-                if (argExpr is not null)
-                {
-                    args[i] = argExpr;
-                }
-                else
-                {
-                    allSatisfied = false;
-                    currentUnsatisfied.Add(param.Name ?? $"arg{i}");
-                }
-            }
-
-            if (allSatisfied && parameters.Length > bestParamCount)
+            if (allSatisfied && paramCount > bestParamCount)
             {
                 bestCtor = ctor;
                 bestArgs = args;
-                bestParamCount = parameters.Length;
+                bestParamCount = paramCount;
             }
 
-            if (!allSatisfied && (unsatisfiedParams is null || parameters.Length > (unsatisfiedParams.Count + bestParamCount)))
+            // Track the constructor with most parameters for error message
+            if (!allSatisfied && (unsatisfiedParams is null || paramCount > (unsatisfiedParams.Count + bestParamCount)))
             {
                 unsatisfiedParams = currentUnsatisfied;
             }
@@ -1482,6 +1482,37 @@ internal static class ExpressionBuilder
         }
 
         return (bestCtor, bestArgs);
+    }
+
+    private static (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied) TryResolveProjectionConstructorArguments(
+        ConstructorInfo ctor,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules)
+    {
+        var parameters = ctor.GetParameters();
+        var args = new Expression[parameters.Length];
+        var allSatisfied = true;
+        var currentUnsatisfied = new List<string>();
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var param = parameters[i];
+            var argExpr = ResolveProjectionConstructorParameter(
+                param, sourceParam, sourceProperties, ctorParamRules);
+
+            if (argExpr is not null)
+            {
+                args[i] = argExpr;
+            }
+            else
+            {
+                allSatisfied = false;
+                currentUnsatisfied.Add(param.Name ?? $"arg{i}");
+            }
+        }
+
+        return (allSatisfied, args, currentUnsatisfied);
     }
 
     /// <summary>

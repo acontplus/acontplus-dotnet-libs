@@ -587,6 +587,12 @@
             Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Services.Implementations.LookupService.#ctor(Acontplus.Core.Abstractions.Persistence.IUnitOfWork,Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.LookupService})">
+            <summary>
+            Service for managing and caching lookup data from database queries.
+            Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
+            </summary>
+        </member>
         <member name="T:Acontplus.Services.Services.Implementations.RequestContextService">
             <summary>
             Implementation of request context service using HTTP context accessor.

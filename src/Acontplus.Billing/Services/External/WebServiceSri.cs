@@ -172,44 +172,46 @@ public class WebServiceSri : IWebServiceSri
     private static void ParseExistenceDocument(XmlDocument doc, ResponseSri responseSri)
     {
         var numeroComprobantes = doc.GetElementsByTagName("numeroComprobantes");
-        if (numeroComprobantes.Count > 0)
-        {
-            if (numeroComprobantes[0]?.InnerText == "1")
-            {
-                var xEstado = doc.GetElementsByTagName(TagEstado);
-                var estadoNode = xEstado.Count > 0 ? xEstado[0] : null;
-
-                if (estadoNode?.InnerText == "AUTORIZADO")
-                {
-                    responseSri.Estado = estadoNode.InnerText;
-                    responseSri.Message = "EL COMPROBANTE  YA FUE AUTORIZADO";
-                    var xNumAuto = doc.GetElementsByTagName("numeroAutorizacion");
-                    responseSri.CodigoAutorizacion = xNumAuto.Count > 0 ? xNumAuto[0]?.InnerText : null;
-                    var xFecha = doc.GetElementsByTagName("fechaAutorizacion");
-                    responseSri.FechaAutorizacion = xFecha.Count > 0 ? xFecha[0]?.InnerText : null;
-                }
-                else
-                {
-                    responseSri.Estado = estadoNode?.InnerText;
-                    var xmessage = doc.GetElementsByTagName(TagMensaje);
-                    if (xmessage.Count > 0 && xmessage[0] is XmlElement messageNode)
-                    {
-                        PopulateMessageDetails(responseSri, messageNode.ChildNodes);
-                    }
-                }
-            }
-            else
-            {
-                responseSri.Estado = "NO EXISTE";
-            }
-        }
-        else
+        if (numeroComprobantes.Count == 0)
         {
             var estadoNoAuth = doc.GetElementsByTagName(TagEstado);
             if (estadoNoAuth.Count > 0)
             {
                 responseSri.Estado = estadoNoAuth[0]?.InnerText;
             }
+            return;
+        }
+
+        if (numeroComprobantes[0]?.InnerText != "1")
+        {
+            responseSri.Estado = "NO EXISTE";
+            return;
+        }
+
+        ParseSingleComprobanteExistence(doc, responseSri);
+    }
+
+    private static void ParseSingleComprobanteExistence(XmlDocument doc, ResponseSri responseSri)
+    {
+        var xEstado = doc.GetElementsByTagName(TagEstado);
+        var estadoNode = xEstado.Count > 0 ? xEstado[0] : null;
+
+        if (estadoNode?.InnerText == "AUTORIZADO")
+        {
+            responseSri.Estado = estadoNode.InnerText;
+            responseSri.Message = "EL COMPROBANTE  YA FUE AUTORIZADO";
+            var xNumAuto = doc.GetElementsByTagName("numeroAutorizacion");
+            responseSri.CodigoAutorizacion = xNumAuto.Count > 0 ? xNumAuto[0]?.InnerText : null;
+            var xFecha = doc.GetElementsByTagName("fechaAutorizacion");
+            responseSri.FechaAutorizacion = xFecha.Count > 0 ? xFecha[0]?.InnerText : null;
+            return;
+        }
+
+        responseSri.Estado = estadoNode?.InnerText;
+        var xmessage = doc.GetElementsByTagName(TagMensaje);
+        if (xmessage.Count > 0 && xmessage[0] is XmlElement messageNode)
+        {
+            PopulateMessageDetails(responseSri, messageNode.ChildNodes);
         }
     }
 

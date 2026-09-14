@@ -29,8 +29,10 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         IAdoRepository adoRepository,
         ILogger<UnitOfWork<TContext>>? logger = null)
     {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        AdoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(adoRepository);
+        _context = context;
+        AdoRepository = adoRepository;
         _logger = logger;
     }
 
@@ -166,25 +168,17 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         }
     }
 
-    private sealed class EfTransaction : ITransaction
+    private sealed class EfTransaction(
+        IDbContextTransaction transaction,
+        IAdoRepository adoRepository,
+        ILogger<UnitOfWork<TContext>>? logger,
+        Action onDisposed) : ITransaction
     {
-        private readonly IAdoRepository _adoRepository;
-        private readonly ILogger<UnitOfWork<TContext>>? _logger;
-        private readonly Action _onDisposed;
-        private readonly IDbContextTransaction _transaction;
+        private readonly IDbContextTransaction _transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+        private readonly IAdoRepository _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
+        private readonly ILogger<UnitOfWork<TContext>>? _logger = logger;
+        private readonly Action _onDisposed = onDisposed ?? throw new ArgumentNullException(nameof(onDisposed));
         private bool _disposed;
-
-        public EfTransaction(
-            IDbContextTransaction transaction,
-            IAdoRepository adoRepository,
-            ILogger<UnitOfWork<TContext>>? logger,
-            Action onDisposed)
-        {
-            _transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
-            _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
-            _logger = logger;
-            _onDisposed = onDisposed ?? throw new ArgumentNullException(nameof(onDisposed));
-        }
 
         public bool IsCompleted { get; private set; }
 

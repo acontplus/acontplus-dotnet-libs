@@ -132,13 +132,22 @@ public static class DbDataReaderMapper
     {
         try
         {
-            return targetType.IsEnum
-                ? Enum.ToObject(targetType, value)
-                : targetType == typeof(Guid)
-                    ? value is string s ? Guid.Parse(s) : (Guid)value
-                    : targetType == typeof(DateTimeOffset)
-                        ? value is DateTime dt ? new DateTimeOffset(dt) : (DateTimeOffset)value
-                        : Convert.ChangeType(value, targetType);
+            if (targetType.IsEnum)
+            {
+                return Enum.ToObject(targetType, value);
+            }
+
+            if (targetType == typeof(Guid))
+            {
+                return value is string s ? Guid.Parse(s) : (Guid)value;
+            }
+
+            if (targetType == typeof(DateTimeOffset))
+            {
+                return value is DateTime dt ? new DateTimeOffset(dt) : (DateTimeOffset)value;
+            }
+
+            return Convert.ChangeType(value, targetType);
         }
         catch (Exception ex)
         {

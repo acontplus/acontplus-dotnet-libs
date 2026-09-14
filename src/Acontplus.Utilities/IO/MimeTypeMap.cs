@@ -705,12 +705,18 @@ public static class MimeTypeMap
 
     public static string GetExtension(string mimeType)
     {
-        return mimeType == null
-            ? throw new ArgumentNullException("mimeType")
-            : mimeType.StartsWith(".")
-            ? throw new ArgumentException("Requested mime type is not valid: " + mimeType)
-            : Mappings.Value.TryGetValue(mimeType, out string? extension)
-            ? extension
-            : throw new ArgumentException("Requested mime type is not registered: " + mimeType);
+        ArgumentNullException.ThrowIfNull(mimeType);
+
+        if (mimeType.StartsWith('.'))
+        {
+            throw new ArgumentException("Requested mime type is not valid: " + mimeType);
+        }
+
+        if (Mappings.Value.TryGetValue(mimeType, out string? extension))
+        {
+            return extension;
+        }
+
+        throw new ArgumentException("Requested mime type is not registered: " + mimeType);
     }
 }

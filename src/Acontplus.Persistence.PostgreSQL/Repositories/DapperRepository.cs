@@ -21,12 +21,17 @@ namespace Acontplus.Persistence.PostgreSQL.Repositories;
 /// </remarks>
 [SuppressMessage("SonarQube", "csharpsquid:S2077",
     Justification = "Dynamic SQL for pagination and sanitized procedure names; all filter values and pagination arguments are bound via Dapper DynamicParameters.")]
-public partial class DapperRepository : IDapperRepository
+[SuppressMessage("Security", "S2077:FormattingSQLQueriesIsSecuritySensitive",
+    Justification = "Dynamic SQL for pagination and sanitized procedure names; all filter values and pagination arguments are bound via Dapper DynamicParameters.")]
+public partial class DapperRepository(
+    IConfiguration configuration,
+    ILogger<DapperRepository> logger,
+    IOptions<PersistenceResilienceOptions> resilienceOptions) : IDapperRepository
 {
-    private readonly IConfiguration _configuration;
+    private readonly IConfiguration _configuration = configuration;
     private readonly ConcurrentDictionary<string, string> _connectionStrings = new();
-    private readonly ILogger<DapperRepository> _logger;
-    private readonly PersistenceResilienceOptions _resilienceOptions;
+    private readonly ILogger<DapperRepository> _logger = logger;
+    private readonly PersistenceResilienceOptions _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
     private DbConnection? _currentConnection;
     private DbTransaction? _currentTransaction;
     private AsyncRetryPolicy? _retryPolicy;
@@ -87,19 +92,6 @@ public partial class DapperRepository : IDapperRepository
     /// Gets the default command timeout from configuration.
     /// </summary>
     private int DefaultTimeout => _resilienceOptions.Timeout.DefaultCommandTimeoutSeconds;
-
-    /// <summary>
-    /// Constructor for DapperRepository with resilience configuration.
-    /// </summary>
-    public DapperRepository(
-        IConfiguration configuration,
-        ILogger<DapperRepository> logger,
-        IOptions<PersistenceResilienceOptions> resilienceOptions)
-    {
-        _configuration = configuration;
-        _logger = logger;
-        _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
-    }
 
     #region Query Methods
 
@@ -464,16 +456,10 @@ LIMIT @Limit OFFSET @Offset";
     #region Transaction Support
 
     /// <inheritdoc />
-    public void SetTransaction(DbTransaction transaction)
-    {
-        _currentTransaction = transaction;
-    }
+    public void SetTransaction(DbTransaction transaction) => _currentTransaction = transaction;
 
     /// <inheritdoc />
-    public void SetConnection(DbConnection connection)
-    {
-        _currentConnection = connection;
-    }
+    public void SetConnection(DbConnection connection) => _currentConnection = connection;
 
     /// <inheritdoc />
     public void ClearTransaction()
@@ -610,10 +596,7 @@ LIMIT @Limit OFFSET @Offset";
         return $"ORDER BY {sanitizedColumn} {direction}";
     }
 
-    private static string GenerateCountQuery(string sql)
-    {
-        return $"SELECT COUNT(*) FROM ({sql}) AS count_query";
-    }
+    private static string GenerateCountQuery(string sql) => $"SELECT COUNT(*) FROM ({sql}) AS count_query";
 
     [GeneratedRegex(@"^[a-zA-Z_][a-zA-Z0-9_]*$")]
     private static partial Regex SafeColumnNameRegex();

@@ -154,11 +154,17 @@ public record ApiResponse<T>
 
     private static ApiResponseOptions InitializeOptions(ApiResponseOptions? options, HttpStatusCode defaultStatusCode)
     {
-        return options == null
-            ? new ApiResponseOptions { StatusCode = defaultStatusCode }
-            : options.StatusCode == HttpStatusCode.OK && defaultStatusCode != HttpStatusCode.OK
-            ? (options with { StatusCode = defaultStatusCode })
-            : options;
+        if (options == null)
+        {
+            return new ApiResponseOptions { StatusCode = defaultStatusCode };
+        }
+
+        if (options.StatusCode == HttpStatusCode.OK && defaultStatusCode != HttpStatusCode.OK)
+        {
+            return options with { StatusCode = defaultStatusCode };
+        }
+
+        return options;
     }
 }
 
@@ -225,20 +231,16 @@ public sealed record ApiResponse : ApiResponse<object?>
 
     private static ApiResponseOptions InitializeOptions(ApiResponseOptions? options, HttpStatusCode defaultStatusCode)
     {
-        return options == null
-            ? new ApiResponseOptions { StatusCode = defaultStatusCode }
-            : options.StatusCode == HttpStatusCode.OK && defaultStatusCode != HttpStatusCode.OK
-            ? new ApiResponseOptions
-            {
-                Message = options.Message,
-                Errors = options.Errors,
-                Warnings = options.Warnings,
-                Metadata = options.Metadata,
-                CorrelationId = options.CorrelationId,
-                TraceId = options.TraceId,
-                Timestamp = options.Timestamp,
-                StatusCode = defaultStatusCode
-            }
-            : options;
+        if (options == null)
+        {
+            return new ApiResponseOptions { StatusCode = defaultStatusCode };
+        }
+
+        if (options.StatusCode == HttpStatusCode.OK && defaultStatusCode != HttpStatusCode.OK)
+        {
+            return options with { StatusCode = defaultStatusCode };
+        }
+
+        return options;
     }
 }

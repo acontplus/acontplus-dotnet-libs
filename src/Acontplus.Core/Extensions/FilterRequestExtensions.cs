@@ -20,7 +20,7 @@ public static class FilterRequestExtensions
     public static FilterRequest WithFilters(this FilterRequest filter, IReadOnlyDictionary<string, object> filters)
     {
         var merged = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
-                     ?? new Dictionary<string, object>();
+                     ?? [];
         foreach (var kvp in filters)
             merged[kvp.Key] = kvp.Value;
         return filter with { Filters = merged };
@@ -30,7 +30,7 @@ public static class FilterRequestExtensions
     public static FilterRequest WithFilter(this FilterRequest filter, string key, object value)
     {
         var merged = filter.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
-                     ?? new Dictionary<string, object>();
+                     ?? [];
         merged[key] = value;
         return filter with { Filters = merged };
     }

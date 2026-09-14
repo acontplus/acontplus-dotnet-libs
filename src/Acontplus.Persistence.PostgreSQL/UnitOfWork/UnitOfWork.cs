@@ -6,33 +6,20 @@ namespace Acontplus.Persistence.PostgreSQL.UnitOfWork;
 /// Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
 /// </summary>
 /// <typeparam name="TContext">The EF Core database context type.</typeparam>
-public sealed class UnitOfWork<TContext> : IUnitOfWork
+public sealed class UnitOfWork<TContext>(
+    TContext context,
+    IAdoRepository adoRepository,
+    ILogger<UnitOfWork<TContext>>? logger = null) : IUnitOfWork
     where TContext : DbContext
 {
-    private readonly TContext _context;
-    private readonly IAdoRepository _adoRepository;
-    private readonly ILogger<UnitOfWork<TContext>>? _logger;
+    private readonly TContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly IAdoRepository _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
+    private readonly ILogger<UnitOfWork<TContext>>? _logger = logger;
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
     private readonly SemaphoreSlim _transactionSemaphore = new(1, 1);
 
     private IDbContextTransaction? _efTransaction;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new <see cref="UnitOfWork{TContext}"/>.
-    /// </summary>
-    /// <param name="context">The EF Core database context.</param>
-    /// <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
-    /// <param name="logger">Optional logger instance.</param>
-    public UnitOfWork(
-        TContext context,
-        IAdoRepository adoRepository,
-        ILogger<UnitOfWork<TContext>>? logger = null)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
-        _logger = logger;
-    }
 
     /// <inheritdoc/>
     public DbTransaction? CurrentDbTransaction => _efTransaction?.GetDbTransaction();
@@ -162,26 +149,18 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
         }
     }
 
-    private sealed class EfTransaction : ITransaction
+    private sealed class EfTransaction(
+        IDbContextTransaction transaction,
+        IAdoRepository adoRepository,
+        ILogger<UnitOfWork<TContext>>? logger,
+        Action onDisposed) : ITransaction
     {
-        private readonly IDbContextTransaction _transaction;
-        private readonly IAdoRepository _adoRepository;
-        private readonly ILogger<UnitOfWork<TContext>>? _logger;
-        private readonly Action _onDisposed;
+        private readonly IDbContextTransaction _transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
+        private readonly IAdoRepository _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
+        private readonly ILogger<UnitOfWork<TContext>>? _logger = logger;
+        private readonly Action _onDisposed = onDisposed ?? throw new ArgumentNullException(nameof(onDisposed));
         private bool _isCompleted;
         private bool _disposed;
-
-        public EfTransaction(
-            IDbContextTransaction transaction,
-            IAdoRepository adoRepository,
-            ILogger<UnitOfWork<TContext>>? logger,
-            Action onDisposed)
-        {
-            _transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
-            _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
-            _logger = logger;
-            _onDisposed = onDisposed ?? throw new ArgumentNullException(nameof(onDisposed));
-        }
 
         public bool IsCompleted => _isCompleted;
 

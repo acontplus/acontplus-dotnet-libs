@@ -1,4 +1,4 @@
-﻿using Acontplus.S3Application.Configuration;
+using Acontplus.S3Application.Configuration;
 using Acontplus.S3Application.Interfaces;
 using Acontplus.S3Application.Models;
 using Amazon;
@@ -20,6 +20,7 @@ namespace Acontplus.S3Application.Services;
 /// </summary>
 public class S3StorageService : IS3StorageService, IDisposable
 {
+    private const string DefaultAwsRegion = "us-east-1";
     private readonly ILogger<S3StorageService> _logger;
     private readonly S3StorageOptions _options;
     private readonly ConcurrentDictionary<string, IAmazonS3> _clientPool;
@@ -120,19 +121,16 @@ public class S3StorageService : IS3StorageService, IDisposable
         {
             CleanupOldTimestamps();
 
-            if (_requestTimestamps.Count >= _options.MaxRequestsPerSecond)
+            if (_requestTimestamps.Count >= _options.MaxRequestsPerSecond && _requestTimestamps.TryPeek(out var oldestTimestamp))
             {
-                if (_requestTimestamps.TryPeek(out var oldestTimestamp))
+                var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
+                if (timeToWait > TimeSpan.Zero)
                 {
-                    var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
-                    if (timeToWait > TimeSpan.Zero)
-                    {
-                        _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}ms",
-                            _requestTimestamps.Count, _options.MaxRequestsPerSecond, timeToWait.TotalMilliseconds);
+                    _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}ms",
+                        _requestTimestamps.Count, _options.MaxRequestsPerSecond, timeToWait.TotalMilliseconds);
 
-                        await Task.Delay(timeToWait, ct);
-                        CleanupOldTimestamps();
-                    }
+                    await Task.Delay(timeToWait, ct);
+                    CleanupOldTimestamps();
                 }
             }
 
@@ -173,7 +171,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 if (s3ObjectCustom.Content == null)
                     throw new InvalidOperationException("S3 object content cannot be null for upload");
@@ -238,7 +236,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 if (s3ObjectCustom.Content == null)
                     throw new InvalidOperationException("S3 object content cannot be null for update");
@@ -302,7 +300,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new DeleteObjectRequest
                 {
@@ -359,7 +357,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetObjectRequest
                 {
@@ -419,7 +417,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetObjectMetadataRequest
                 {
@@ -437,7 +435,7 @@ public class S3StorageService : IS3StorageService, IDisposable
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogDebug("Object not found: {Key} in bucket {Bucket}",
+            _logger.LogDebug(ex, "Object not found: {Key} in bucket {Bucket}",
                 s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
             return false;
         }
@@ -467,7 +465,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetPreSignedUrlRequest
                 {
@@ -514,26 +512,41 @@ public class S3StorageService : IS3StorageService, IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases unmanaged and optionally managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed) return;
 
-        _logger.LogInformation("Disposing S3StorageService and {ClientCount} pooled clients", _clientPool.Count);
-
-        foreach (var client in _clientPool.Values)
+        if (disposing)
         {
-            try
+            if (_logger.IsEnabled(LogLevel.Information))
             {
-                client.Dispose();
+                _logger.LogInformation("Disposing S3StorageService and {ClientCount} pooled clients", _clientPool.Count);
             }
-            catch (Exception ex)
+
+            foreach (var client in _clientPool.Values)
             {
-                _logger.LogWarning(ex, "Error disposing S3 client");
+                try
+                {
+                    client.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error disposing S3 client");
+                }
             }
+
+            _clientPool.Clear();
+            _rateLimitSemaphore?.Dispose();
         }
 
-        _clientPool.Clear();
-        _rateLimitSemaphore?.Dispose();
         _disposed = true;
-
-        GC.SuppressFinalize(this);
     }
 }

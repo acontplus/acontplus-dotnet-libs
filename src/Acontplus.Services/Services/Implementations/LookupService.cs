@@ -7,24 +7,17 @@ namespace Acontplus.Services.Services.Implementations;
 /// Service for managing and caching lookup data from database queries.
 /// Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
 /// </summary>
-public class LookupService : ILookupService
+public class LookupService(
+    IUnitOfWork unitOfWork,
+    ICacheService cacheService,
+    ILogger<LookupService> logger) : ILookupService
 {
     private const string CacheKeyPrefix = "lookups";
     private static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromMinutes(30);
 
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<LookupService> _logger;
-
-    public LookupService(
-        IUnitOfWork unitOfWork,
-        ICacheService cacheService,
-        ILogger<LookupService> logger)
-    {
-        _unitOfWork = unitOfWork;
-        _cacheService = cacheService;
-        _logger = logger;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ICacheService _cacheService = cacheService;
+    private readonly ILogger<LookupService> _logger = logger;
 
     public async Task<Result<IDictionary<string, IEnumerable<LookupItem>>, DomainError>> GetLookupsAsync(
         string storedProcedureName,
@@ -61,7 +54,10 @@ public class LookupService : ILookupService
             var cacheKey = BuildCacheKey(storedProcedureName, filterRequest);
             await _cacheService.RemoveAsync(cacheKey, cancellationToken);
 
-            _logger.LogInformation("Cache removed for key: {CacheKey}", cacheKey);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Cache removed for key: {CacheKey}", cacheKey);
+            }
 
             return await GetLookupsAsync(storedProcedureName, filterRequest, cancellationToken);
         }
@@ -112,8 +108,11 @@ public class LookupService : ILookupService
                 )).ToArray(),
                 StringComparer.OrdinalIgnoreCase);
 
-        _logger.LogDebug("Fetched {Count} lookup groups from {StoredProcedure}",
-            resultPayload.Count, storedProcedureName);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Fetched {Count} lookup groups from {StoredProcedure}",
+                resultPayload.Count, storedProcedureName);
+        }
 
         return Result<IDictionary<string, IEnumerable<LookupItem>>, DomainError>.Success(resultPayload);
     }

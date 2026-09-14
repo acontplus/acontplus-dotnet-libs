@@ -170,10 +170,8 @@ public static class BaseEntityRegistration
     /// <summary>
     /// Registers entities with default conventions and base configuration.
     /// </summary>
-    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes)
-    {
+    public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
         RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
-    }
 
     /// <summary>
     /// Registers entities, explicitly setting schemas for specified types.
@@ -212,8 +210,6 @@ public static class BaseEntityRegistration
         ModelBuilder modelBuilder,
         Type dbContextType,
         Dictionary<Type, Type> customConfigurations,
-        params Type[] entityTypes)
-    {
+        params Type[] entityTypes) =>
         RegisterEntities(modelBuilder, dbContextType, null!, customConfigurations, entityTypes);
-    }
 }

@@ -35,6 +35,8 @@ public readonly record struct Result<TValue, TError>
         _initialized = true;
     }
 
+    private const string UninitializedResultMessage = "Uninitialized Result (default struct).";
+
     public bool IsSuccess => _isSuccess;
     public bool IsFailure => !_isSuccess;
 
@@ -43,9 +45,17 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _value! : throw new InvalidOperationException("Cannot access Value on a failed result.");
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (!_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Value on a failed result.");
+            }
+
+            return _value!;
         }
     }
 
@@ -54,9 +64,17 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? throw new InvalidOperationException("Cannot access Error on a successful result.") : _error!;
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Error on a successful result.");
+            }
+
+            return _error!;
         }
     }
 
@@ -65,9 +83,12 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _successMessage : null;
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            return _isSuccess ? _successMessage : null;
         }
     }
 
@@ -462,11 +483,17 @@ public readonly record struct Result<TValue, TError>
     /// </summary>
     public TValue ThrowOnFailure()
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw new InvalidOperationException($"Result failed with error: {_error}");
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw new InvalidOperationException($"Result failed with error: {_error}");
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -475,11 +502,17 @@ public readonly record struct Result<TValue, TError>
     public TValue ThrowOnFailure<TException>(Func<TError, TException> exceptionFactory)
         where TException : Exception
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw exceptionFactory(_error!);
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw exceptionFactory(_error!);
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -523,6 +556,8 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         _initialized = true;
     }
 
+    private const string UninitializedResultMessage = "Uninitialized Result (default struct).";
+
     public bool IsSuccess => _isSuccess;
     public bool IsFailure => !_isSuccess;
 
@@ -531,9 +566,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _value! : throw new InvalidOperationException("Cannot access Value on a failed result.");
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (!_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Value on a failed result.");
+            }
+
+            return _value!;
         }
     }
 
@@ -542,9 +585,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : (DomainError)(_isSuccess ? throw new InvalidOperationException("Cannot access Error on a successful result.") : _error!);
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Error on a successful result.");
+            }
+
+            return _error!.Value;
         }
     }
 
@@ -942,11 +993,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// </summary>
     public TValue ThrowOnFailure()
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw new InvalidOperationException($"Result failed with error: {_error!.Value.Message}");
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw new InvalidOperationException($"Result failed with error: {_error!.Value.Message}");
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -955,11 +1012,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     public TValue ThrowOnFailure<TException>(Func<DomainError, TException> exceptionFactory)
         where TException : Exception
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw exceptionFactory(_error!.Value);
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw exceptionFactory(_error!.Value);
+        }
+
+        return _value!;
     }
 
     /// <summary>

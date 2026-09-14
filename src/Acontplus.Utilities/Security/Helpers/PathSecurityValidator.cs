@@ -65,7 +65,7 @@ public static class PathSecurityValidator
         foreach (var component in pathComponents)
         {
             // Check for relative path components
-            if (component == "." || component == "..")
+            if (component is "." or "..")
             {
                 throw new SecurityException($"Path contains relative directory references (./ or ../): {requestedPath}");
             }

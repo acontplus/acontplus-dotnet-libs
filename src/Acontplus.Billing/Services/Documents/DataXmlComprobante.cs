@@ -4,6 +4,21 @@ namespace Acontplus.Billing.Services.Documents;
 
 public class DataXmlComprobante
 {
+    private const string TagVersion = "version";
+    private const string TagDetalles = "detalles";
+    private const string TagImpuestos = "impuestos";
+    private const string TagFechaEmision = "fechaEmision";
+    private const string TagDirEstablecimiento = "dirEstablecimiento";
+    private const string TagContribuyenteEspecial = "contribuyenteEspecial";
+    private const string TagObligadoContabilidad = "obligadoContabilidad";
+    private const string TagFechaEmisionDocSustento = "fechaEmisionDocSustento";
+    private const string TagTotalSinImpuestos = "totalSinImpuestos";
+    private const string TagMoneda = "moneda";
+    private const string TagPagos = "pagos";
+    private const string TagCodigo = "codigo";
+    private const string TagCodigoPorcentaje = "codigoPorcentaje";
+    private const string TagBaseImponible = "baseImponible";
+
     public bool GetData(XmlDocument xmlSri, ref ComprobanteElectronico comp, ref string message)
     {
         var resp = true;
@@ -39,76 +54,7 @@ public class DataXmlComprobante
                 }
             }
 
-            switch (comp.CodDoc)
-            {
-                case "01":
-                    var nodeFact = xmlComp.GetElementsByTagName("factura")[0];
-                    comp.VersionComp = nodeFact?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoFactura = xmlComp.GetElementsByTagName("infoFactura")[0];
-                    if (nodeInfoFactura != null) GetInfoFactura(comp.CodDoc, comp, nodeInfoFactura);
-
-                    GetDetails(comp, xmlComp.GetElementsByTagName("detalles")[0]);
-
-                    break;
-                case "03":
-                    var nodeLiq = xmlComp.GetElementsByTagName("liquidacionCompra")[0];
-                    comp.VersionComp = nodeLiq?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoLiquidacion = xmlComp.GetElementsByTagName("infoLiquidacionCompra")[0];
-                    if (nodeInfoLiquidacion != null) GetInfoLiquidacionCompra(comp.CodDoc, comp, nodeInfoLiquidacion);
-
-                    GetDetails(comp, xmlComp.GetElementsByTagName("detalles")[0]);
-
-                    break;
-                case "04":
-                    var nodeNc = xmlComp.GetElementsByTagName("notaCredito")[0];
-                    comp.VersionComp = nodeNc?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoNotaCredito = xmlComp.GetElementsByTagName("infoNotaCredito")[0];
-
-                    if (nodeInfoNotaCredito != null) GetInfoNotaCredito(comp.CodDoc, comp, nodeInfoNotaCredito);
-
-                    GetDetails(comp, xmlComp.GetElementsByTagName("detalles")[0]);
-
-                    break;
-                case "05":
-                    var nodeNd = xmlComp.GetElementsByTagName("notaDebito")[0];
-                    comp.VersionComp = nodeNd?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoNotaDebito = xmlComp.GetElementsByTagName("infoNotaDebito")[0];
-                    if (nodeInfoNotaDebito != null) GetInfoNotaDebito(comp.CodDoc, comp, nodeInfoNotaDebito);
-
-                    var nodeMotivos = xmlComp.GetElementsByTagName("motivos")[0];
-                    if (nodeMotivos != null) GetMotivosNotaDebito(comp, nodeMotivos);
-
-                    break;
-                case "06":
-                    var nodeGr = xmlComp.GetElementsByTagName("guiaRemision")[0];
-                    comp.VersionComp = nodeGr?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoGuiaRemision = xmlComp.GetElementsByTagName("infoGuiaRemision")[0];
-                    if (nodeInfoGuiaRemision != null) GetInfoGuiaRemision(comp, nodeInfoGuiaRemision);
-
-                    var nodeDestinatarios = xmlComp.GetElementsByTagName("destinatarios")[0];
-                    if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
-
-                    break;
-                case "07":
-                    var nodeRet = xmlComp.GetElementsByTagName("comprobanteRetencion")[0];
-                    comp.VersionComp = nodeRet?.Attributes?["version"]?.Value ?? string.Empty;
-
-                    var nodeInfoCompRetencion = xmlComp.GetElementsByTagName("infoCompRetencion")[0];
-
-                    GetInfoCompRetencion(comp.VersionComp, comp, nodeInfoCompRetencion);
-
-                    if (comp.VersionComp == "2.0.0")
-                        GetDocSustento(comp, xmlComp.GetElementsByTagName("docsSustento")[0]);
-                    else
-                        GetImpuestoRetencion(comp, xmlComp.GetElementsByTagName("impuestos")[0]);
-
-                    break;
-            }
+            ProcessDocumentByCode(comp.CodDoc, xmlComp, comp);
 
             if (xmlComp.GetElementsByTagName("infoAdicional")[0] != null)
                 GetInfoAdicional(comp, xmlComp.GetElementsByTagName("infoAdicional")[0]);
@@ -120,6 +66,102 @@ public class DataXmlComprobante
         }
 
         return resp;
+    }
+
+    private void ProcessDocumentByCode(string codDoc, XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        switch (codDoc)
+        {
+            case "01":
+                ProcessFactura(xmlComp, comp);
+                break;
+            case "03":
+                ProcessLiquidacionCompra(xmlComp, comp);
+                break;
+            case "04":
+                ProcessNotaCredito(xmlComp, comp);
+                break;
+            case "05":
+                ProcessNotaDebito(xmlComp, comp);
+                break;
+            case "06":
+                ProcessGuiaRemision(xmlComp, comp);
+                break;
+            case "07":
+                ProcessComprobanteRetencion(xmlComp, comp);
+                break;
+        }
+    }
+
+    private void ProcessFactura(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeFact = xmlComp.GetElementsByTagName("factura")[0];
+        comp.VersionComp = nodeFact?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoFactura = xmlComp.GetElementsByTagName("infoFactura")[0];
+        if (nodeInfoFactura != null) GetInfoFactura(comp.CodDoc, comp, nodeInfoFactura);
+
+        GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
+    }
+
+    private void ProcessLiquidacionCompra(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeLiq = xmlComp.GetElementsByTagName("liquidacionCompra")[0];
+        comp.VersionComp = nodeLiq?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoLiquidacion = xmlComp.GetElementsByTagName("infoLiquidacionCompra")[0];
+        if (nodeInfoLiquidacion != null) GetInfoLiquidacionCompra(comp.CodDoc, comp, nodeInfoLiquidacion);
+
+        GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
+    }
+
+    private void ProcessNotaCredito(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeNc = xmlComp.GetElementsByTagName("notaCredito")[0];
+        comp.VersionComp = nodeNc?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoNotaCredito = xmlComp.GetElementsByTagName("infoNotaCredito")[0];
+        if (nodeInfoNotaCredito != null) GetInfoNotaCredito(comp.CodDoc, comp, nodeInfoNotaCredito);
+
+        GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
+    }
+
+    private void ProcessNotaDebito(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeNd = xmlComp.GetElementsByTagName("notaDebito")[0];
+        comp.VersionComp = nodeNd?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoNotaDebito = xmlComp.GetElementsByTagName("infoNotaDebito")[0];
+        if (nodeInfoNotaDebito != null) GetInfoNotaDebito(comp.CodDoc, comp, nodeInfoNotaDebito);
+
+        var nodeMotivos = xmlComp.GetElementsByTagName("motivos")[0];
+        if (nodeMotivos != null) GetMotivosNotaDebito(comp, nodeMotivos);
+    }
+
+    private void ProcessGuiaRemision(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeGr = xmlComp.GetElementsByTagName("guiaRemision")[0];
+        comp.VersionComp = nodeGr?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoGuiaRemision = xmlComp.GetElementsByTagName("infoGuiaRemision")[0];
+        if (nodeInfoGuiaRemision != null) GetInfoGuiaRemision(comp, nodeInfoGuiaRemision);
+
+        var nodeDestinatarios = xmlComp.GetElementsByTagName("destinatarios")[0];
+        if (nodeDestinatarios != null) GetDestinatarios(comp, nodeDestinatarios);
+    }
+
+    private void ProcessComprobanteRetencion(XmlDocument xmlComp, ComprobanteElectronico comp)
+    {
+        var nodeRet = xmlComp.GetElementsByTagName("comprobanteRetencion")[0];
+        comp.VersionComp = nodeRet?.Attributes?[TagVersion]?.Value ?? string.Empty;
+
+        var nodeInfoCompRetencion = xmlComp.GetElementsByTagName("infoCompRetencion")[0];
+        GetInfoCompRetencion(comp.VersionComp, comp, nodeInfoCompRetencion);
+
+        if (comp.VersionComp == "2.0.0")
+            GetDocSustento(comp, xmlComp.GetElementsByTagName("docsSustento")[0]);
+        else
+            GetImpuestoRetencion(comp, xmlComp.GetElementsByTagName(TagImpuestos)[0]);
     }
 
     private void GetInfoTributaria(ComprobanteElectronico ce, XmlNode nodeInfoTrib)
@@ -144,35 +186,35 @@ public class DataXmlComprobante
     {
         var infoFac = new InfoNotaCredito
         {
-            FechaEmision = nodeInfoNotaCredito.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
-            DirEstablecimiento = nodeInfoNotaCredito.SelectSingleNode("dirEstablecimiento") == null
+            FechaEmision = nodeInfoNotaCredito.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoNotaCredito.SelectSingleNode(TagDirEstablecimiento) == null
                 ? ""
-                : nodeInfoNotaCredito.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+                : nodeInfoNotaCredito.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
             TipoIdentificacionComprador =
                 nodeInfoNotaCredito.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty,
             RazonSocialComprador = nodeInfoNotaCredito.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty,
             IdentificacionComprador = nodeInfoNotaCredito.SelectSingleNode("identificacionComprador")?.InnerText ?? string.Empty,
-            ContribuyenteEspecial = nodeInfoNotaCredito.SelectSingleNode("contribuyenteEspecial") == null
+            ContribuyenteEspecial = nodeInfoNotaCredito.SelectSingleNode(TagContribuyenteEspecial) == null
                 ? ""
-                : nodeInfoNotaCredito.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
-            ObligadoContabilidad = nodeInfoNotaCredito.SelectSingleNode("obligadoContabilidad") == null
+                : nodeInfoNotaCredito.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoNotaCredito.SelectSingleNode(TagObligadoContabilidad) == null
                 ? ""
-                : nodeInfoNotaCredito.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+                : nodeInfoNotaCredito.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
             Rise = nodeInfoNotaCredito.SelectSingleNode("rise") == null
                 ? ""
                 : nodeInfoNotaCredito.SelectSingleNode("rise")?.InnerText ?? string.Empty,
             CodDocModificado = nodeInfoNotaCredito.SelectSingleNode("codDocModificado")?.InnerText ?? string.Empty,
             NumDocModificado = nodeInfoNotaCredito.SelectSingleNode("numDocModificado")?.InnerText ?? string.Empty,
-            FechaEmisionDocSustento = nodeInfoNotaCredito.SelectSingleNode("fechaEmisionDocSustento") == null
+            FechaEmisionDocSustento = nodeInfoNotaCredito.SelectSingleNode(TagFechaEmisionDocSustento) == null
                 ? ""
-                : nodeInfoNotaCredito.SelectSingleNode("fechaEmisionDocSustento")?.InnerText ?? string.Empty,
-            TotalSinImpuestos = nodeInfoNotaCredito.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty,
+                : nodeInfoNotaCredito.SelectSingleNode(TagFechaEmisionDocSustento)?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoNotaCredito.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty,
             ValorModificacion = nodeInfoNotaCredito.SelectSingleNode("valorModificacion") == null
                 ? ""
                 : nodeInfoNotaCredito.SelectSingleNode("valorModificacion")?.InnerText ?? string.Empty,
-            Moneda = nodeInfoNotaCredito.SelectSingleNode("moneda") == null
+            Moneda = nodeInfoNotaCredito.SelectSingleNode(TagMoneda) == null
                 ? ""
-                : nodeInfoNotaCredito.SelectSingleNode("moneda")?.InnerText ?? string.Empty,
+                : nodeInfoNotaCredito.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty,
             Motivo = nodeInfoNotaCredito.SelectSingleNode("motivo") == null
                 ? ""
                 : nodeInfoNotaCredito.SelectSingleNode("motivo")?.InnerText ?? string.Empty
@@ -199,16 +241,16 @@ public class DataXmlComprobante
     private static void GetInfoFactura(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoFactura)
     {
         var infoFac = new InfoFactura();
-        infoFac.FechaEmision = nodeInfoFactura.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty;
-        infoFac.DirEstablecimiento = nodeInfoFactura.SelectSingleNode("dirEstablecimiento") == null
+        infoFac.FechaEmision = nodeInfoFactura.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty;
+        infoFac.DirEstablecimiento = nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento) == null
             ? ""
-            : nodeInfoFactura.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty;
-        infoFac.ContribuyenteEspecial = nodeInfoFactura.SelectSingleNode("contribuyenteEspecial") == null
+            : nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty;
+        infoFac.ContribuyenteEspecial = nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial) == null
             ? ""
-            : nodeInfoFactura.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty;
-        infoFac.ObligadoContabilidad = nodeInfoFactura.SelectSingleNode("obligadoContabilidad") == null
+            : nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty;
+        infoFac.ObligadoContabilidad = nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad) == null
             ? ""
-            : nodeInfoFactura.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty;
+            : nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty;
         infoFac.TipoIdentificacionComprador =
             nodeInfoFactura.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty;
         infoFac.RazonSocialComprador = nodeInfoFactura.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty;
@@ -219,20 +261,20 @@ public class DataXmlComprobante
         infoFac.GuiaRemision = nodeInfoFactura.SelectSingleNode("guiaRemision") == null
             ? ""
             : nodeInfoFactura.SelectSingleNode("guiaRemision")?.InnerText ?? string.Empty;
-        infoFac.TotalSinImpuestos = nodeInfoFactura.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty;
+        infoFac.TotalSinImpuestos = nodeInfoFactura.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty;
         infoFac.TotalDescuento = nodeInfoFactura.SelectSingleNode("totalDescuento")?.InnerText ?? string.Empty;
         infoFac.Propina = nodeInfoFactura.SelectSingleNode("propina") == null
             ? "0.00"
             : nodeInfoFactura.SelectSingleNode("propina")?.InnerText ?? string.Empty;
         infoFac.ImporteTotal = nodeInfoFactura.SelectSingleNode("importeTotal")?.InnerText ?? string.Empty;
-        infoFac.Moneda = nodeInfoFactura.SelectSingleNode("moneda") == null
+        infoFac.Moneda = nodeInfoFactura.SelectSingleNode(TagMoneda) == null
             ? ""
-            : nodeInfoFactura.SelectSingleNode("moneda")?.InnerText ?? string.Empty;
+            : nodeInfoFactura.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty;
 
         GetTotalTaxes(codDoc, infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
 
-        if (nodeInfoFactura.SelectSingleNode("pagos") != null)
-            GetInvoicePayments(infoFac, nodeInfoFactura.SelectSingleNode("pagos"));
+        if (nodeInfoFactura.SelectSingleNode(TagPagos) != null)
+            GetInvoicePayments(infoFac, nodeInfoFactura.SelectSingleNode(TagPagos));
 
         ce.CreateInfoComp(codDoc, infoFac);
     }
@@ -244,12 +286,12 @@ public class DataXmlComprobante
         var totalImpuestos = (from XmlNode item in impuestos
                               select new TotalImpuesto
                               {
-                                  Codigo = item.SelectSingleNode("codigo")?.InnerText ?? string.Empty,
-                                  CodigoPorcentaje = item.SelectSingleNode("codigoPorcentaje")?.InnerText ?? string.Empty,
+                                  Codigo = item.SelectSingleNode(TagCodigo)?.InnerText ?? string.Empty,
+                                  CodigoPorcentaje = item.SelectSingleNode(TagCodigoPorcentaje)?.InnerText ?? string.Empty,
                                   DescuentoAdicional = item.SelectSingleNode("descuentoAdicional") == null
                                       ? "0.00"
                                       : item.SelectSingleNode("descuentoAdicional")?.InnerText ?? string.Empty,
-                                  BaseImponible = item.SelectSingleNode("baseImponible")?.InnerText ?? string.Empty,
+                                  BaseImponible = item.SelectSingleNode(TagBaseImponible)?.InnerText ?? string.Empty,
                                   Valor = item.SelectSingleNode("valor")?.InnerText ?? string.Empty
                               }).ToList();
 
@@ -322,13 +364,13 @@ public class DataXmlComprobante
             PrecioUnitario = item.SelectSingleNode("precioUnitario")?.InnerText ?? string.Empty,
             Descuento = item.SelectSingleNode("descuento")?.InnerText ?? string.Empty,
             PrecioTotalSinImpuesto = item.SelectSingleNode("precioTotalSinImpuesto")?.InnerText ?? string.Empty,
-            Impuestos = item.SelectSingleNode("impuestos")?.OuterXml ?? string.Empty,
+            Impuestos = item.SelectSingleNode(TagImpuestos)?.OuterXml ?? string.Empty,
             DetallesAdicionales = item.SelectSingleNode("detallesAdicionales")?.OuterXml ?? string.Empty
         };
 
     private static List<Impuesto> ParseDetalleImpuestos(XmlNode item, int idDetalle, string codArticulo)
     {
-        var taxesNodes = item.SelectNodes("impuestos");
+        var taxesNodes = item.SelectNodes(TagImpuestos);
         if (taxesNodes == null) return [];
 
         return (from XmlElement taxes in taxesNodes
@@ -336,10 +378,10 @@ public class DataXmlComprobante
                 {
                     IdDetalle = idDetalle,
                     CodArticulo = codArticulo,
-                    Codigo = taxes.GetElementsByTagName("codigo")[0]?.InnerText ?? string.Empty,
-                    CodigoPorcentaje = taxes.GetElementsByTagName("codigoPorcentaje")[0]?.InnerText ?? string.Empty,
+                    Codigo = taxes.GetElementsByTagName(TagCodigo)[0]?.InnerText ?? string.Empty,
+                    CodigoPorcentaje = taxes.GetElementsByTagName(TagCodigoPorcentaje)[0]?.InnerText ?? string.Empty,
                     Tarifa = taxes.GetElementsByTagName("tarifa")[0]?.InnerText ?? string.Empty,
-                    BaseImponible = taxes.GetElementsByTagName("baseImponible")[0]?.InnerText ?? string.Empty,
+                    BaseImponible = taxes.GetElementsByTagName(TagBaseImponible)[0]?.InnerText ?? string.Empty,
                     Valor = taxes.GetElementsByTagName("valor")[0]?.InnerText ?? string.Empty
                 }).ToList();
     }
@@ -350,14 +392,14 @@ public class DataXmlComprobante
         {
             var infoRet = new InfoCompRetencion
             {
-                FechaEmision = nodeInfoCompRetencion.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
-                DirEstablecimiento = nodeInfoCompRetencion.SelectSingleNode("dirEstablecimiento") == null
+                FechaEmision = nodeInfoCompRetencion.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty,
+                DirEstablecimiento = nodeInfoCompRetencion.SelectSingleNode(TagDirEstablecimiento) == null
                     ? ""
-                    : nodeInfoCompRetencion.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
-                ContribuyenteEspecial = nodeInfoCompRetencion.SelectSingleNode("contribuyenteEspecial") == null
+                    : nodeInfoCompRetencion.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
+                ContribuyenteEspecial = nodeInfoCompRetencion.SelectSingleNode(TagContribuyenteEspecial) == null
                     ? ""
-                    : nodeInfoCompRetencion.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
-                ObligadoContabilidad = nodeInfoCompRetencion.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+                    : nodeInfoCompRetencion.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
+                ObligadoContabilidad = nodeInfoCompRetencion.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
                 TipoIdentificacionSujetoRetenido = nodeInfoCompRetencion.SelectSingleNode("tipoIdentificacionSujetoRetenido")?.InnerText ?? string.Empty,
                 RazonSocialSujetoRetenido = nodeInfoCompRetencion.SelectSingleNode("razonSocialSujetoRetenido")?.InnerText ?? string.Empty,
                 IdentificacionSujetoRetenido = nodeInfoCompRetencion.SelectSingleNode("identificacionSujetoRetenido")?.InnerText ?? string.Empty,
@@ -386,14 +428,14 @@ public class DataXmlComprobante
         {
             var tax = new ImpuestoRetencion
             {
-                Codigo = taxes.GetElementsByTagName("codigo")[0]?.InnerText ?? string.Empty,
+                Codigo = taxes.GetElementsByTagName(TagCodigo)[0]?.InnerText ?? string.Empty,
                 CodigoRetencion = taxes.GetElementsByTagName("codigoRetencion")[0]?.InnerText ?? string.Empty,
-                BaseImponible = taxes.GetElementsByTagName("baseImponible")[0]?.InnerText ?? string.Empty,
+                BaseImponible = taxes.GetElementsByTagName(TagBaseImponible)[0]?.InnerText ?? string.Empty,
                 PorcentajeRetener = taxes.GetElementsByTagName("porcentajeRetener")[0]?.InnerText ?? string.Empty,
                 ValorRetenido = taxes.GetElementsByTagName("valorRetenido")[0]?.InnerText ?? string.Empty,
                 CodDocSustento = taxes.GetElementsByTagName("codDocSustento")[0]?.InnerText ?? string.Empty,
                 NumDocSustento = taxes.GetElementsByTagName("numDocSustento")[0]?.InnerText ?? string.Empty,
-                FechaEmisionDocSustento = taxes.GetElementsByTagName("fechaEmisionDocSustento")[0]?.InnerText ?? string.Empty
+                FechaEmisionDocSustento = taxes.GetElementsByTagName(TagFechaEmisionDocSustento)[0]?.InnerText ?? string.Empty
             };
             impuestos.Add(tax);
         }
@@ -421,7 +463,7 @@ public class DataXmlComprobante
             CodSustento = item.GetElementsByTagName("codSustento")[0]?.InnerText ?? string.Empty,
             CodDocSustento = item.GetElementsByTagName("codDocSustento")[0]?.InnerText ?? string.Empty,
             NumDocSustento = item.GetElementsByTagName("numDocSustento")[0]?.InnerText ?? string.Empty,
-            FechaEmisionDocSustento = item.GetElementsByTagName("fechaEmisionDocSustento")[0]?.InnerText ?? string.Empty,
+            FechaEmisionDocSustento = item.GetElementsByTagName(TagFechaEmisionDocSustento)[0]?.InnerText ?? string.Empty,
             NumAutDocSustento = item.SelectSingleNode("numAutDocSustento")?.InnerText ?? string.Empty,
             PagoLocExt = item.GetElementsByTagName("pagoLocExt")[0]?.InnerText ?? string.Empty,
             TipoRegi = item.SelectSingleNode("tipoRegi")?.InnerText ?? string.Empty,
@@ -432,7 +474,7 @@ public class DataXmlComprobante
             TotalComprobantesReembolso = item.SelectSingleNode("totalComprobantesReembolso")?.InnerText ?? string.Empty,
             TotalBaseImponibleReembolso = item.SelectSingleNode("totalBaseImponibleReembolso")?.InnerText ?? string.Empty,
             TotalImpuestoReembolso = item.SelectSingleNode("totalImpuestoReembolso")?.InnerText ?? string.Empty,
-            TotalSinImpuestos = item.GetElementsByTagName("totalSinImpuestos")[0]?.InnerText ?? string.Empty,
+            TotalSinImpuestos = item.GetElementsByTagName(TagTotalSinImpuestos)[0]?.InnerText ?? string.Empty,
             ImporteTotal = item.GetElementsByTagName("importeTotal")[0]?.InnerText ?? string.Empty
         };
 
@@ -443,7 +485,7 @@ public class DataXmlComprobante
             GetReembolsos(docSustento, item.SelectSingleNode("reembolsos"));
         }
 
-        var pagosNode = item.SelectSingleNode("pagos");
+        var pagosNode = item.SelectSingleNode(TagPagos);
         if (pagosNode != null)
         {
             GetRetencionPayments(docSustento, pagosNode);
@@ -460,8 +502,8 @@ public class DataXmlComprobante
                          select new ImpuestoDocSustento
                          {
                              CodImpuestoDocSustento = item.GetElementsByTagName("codImpuestoDocSustento")[0]?.InnerText ?? string.Empty,
-                             CodigoPorcentaje = item.GetElementsByTagName("codigoPorcentaje")[0]?.InnerText ?? string.Empty,
-                             BaseImponible = item.GetElementsByTagName("baseImponible")[0]?.InnerText ?? string.Empty,
+                             CodigoPorcentaje = item.GetElementsByTagName(TagCodigoPorcentaje)[0]?.InnerText ?? string.Empty,
+                             BaseImponible = item.GetElementsByTagName(TagBaseImponible)[0]?.InnerText ?? string.Empty,
                              Tarifa = item.GetElementsByTagName("tarifa")[0]?.InnerText ?? string.Empty,
                              ValorImpuesto = item.GetElementsByTagName("valorImpuesto")[0]?.InnerText ?? string.Empty
                          }).ToList();
@@ -480,9 +522,9 @@ public class DataXmlComprobante
         {
             var retencion = new Retencion
             {
-                Codigo = item.GetElementsByTagName("codigo")[0]?.InnerText ?? string.Empty,
+                Codigo = item.GetElementsByTagName(TagCodigo)[0]?.InnerText ?? string.Empty,
                 CodigoRetencion = item.GetElementsByTagName("codigoRetencion")[0]?.InnerText ?? string.Empty,
-                BaseImponible = item.GetElementsByTagName("baseImponible")[0]?.InnerText ?? string.Empty,
+                BaseImponible = item.GetElementsByTagName(TagBaseImponible)[0]?.InnerText ?? string.Empty,
                 PorcentajeRetener = item.GetElementsByTagName("porcentajeRetener")[0]?.InnerText ?? string.Empty,
                 ValorRetenido = item.GetElementsByTagName("valorRetenido")[0]?.InnerText ?? string.Empty
             };
@@ -490,9 +532,9 @@ public class DataXmlComprobante
 
             var ir = new ImpuestoRetencion
             {
-                Codigo = item.GetElementsByTagName("codigo")[0]?.InnerText ?? string.Empty,
+                Codigo = item.GetElementsByTagName(TagCodigo)[0]?.InnerText ?? string.Empty,
                 CodigoRetencion = item.GetElementsByTagName("codigoRetencion")[0]?.InnerText ?? string.Empty,
-                BaseImponible = item.GetElementsByTagName("baseImponible")[0]?.InnerText ?? string.Empty,
+                BaseImponible = item.GetElementsByTagName(TagBaseImponible)[0]?.InnerText ?? string.Empty,
                 PorcentajeRetener = item.GetElementsByTagName("porcentajeRetener")[0]?.InnerText ?? string.Empty,
                 ValorRetenido = item.GetElementsByTagName("valorRetenido")[0]?.InnerText ?? string.Empty,
                 CodDocSustento = doc.CodDocSustento,
@@ -544,8 +586,8 @@ public class DataXmlComprobante
         var impuestos = (from XmlElement item in impuestosReembolso
                          select new DetalleImpuesto
                          {
-                             Codigo = item.GetElementsByTagName("codigo")[0]?.InnerText ?? string.Empty,
-                             CodigoPorcentaje = item.GetElementsByTagName("codigoPorcentaje")[0]?.InnerText ?? string.Empty,
+                             Codigo = item.GetElementsByTagName(TagCodigo)[0]?.InnerText ?? string.Empty,
+                             CodigoPorcentaje = item.GetElementsByTagName(TagCodigoPorcentaje)[0]?.InnerText ?? string.Empty,
                              Tarifa = item.GetElementsByTagName("tarifa")[0]?.InnerText ?? string.Empty,
                              BaseImponibleReembolso = item.GetElementsByTagName("baseImponibleReembolso")[0]?.InnerText ?? string.Empty,
                              ImpuestoReembolso = item.GetElementsByTagName("impuestoReembolso")[0]?.InnerText ?? string.Empty
@@ -567,26 +609,26 @@ public class DataXmlComprobante
     {
         var infoLiq = new InfoLiquidacionCompra
         {
-            FechaEmision = nodeInfoLiquidacion.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
-            DirEstablecimiento = nodeInfoLiquidacion.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
-            ContribuyenteEspecial = nodeInfoLiquidacion.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
-            ObligadoContabilidad = nodeInfoLiquidacion.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+            FechaEmision = nodeInfoLiquidacion.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoLiquidacion.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoLiquidacion.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoLiquidacion.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
             TipoIdentificacionProveedor = nodeInfoLiquidacion.SelectSingleNode("tipoIdentificacionProveedor")?.InnerText ?? string.Empty,
             RazonSocialProveedor = nodeInfoLiquidacion.SelectSingleNode("razonSocialProveedor")?.InnerText ?? string.Empty,
             IdentificacionProveedor = nodeInfoLiquidacion.SelectSingleNode("identificacionProveedor")?.InnerText ?? string.Empty,
             DireccionProveedor = nodeInfoLiquidacion.SelectSingleNode("direccionProveedor")?.InnerText ?? string.Empty,
-            TotalSinImpuestos = nodeInfoLiquidacion.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoLiquidacion.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty,
             TotalDescuento = nodeInfoLiquidacion.SelectSingleNode("totalDescuento")?.InnerText ?? string.Empty,
             CodDocReembolso = nodeInfoLiquidacion.SelectSingleNode("codDocReembolso")?.InnerText ?? string.Empty,
             TotalComprobantesReembolso = nodeInfoLiquidacion.SelectSingleNode("totalComprobantesReembolso")?.InnerText ?? string.Empty,
             TotalBaseImponibleReembolso = nodeInfoLiquidacion.SelectSingleNode("totalBaseImponibleReembolso")?.InnerText ?? string.Empty,
             TotalImpuestoReembolso = nodeInfoLiquidacion.SelectSingleNode("totalImpuestoReembolso")?.InnerText ?? string.Empty,
             ImporteTotal = nodeInfoLiquidacion.SelectSingleNode("importeTotal")?.InnerText ?? string.Empty,
-            Moneda = nodeInfoLiquidacion.SelectSingleNode("moneda")?.InnerText ?? string.Empty
+            Moneda = nodeInfoLiquidacion.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty
         };
 
         GetTotalTaxes(codDoc, infoLiq, nodeInfoLiquidacion.SelectSingleNode("totalConImpuestos"));
-        GetLiquidacionPayments(infoLiq, nodeInfoLiquidacion.SelectSingleNode("pagos"));
+        GetLiquidacionPayments(infoLiq, nodeInfoLiquidacion.SelectSingleNode(TagPagos));
         GetLiquidacionReembolsos(infoLiq, nodeInfoLiquidacion.SelectSingleNode("reembolsos"));
 
         ce.CreateInfoComp(codDoc, infoLiq);
@@ -608,24 +650,24 @@ public class DataXmlComprobante
     {
         var infoNd = new InfoNotaDebito
         {
-            FechaEmision = nodeInfoNotaDebito.SelectSingleNode("fechaEmision")?.InnerText ?? string.Empty,
-            DirEstablecimiento = nodeInfoNotaDebito.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+            FechaEmision = nodeInfoNotaDebito.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoNotaDebito.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
             TipoIdentificacionComprador = nodeInfoNotaDebito.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty,
             RazonSocialComprador = nodeInfoNotaDebito.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty,
             IdentificacionComprador = nodeInfoNotaDebito.SelectSingleNode("identificacionComprador")?.InnerText ?? string.Empty,
-            ContribuyenteEspecial = nodeInfoNotaDebito.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
-            ObligadoContabilidad = nodeInfoNotaDebito.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoNotaDebito.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoNotaDebito.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
             Rise = nodeInfoNotaDebito.SelectSingleNode("rise")?.InnerText ?? string.Empty,
             CodDocModificado = nodeInfoNotaDebito.SelectSingleNode("codDocModificado")?.InnerText ?? string.Empty,
             NumDocModificado = nodeInfoNotaDebito.SelectSingleNode("numDocModificado")?.InnerText ?? string.Empty,
-            FechaEmisionDocSustento = nodeInfoNotaDebito.SelectSingleNode("fechaEmisionDocSustento")?.InnerText ?? string.Empty,
-            TotalSinImpuestos = nodeInfoNotaDebito.SelectSingleNode("totalSinImpuestos")?.InnerText ?? string.Empty,
+            FechaEmisionDocSustento = nodeInfoNotaDebito.SelectSingleNode(TagFechaEmisionDocSustento)?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoNotaDebito.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty,
             ImpuestoTotal = nodeInfoNotaDebito.SelectSingleNode("valorTotal")?.InnerText ?? string.Empty,
-            Moneda = nodeInfoNotaDebito.SelectSingleNode("moneda") == null ? "DOLAR" : nodeInfoNotaDebito.SelectSingleNode("moneda")?.InnerText ?? string.Empty
+            Moneda = nodeInfoNotaDebito.SelectSingleNode(TagMoneda) == null ? "DOLAR" : nodeInfoNotaDebito.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty
         };
 
-        GetTotalTaxes(codDoc, infoNd, nodeInfoNotaDebito.SelectSingleNode("impuestos"));
-        GetNotaDebitoPayments(infoNd, nodeInfoNotaDebito.SelectSingleNode("pagos"));
+        GetTotalTaxes(codDoc, infoNd, nodeInfoNotaDebito.SelectSingleNode(TagImpuestos));
+        GetNotaDebitoPayments(infoNd, nodeInfoNotaDebito.SelectSingleNode(TagPagos));
 
         ce.CreateInfoComp(codDoc, infoNd);
     }
@@ -654,14 +696,14 @@ public class DataXmlComprobante
     {
         var infoGr = new InfoGuiaRemision
         {
-            DirEstablecimiento = nodeInfoGuiaRemision.SelectSingleNode("dirEstablecimiento")?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoGuiaRemision.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
             DirPartida = nodeInfoGuiaRemision.SelectSingleNode("dirPartida")?.InnerText ?? string.Empty,
             RazonSocialTransportista = nodeInfoGuiaRemision.SelectSingleNode("razonSocialTransportista")?.InnerText ?? string.Empty,
             TipoIdentificacionTransportista = nodeInfoGuiaRemision.SelectSingleNode("tipoIdentificacionTransportista")?.InnerText ?? string.Empty,
             RucTransportista = nodeInfoGuiaRemision.SelectSingleNode("rucTransportista")?.InnerText ?? string.Empty,
             Rise = nodeInfoGuiaRemision.SelectSingleNode("rise")?.InnerText ?? string.Empty,
-            ObligadoContabilidad = nodeInfoGuiaRemision.SelectSingleNode("obligadoContabilidad")?.InnerText ?? string.Empty,
-            ContribuyenteEspecial = nodeInfoGuiaRemision.SelectSingleNode("contribuyenteEspecial")?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoGuiaRemision.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoGuiaRemision.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
             FechaIniTransporte = nodeInfoGuiaRemision.SelectSingleNode("fechaIniTransporte")?.InnerText ?? string.Empty,
             FechaFinTransporte = nodeInfoGuiaRemision.SelectSingleNode("fechaFinTransporte")?.InnerText ?? string.Empty,
             Placa = nodeInfoGuiaRemision.SelectSingleNode("placa")?.InnerText ?? string.Empty
@@ -689,10 +731,10 @@ public class DataXmlComprobante
                 CodDocSustento = item.GetElementsByTagName("codDocSustento")[0]?.InnerText ?? string.Empty,
                 NumDocSustento = item.GetElementsByTagName("numDocSustento")[0]?.InnerText ?? string.Empty,
                 NumAutDocSustento = item.GetElementsByTagName("numAutDocSustento")[0]?.InnerText ?? string.Empty,
-                FechaEmisionDocSustento = item.GetElementsByTagName("fechaEmisionDocSustento")[0]?.InnerText ?? string.Empty
+                FechaEmisionDocSustento = item.GetElementsByTagName(TagFechaEmisionDocSustento)[0]?.InnerText ?? string.Empty
             };
 
-            GetDetallesDestinatario(destinatario, item.SelectSingleNode("detalles"));
+            GetDetallesDestinatario(destinatario, item.SelectSingleNode(TagDetalles));
             destinatarios.Add(destinatario);
         }
 

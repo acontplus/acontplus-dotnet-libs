@@ -357,22 +357,27 @@ public class ApiExceptionMiddleware
 
     private static Dictionary<string, object>? GetSafeDebugInfo(Exception ex)
     {
-        return !ShouldIncludeDebugInfo()
-            ? null
-            : new Dictionary<string, object>
+        if (!ShouldIncludeDebugInfo())
+        {
+            return null;
+        }
+
+        object? innerExceptionInfo = ex.InnerException != null
+            ? new
             {
-                [DebugMetadataKeys.ExceptionType] = ex.GetType().Name,
-                [DebugMetadataKeys.Message] = ex.Message,
-                [DebugMetadataKeys.StackTrace] = ex.StackTrace?.Split(Environment.NewLine) ?? Array.Empty<string>(),
-                [DebugMetadataKeys.InnerException] = ex.InnerException != null
-                ? new
-                {
-                    type = ex.InnerException.GetType().Name,
-                    message = ex.InnerException.Message
-                }
-                : null!,
-                [DebugMetadataKeys.ActivityId] = Activity.Current?.Id ?? "none"
-            };
+                type = ex.InnerException.GetType().Name,
+                message = ex.InnerException.Message
+            }
+            : null;
+
+        return new Dictionary<string, object>
+        {
+            [DebugMetadataKeys.ExceptionType] = ex.GetType().Name,
+            [DebugMetadataKeys.Message] = ex.Message,
+            [DebugMetadataKeys.StackTrace] = ex.StackTrace?.Split(Environment.NewLine) ?? Array.Empty<string>(),
+            [DebugMetadataKeys.InnerException] = innerExceptionInfo!,
+            [DebugMetadataKeys.ActivityId] = Activity.Current?.Id ?? "none"
+        };
     }
 
     private static bool ShouldIncludeDebugInfo()

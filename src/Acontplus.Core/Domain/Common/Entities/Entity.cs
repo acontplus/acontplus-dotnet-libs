@@ -39,9 +39,12 @@ public abstract class Entity<TId> : IEntityWithDomainEvents where TId : notnull
     /// <returns>true if the specified object is equal to the current entity; otherwise, false.</returns>
     public override bool Equals(object? obj)
     {
-        return obj is not Entity<TId> other
-            ? false
-            : ReferenceEquals(this, other) || GetType() == other.GetType() && !Id.Equals(default) && !other.Id.Equals(default) && Id.Equals(other.Id);
+        if (obj is not Entity<TId> other)
+        {
+            return false;
+        }
+
+        return ReferenceEquals(this, other) || (GetType() == other.GetType() && !Id.Equals(default) && !other.Id.Equals(default) && Id.Equals(other.Id));
     }
 
     /// <summary>

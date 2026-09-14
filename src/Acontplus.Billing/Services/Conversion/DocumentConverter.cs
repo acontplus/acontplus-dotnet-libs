@@ -9,57 +9,7 @@ public class DocumentConverter : IDocumentConverter
     public string CreateHtml(ComprobanteElectronico comprobanteElectronico)
     {
         var assembly = typeof(DocumentConverter).Assembly;
-        byte[] imageBytes;
-        string resourceName = "Common.Billing.Resources.Images.logo-generic.png";
-
-        using (var stream = assembly.GetManifestResourceStream(resourceName))
-        {
-            if (stream == null)
-            {
-                // Si no encontramos el recurso con el nombre exacto, buscaremos entre todos los recursos
-                var resourceNames = assembly.GetManifestResourceNames();
-                string? matchingResource = null;
-
-                foreach (var name in resourceNames)
-                {
-                    if (name.EndsWith("logo-generic.png"))
-                    {
-                        matchingResource = name;
-                        break;
-                    }
-                }
-
-                if (matchingResource != null)
-                {
-                    using var foundStream = assembly.GetManifestResourceStream(matchingResource);
-                    if (foundStream != null)
-                    {
-                        using var ms = new MemoryStream();
-                        foundStream.CopyTo(ms);
-                        imageBytes = ms.ToArray();
-                    }
-                    else
-                    {
-                        throw new FileNotFoundException($"No se pudo cargar el recurso '{matchingResource}'.");
-                    }
-                }
-                else
-                {
-                    // Si no encontramos el recurso, proporcionamos información de diagnóstico
-                    var availableResources = string.Join(", ", resourceNames);
-                    throw new FileNotFoundException(
-                        $"No se pudo encontrar el recurso embebido 'logo-generic.png'. " +
-                        $"Recursos disponibles: {availableResources}");
-                }
-            }
-            else
-            {
-                // Leer el stream en un array de bytes
-                using var ms = new MemoryStream();
-                stream.CopyTo(ms);
-                imageBytes = ms.ToArray();
-            }
-        }
+        byte[] imageBytes = LoadLogoImageBytes(assembly);
 
         // Convertir la imagen a base64 para incluirla en el HTML
         var base64Image = Convert.ToBase64String(imageBytes);
@@ -415,6 +365,29 @@ public class DocumentConverter : IDocumentConverter
 
     private static string GetTotals(ComprobanteElectronico data)
     {
+        var totals = @"<div class=""col-xl-5 col-lg-5 col-md-5 col-sm-5 col-5"">
+                            <div class=""table-responsive"">
+                                <h5><strong></strong></h5>
+                                <table class=""table table-bordered"">
+                                    <tbody>";
+
+        if (data.CodDoc == "01" && data.InfoFactura != null)
+        {
+            totals += BuildFacturaTotalsHtml(data.InfoFactura);
+        }
+
+        totals += @"</tbody>
+                                </table>
+                            </div>
+                            <h4 class=""float-right""><strong></strong></h4><br>
+                            <h4 class=""float-right""><strong></strong></h4>
+                        </div>";
+        return totals;
+    }
+
+    private static string BuildFacturaTotalsHtml(InfoFactura infoFactura)
+    {
+        var sb = new StringBuilder();
         double subtotalIva0 = 0;
         double subtotal12 = 0;
         var subtotalNoObjetoIva = 0.00;
@@ -423,112 +396,86 @@ public class DocumentConverter : IDocumentConverter
         var iva12 = 0.00;
         var irbpnr = 0.00;
 
-        var totals = @"<div class=""col-xl-5 col-lg-5 col-md-5 col-sm-5 col-5"">
-                            <div class=""table-responsive"">
-                                <h5><strong></strong></h5>
-                                <table class=""table table-bordered"">
-                                    <tbody>";
-
-        switch (data.CodDoc)
+        if (infoFactura.TotalImpuestos != null)
         {
-            case "01":
-                if (data.InfoFactura != null)
+            foreach (var item in infoFactura.TotalImpuestos)
+            {
+                if (item.Codigo == "2" && item.CodigoPorcentaje is "2" or "4")
                 {
-                    if (data.InfoFactura.TotalImpuestos != null)
-                    {
-                        foreach (var item in data.InfoFactura.TotalImpuestos)
-                        {
-                            if (item.Codigo == "2" && item.CodigoPorcentaje == "2")
-                                totals += @"<tr>
-                                            <td class=""text-right""><strong>SubTotal Iva 12%</strong></td>
-                                            <td class=""text-right"">" +
-                                          Convert.ToString(subtotal12 += Convert.ToDouble(item.BaseImponible),
-                                              CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-                            if (item.Codigo == "2" && item.CodigoPorcentaje == "4")
-                                totals += @"<tr>
-                                            <td class=""text-right""><strong>SubTotal Iva 15%</strong></td>
-                                            <td class=""text-right"">" +
-                                          Convert.ToString(subtotal12 += Convert.ToDouble(item.BaseImponible),
-                                              CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-
-                            if (item.Codigo == "2" && item.CodigoPorcentaje == "0")
-                                totals += @"<tr>
-                                            <td class=""text-right""><strong>SubTotal Iva 0%</strong></td>
-                                            <td class=""text-right"">" +
-                                          Convert.ToString(subtotalIva0 += Convert.ToDouble(item.BaseImponible),
-                                              CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-
-                            if (item.Codigo == "2" && item.CodigoPorcentaje == "6")
-                                totals += @"<tr>
-                                            <td class=""text-right""><strong>SubTotal No Objeto Iva</strong></td>
-                                            <td class=""text-right"">" +
-                                          Convert.ToString(subtotalNoObjetoIva += Convert.ToDouble(item.BaseImponible), CultureInfo.InvariantCulture) +
-                                          @"</td>
-                                        </tr>";
-
-                            if (item.Codigo == "2" && item.CodigoPorcentaje == "7")
-                                totals += @"<tr>
-                                            <td class=""text-right""><strong>SubTotal Excento Iva</strong></td>
-                                            <td class=""text-right"">" +
-                                          Convert.ToString(subtotalExcentoIva += Convert.ToDouble(item.BaseImponible), CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-
-                            totals += @"<tr>
-                                            <td class=""text-right""><strong>Total Sin Impuestos</strong></td>
-                                            <td class=""text-right"">" + data.InfoFactura.TotalSinImpuestos + @"</td>
-                                        </tr>";
-                            switch (item.Codigo)
-                            {
-                                case "3":
-                                    totals += @"<tr>
-                                            <td class=""text-right""><strong>ICE</strong></td>
-                                            <td class=""text-right"">" +
-                                              Convert.ToString(ice += Convert.ToDouble(item.Valor),
-                                                  CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-                                    break;
-                                case "2" when item.CodigoPorcentaje == "2":
-                                    totals += @"<tr>
-                                            <td class=""text-right""><strong>IVA 12%</strong></td>
-                                            <td class=""text-right"">" +
-                                              Convert.ToString(iva12 += Convert.ToDouble(item.Valor),
-                                                  CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-                                    break;
-                                case "5":
-                                    totals += @"<tr>
-                                            <td class=""text-right""><strong>IRBPNR</strong></td>
-                                            <td class=""text-right"">" +
-                                              Convert.ToString(irbpnr += Convert.ToDouble(item.Valor),
-                                                  CultureInfo.InvariantCulture) + @"</td>
-                                        </tr>";
-                                    break;
-                            }
-                        }
-                    }
-
-                    totals += @" <tr><td class=""text-right""><strong>Propina</strong></td>
-                                            <td class=""text-right"">" + data.InfoFactura.Propina + @"</td>
-                                        </tr>";
-                    totals += @" <tr><td class=""text-right""><strong>Valor Total</strong></td>
-                                            <td class=""text-right"">" + data.InfoFactura.ImporteTotal + @"</td>
-                                        </tr>";
+                    var label = item.CodigoPorcentaje == "2" ? "SubTotal Iva 12%" : "SubTotal Iva 15%";
+                    subtotal12 += Convert.ToDouble(item.BaseImponible);
+                    sb.Append($@"<tr><td class=""text-right""><strong>{label}</strong></td><td class=""text-right"">{Convert.ToString(subtotal12, CultureInfo.InvariantCulture)}</td></tr>");
                 }
-                break;
-            case "04":
+                else if (item.Codigo == "2" && item.CodigoPorcentaje == "0")
+                {
+                    subtotalIva0 += Convert.ToDouble(item.BaseImponible);
+                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Iva 0%</strong></td><td class=""text-right"">{Convert.ToString(subtotalIva0, CultureInfo.InvariantCulture)}</td></tr>");
+                }
+                else if (item.Codigo == "2" && item.CodigoPorcentaje == "6")
+                {
+                    subtotalNoObjetoIva += Convert.ToDouble(item.BaseImponible);
+                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal No Objeto Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalNoObjetoIva, CultureInfo.InvariantCulture)}</td></tr>");
+                }
+                else if (item.Codigo == "2" && item.CodigoPorcentaje == "7")
+                {
+                    subtotalExcentoIva += Convert.ToDouble(item.BaseImponible);
+                    sb.Append($@"<tr><td class=""text-right""><strong>SubTotal Excento Iva</strong></td><td class=""text-right"">{Convert.ToString(subtotalExcentoIva, CultureInfo.InvariantCulture)}</td></tr>");
+                }
 
-                break;
+                sb.Append($@"<tr><td class=""text-right""><strong>Total Sin Impuestos</strong></td><td class=""text-right"">{infoFactura.TotalSinImpuestos}</td></tr>");
+
+                if (item.Codigo == "3")
+                {
+                    ice += Convert.ToDouble(item.Valor);
+                    sb.Append($@"<tr><td class=""text-right""><strong>ICE</strong></td><td class=""text-right"">{Convert.ToString(ice, CultureInfo.InvariantCulture)}</td></tr>");
+                }
+                else if (item.Codigo == "2" && item.CodigoPorcentaje == "2")
+                {
+                    iva12 += Convert.ToDouble(item.Valor);
+                    sb.Append($@"<tr><td class=""text-right""><strong>IVA 12%</strong></td><td class=""text-right"">{Convert.ToString(iva12, CultureInfo.InvariantCulture)}</td></tr>");
+                }
+                else if (item.Codigo == "5")
+                {
+                    irbpnr += Convert.ToDouble(item.Valor);
+                    sb.Append($@"<tr><td class=""text-right""><strong>IRBPNR</strong></td><td class=""text-right"">{Convert.ToString(irbpnr, CultureInfo.InvariantCulture)}</td></tr>");
+                }
+            }
         }
-        ;
-        totals += @"</tbody>
-                                </table>
-                            </div>
-                            <h4 class=""float-right""><strong></strong></h4><br>
-                            <h4 class=""float-right""><strong></strong></h4>
-                        </div>";
-        return totals;
+
+        sb.Append($@" <tr><td class=""text-right""><strong>Propina</strong></td><td class=""text-right"">{infoFactura.Propina}</td></tr>");
+        sb.Append($@" <tr><td class=""text-right""><strong>Valor Total</strong></td><td class=""text-right"">{infoFactura.ImporteTotal}</td></tr>");
+
+        return sb.ToString();
+    }
+
+    private static byte[] LoadLogoImageBytes(System.Reflection.Assembly assembly)
+    {
+        const string resourceName = "Common.Billing.Resources.Images.logo-generic.png";
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream != null)
+        {
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            return ms.ToArray();
+        }
+
+        var resourceNames = assembly.GetManifestResourceNames();
+        var matchingResource = resourceNames.FirstOrDefault(name => name.EndsWith("logo-generic.png", StringComparison.Ordinal));
+        if (matchingResource != null)
+        {
+            using var foundStream = assembly.GetManifestResourceStream(matchingResource);
+            if (foundStream != null)
+            {
+                using var ms = new MemoryStream();
+                foundStream.CopyTo(ms);
+                return ms.ToArray();
+            }
+
+            throw new FileNotFoundException($"No se pudo cargar el recurso '{matchingResource}'.");
+        }
+
+        var availableResources = string.Join(", ", resourceNames);
+        throw new FileNotFoundException(
+            $"No se pudo encontrar el recurso embebido 'logo-generic.png'. Recursos disponibles: {availableResources}");
     }
 }

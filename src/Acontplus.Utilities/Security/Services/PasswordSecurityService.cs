@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Acontplus.Utilities.Security.Services;
 
 /// <summary>
@@ -10,19 +12,16 @@ public class PasswordSecurityService(IDataEncryptionService dataEncryptionServic
     private const int BcryptWorkFactor = 12;
 
     /// <inheritdoc />
-    public string HashPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: BcryptWorkFactor);
-    }
+    public string HashPassword(string password) =>
+        BCrypt.Net.BCrypt.HashPassword(password, workFactor: BcryptWorkFactor);
 
     /// <inheritdoc />
-    public bool VerifyPassword(string password, string hashedPassword)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
-    }
+    public bool VerifyPassword(string password, string hashedPassword) =>
+        BCrypt.Net.BCrypt.Verify(password, hashedPassword);
 
     /// <inheritdoc />
     [Obsolete("Reversible password storage is deprecated for security reasons (OWASP Password Storage Cheat Sheet / Sonar S5344 / CWE-256). Passwords must never be reversible. Use HashPassword instead.")]
+    [SuppressMessage("SonarQube", "S1133", Justification = "Preserved for backwards compatibility with legacy database schemas until next major release.")]
     public (byte[] EncryptedPassword, string PasswordHash) SetPassword(string password)
     {
         var encryptedPassword = dataEncryptionService.EncryptToBytes(password);
@@ -32,8 +31,7 @@ public class PasswordSecurityService(IDataEncryptionService dataEncryptionServic
 
     /// <inheritdoc />
     [Obsolete("Reversible password storage is deprecated for security reasons (OWASP Password Storage Cheat Sheet / Sonar S5344 / CWE-256). Storing reversible passwords exposes all credentials if keys are compromised.")]
-    public string GetDecryptedPassword(byte[] encryptedPassword)
-    {
-        return dataEncryptionService.DecryptFromBytes(encryptedPassword);
-    }
+    [SuppressMessage("SonarQube", "S1133", Justification = "Preserved for backwards compatibility with legacy database schemas until next major release.")]
+    public string GetDecryptedPassword(byte[] encryptedPassword) =>
+        dataEncryptionService.DecryptFromBytes(encryptedPassword);
 }

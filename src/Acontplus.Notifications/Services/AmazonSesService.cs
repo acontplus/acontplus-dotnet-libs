@@ -664,9 +664,12 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
     private static string LowerFirstCharacter(string value)
     {
-        return string.IsNullOrEmpty(value)
-            ? value
-            : value.Length > 1
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return value.Length > 1
             ? char.ToLowerInvariant(value[0]) + value[1..]
             : char.ToLowerInvariant(value[0]).ToString();
     }

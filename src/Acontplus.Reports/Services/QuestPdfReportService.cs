@@ -59,10 +59,12 @@ public sealed class QuestPdfReportService : IQuestPdfReportService, IDisposable
 
         try
         {
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "QuestPDF generation started. Title: {Title}, Sections: {Count}",
                     request.Title, request.Sections.Count);
+            }
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(_options.ReportGenerationTimeoutSeconds));
@@ -91,10 +93,12 @@ public sealed class QuestPdfReportService : IQuestPdfReportService, IDisposable
 
             sw.Stop();
 
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "QuestPDF generation completed. Title: {Title}, Size: {Bytes}B, Elapsed: {Ms}ms",
                     request.Title, pdfBytes.Length, sw.ElapsedMilliseconds);
+            }
 
             return new ReportResponse
             {
@@ -180,7 +184,10 @@ public sealed class QuestPdfReportService : IQuestPdfReportService, IDisposable
             if (bytes.Length == 0)
                 throw new ReportGenerationException("QuestPDF produced an empty document during probe.");
 
-            _logger.LogInformation("QuestPDF configuration validated successfully. Probe size: {Bytes}B", bytes.Length);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("QuestPDF configuration validated successfully. Probe size: {Bytes}B", bytes.Length);
+            }
         }
         catch (ReportGenerationException)
         {

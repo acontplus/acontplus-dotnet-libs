@@ -3,18 +3,12 @@ namespace Acontplus.Infrastructure.Resilience;
 /// <summary>
 ///     Retry policy service providing retry patterns for operations.
 /// </summary>
-public class RetryPolicyService
+public class RetryPolicyService(
+    ILogger<RetryPolicyService> logger,
+    IOptions<ResilienceConfiguration> config)
 {
-    private readonly ResilienceConfiguration _config;
-    private readonly ILogger<RetryPolicyService> _logger;
-
-    public RetryPolicyService(
-        ILogger<RetryPolicyService> _logger,
-        IOptions<ResilienceConfiguration> config)
-    {
-        this._logger = _logger;
-        _config = config.Value;
-    }
+    private readonly ResilienceConfiguration _config = config.Value;
+    private readonly ILogger<RetryPolicyService> _logger = logger;
 
     /// <summary>
     ///     Executes an async action with retry policy.

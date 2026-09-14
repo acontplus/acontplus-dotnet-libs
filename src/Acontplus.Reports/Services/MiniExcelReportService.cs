@@ -194,34 +194,45 @@ public sealed class MiniExcelReportService : IMiniExcelReportService, IDisposabl
 
         foreach (DataRow row in ws.Data.Rows)
         {
-            var dict = new Dictionary<string, object?>(visible.Count, StringComparer.Ordinal);
-
-            foreach (var col in visible)
-            {
-                var header = colMap.TryGetValue(col.ColumnName, out var definition)
-                             && !string.IsNullOrWhiteSpace(definition.Header)
-                    ? definition.Header
-                    : col.ColumnName;
-
-                var rawValue = row.IsNull(col) ? null : row[col];
-
-                // Apply format hint if provided (project value to formatted string)
-                if (rawValue is not null
-                    && definition is not null
-                    && !string.IsNullOrEmpty(definition.Format))
-                {
-                    rawValue = rawValue switch
-                    {
-                        IFormattable f => f.ToString(definition.Format, System.Globalization.CultureInfo.CurrentCulture),
-                        _ => rawValue
-                    };
-                }
-
-                dict[header] = rawValue;
-            }
-
-            yield return dict;
+            yield return MapRowToDictionary(row, visible, colMap);
         }
+    }
+
+    private static Dictionary<string, object?> MapRowToDictionary(
+        DataRow row,
+        List<DataColumn> visible,
+        Dictionary<string, ExcelColumnDefinition> colMap)
+    {
+        var dict = new Dictionary<string, object?>(visible.Count, StringComparer.Ordinal);
+
+        foreach (var col in visible)
+        {
+            var header = colMap.TryGetValue(col.ColumnName, out var definition)
+                         && !string.IsNullOrWhiteSpace(definition.Header)
+                ? definition.Header
+                : col.ColumnName;
+
+            var rawValue = row.IsNull(col) ? null : row[col];
+            dict[header] = FormatColumnValue(rawValue, definition);
+        }
+
+        return dict;
+    }
+
+    private static object? FormatColumnValue(object? rawValue, ExcelColumnDefinition? definition)
+    {
+        if (rawValue is not null
+            && definition is not null
+            && !string.IsNullOrEmpty(definition.Format))
+        {
+            return rawValue switch
+            {
+                IFormattable f => f.ToString(definition.Format, System.Globalization.CultureInfo.CurrentCulture),
+                _ => rawValue
+            };
+        }
+
+        return rawValue;
     }
 
     private async Task AcquireSlotAsync(CancellationToken cancellationToken, string reportName)

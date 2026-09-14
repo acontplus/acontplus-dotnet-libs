@@ -484,13 +484,11 @@
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.#ctor(Acontplus.Utilities.Mapping.MapperRegistry)">
-            <summary>Initialises the mapper with a fully built <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/>.</summary>
-            <param name="registry">
-            A fully initialised registry containing compiled delegates for all registered type pairs.
-            </param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown when <paramref name="registry"/> is <c>null</c>.
-            </exception>
+            <summary>
+            Default implementation of <see cref="T:Acontplus.Utilities.Mapping.IObjectMapper"/> backed by pre-compiled
+            <c>Expression</c>-tree delegates. Register as a singleton via
+            <c>services.AddObjectMapper(...)</c>.
+            </summary>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(``0)">
             <inheritdoc />
