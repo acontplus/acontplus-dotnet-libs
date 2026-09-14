@@ -348,20 +348,14 @@ public static class XmlValidator
     /// <summary>
     /// Normaliza los saltos de línea para evitar problemas con diferentes sistemas operativos
     /// </summary>
-    private static string NormalizeLineBreaks(string xml)
-    {
-        // Convertir todos los tipos de saltos de línea a \n
-        return Regex.Replace(xml, @"\r\n?|\n", "\n", RegexOptions.None, RegexTimeout);
-    }
+    private static string NormalizeLineBreaks(string xml) =>
+        Regex.Replace(xml, @"\r\n?|\n", "\n", RegexOptions.None, RegexTimeout);
 
     /// <summary>
     /// Elimina caracteres que no son válidos en XML según la especificación
     /// </summary>
-    private static string RemoveInvalidXmlChars(string xml)
-    {
-        // Según la especificación XML, estos caracteres no son válidos
-        return Regex.Replace(xml, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", RegexOptions.None, RegexTimeout);
-    }
+    private static string RemoveInvalidXmlChars(string xml) =>
+        Regex.Replace(xml, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", RegexOptions.None, RegexTimeout);
 
     /// <summary>
     /// Método original para eliminar declaración XML

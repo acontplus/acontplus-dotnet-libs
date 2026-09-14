@@ -13,15 +13,9 @@ public static partial class SqlStringParam
     /// </summary>
     /// <param name="input">The raw input string to sanitize.</param>
     /// <returns>The sanitized string with dangerous patterns replaced by spaces.</returns>
-    public static string Sanitize(string input)
-    {
-        return SanitizeRegex().Replace(input, MatchEvaluatorHandler);
-    }
+    public static string Sanitize(string input) =>
+        SanitizeRegex().Replace(input, MatchEvaluatorHandler);
 
-    private static string MatchEvaluatorHandler(Match match)
-    {
-        //Replace the matched items with a blank string of
-        //equal length
-        return new string(' ', match.Length);
-    }
+    private static string MatchEvaluatorHandler(Match match) =>
+        new(' ', match.Length);
 }

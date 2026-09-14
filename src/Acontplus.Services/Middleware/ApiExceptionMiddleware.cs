@@ -267,7 +267,10 @@ public class ApiExceptionMiddleware
         }
 
         var logLevel = GetLogLevel(ex);
-        _logger.Log(logLevel, ex, "{LogDetails}", logMessage.ToString());
+        if (_logger.IsEnabled(logLevel))
+        {
+            _logger.Log(logLevel, ex, "{LogDetails}", logMessage.ToString());
+        }
     }
 
     private static LogLevel GetLogLevel(Exception ex)

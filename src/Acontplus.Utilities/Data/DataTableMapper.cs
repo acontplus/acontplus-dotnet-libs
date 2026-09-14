@@ -147,7 +147,7 @@ public static class DataTableMapper
             // Handle special cases first
             if (underlyingType == typeof(bool))
             {
-                return ConvertBooleanValue(value) ?? false;
+                return ConvertBooleanValue(value);
             }
 
             if (underlyingType == typeof(int) && value is string intStr)
@@ -185,7 +185,7 @@ public static class DataTableMapper
         }
     }
 
-    private static object? ConvertBooleanValue(object value)
+    private static bool ConvertBooleanValue(object value)
     {
         if (value is string strValue)
         {
@@ -203,7 +203,7 @@ public static class DataTableMapper
         if (value is int intValue)
             return intValue != 0;
 
-        return null;
+        return false;
     }
 
     private static byte[]? ConvertByteArrayValue(object value)

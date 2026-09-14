@@ -173,10 +173,8 @@ public sealed class S3ObjectCustom : IDisposable
         }
     }
 
-    private void ThrowIfDisposed()
-    {
+    private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(_disposed, this);
-    }
 
     /// <summary>
     /// Finalizer to ensure resources are released.

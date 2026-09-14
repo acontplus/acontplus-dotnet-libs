@@ -43,9 +43,12 @@ public sealed class RequestContextMiddleware(
                             requestId;
         var tenantId = SanitizeHeader(context.Request.Headers["Tenant-Id"]) ??
                        requestId;
-        _logger.LogDebug(
-            "Processing request: RequestId: {RequestId}, CorrelationId: {CorrelationId}, TenantId: {TenantId}",
-            requestId, correlationId, tenantId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "Processing request: RequestId: {RequestId}, CorrelationId: {CorrelationId}, TenantId: {TenantId}",
+                requestId, correlationId, tenantId);
+        }
 
         // 3. Client Context
         var clientId = ValidateClientId(context);
@@ -61,14 +64,19 @@ public sealed class RequestContextMiddleware(
         }
 
         var issuer = SanitizeHeader(context.Request.Headers["Issuer"]);
-        _logger.LogDebug("Client ID: {ClientId}, Issuer: {Issuer}", clientId, issuer);
-
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Client ID: {ClientId}, Issuer: {Issuer}", clientId, issuer);
+        }
 
         // 4. Device Detection
         var deviceType = GetDeviceType(context);
         var isMobileRequest = deviceType is DeviceType.Mobile or DeviceType.Tablet;
-        _logger.LogDebug("Detected device type: {DeviceType}, IsMobileRequest: {IsMobileRequest}", deviceType,
-            isMobileRequest);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Detected device type: {DeviceType}, IsMobileRequest: {IsMobileRequest}", deviceType,
+                isMobileRequest);
+        }
 
         // 5. Context Storage (using HttpContext.Items and extension methods)
         context.SetRequestId(requestId);

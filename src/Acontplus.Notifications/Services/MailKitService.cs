@@ -153,7 +153,11 @@ public class MailKitService : IMailKitService, IDisposable
                 // Add timeout configurations
                 newClient.Timeout = 30000; // 30 seconds timeout
 
-                _logger.LogInformation("Connecting and authenticating to SMTP server {SmtpServer}:{SmtpPort} for {SenderEmail}...", email.SmtpServer, email.SmtpPort, email.SenderEmail);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Connecting and authenticating to SMTP server {SmtpServer}:{SmtpPort} for {SenderEmail}...", email.SmtpServer, email.SmtpPort, email.SenderEmail);
+                }
+
                 await newClient.ConnectAsync(email.SmtpServer, email.SmtpPort, MailKit.Security.SecureSocketOptions.Auto, ct);
 
                 // Record authentication attempt
@@ -161,7 +165,10 @@ public class MailKitService : IMailKitService, IDisposable
 
                 await newClient.AuthenticateAsync(email.SenderEmail!, email.Password, ct);
 
-                _logger.LogInformation("Successfully connected and authenticated to SMTP server {SmtpServer}:{SmtpPort}.", email.SmtpServer, email.SmtpPort);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Successfully connected and authenticated to SMTP server {SmtpServer}:{SmtpPort}.", email.SmtpServer, email.SmtpPort);
+                }
 
                 // Reset auth attempt count on successful authentication
                 _authAttemptCount.TryRemove(serverKey, out _);
