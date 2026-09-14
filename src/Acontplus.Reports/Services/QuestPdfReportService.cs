@@ -203,6 +203,7 @@ public sealed class QuestPdfReportService : IQuestPdfReportService, IDisposable
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
+    /// <inheritdoc />
     public void Dispose()
     {
         if (_disposed) return;

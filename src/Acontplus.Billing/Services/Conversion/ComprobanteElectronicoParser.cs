@@ -3,12 +3,21 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
+/// <summary>
+/// Parser for converting raw SRI XML documents into strongly-typed <see cref="ComprobanteElectronico"/> objects.
+/// </summary>
 public class ComprobanteElectronicoParser : IXmlDocumentParser<ComprobanteElectronico>
 {
     private readonly IDictionary<string, IDocumentTypeParser> _documentTypeParsers;
     private readonly IInfoTributariaParser _infoTributariaParser;
     private readonly IInfoAdicionalParser _infoAdicionalParser;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ComprobanteElectronicoParser"/> class.
+    /// </summary>
+    /// <param name="documentTypeParsers">Dictionary mapping document type codes to their corresponding parsers.</param>
+    /// <param name="infoTributariaParser">Parser for tributary information.</param>
+    /// <param name="infoAdicionalParser">Parser for additional metadata fields.</param>
     public ComprobanteElectronicoParser(
         IDictionary<string, IDocumentTypeParser> documentTypeParsers,
         IInfoTributariaParser infoTributariaParser,
@@ -19,6 +28,7 @@ public class ComprobanteElectronicoParser : IXmlDocumentParser<ComprobanteElectr
         _infoAdicionalParser = infoAdicionalParser ?? throw new ArgumentNullException(nameof(infoAdicionalParser));
     }
 
+    /// <inheritdoc />
     public bool TryParse(XmlDocument xmlDocument, out ComprobanteElectronico result, out string errorMessage)
     {
         errorMessage = string.Empty;

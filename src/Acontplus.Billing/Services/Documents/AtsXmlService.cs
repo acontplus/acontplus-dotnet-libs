@@ -3,6 +3,9 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents;
 
+/// <summary>
+/// Service that builds and serializes the ATS (Anexo Transaccional Simplificado) XML document.
+/// </summary>
 public class AtsXmlService : IAtsXmlService
 {
     // You could inject ILogger<AtsXmlService> here for comprehensive logging
@@ -12,6 +15,7 @@ public class AtsXmlService : IAtsXmlService
     //     _logger = logger;
     // }
 
+    /// <inheritdoc />
     public async Task<byte[]> CreateAtsXmlAsync(AtsData atsData)
     {
         // Use a MemoryStream to hold the XML content

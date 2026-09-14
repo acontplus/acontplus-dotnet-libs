@@ -5,9 +5,21 @@ namespace Acontplus.Services.Policies;
 /// </summary>
 public class TenantIsolationRequirement : IAuthorizationRequirement
 {
+    /// <summary>
+    /// Gets a value indicating whether the Tenant-Id header is strictly required.
+    /// </summary>
     public bool RequireTenantHeader { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the user's tenant claim must match the header tenant ID.
+    /// </summary>
     public bool ValidateUserTenantAccess { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TenantIsolationRequirement"/> class.
+    /// </summary>
+    /// <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+    /// <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
     public TenantIsolationRequirement(bool requireTenantHeader = true, bool validateUserTenantAccess = true)
     {
         RequireTenantHeader = requireTenantHeader;
@@ -22,11 +34,16 @@ public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequir
 {
     private readonly ILogger<TenantIsolationHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TenantIsolationHandler"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public TenantIsolationHandler(ILogger<TenantIsolationHandler> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         TenantIsolationRequirement requirement)
@@ -87,12 +104,22 @@ public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequir
 /// </summary>
 public static class TenantIsolationPolicyExtensions
 {
+    /// <summary>
+    /// Registers the tenant isolation authorization handler into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddTenantIsolationAuthorization(this IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, TenantIsolationHandler>();
         return services;
     }
 
+    /// <summary>
+    /// Adds preconfigured tenant isolation authorization policies to the authorization options.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <returns>The authorization options for chaining.</returns>
     public static AuthorizationOptions AddTenantIsolationPolicies(this AuthorizationOptions options)
     {
         options.AddPolicy("RequireTenant", policy =>

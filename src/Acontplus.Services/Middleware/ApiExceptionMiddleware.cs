@@ -14,6 +14,12 @@ public class ApiExceptionMiddleware
     private readonly ExceptionHandlingOptions _options;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiExceptionMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next request delegate in the pipeline.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="options">Exception handling options.</param>
     public ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMiddleware> logger, ExceptionHandlingOptions options)
     {
         _next = next;

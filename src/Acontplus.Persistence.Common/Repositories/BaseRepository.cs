@@ -6,18 +6,34 @@
 namespace Acontplus.Persistence.Common.Repositories;
 
 /// <summary>
-///     A generic repository implementation for Entity Framework Core, targeting .NET 9+.
+/// A generic repository implementation for Entity Framework Core.
 /// </summary>
-/// TEntity: The type of the entity.
-/// int: The type of the entity's primary key, must be not null.
+/// <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
 public class BaseRepository<TEntity> : IRepository<TEntity>
     where TEntity : class
 {
+    /// <summary>
+    /// The underlying Entity Framework <see cref="DbContext"/>.
+    /// </summary>
     protected readonly DbContext _context;
+
+    /// <summary>
+    /// The <see cref="DbSet{TEntity}"/> for the entity type.
+    /// </summary>
     protected readonly DbSet<TEntity> _dbSet;
+
     private readonly string? _idPropertyName;
+
+    /// <summary>
+    /// The optional logger instance.
+    /// </summary>
     protected readonly ILogger<BaseRepository<TEntity>>? _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseRepository{TEntity}"/> class.
+    /// </summary>
+    /// <param name="context">The database context instance.</param>
+    /// <param name="logger">Optional logger instance.</param>
     public BaseRepository(DbContext context, ILogger<BaseRepository<TEntity>>? logger = null)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -38,6 +54,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Query Methods
 
+    /// <inheritdoc />
     public virtual async Task<TEntity> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(GetByIdAsync)}");
@@ -53,6 +70,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TEntity?> GetByIdOrDefaultAsync(int id, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(GetByIdOrDefaultAsync)}");
@@ -67,6 +85,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TEntity>> GetByIdsAsync(
         IEnumerable<int> ids,
         CancellationToken cancellationToken = default,
@@ -100,6 +119,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TEntity?> FindSingleOrDefaultAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default,
@@ -119,6 +139,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TEntity> FindSingleAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default,
@@ -139,6 +160,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TEntity?> GetFirstOrDefaultAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default,
@@ -158,6 +180,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(
         CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object>>[] includeProperties)
@@ -175,6 +198,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TEntity>> FindAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default,
@@ -194,6 +218,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual IAsyncEnumerable<TEntity> FindAsyncEnumerable(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
@@ -211,6 +236,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
         CancellationToken cancellationToken = default,
@@ -218,6 +244,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         bool orderByDescending = false) =>
         GetPagedAsync(pagination, null!, cancellationToken, orderBy, orderByDescending);
 
+    /// <inheritdoc />
     public virtual async Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
         Expression<Func<TEntity, bool>> predicate,
@@ -266,6 +293,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<PagedResult<TProjection>> GetPagedProjectionAsync<TProjection>(
         PaginationRequest pagination,
         Expression<Func<TEntity, TProjection>> projection,
@@ -317,6 +345,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<bool> ExistsAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
@@ -334,6 +363,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? predicate = null,
         CancellationToken cancellationToken = default)
@@ -352,6 +382,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<long> LongCountAsync(
         Expression<Func<TEntity, bool>>? predicate = null,
         CancellationToken cancellationToken = default)
@@ -370,6 +401,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TProperty?> GetMaxAsync<TProperty>(
         Expression<Func<TEntity, TProperty>> selector,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -395,6 +427,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TProperty?> GetMinAsync<TProperty>(
         Expression<Func<TEntity, TProperty>> selector,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -420,6 +453,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<decimal> GetSumAsync(
         Expression<Func<TEntity, decimal>> selector,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -445,6 +479,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<double> GetAverageAsync(
         Expression<Func<TEntity, decimal>> selector,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -474,6 +509,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Persistence Methods
 
+    /// <inheritdoc />
     public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(AddAsync)}");
@@ -490,6 +526,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(AddRangeAsync)}");
@@ -505,6 +542,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(UpdateAsync)}");
@@ -527,6 +565,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task<IEnumerable<TEntity>> UpdateRangeAsync(IEnumerable<TEntity> entities,
         CancellationToken cancellationToken = default)
     {
@@ -550,6 +589,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task<TEntity> UpdatePropertiesAsync(
         TEntity entity,
         CancellationToken cancellationToken = default,
@@ -588,6 +628,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteAsync)}");
@@ -604,6 +645,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<bool> DeleteByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteByIdAsync)}");
@@ -625,6 +667,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteRangeAsync)}");
@@ -641,6 +684,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> DeleteAsync(Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
@@ -667,6 +711,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Bulk Operations
 
+    /// <inheritdoc />
     public virtual async Task<int> BulkDeleteAsync(Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
@@ -686,6 +731,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> BulkUpdateAsync<TProperty>(
         Expression<Func<TEntity, bool>> predicate,
         Expression<Func<TEntity, TProperty>> propertyExpression,
@@ -710,6 +756,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> BulkInsertAsync(IEnumerable<TEntity> entities,
         CancellationToken cancellationToken = default)
     {
@@ -735,6 +782,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> BulkUpdateAsync(
         Expression<Func<TEntity, bool>> predicate,
         Expression<Func<TEntity, TEntity>> updateExpression,
@@ -772,6 +820,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Specification Pattern
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TEntity>> FindWithSpecificationAsync(
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
@@ -789,6 +838,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TEntity> GetFirstOrDefaultWithSpecificationAsync(
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
@@ -810,6 +860,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<PagedResult<TEntity>> GetPagedWithSpecificationAsync(
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
@@ -836,6 +887,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TProjection>> FindProjectionWithSpecificationAsync<TProjection>(
         ISpecification<TEntity> specification,
         Expression<Func<TEntity, TProjection>> projection,
@@ -859,6 +911,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<int> CountWithSpecificationAsync(
         ISpecification<TEntity> specification,
         CancellationToken cancellationToken = default)
@@ -881,11 +934,13 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Advanced Query Operations
 
+    /// <inheritdoc />
     public virtual IQueryable<TEntity> GetQueryable(
         bool tracking = false,
         params Expression<Func<TEntity, object>>[] includeProperties) =>
         BuildQuery(tracking, includeProperties);
 
+    /// <inheritdoc />
     public virtual Task<TResult> ExecuteQueryAsync<TResult>(
         Expression<Func<IQueryable<TEntity>, TResult>> queryExpression,
         CancellationToken cancellationToken = default)
@@ -906,6 +961,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TResult>> ExecuteQueryToListAsync<TResult>(
         Expression<Func<IQueryable<TEntity>, IQueryable<TResult>>> queryExpression,
         CancellationToken cancellationToken = default)
@@ -926,6 +982,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<PagedResult<TResult>> ExecutePagedQueryAsync<TResult>(
         Expression<Func<IQueryable<TEntity>, IQueryable<TResult>>> queryExpression,
         PaginationRequest pagination,
@@ -960,6 +1017,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TEntity>> GetOrderedAsync(
         Expression<Func<TEntity, bool>>? predicate = null,
         CancellationToken cancellationToken = default,
@@ -986,6 +1044,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual Task<TResult> AggregateAsync<TResult>(
         Expression<Func<IQueryable<TEntity>, TResult>> aggregateExpression,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -1016,6 +1075,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TProperty>> GetDistinctAsync<TProperty>(
         Expression<Func<TEntity, TProperty>> propertySelector,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -1041,6 +1101,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TProjection>> GetProjectionAsync<TProjection>(
         Expression<Func<TEntity, TProjection>> projection,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -1067,6 +1128,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task<TProjection?> GetFirstProjectionOrDefaultAsync<TProjection>(
         Expression<Func<TEntity, TProjection>> projection,
         Expression<Func<TEntity, bool>>? predicate = null,
@@ -1099,6 +1161,12 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Helper Methods
 
+    /// <summary>
+    /// Builds an entity query with optional tracking and eager loading inclusions.
+    /// </summary>
+    /// <param name="tracking">Whether to enable change tracking. Defaults to <see langword="true"/>.</param>
+    /// <param name="includeProperties">Navigation properties to eagerly load.</param>
+    /// <returns>An <see cref="IQueryable{TEntity}"/> query configured with the specified options.</returns>
     protected virtual IQueryable<TEntity> BuildQuery(
         bool tracking = true,
         params Expression<Func<TEntity, object>>[] includeProperties)
@@ -1113,6 +1181,13 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         return query;
     }
 
+    /// <summary>
+    /// Builds an entity query based on a domain specification.
+    /// </summary>
+    /// <param name="spec">The specification to apply.</param>
+    /// <param name="ignorePaging">Whether to ignore pagination rules defined in the specification.</param>
+    /// <param name="ignoreOrdering">Whether to ignore ordering rules defined in the specification.</param>
+    /// <returns>An <see cref="IQueryable{TEntity}"/> query filtered by the specification.</returns>
     protected virtual IQueryable<TEntity> BuildSpecificationQuery(ISpecification<TEntity> spec,
         bool ignorePaging = false, bool ignoreOrdering = false)
     {
@@ -1139,12 +1214,24 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         return query;
     }
 
+    /// <summary>
+    /// Applies pagination parameters from a specification to the query.
+    /// </summary>
+    /// <param name="query">The base query.</param>
+    /// <param name="spec">The specification with paging parameters.</param>
+    /// <returns>The paginated query.</returns>
     protected virtual IQueryable<TEntity> ApplyPaging(IQueryable<TEntity> query, ISpecification<TEntity> spec)
     {
         return query.Skip((spec.Pagination.PageIndex - 1) * spec.Pagination.PageSize)
             .Take(spec.Pagination.PageSize);
     }
 
+    /// <summary>
+    /// Applies ordering expressions from a specification to the query.
+    /// </summary>
+    /// <param name="query">The base query.</param>
+    /// <param name="orderExpressions">Ordering expressions specifying key selector and direction.</param>
+    /// <returns>The ordered query.</returns>
     protected virtual IQueryable<TEntity> ApplyOrdering(IQueryable<TEntity> query,
         params (Expression<Func<TEntity, object>> KeySelector, bool Descending)[] orderExpressions)
     {
@@ -1175,6 +1262,12 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         return orderedQuery ?? query;
     }
 
+    /// <summary>
+    /// Validates pagination parameters to ensure valid page number and page size.
+    /// </summary>
+    /// <param name="pagination">The pagination request to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="pagination"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when page number or page size is invalid.</exception>
     protected virtual void ValidatePagination(PaginationRequest pagination)
     {
         ArgumentNullException.ThrowIfNull(pagination);
@@ -1194,6 +1287,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
 
     #region Transaction Support
 
+    /// <inheritdoc />
     public virtual async Task<TResult> ExecuteInTransactionAsync<TResult>(
         Func<Task<TResult>> operation,
         CancellationToken cancellationToken = default)
@@ -1225,6 +1319,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
+    /// <inheritdoc />
     public virtual async Task ExecuteInTransactionAsync(
         Func<Task> operation,
         CancellationToken cancellationToken = default)

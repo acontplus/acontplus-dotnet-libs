@@ -7,6 +7,7 @@ namespace Acontplus.Infrastructure.HealthChecks;
 /// </summary>
 public class SelfHealthCheck : IHealthCheck
 {
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

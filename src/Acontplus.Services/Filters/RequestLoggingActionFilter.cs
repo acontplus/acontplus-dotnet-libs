@@ -7,11 +7,16 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
 {
     private readonly ILogger<RequestLoggingActionFilter> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RequestLoggingActionFilter"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public RequestLoggingActionFilter(ILogger<RequestLoggingActionFilter> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var stopwatch = Stopwatch.StartNew();

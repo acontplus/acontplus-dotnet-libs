@@ -2,6 +2,9 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Interfaces.Services;
 
+/// <summary>
+/// Service contract for generating ATS (Anexo Transaccional Simplificado) XML documents.
+/// </summary>
 public interface IAtsXmlService
 {
     /// <summary>

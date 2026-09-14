@@ -2,6 +2,12 @@ using Microsoft.Extensions.Primitives;
 
 namespace Acontplus.Services.Middleware;
 
+/// <summary>
+/// Middleware that populates and validates ambient request context metadata (request ID, correlation ID, tenant ID, client ID, device type).
+/// </summary>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="logger">The logger instance.</param>
+/// <param name="options">The request context configuration options.</param>
 public sealed class RequestContextMiddleware(
     RequestDelegate next,
     ILogger<RequestContextMiddleware> logger, // Injected ILogger
@@ -17,6 +23,11 @@ public sealed class RequestContextMiddleware(
 
     // Injected IOptions<T>
 
+    /// <summary>
+    /// Executes the middleware for an incoming HTTP request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>A task representing the completion of request processing.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         // 1. Security Hardening (conditionally applied)

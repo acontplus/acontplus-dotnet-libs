@@ -1,5 +1,8 @@
 namespace Acontplus.Utilities.IO.Images;
 
+/// <summary>
+/// Provides utility methods for detecting image formats from byte arrays.
+/// </summary>
 public static class PictureHelper
 {
     // some magic bytes for the most important image formats, see Wikipedia for more
@@ -56,6 +59,11 @@ public static class PictureHelper
         (Svg_xml_capital, "svg")
     };
 
+    /// <summary>
+    /// Attempts to determine the file extension of an image from its binary header (magic bytes).
+    /// </summary>
+    /// <param name="array">The byte array containing the image data.</param>
+    /// <returns>The file extension without a leading dot (e.g. "jpg", "png"), or <see langword="null"/> if not recognized.</returns>
     public static string? TryGetExtension(byte[] array)
     {
         // check for simple formats first

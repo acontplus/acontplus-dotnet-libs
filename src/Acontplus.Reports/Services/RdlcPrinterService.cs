@@ -8,6 +8,9 @@ using System.Security;
 
 namespace Acontplus.Reports.Services;
 
+/// <summary>
+/// Service for rendering RDLC reports directly to physical printers on Windows systems.
+/// </summary>
 [SupportedOSPlatform("windows6.1")]
 public class RdlcPrinterService : IRdlcPrinterService
 {
@@ -16,6 +19,12 @@ public class RdlcPrinterService : IRdlcPrinterService
     private readonly SemaphoreSlim _printSemaphore;
     private readonly ReportDefinitionCache _cache;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RdlcPrinterService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="options">The report configuration options.</param>
+    /// <param name="cache">The report definition cache.</param>
     public RdlcPrinterService(
         ILogger<RdlcPrinterService> logger,
         IOptions<ReportOptions> options,
@@ -27,6 +36,7 @@ public class RdlcPrinterService : IRdlcPrinterService
         _printSemaphore = new SemaphoreSlim(_options.MaxConcurrentPrintJobs);
     }
 
+    /// <inheritdoc />
     public async Task<bool> PrintAsync(RdlcPrinterDto rdlcPrinter, RdlcPrintRequestDto printRequest, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(rdlcPrinter);

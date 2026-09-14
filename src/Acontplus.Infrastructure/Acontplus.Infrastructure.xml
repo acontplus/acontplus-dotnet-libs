@@ -9,15 +9,130 @@
                 Distributed cache service implementation using Redis or other distributed cache.
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.#ctor(Microsoft.Extensions.Caching.Distributed.IDistributedCache,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Caching.DistributedCacheService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.Caching.DistributedCacheService"/> class.
+            </summary>
+            <param name="cache">The distributed cache instance.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.Get``1(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.GetAsync``1(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.Set``1(System.String,``0,System.Nullable{System.TimeSpan})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.SetAsync``1(System.String,``0,System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.Remove(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.RemoveAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.TryGetValue``1(System.String,``0@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.GetOrCreate``1(System.String,System.Func{``0},System.Nullable{System.TimeSpan})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.GetOrCreateAsync``1(System.String,System.Func{System.Threading.Tasks.Task{``0}},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.Clear">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.ClearAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.Exists(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.ExistsAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.RemoveByPrefix(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.RemoveByPrefixAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.GetStatistics">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.GetStatisticsAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Infrastructure.Caching.MemoryCacheService">
             <summary>
-                In-memory cache service implementation using IMemoryCache.
+            In-memory cache service implementation using <see cref="T:Microsoft.Extensions.Caching.Memory.IMemoryCache"/>.
             </summary>
+            <param name="memoryCache">The in-memory cache instance.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="config">The cache configuration options.</param>
         </member>
         <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.#ctor(Microsoft.Extensions.Caching.Memory.IMemoryCache,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Caching.MemoryCacheService},Microsoft.Extensions.Options.IOptions{Acontplus.Infrastructure.Configuration.CacheConfiguration})">
             <summary>
-                In-memory cache service implementation using IMemoryCache.
+            In-memory cache service implementation using <see cref="T:Microsoft.Extensions.Caching.Memory.IMemoryCache"/>.
             </summary>
+            <param name="memoryCache">The in-memory cache instance.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="config">The cache configuration options.</param>
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.Get``1(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.Set``1(System.String,``0,System.Nullable{System.TimeSpan})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.Remove(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.TryGetValue``1(System.String,``0@)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.GetOrCreate``1(System.String,System.Func{``0},System.Nullable{System.TimeSpan})">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.GetAsync``1(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.SetAsync``1(System.String,``0,System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.RemoveAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.GetOrCreateAsync``1(System.String,System.Func{System.Threading.Tasks.Task{``0}},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.Clear">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.ClearAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.Exists(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.ExistsAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.RemoveByPrefix(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.RemoveByPrefixAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.GetStatistics">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Caching.MemoryCacheService.GetStatisticsAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Infrastructure.Configuration.CacheConfiguration">
             <summary>
@@ -346,15 +461,36 @@
                 Health check for cache service.
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.HealthChecks.CacheHealthCheck.#ctor(Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.HealthChecks.CacheHealthCheck"/> class.
+            </summary>
+            <param name="cacheService">The cache service to evaluate.</param>
+        </member>
+        <member name="M:Acontplus.Infrastructure.HealthChecks.CacheHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck">
             <summary>
                 Health check for circuit breaker service.
             </summary>
         </member>
+        <member name="M:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck.#ctor(Acontplus.Core.Abstractions.Infrastructure.Resilience.ICircuitBreakerService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck"/> class.
+            </summary>
+            <param name="circuitBreakerService">The circuit breaker service to evaluate.</param>
+        </member>
+        <member name="M:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Infrastructure.HealthChecks.SelfHealthCheck">
             <summary>
                 Self health check that always returns healthy with application name.
             </summary>
+        </member>
+        <member name="M:Acontplus.Infrastructure.HealthChecks.SelfHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Infrastructure.Http.ResilientHttpClientFactory">
             <summary>
@@ -490,6 +626,34 @@
             <summary>
                 Circuit breaker service implementation using Polly policies.
             </summary>
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Resilience.CircuitBreakerService},Microsoft.Extensions.Options.IOptions{Acontplus.Infrastructure.Configuration.ResilienceConfiguration})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.Resilience.CircuitBreakerService"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+            <param name="config">The resilience configuration options.</param>
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.ExecuteAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.ExecuteAsync(System.Func{System.Threading.Tasks.Task},System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.Execute``1(System.Func{``0},System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.Execute(System.Action,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.GetCircuitBreakerState(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.OpenCircuit(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Infrastructure.Resilience.CircuitBreakerService.CloseCircuit(System.String)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Infrastructure.Resilience.RetryPolicyService">
             <summary>

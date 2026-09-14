@@ -1,22 +1,45 @@
 namespace Acontplus.Services.Extensions.Context;
 
+/// <summary>
+/// Extension methods for extracting common claims from a <see cref="ClaimsPrincipal"/>.
+/// </summary>
 public static class ClaimsPrincipalExtensions
 {
+    /// <summary>
+    /// Gets the username from the <see cref="ClaimTypes.Name"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The username, or null if not found.</returns>
     public static string? GetUsername(this ClaimsPrincipal user)
     {
         return user.FindFirst(ClaimTypes.Name)?.Value;
     }
 
+    /// <summary>
+    /// Gets the email address from the <see cref="ClaimTypes.Email"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The email address, or null if not found.</returns>
     public static string? GetEmail(this ClaimsPrincipal user)
     {
         return user.FindFirstValue(ClaimTypes.Email);
     }
 
+    /// <summary>
+    /// Gets the role name from the <see cref="ClaimTypes.Role"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The role name, or null if not found.</returns>
     public static string? GetRoleName(this ClaimsPrincipal user)
     {
         return user.FindFirst(ClaimTypes.Role)?.Value;
     }
 
+    /// <summary>
+    /// Gets the user ID from the <see cref="ClaimTypes.NameIdentifier"/> claim as an integer.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The parsed user ID, or 0 if not found or invalid.</returns>
     public static int GetUserId(this ClaimsPrincipal user)
     {
         var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;

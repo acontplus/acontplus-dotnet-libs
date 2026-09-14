@@ -27,6 +27,11 @@ public class CircuitBreakerService : ICircuitBreakerService
     private readonly ILogger<CircuitBreakerService> _logger;
     private readonly Dictionary<string, IAsyncPolicy> _policies;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CircuitBreakerService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="config">The resilience configuration options.</param>
     public CircuitBreakerService(
         ILogger<CircuitBreakerService> logger,
         IOptions<ResilienceConfiguration> config)
@@ -44,18 +49,21 @@ public class CircuitBreakerService : ICircuitBreakerService
         InitializePolicies();
     }
 
+    /// <inheritdoc />
     public async Task<TResult> ExecuteAsync<TResult>(Func<Task<TResult>> action, string? policyName = null)
     {
         var policy = GetPolicy(policyName);
         return await policy.ExecuteAsync(action);
     }
 
+    /// <inheritdoc />
     public async Task ExecuteAsync(Func<Task> action, string? policyName = null)
     {
         var policy = GetPolicy(policyName);
         await policy.ExecuteAsync(action);
     }
 
+    /// <inheritdoc />
     public TResult Execute<TResult>(Func<TResult> action, string? policyName = null)
     {
         // For sync operations, we'll use a simple retry without circuit breaker
@@ -66,6 +74,7 @@ public class CircuitBreakerService : ICircuitBreakerService
         return retryPolicy.Execute(action);
     }
 
+    /// <inheritdoc />
     public void Execute(Action action, string? policyName = null)
     {
         // For sync operations, we'll use a simple retry without circuit breaker
@@ -76,15 +85,18 @@ public class CircuitBreakerService : ICircuitBreakerService
         retryPolicy.Execute(action);
     }
 
+    /// <inheritdoc />
     public CircuitBreakerState GetCircuitBreakerState(string policyName = DefaultPolicyName) =>
         _circuitStates.GetValueOrDefault(policyName, CircuitBreakerState.Closed);
 
+    /// <inheritdoc />
     public void OpenCircuit(string policyName = DefaultPolicyName)
     {
         _circuitStates[policyName] = CircuitBreakerState.Open;
         _logger.LogWarning("Circuit breaker manually opened for policy: {PolicyName}", policyName);
     }
 
+    /// <inheritdoc />
     public void CloseCircuit(string policyName = DefaultPolicyName)
     {
         _circuitStates[policyName] = CircuitBreakerState.Closed;

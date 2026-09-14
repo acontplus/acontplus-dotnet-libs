@@ -2,6 +2,9 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents;
 
+/// <summary>
+/// Legacy XML document parser for SRI electronic receipts.
+/// </summary>
 public class DataXmlComprobante
 {
     private const string TagVersion = "version";
@@ -19,6 +22,13 @@ public class DataXmlComprobante
     private const string TagCodigoPorcentaje = "codigoPorcentaje";
     private const string TagBaseImponible = "baseImponible";
 
+    /// <summary>
+    /// Extracts electronic receipt metadata and nodes from an SRI XML document.
+    /// </summary>
+    /// <param name="xmlSri">The SRI XML document.</param>
+    /// <param name="comp">The electronic receipt reference to populate.</param>
+    /// <param name="message">The output error message if parsing fails.</param>
+    /// <returns><c>true</c> if successfully extracted; otherwise <c>false</c>.</returns>
     public bool GetData(XmlDocument xmlSri, ref ComprobanteElectronico comp, ref string message)
     {
         var resp = true;
@@ -182,6 +192,12 @@ public class DataXmlComprobante
         };
     }
 
+    /// <summary>
+    /// Extracts credit note information from the XML node.
+    /// </summary>
+    /// <param name="codDoc">The document type code.</param>
+    /// <param name="ce">The electronic receipt being populated.</param>
+    /// <param name="nodeInfoNotaCredito">The XML node containing credit note info.</param>
     public void GetInfoNotaCredito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaCredito)
     {
         var infoFac = new InfoNotaCredito
@@ -223,6 +239,11 @@ public class DataXmlComprobante
         ce.CreateInfoComp(codDoc, infoFac);
     }
 
+    /// <summary>
+    /// Extracts additional information (infoAdicional) name-value pairs into the electronic receipt.
+    /// </summary>
+    /// <param name="comp">The electronic receipt to populate.</param>
+    /// <param name="infoAdi">The XML node containing infoAdicional elements.</param>
     public static void GetInfoAdicional(ComprobanteElectronico comp, XmlNode? infoAdi)
     {
         if (infoAdi == null) return;

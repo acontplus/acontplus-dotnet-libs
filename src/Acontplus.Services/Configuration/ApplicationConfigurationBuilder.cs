@@ -47,6 +47,10 @@ public static class ApplicationConfigurationBuilder
         return string.Empty;
     }
 
+    /// <summary>
+    /// Builds the merged <see cref="IConfiguration"/> hierarchy including JSON settings, environment variables, shared platform settings, and Azure Key Vault.
+    /// </summary>
+    /// <returns>The built <see cref="IConfiguration"/> instance.</returns>
     public static IConfiguration Load()
     {
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";

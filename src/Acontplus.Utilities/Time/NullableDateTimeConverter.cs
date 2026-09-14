@@ -7,11 +7,16 @@ public class NullableDateTimeConverter : JsonConverter<DateTime?>
 {
     private readonly string _dateFormat;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NullableDateTimeConverter"/> class with a custom date format.
+    /// </summary>
+    /// <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
     public NullableDateTimeConverter(string dateFormat = "yyyy-MM-dd")
     {
         _dateFormat = dateFormat;
     }
 
+    /// <inheritdoc />
     public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.String)
@@ -25,6 +30,7 @@ public class NullableDateTimeConverter : JsonConverter<DateTime?>
         return reader.TokenType == JsonTokenType.Null ? null : throw new JsonException("Invalid date format.");
     }
 
+    /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
     {
         if (value.HasValue)

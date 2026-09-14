@@ -144,6 +144,11 @@ public static class DataConverters
         }
     }
 
+    /// <summary>
+    /// Serializes a dictionary to an optimized JSON string.
+    /// </summary>
+    /// <param name="data">The dictionary data to serialize.</param>
+    /// <returns>A JSON string representation of the dictionary.</returns>
     public static string SerializeDictionary(Dictionary<string, object> data) => data.SerializeOptimized();
 
     /// <summary>
@@ -257,11 +262,22 @@ public static class DataConverters
         }
     }
 
+    /// <summary>
+    /// Serializes an object to JSON with optional formatting configurations.
+    /// </summary>
+    /// <param name="data">The object to serialize.</param>
+    /// <param name="options">Optional JSON serializer options.</param>
+    /// <returns>The serialized JSON string.</returns>
     public static string SerializeWithOptions(object data, JsonSerializerOptions? options = null)
     {
         return data.SerializeOptimized(options == JsonExtensions.PrettyOptions);
     }
 
+    /// <summary>
+    /// Serializes an object after sanitizing complex or database values.
+    /// </summary>
+    /// <param name="data">The object to sanitize and serialize.</param>
+    /// <returns>The sanitized JSON string.</returns>
     public static string SerializeSanitizedData(object data)
     {
         var sanitizedData = SanitizeValueForSerialization(data);

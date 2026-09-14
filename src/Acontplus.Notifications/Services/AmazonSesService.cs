@@ -11,6 +11,9 @@ using Template = Scriban.Template;
 
 namespace Acontplus.Notifications.Services;
 
+/// <summary>
+/// Email delivery service implementing <see cref="IMailKitService"/> using the Amazon Simple Email Service (SES) v2 API.
+/// </summary>
 public sealed class AmazonSesService : IMailKitService, IDisposable
 {
     private const int MaxSesBulkRecipients = 50;
@@ -44,6 +47,12 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
     private readonly string? _defaultFromEmail;
     private readonly string? _templatesPath;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AmazonSesService"/> class.
+    /// </summary>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="memoryCache">The memory cache instance for template caching.</param>
     public AmazonSesService(
         IConfiguration configuration,
         ILogger<AmazonSesService> logger,
@@ -91,6 +100,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         _bulkRetryPolicy = CreateBulkRetryPolicy();
     }
 
+    /// <inheritdoc />
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(email);
@@ -123,6 +133,12 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         }
     }
 
+    /// <summary>
+    /// Sends a collection of individual emails in batches asynchronously.
+    /// </summary>
+    /// <param name="emails">The collection of emails to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns><c>true</c> if all emails were sent successfully; otherwise, <c>false</c>.</returns>
     public async Task<bool> SendBulkAsync(IEnumerable<EmailModel> emails, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(emails);
@@ -176,6 +192,13 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         return success;
     }
 
+    /// <summary>
+    /// Sends templated emails to multiple destinations using an SES template in batches.
+    /// </summary>
+    /// <param name="templateName">The name of the SES email template.</param>
+    /// <param name="destinations">The collection of destinations and replacement template data.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns><c>true</c> if all destinations were sent successfully; otherwise, <c>false</c>.</returns>
     public async Task<bool> SendTemplatedBulkAsync(
         string templateName,
         IEnumerable<BulkEmailDestination> destinations,
@@ -753,6 +776,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         return activity.Start();
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _sesClient?.Dispose();
@@ -760,9 +784,19 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Represents a destination recipient and optional replacement data for SES bulk templated sending.
+    /// </summary>
     public sealed class BulkEmailDestination
     {
+        /// <summary>
+        /// Gets or sets the SES destination containing recipient email addresses.
+        /// </summary>
         public Destination Destination { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets JSON-serialized template replacement data specific to this destination.
+        /// </summary>
         public string? ReplacementTemplateData { get; set; }
     }
 }

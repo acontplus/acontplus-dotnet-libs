@@ -12,6 +12,9 @@ using Scriban;
 
 namespace Acontplus.Notifications.Services;
 
+/// <summary>
+/// Email delivery service implementing <see cref="IMailKitService"/> using MailKit/MimeKit with connection pooling and retry policies.
+/// </summary>
 public class MailKitService : IMailKitService, IDisposable
 {
     private readonly IConfiguration _configuration;
@@ -36,6 +39,11 @@ public class MailKitService : IMailKitService, IDisposable
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MailKitService"/> class.
+    /// </summary>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="logger">The logger instance.</param>
     public MailKitService(IConfiguration configuration, ILogger<MailKitService> logger)
     {
         _configuration = configuration;
@@ -233,6 +241,7 @@ public class MailKitService : IMailKitService, IDisposable
         }
     }
 
+    /// <inheritdoc />
     [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
         Justification = "Exception is logged with contextual recipient information before rethrowing to caller.")]
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
@@ -422,12 +431,17 @@ public class MailKitService : IMailKitService, IDisposable
     private static string LowerFirstCharacter(string value) =>
         value.Length > 1 ? char.ToLowerInvariant(value[0]) + value[1..] : value;
 
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Releases the unmanaged and optionally managed resources used by the service.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release managed resources; otherwise, <c>false</c>.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

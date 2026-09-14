@@ -1,15 +1,26 @@
-﻿namespace Acontplus.Services.Middleware;
+namespace Acontplus.Services.Middleware;
 
 
+/// <summary>
+/// Middleware that generates and attaches a unique Content Security Policy (CSP) nonce to the request context.
+/// </summary>
 public class CspNonceMiddleware
 {
     private readonly RequestDelegate _next;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CspNonceMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next middleware delegate.</param>
     public CspNonceMiddleware(RequestDelegate next)
     {
         _next = next;
     }
 
+    /// <summary>
+    /// Invokes the middleware to generate and attach a CSP nonce.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
     public async Task InvokeAsync(HttpContext context)
     {
         // Generate a unique nonce for this request
@@ -28,8 +39,16 @@ public class CspNonceMiddleware
     }
 }
 
+/// <summary>
+/// Extension methods for accessing the CSP nonce from the HTTP context.
+/// </summary>
 public static class CspNonceExtensions
 {
+    /// <summary>
+    /// Retrieves the CSP nonce generated for the current HTTP request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>The CSP nonce string, or empty string if not found.</returns>
     public static string GetCspNonce(this HttpContext context)
     {
         return context.Items["csp-nonce"]?.ToString() ?? string.Empty;

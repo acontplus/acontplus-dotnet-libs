@@ -74,7 +74,10 @@ public class QuestPdfDocumentSettings
 /// </summary>
 public enum QuestPdfLicenseType
 {
+    /// <summary>Community license for non-commercial or qualifying organizations.</summary>
     Community,
+    /// <summary>Professional commercial license.</summary>
     Professional,
+    /// <summary>Enterprise commercial license.</summary>
     Enterprise
 }

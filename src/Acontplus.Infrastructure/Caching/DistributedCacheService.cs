@@ -8,12 +8,18 @@ public class DistributedCacheService : ICacheService
     private readonly IDistributedCache _cache;
     private readonly ILogger<DistributedCacheService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DistributedCacheService"/> class.
+    /// </summary>
+    /// <param name="cache">The distributed cache instance.</param>
+    /// <param name="logger">The logger instance.</param>
     public DistributedCacheService(IDistributedCache cache, ILogger<DistributedCacheService> logger)
     {
         _cache = cache;
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public T? Get<T>(string key)
     {
         try
@@ -28,6 +34,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         try
@@ -42,6 +49,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public void Set<T>(string key, T value, TimeSpan? expiration = null)
     {
         try
@@ -62,6 +70,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null,
         CancellationToken ct = default)
     {
@@ -83,6 +92,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public void Remove(string key)
     {
         try
@@ -95,6 +105,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task RemoveAsync(string key, CancellationToken ct = default)
     {
         try
@@ -107,6 +118,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public bool TryGetValue<T>(string key, out T? value)
     {
         try
@@ -129,6 +141,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public T GetOrCreate<T>(string key, Func<T> factory, TimeSpan? expiration = null)
     {
         var value = Get<T>(key);
@@ -142,6 +155,7 @@ public class DistributedCacheService : ICacheService
         return value;
     }
 
+    /// <inheritdoc />
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null,
         CancellationToken ct = default)
     {
@@ -156,6 +170,7 @@ public class DistributedCacheService : ICacheService
         return value;
     }
 
+    /// <inheritdoc />
     public void Clear()
     {
         // Note: Distributed cache doesn't support clearing all entries by design
@@ -163,6 +178,7 @@ public class DistributedCacheService : ICacheService
         _logger.LogWarning("Clear operation not supported for distributed cache - this is a platform limitation");
     }
 
+    /// <inheritdoc />
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         // Note: Distributed cache doesn't support clearing all entries by design
@@ -171,6 +187,7 @@ public class DistributedCacheService : ICacheService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public bool Exists(string key)
     {
         try
@@ -185,6 +202,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         try
@@ -199,18 +217,21 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public void RemoveByPrefix(string prefix)
     {
         _logger.LogWarning(
             "RemoveByPrefix is not supported for distributed cache. Use Redis-specific clients for pattern-based removal.");
     }
 
+    /// <inheritdoc />
     public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
     {
         RemoveByPrefix(prefix);
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public CacheStatistics GetStatistics()
     {
         // Note: Distributed cache providers (Redis, etc.) don't expose detailed statistics
@@ -226,6 +247,7 @@ public class DistributedCacheService : ICacheService
         };
     }
 
+    /// <inheritdoc />
     public Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default) =>
         Task.FromResult<CacheStatistics?>(GetStatistics());
 }

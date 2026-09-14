@@ -9,11 +9,16 @@ public class CircuitBreakerHealthCheck : IHealthCheck
 {
     private readonly ICircuitBreakerService _circuitBreakerService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CircuitBreakerHealthCheck"/> class.
+    /// </summary>
+    /// <param name="circuitBreakerService">The circuit breaker service to evaluate.</param>
     public CircuitBreakerHealthCheck(ICircuitBreakerService circuitBreakerService)
     {
         _circuitBreakerService = circuitBreakerService;
     }
 
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

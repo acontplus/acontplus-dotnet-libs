@@ -7,6 +7,9 @@ namespace Acontplus.Services.Services.Implementations;
 /// Service for managing and caching lookup data from database queries.
 /// Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
 /// </summary>
+/// <param name="unitOfWork">The unit of work providing repository access.</param>
+/// <param name="cacheService">The caching service instance.</param>
+/// <param name="logger">The logger instance.</param>
 public class LookupService(
     IUnitOfWork unitOfWork,
     ICacheService cacheService,
@@ -19,6 +22,7 @@ public class LookupService(
     private readonly ICacheService _cacheService = cacheService;
     private readonly ILogger<LookupService> _logger = logger;
 
+    /// <inheritdoc />
     public async Task<Result<IDictionary<string, IEnumerable<LookupItem>>, DomainError>> GetLookupsAsync(
         string storedProcedureName,
         FilterRequest filterRequest,
@@ -44,6 +48,7 @@ public class LookupService(
         }
     }
 
+    /// <inheritdoc />
     public async Task<Result<IDictionary<string, IEnumerable<LookupItem>>, DomainError>> RefreshLookupsAsync(
         string storedProcedureName,
         FilterRequest filterRequest,

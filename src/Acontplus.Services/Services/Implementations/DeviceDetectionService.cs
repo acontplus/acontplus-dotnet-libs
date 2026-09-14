@@ -22,11 +22,16 @@ public class DeviceDetectionService : IDeviceDetectionService
         @"(Windows NT|Macintosh|Linux(?!.*Android))",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeviceDetectionService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public DeviceDetectionService(ILogger<DeviceDetectionService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public DeviceType DetectDeviceType(HttpContext context)
     {
         // Try Device-Type header first (preferred method)
@@ -54,12 +59,14 @@ public class DeviceDetectionService : IDeviceDetectionService
         return detectedType;
     }
 
+    /// <inheritdoc />
     public bool IsMobileDevice(HttpContext context)
     {
         var deviceType = DetectDeviceType(context);
         return deviceType is DeviceType.Mobile or DeviceType.Tablet;
     }
 
+    /// <inheritdoc />
     public DeviceCapabilities GetDeviceCapabilities(string userAgent)
     {
         if (string.IsNullOrWhiteSpace(userAgent))
@@ -84,6 +91,7 @@ public class DeviceDetectionService : IDeviceDetectionService
         return capabilities;
     }
 
+    /// <inheritdoc />
     public bool ValidateDeviceHeaders(HttpContext context)
     {
         var headers = context.Request.Headers;

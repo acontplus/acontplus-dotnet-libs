@@ -3,9 +3,12 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
-// Implementation of details parser
+/// <summary>
+/// Parser for extracting line item details from electronic invoice and receipt XML nodes.
+/// </summary>
 public class DetailsParser : IDetailsParser
 {
+    /// <inheritdoc />
     public void Parse(XmlNode nodeDetails, ComprobanteElectronico comprobante)
     {
         var detalles = new List<Detalle>();

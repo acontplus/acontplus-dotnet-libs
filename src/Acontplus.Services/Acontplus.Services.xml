@@ -34,6 +34,12 @@
              <c>AwsConfiguration--AWSSecretKey</c>.</para>
              </remarks>
         </member>
+        <member name="M:Acontplus.Services.Configuration.ApplicationConfigurationBuilder.Load">
+            <summary>
+            Builds the merged <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> hierarchy including JSON settings, environment variables, shared platform settings, and Azure Key Vault.
+            </summary>
+            <returns>The built <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/> instance.</returns>
+        </member>
         <member name="T:Acontplus.Services.Configuration.JsonConfigurationService">
             <summary>
             Service for configuring JSON serialization in applications
@@ -81,10 +87,21 @@
             Interface for JSON configuration provider
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Configuration.IJsonConfigurationProvider.GetOptions(System.Boolean,System.Boolean)">
+            <summary>
+            Gets JSON serializer options with configurable settings.
+            </summary>
+            <param name="prettyFormat">Whether to format the JSON output with indentation.</param>
+            <param name="strictMode">Whether to enforce strict JSON reading and validation rules.</param>
+            <returns>Configured <see cref="T:System.Text.Json.JsonSerializerOptions"/>.</returns>
+        </member>
         <member name="T:Acontplus.Services.Configuration.JsonConfigurationProvider">
             <summary>
             Implementation of JSON configuration provider
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Configuration.JsonConfigurationProvider.GetOptions(System.Boolean,System.Boolean)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Services.Configuration.RequestContextConfiguration">
             <summary>
@@ -215,6 +232,94 @@
             Configures API explorer for documentation tools.
             </summary>
         </member>
+        <member name="T:Acontplus.Services.Extensions.RequestContextHealthCheck">
+            <summary>
+            Health check that verifies the availability and operation of the request context service.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.RequestContextHealthCheck.#ctor(Acontplus.Core.Abstractions.Services.IRequestContextService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.RequestContextHealthCheck"/> class.
+            </summary>
+            <param name="requestContextService">The request context service.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.RequestContextHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Services.Extensions.SecurityHeaderHealthCheck">
+            <summary>
+            Health check that verifies the availability of the security header service.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.SecurityHeaderHealthCheck.#ctor(Acontplus.Services.Services.Abstractions.ISecurityHeaderService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.SecurityHeaderHealthCheck"/> class.
+            </summary>
+            <param name="securityHeaderService">The security header service.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.SecurityHeaderHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Services.Extensions.DeviceDetectionHealthCheck">
+            <summary>
+            Health check that verifies the functionality and accuracy of the device detection service.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.DeviceDetectionHealthCheck.#ctor(Acontplus.Services.Services.Abstractions.IDeviceDetectionService)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.DeviceDetectionHealthCheck"/> class.
+            </summary>
+            <param name="deviceDetectionService">The device detection service.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.DeviceDetectionHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Authentication.JwtAuthenticationExtensions">
+            <summary>
+            Extension methods for configuring JWT Bearer authentication.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Authentication.JwtAuthenticationExtensions.AddJwtAuthentication(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures JWT Bearer authentication using settings from the provided configuration.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="config">The application configuration containing JwtSettings.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions">
+            <summary>
+            Extension methods for extracting common claims from a <see cref="T:System.Security.Claims.ClaimsPrincipal"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions.GetUsername(System.Security.Claims.ClaimsPrincipal)">
+            <summary>
+            Gets the username from the <see cref="F:System.Security.Claims.ClaimTypes.Name"/> claim.
+            </summary>
+            <param name="user">The claims principal.</param>
+            <returns>The username, or null if not found.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions.GetEmail(System.Security.Claims.ClaimsPrincipal)">
+            <summary>
+            Gets the email address from the <see cref="F:System.Security.Claims.ClaimTypes.Email"/> claim.
+            </summary>
+            <param name="user">The claims principal.</param>
+            <returns>The email address, or null if not found.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions.GetRoleName(System.Security.Claims.ClaimsPrincipal)">
+            <summary>
+            Gets the role name from the <see cref="F:System.Security.Claims.ClaimTypes.Role"/> claim.
+            </summary>
+            <param name="user">The claims principal.</param>
+            <returns>The role name, or null if not found.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions.GetUserId(System.Security.Claims.ClaimsPrincipal)">
+            <summary>
+            Gets the user ID from the <see cref="F:System.Security.Claims.ClaimTypes.NameIdentifier"/> claim as an integer.
+            </summary>
+            <param name="user">The claims principal.</param>
+            <returns>The parsed user ID, or 0 if not found or invalid.</returns>
+        </member>
         <member name="M:Acontplus.Services.Extensions.Context.ClaimsPrincipalExtensions.GetClaimValue``1(System.Security.Claims.ClaimsPrincipal,System.String)">
             <summary>
             Retrieves the value of a specific claim from the ClaimsPrincipal and converts it to the specified type.
@@ -251,6 +356,116 @@
             Relies on <c>IsMobileRequest</c> being set in <c>HttpContext.Items</c> by the device-detection
             middleware that is registered via <c>AddApplicationServices()</c>.
             </remarks>
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Context.HttpContextExtensions">
+            <summary>
+            Extension methods for storing and retrieving ambient request context metadata on <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetRequestId(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            Stores the request identifier in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="requestId">The request identifier.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetRequestId(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the request identifier from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The request identifier, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetCorrelationId(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            Stores the correlation identifier in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="correlationId">The correlation identifier.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetCorrelationId(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the correlation identifier from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The correlation identifier, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetTenantId(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            Stores the tenant identifier in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="tenantId">The tenant identifier.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetTenantId(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the tenant identifier from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The tenant identifier, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetClientId(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            Stores the client identifier in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="clientId">The client identifier.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetClientId(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the client identifier from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The client identifier, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetIssuer(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            Stores the token issuer in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="issuer">The issuer string.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetIssuer(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the token issuer from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The issuer string, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetDeviceType(Microsoft.AspNetCore.Http.HttpContext,Acontplus.Core.Domain.Enums.DeviceType)">
+            <summary>
+            Stores the detected device type string representation in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="deviceType">The detected device type.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetDeviceTypeString(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the raw device type string from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The device type string, or null if not set.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetDeviceType(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the parsed <see cref="T:Acontplus.Core.Domain.Enums.DeviceType"/> enum from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The parsed device type, or null if not set or invalid.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.SetIsMobileRequest(Microsoft.AspNetCore.Http.HttpContext,System.Boolean)">
+            <summary>
+            Stores whether the request originated from a mobile device in <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <param name="isMobileRequest">True if mobile request; otherwise false.</param>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Context.HttpContextExtensions.GetIsMobileRequest(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves whether the request originated from a mobile device from <see cref="P:Microsoft.AspNetCore.Http.HttpContext.Items"/>.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>True if mobile, false if not, or null if not set.</returns>
         </member>
         <member name="T:Acontplus.Services.Extensions.Context.UserContext">
             <summary>
@@ -301,6 +516,11 @@
             <param name="app">The application builder.</param>
             <param name="configure">Optional configuration for exception handling options.</param>
             <returns>The application builder.</returns>
+        </member>
+        <member name="T:Acontplus.Services.Extensions.Middleware.ExceptionHandlingOptions">
+            <summary>
+            Configuration options for <see cref="T:Acontplus.Services.Middleware.ApiExceptionMiddleware"/>.
+            </summary>
         </member>
         <member name="P:Acontplus.Services.Extensions.Middleware.ExceptionHandlingOptions.IncludeRequestDetails">
             <summary>
@@ -374,6 +594,19 @@
         <member name="P:Acontplus.Services.Extensions.Security.AntiforgeryTokenResponse.RequestToken">
             <summary>The request token paired with the antiforgery cookie stored in the response.</summary>
         </member>
+        <member name="T:Acontplus.Services.Extensions.Security.SecurityHeaderPolicyExtensions">
+            <summary>
+            Extension methods for configuring security header policies and Content Security Policy (CSP).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Extensions.Security.SecurityHeaderPolicyExtensions.UseSecurityHeaders(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            Configures security headers and Content Security Policy (CSP) based on the application environment.
+            </summary>
+            <param name="app">The application builder.</param>
+            <param name="environment">The web host environment.</param>
+            <returns>The application builder for chaining.</returns>
+        </member>
         <member name="T:Acontplus.Services.Extensions.ServiceExtensions">
             <summary>
             Extension methods for registering application-level services.
@@ -406,20 +639,63 @@
             Action filter for logging request details and performance metrics.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Filters.RequestLoggingActionFilter.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.RequestLoggingActionFilter})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.RequestLoggingActionFilter"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Filters.RequestLoggingActionFilter.OnActionExecutionAsync(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext,Microsoft.AspNetCore.Mvc.Filters.ActionExecutionDelegate)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Filters.SecurityHeaderActionFilter">
             <summary>
             Action filter for applying security headers to responses.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Filters.SecurityHeaderActionFilter.#ctor(Acontplus.Services.Services.Abstractions.ISecurityHeaderService,Microsoft.Extensions.Options.IOptions{Acontplus.Services.Configuration.RequestContextConfiguration},Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.SecurityHeaderActionFilter})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.SecurityHeaderActionFilter"/> class.
+            </summary>
+            <param name="securityHeaderService">The security header service.</param>
+            <param name="configuration">The request context configuration options.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Filters.SecurityHeaderActionFilter.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Filters.SecurityHeaderActionFilter.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Services.Filters.ValidationActionFilter">
             <summary>
             Action filter for automatic model validation with standardized error responses.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Filters.ValidationActionFilter.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.ValidationActionFilter})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.ValidationActionFilter"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Filters.ValidationActionFilter.OnActionExecuting(Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Filters.ValidationActionFilter.OnActionExecuted(Microsoft.AspNetCore.Mvc.Filters.ActionExecutedContext)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Middleware.ApiExceptionMiddleware">
             <summary>
             Middleware for centralized API exception handling, logging, and standardized error responses.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.ApiExceptionMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Middleware.ApiExceptionMiddleware},Acontplus.Services.Extensions.Middleware.ExceptionHandlingOptions)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Middleware.ApiExceptionMiddleware"/> class.
+            </summary>
+            <param name="next">The next request delegate in the pipeline.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="options">Exception handling options.</param>
         </member>
         <member name="M:Acontplus.Services.Middleware.ApiExceptionMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
@@ -432,50 +708,244 @@
             Searches the exception chain for a specific exception type.
             </summary>
         </member>
+        <member name="T:Acontplus.Services.Middleware.CspNonceMiddleware">
+            <summary>
+            Middleware that generates and attaches a unique Content Security Policy (CSP) nonce to the request context.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.CspNonceMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Middleware.CspNonceMiddleware"/> class.
+            </summary>
+            <param name="next">The next middleware delegate.</param>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.CspNonceMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Invokes the middleware to generate and attach a CSP nonce.
+            </summary>
+            <param name="context">The HTTP context.</param>
+        </member>
+        <member name="T:Acontplus.Services.Middleware.CspNonceExtensions">
+            <summary>
+            Extension methods for accessing the CSP nonce from the HTTP context.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.CspNonceExtensions.GetCspNonce(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Retrieves the CSP nonce generated for the current HTTP request.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>The CSP nonce string, or empty string if not found.</returns>
+        </member>
+        <member name="T:Acontplus.Services.Middleware.RequestContextMiddleware">
+            <summary>
+            Middleware that populates and validates ambient request context metadata (request ID, correlation ID, tenant ID, client ID, device type).
+            </summary>
+            <param name="next">The next middleware in the pipeline.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="options">The request context configuration options.</param>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.RequestContextMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Middleware.RequestContextMiddleware},Microsoft.Extensions.Options.IOptions{Acontplus.Services.Configuration.RequestContextConfiguration})">
+            <summary>
+            Middleware that populates and validates ambient request context metadata (request ID, correlation ID, tenant ID, client ID, device type).
+            </summary>
+            <param name="next">The next middleware in the pipeline.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="options">The request context configuration options.</param>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.RequestContextMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Executes the middleware for an incoming HTTP request.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>A task representing the completion of request processing.</returns>
+        </member>
+        <member name="T:Acontplus.Services.Middleware.RequestLoggingMiddleware">
+            <summary>
+            Middleware that logs HTTP request execution times, response status codes, and assigns a request identifier.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.RequestLoggingMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Middleware.RequestLoggingMiddleware})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Middleware.RequestLoggingMiddleware"/> class.
+            </summary>
+            <param name="next">The next middleware in the pipeline.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Middleware.RequestLoggingMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Executes the middleware to time and log the request.
+            </summary>
+            <param name="context">The HTTP context.</param>
+            <returns>A task representing the completion of request processing.</returns>
+        </member>
         <member name="T:Acontplus.Services.Policies.DeviceTypeRequirement">
             <summary>
             Authorization requirement for device type validation and restrictions.
             </summary>
+        </member>
+        <member name="P:Acontplus.Services.Policies.DeviceTypeRequirement.AllowedDeviceTypes">
+            <summary>
+            Gets the list of allowed device types.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Services.Policies.DeviceTypeRequirement.RequireDeviceValidation">
+            <summary>
+            Gets a value indicating whether device headers must be validated.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypeRequirement.#ctor(System.Collections.Generic.List{Acontplus.Core.Domain.Enums.DeviceType},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.DeviceTypeRequirement"/> class.
+            </summary>
+            <param name="allowedDeviceTypes">The list of allowed device types.</param>
+            <param name="requireDeviceValidation">Whether device header validation is required.</param>
         </member>
         <member name="T:Acontplus.Services.Policies.DeviceTypeHandler">
             <summary>
             Authorization handler for device type validation.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypeHandler.#ctor(Acontplus.Services.Services.Abstractions.IDeviceDetectionService,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.DeviceTypeHandler})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.DeviceTypeHandler"/> class.
+            </summary>
+            <param name="deviceDetectionService">The device detection service.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypeHandler.HandleRequirementAsync(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext,Acontplus.Services.Policies.DeviceTypeRequirement)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Policies.DeviceTypePolicyExtensions">
             <summary>
             Extension methods for registering device type authorization policies.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypePolicyExtensions.AddDeviceTypeAuthorization(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the device type authorization handler into the dependency injection container.
+            </summary>
+            <param name="services">The service collection.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypePolicyExtensions.AddDeviceTypePolicies(Microsoft.AspNetCore.Authorization.AuthorizationOptions)">
+            <summary>
+            Adds preconfigured device type authorization policies to the authorization options.
+            </summary>
+            <param name="options">The authorization options.</param>
+            <returns>The authorization options for chaining.</returns>
         </member>
         <member name="T:Acontplus.Services.Policies.RequireClientIdRequirement">
             <summary>
             Authorization requirement that validates the presence and validity of a Client-Id header.
             </summary>
         </member>
+        <member name="P:Acontplus.Services.Policies.RequireClientIdRequirement.AllowedClientIds">
+            <summary>
+            Gets the list of allowed client IDs, or null if any non-empty client ID is permitted.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Services.Policies.RequireClientIdRequirement.AllowAnonymous">
+            <summary>
+            Gets a value indicating whether anonymous requests (missing Client-Id) are permitted.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.RequireClientIdRequirement.#ctor(System.Collections.Generic.List{System.String},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.RequireClientIdRequirement"/> class.
+            </summary>
+            <param name="allowedClientIds">Optional list of allowed client IDs.</param>
+            <param name="allowAnonymous">Whether anonymous access is allowed.</param>
+        </member>
         <member name="T:Acontplus.Services.Policies.RequireClientIdHandler">
             <summary>
             Authorization handler for Client-Id validation.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.RequireClientIdHandler.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.RequireClientIdHandler})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.RequireClientIdHandler"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.RequireClientIdHandler.HandleRequirementAsync(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext,Acontplus.Services.Policies.RequireClientIdRequirement)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Services.Policies.ClientIdPolicyExtensions">
             <summary>
             Extension methods for registering Client-Id authorization policies.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Policies.ClientIdPolicyExtensions.AddClientIdAuthorization(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Collections.Generic.List{System.String})">
+            <summary>
+            Registers the Client-Id authorization handler into the dependency injection container.
+            </summary>
+            <param name="services">The service collection.</param>
+            <param name="allowedClientIds">Optional allowed client IDs.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Policies.ClientIdPolicyExtensions.AddClientIdPolicies(Microsoft.AspNetCore.Authorization.AuthorizationOptions,System.Collections.Generic.List{System.String})">
+            <summary>
+            Adds preconfigured Client-Id authorization policies to the authorization options.
+            </summary>
+            <param name="options">The authorization options.</param>
+            <param name="allowedClientIds">Optional allowed client IDs.</param>
+            <returns>The authorization options for chaining.</returns>
+        </member>
         <member name="T:Acontplus.Services.Policies.TenantIsolationRequirement">
             <summary>
             Authorization requirement for tenant isolation and validation.
             </summary>
+        </member>
+        <member name="P:Acontplus.Services.Policies.TenantIsolationRequirement.RequireTenantHeader">
+            <summary>
+            Gets a value indicating whether the Tenant-Id header is strictly required.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Services.Policies.TenantIsolationRequirement.ValidateUserTenantAccess">
+            <summary>
+            Gets a value indicating whether the user's tenant claim must match the header tenant ID.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationRequirement.#ctor(System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.TenantIsolationRequirement"/> class.
+            </summary>
+            <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+            <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
         </member>
         <member name="T:Acontplus.Services.Policies.TenantIsolationHandler">
             <summary>
             Authorization handler for tenant isolation validation.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationHandler.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.TenantIsolationHandler})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.TenantIsolationHandler"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationHandler.HandleRequirementAsync(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext,Acontplus.Services.Policies.TenantIsolationRequirement)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Policies.TenantIsolationPolicyExtensions">
             <summary>
             Extension methods for registering tenant isolation authorization policies.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationPolicyExtensions.AddTenantIsolationAuthorization(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers the tenant isolation authorization handler into the dependency injection container.
+            </summary>
+            <param name="services">The service collection.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationPolicyExtensions.AddTenantIsolationPolicies(Microsoft.AspNetCore.Authorization.AuthorizationOptions)">
+            <summary>
+            Adds preconfigured tenant isolation authorization policies to the authorization options.
+            </summary>
+            <param name="options">The authorization options.</param>
+            <returns>The authorization options for chaining.</returns>
         </member>
         <member name="T:Acontplus.Services.Services.Abstractions.IDeviceDetectionService">
             <summary>
@@ -581,27 +1051,106 @@
             Implementation of device detection service for identifying device types and capabilities.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.DeviceDetectionService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.DeviceDetectionService"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.DetectDeviceType(Microsoft.AspNetCore.Http.HttpContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.IsMobileDevice(Microsoft.AspNetCore.Http.HttpContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.GetDeviceCapabilities(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.ValidateDeviceHeaders(Microsoft.AspNetCore.Http.HttpContext)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Services.Implementations.LookupService">
             <summary>
             Service for managing and caching lookup data from database queries.
             Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
             </summary>
+            <param name="unitOfWork">The unit of work providing repository access.</param>
+            <param name="cacheService">The caching service instance.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Services.Implementations.LookupService.#ctor(Acontplus.Core.Abstractions.Persistence.IUnitOfWork,Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.LookupService})">
             <summary>
             Service for managing and caching lookup data from database queries.
             Works with both ADO.NET and Entity Framework Core through IUnitOfWork abstraction.
             </summary>
+            <param name="unitOfWork">The unit of work providing repository access.</param>
+            <param name="cacheService">The caching service instance.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.LookupService.GetLookupsAsync(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.LookupService.RefreshLookupsAsync(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Services.Services.Implementations.RequestContextService">
             <summary>
             Implementation of request context service using HTTP context accessor.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.RequestContextService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.RequestContextService"/> class.
+            </summary>
+            <param name="httpContextAccessor">The HTTP context accessor.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetRequestId">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetCorrelationId">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetTenantId">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetClientId">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetIssuer">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetDeviceType">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.IsMobileRequest">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.GetRequestContext">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Services.Services.Implementations.SecurityHeaderService">
             <summary>
             Implementation of security header service for managing HTTP security headers.
             </summary>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.SecurityHeaderService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.SecurityHeaderService"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.ApplySecurityHeaders(Microsoft.AspNetCore.Http.HttpContext,Acontplus.Services.Configuration.RequestContextConfiguration)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.GenerateCspNonce">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.ValidateSecurityHeaders(Microsoft.AspNetCore.Http.HttpContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.GetRecommendedHeaders(System.Boolean)">
+            <inheritdoc />
         </member>
     </members>
 </doc>

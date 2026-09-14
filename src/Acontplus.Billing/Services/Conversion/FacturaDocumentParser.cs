@@ -3,10 +3,15 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
+/// <summary>
+/// Parser for electronic invoices (factura - codDoc 01).
+/// </summary>
+/// <param name="detailsParser">The item details parser.</param>
 public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentTypeParser
 {
     private readonly IDetailsParser _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
 
+    /// <inheritdoc />
     public bool Parse(XmlDocument xmlDocument, ComprobanteElectronico comprobante, out string errorMessage)
     {
         errorMessage = string.Empty;

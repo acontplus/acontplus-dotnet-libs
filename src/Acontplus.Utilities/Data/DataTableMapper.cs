@@ -2,8 +2,18 @@ using System.Reflection;
 
 namespace Acontplus.Utilities.Data;
 
+/// <summary>
+/// Provides reflection-based mapping utilities between ADO.NET DataTables / DataRows and strongly typed models.
+/// </summary>
 public static class DataTableMapper
 {
+    /// <summary>
+    /// Maps a single <see cref="DataRow"/> to a new instance of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target model type.</typeparam>
+    /// <param name="row">The source data row to map.</param>
+    /// <returns>A mapped instance of <typeparamref name="T"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="row"/> is null.</exception>
     public static T MapDataRowToModel<T>(DataRow row)
     {
         if (row == null)
@@ -116,6 +126,12 @@ public static class DataTableMapper
         return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 
+    /// <summary>
+    /// Maps all rows in a <see cref="DataTable"/> to a strongly typed list of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target model type, requiring a parameterless constructor.</typeparam>
+    /// <param name="dt">The source data table.</param>
+    /// <returns>A list of mapped model instances.</returns>
     public static List<T> MapDataTableToList<T>(DataTable dt) where T : new()
     {
         if (dt == null || dt.Rows.Count == 0)

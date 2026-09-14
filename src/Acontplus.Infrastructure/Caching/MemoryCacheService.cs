@@ -1,8 +1,11 @@
 namespace Acontplus.Infrastructure.Caching;
 
 /// <summary>
-///     In-memory cache service implementation using IMemoryCache.
+/// In-memory cache service implementation using <see cref="IMemoryCache"/>.
 /// </summary>
+/// <param name="memoryCache">The in-memory cache instance.</param>
+/// <param name="logger">The logger instance.</param>
+/// <param name="config">The cache configuration options.</param>
 public sealed class MemoryCacheService(
     IMemoryCache memoryCache,
     ILogger<MemoryCacheService> logger,
@@ -15,6 +18,7 @@ public sealed class MemoryCacheService(
     private long _hits;
     private long _misses;
 
+    /// <inheritdoc />
     public T? Get<T>(string key)
     {
         try
@@ -35,6 +39,7 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public void Set<T>(string key, T value, TimeSpan? expiration = null)
     {
         try
@@ -54,6 +59,7 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public void Remove(string key)
     {
         try
@@ -67,6 +73,7 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public bool TryGetValue<T>(string key, out T? value)
     {
         try
@@ -88,6 +95,7 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public T GetOrCreate<T>(string key, Func<T> factory, TimeSpan? expiration = null)
     {
         if (_memoryCache.TryGetValue(key, out T? cached))
@@ -118,21 +126,24 @@ public sealed class MemoryCacheService(
         }
     }
 
-    // Async versions
+    /// <inheritdoc />
     public Task<T?> GetAsync<T>(string key, CancellationToken ct = default) => Task.FromResult(Get<T>(key));
 
+    /// <inheritdoc />
     public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken ct = default)
     {
         Set(key, value, expiration);
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public Task RemoveAsync(string key, CancellationToken ct = default)
     {
         Remove(key);
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null,
         CancellationToken ct = default)
     {
@@ -164,6 +175,7 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public void Clear()
     {
         if (_memoryCache is MemoryCache memCache)
@@ -174,17 +186,21 @@ public sealed class MemoryCacheService(
         }
     }
 
+    /// <inheritdoc />
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         Clear();
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public bool Exists(string key) => _memoryCache.TryGetValue(key, out _);
 
+    /// <inheritdoc />
     public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default) =>
         Task.FromResult(Exists(key));
 
+    /// <inheritdoc />
     public void RemoveByPrefix(string prefix)
     {
         var keysToRemove = _locks.Keys
@@ -194,12 +210,14 @@ public sealed class MemoryCacheService(
             Remove(key);
     }
 
+    /// <inheritdoc />
     public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
     {
         RemoveByPrefix(prefix);
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public CacheStatistics GetStatistics()
     {
         var totalRequests = _hits + _misses;
@@ -217,6 +235,7 @@ public sealed class MemoryCacheService(
         };
     }
 
+    /// <inheritdoc />
     public Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default) =>
         Task.FromResult<CacheStatistics?>(GetStatistics());
 }

@@ -9,11 +9,16 @@ public class CacheHealthCheck : IHealthCheck
 {
     private readonly ICacheService _cacheService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CacheHealthCheck"/> class.
+    /// </summary>
+    /// <param name="cacheService">The cache service to evaluate.</param>
     public CacheHealthCheck(ICacheService cacheService)
     {
         _cacheService = cacheService;
     }
 
+    /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

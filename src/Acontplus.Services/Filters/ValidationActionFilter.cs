@@ -9,11 +9,16 @@ public class ValidationActionFilter : IActionFilter
 {
     private readonly ILogger<ValidationActionFilter> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationActionFilter"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public ValidationActionFilter(ILogger<ValidationActionFilter> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public void OnActionExecuting(ActionExecutingContext context)
     {
         if (!context.ModelState.IsValid)
@@ -48,6 +53,7 @@ public class ValidationActionFilter : IActionFilter
         }
     }
 
+    /// <inheritdoc />
     public void OnActionExecuted(ActionExecutedContext context)
     {
         // No action needed after execution

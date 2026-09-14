@@ -139,15 +139,24 @@ public static class ApplicationServiceExtensions
 }
 
 // Health check implementations for application services
+
+/// <summary>
+/// Health check that verifies the availability and operation of the request context service.
+/// </summary>
 public class RequestContextHealthCheck : IHealthCheck
 {
     private readonly IRequestContextService _requestContextService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RequestContextHealthCheck"/> class.
+    /// </summary>
+    /// <param name="requestContextService">The request context service.</param>
     public RequestContextHealthCheck(IRequestContextService requestContextService)
     {
         _requestContextService = requestContextService;
     }
 
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -189,15 +198,23 @@ public class RequestContextHealthCheck : IHealthCheck
     }
 }
 
+/// <summary>
+/// Health check that verifies the availability of the security header service.
+/// </summary>
 public class SecurityHeaderHealthCheck : IHealthCheck
 {
     private readonly ISecurityHeaderService _securityHeaderService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityHeaderHealthCheck"/> class.
+    /// </summary>
+    /// <param name="securityHeaderService">The security header service.</param>
     public SecurityHeaderHealthCheck(ISecurityHeaderService securityHeaderService)
     {
         _securityHeaderService = securityHeaderService;
     }
 
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -213,15 +230,23 @@ public class SecurityHeaderHealthCheck : IHealthCheck
     }
 }
 
+/// <summary>
+/// Health check that verifies the functionality and accuracy of the device detection service.
+/// </summary>
 public class DeviceDetectionHealthCheck : IHealthCheck
 {
     private readonly IDeviceDetectionService _deviceDetectionService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeviceDetectionHealthCheck"/> class.
+    /// </summary>
+    /// <param name="deviceDetectionService">The device detection service.</param>
     public DeviceDetectionHealthCheck(IDeviceDetectionService deviceDetectionService)
     {
         _deviceDetectionService = deviceDetectionService;
     }
 
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try

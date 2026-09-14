@@ -3,26 +3,31 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents
 {
-    public class XmlSriFileService : IXmlSriFileService
+/// <summary>
+/// Service for parsing and validating electronic document XML files from SRI.
+/// </summary>
+public class XmlSriFileService : IXmlSriFileService
+{
+    private const string TagFechaEmision = "fechaEmision";
+    private const string TagVersionComp = "version";
+
+    /// <inheritdoc />
+    public async Task<XmlSriFileModel?> GetAsync(IFormFile file)
     {
-        private const string TagFechaEmision = "fechaEmision";
-        private const string TagVersionComp = "version";
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("File is null or empty", nameof(file));
 
-        public async Task<XmlSriFileModel?> GetAsync(IFormFile file)
+        string rawXml;
+        using (var reader = new StreamReader(file.OpenReadStream()))
         {
-            if (file == null || file.Length == 0)
-                throw new ArgumentException("File is null or empty", nameof(file));
-
-            string rawXml;
-            using (var reader = new StreamReader(file.OpenReadStream()))
-            {
-                rawXml = await reader.ReadToEndAsync();
-            }
-
-            return await GetAsync(rawXml);
+            rawXml = await reader.ReadToEndAsync();
         }
 
-        public async Task<XmlSriFileModel?> GetAsync(string xmlSri)
+        return await GetAsync(rawXml);
+    }
+
+    /// <inheritdoc />
+    public async Task<XmlSriFileModel?> GetAsync(string xmlSri)
         {
             if (string.IsNullOrWhiteSpace(xmlSri))
                 throw new ArgumentException("XML string is null or empty", nameof(xmlSri));

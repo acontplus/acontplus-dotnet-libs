@@ -4,11 +4,718 @@
         <name>Acontplus.Notifications</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Notifications.Abstractions.IMailKitService">
+            <summary>
+            Service contract for sending email notifications.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.Abstractions.IMailKitService.SendAsync(Acontplus.Notifications.Models.EmailModel,System.Threading.CancellationToken)">
+            <summary>
+            Sends an email message asynchronously.
+            </summary>
+            <param name="email">The email model containing recipients, content, and optional SMTP settings.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns><c>true</c> if the email was sent successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.Attachment">
+            <summary>
+            Represents a file attachment associated with a notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.NotificationId">
+            <summary>
+            Gets or sets the foreign key identifier for the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.Notification">
+            <summary>
+            Gets or sets the navigation property to the associated notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.FileName">
+            <summary>
+            Gets or sets the file name including its extension.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.FileType">
+            <summary>
+            Gets or sets the MIME content type of the attachment.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.FileSize">
+            <summary>
+            Gets or sets the file size in bytes.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.FilePath">
+            <summary>
+            Gets or sets the optional local filesystem path where the file is stored.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.S3ObjectKey">
+            <summary>
+            Gets or sets the optional Amazon S3 object key.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Attachment.S3ObjectUrl">
+            <summary>
+            Gets or sets the optional Amazon S3 public or presigned URL.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.Email">
+            <summary>
+            Represents an email notification record with compressed body storage and lifecycle tracking.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.NotificationId">
+            <summary>
+            Gets or sets the foreign key identifier for the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Notification">
+            <summary>
+            Gets or sets the navigation property to the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.EmailSenderConfigId">
+            <summary>
+            Gets or sets the foreign key identifier for the sender email configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.EmailSenderConfig">
+            <summary>
+            Gets or sets the navigation property to the sender email configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.RecipientEmail">
+            <summary>
+            Gets or sets the email address of the recipient.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Subject">
+            <summary>
+            Gets or sets the email subject line.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Cc">
+            <summary>
+            Gets or sets carbon copy (CC) recipients.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.IsHtml">
+            <summary>
+            Gets or sets whether the email body is formatted as HTML.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.CompressedBody">
+            <summary>
+            Gets or sets the gzip-compressed raw byte array of the email body.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.PriorityId">
+            <summary>
+            Gets or sets the foreign key identifier for the delivery priority.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Priority">
+            <summary>
+            Gets or sets the navigation property for the delivery priority.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.StatusId">
+            <summary>
+            Gets or sets the foreign key identifier for the notification status.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Status">
+            <summary>
+            Gets or sets the navigation property for the notification status.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.RetryCount">
+            <summary>
+            Gets or sets the count of delivery retry attempts.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.ScheduledAt">
+            <summary>
+            Gets or sets the scheduled dispatch timestamp in UTC.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.SentAt">
+            <summary>
+            Gets or sets the actual dispatch timestamp in UTC.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Template">
+            <summary>
+            Gets or sets optional template name or identifier used to render the email.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Email.Content">
+            <summary>
+            Gets or sets the uncompressed string representation of the email body, automatically compressing to <see cref="P:Acontplus.Notifications.Entities.Email.CompressedBody"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.EmailSenderConfig">
+            <summary>
+            Represents SMTP sender configuration settings for global or tenant-scoped email delivery.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.CompanyId">
+            <summary>
+            Gets or sets the company identifier for tenant-specific configuration, or null for global.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.IsGlobal">
+            <summary>
+            Gets or sets whether this configuration is applied globally across all companies.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.SenderEmail">
+            <summary>
+            Gets or sets the sender email address (e.g. no-reply@example.com).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.SenderName">
+            <summary>
+            Gets or sets the friendly display name for the sender.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.SmtpServer">
+            <summary>
+            Gets or sets the SMTP server host or IP address.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.SmtpPort">
+            <summary>
+            Gets or sets the SMTP server port number.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.UseSsl">
+            <summary>
+            Gets or sets whether SSL/TLS encryption is required.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.Username">
+            <summary>
+            Gets or sets the SMTP authentication username.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.EncryptedPassword">
+            <summary>
+            Gets or sets encrypted password bytes for secure storage.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.PasswordHash">
+            <summary>
+            Gets or sets optional password hash.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.EmailSenderConfig.Password">
+            <summary>
+            Gets or sets optional plaintext password.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.Notification">
+            <summary>
+            Represents a notification record with compressed parameters, classification, and delivery tracking.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.NotificationTypeId">
+            <summary>
+            Gets or sets the foreign key identifier for the notification type.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.NotificationType">
+            <summary>
+            Gets or sets the navigation property for the notification type.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.CompressedParameters">
+            <summary>
+            Gets or sets the gzip-compressed parameters byte array for the notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.Title">
+            <summary>
+            Gets or sets the optional notification title.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.Subject">
+            <summary>
+            Gets or sets the notification subject line.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.Message">
+            <summary>
+            Gets or sets the notification message text.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.IsRead">
+            <summary>
+            Gets or sets whether the notification has been marked as read.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.Attachments">
+            <summary>
+            Gets or sets attachments associated with this notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Notification.Parameters">
+            <summary>
+            Gets or sets uncompressed parameters as a JSON string, automatically compressed to <see cref="P:Acontplus.Notifications.Entities.Notification.CompressedParameters"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.NotificationGroup">
+            <summary>
+            Represents a notification recipient group spanning one or multiple companies.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationGroup.Name">
+            <summary>
+            Gets or sets the group name (e.g. "Finance Team", "Company-Wide").
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationGroup.CompanyId">
+            <summary>
+            Gets or sets the optional company identifier.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationGroup.UserGroups">
+            <summary>
+            Gets or sets user associations for this group.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.NotificationRecipient">
+            <summary>
+            Represents a recipient of a notification, linked directly to a user or a recipient group.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.NotificationId">
+            <summary>
+            Gets or sets the foreign key identifier for the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.Notification">
+            <summary>
+            Gets or sets the navigation property for the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.GroupId">
+            <summary>
+            Gets or sets the optional group identifier for group notifications.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.Group">
+            <summary>
+            Gets or sets the navigation property for the recipient group.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.IsRead">
+            <summary>
+            Gets or sets whether the recipient has read the notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationRecipient.ReadAt">
+            <summary>
+            Gets or sets the timestamp when the recipient read the notification.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.NotificationType">
+            <summary>
+            Represents the classification type of a notification (e.g. Email, WhatsApp, Push).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationType.Code">
+            <summary>
+            Gets or sets the unique code for the notification type.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.NotificationType.Name">
+            <summary>
+            Gets or sets the display name of the notification type.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.Priority">
+            <summary>
+            Represents the priority level for notification queueing and delivery.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Priority.Code">
+            <summary>
+            Gets or sets the unique priority code.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Priority.Name">
+            <summary>
+            Gets or sets the priority name (e.g. "High", "Medium", "Low").
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.Status">
+            <summary>
+            Represents the delivery status of a notification (e.g. Queued, Processing, Sent, Failed).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Status.Code">
+            <summary>
+            Gets or sets the unique status code.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.Status.Name">
+            <summary>
+            Gets or sets the human-readable status name.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.UserGroup">
+            <summary>
+            Represents the relationship between a user and a notification group.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.UserGroup.GroupId">
+            <summary>
+            Gets or sets the foreign key identifier for the notification group.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.UserGroup.Group">
+            <summary>
+            Gets or sets the navigation property for the notification group.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.WhatsAppMessage">
+            <summary>
+            Represents a WhatsApp notification message record with compressed body and delivery tracking.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.NotificationId">
+            <summary>
+            Gets or sets the foreign key identifier for the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Notification">
+            <summary>
+            Gets or sets the navigation property to the parent notification.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.WhatsAppSenderConfigId">
+            <summary>
+            Gets or sets the foreign key identifier for the WhatsApp sender configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.WhatsAppSenderConfig">
+            <summary>
+            Gets or sets the navigation property to the WhatsApp sender configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.CompressedMessage">
+            <summary>
+            Gets or sets the gzip-compressed raw byte array of the message text.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Os">
+            <summary>
+            Gets or sets optional client operating system name.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Browser">
+            <summary>
+            Gets or sets optional client browser name.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.RecipientPhoneNumber">
+            <summary>
+            Gets or sets the recipient phone number in international format.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.PriorityId">
+            <summary>
+            Gets or sets the foreign key identifier for the message priority.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Priority">
+            <summary>
+            Gets or sets the navigation property for the message priority.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.StatusId">
+            <summary>
+            Gets or sets the foreign key identifier for the delivery status.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Status">
+            <summary>
+            Gets or sets the navigation property for the delivery status.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.ScheduledAt">
+            <summary>
+            Gets or sets the scheduled dispatch timestamp in UTC.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.SentAt">
+            <summary>
+            Gets or sets the actual dispatch timestamp in UTC.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppMessage.Message">
+            <summary>
+            Gets or sets the uncompressed string representation of the message, automatically compressing to <see cref="P:Acontplus.Notifications.Entities.WhatsAppMessage.CompressedMessage"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.WhatsAppSenderConfig">
+            <summary>
+            Represents WhatsApp Cloud API sender credentials and endpoint configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.CompanyId">
+            <summary>
+            Gets or sets the company identifier for tenant-specific configuration, or null for global.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.IsGlobal">
+            <summary>
+            Gets or sets whether this configuration is applied globally across all companies.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.AccountId">
+            <summary>
+            Gets or sets the Meta WhatsApp Business Account ID or Phone Number ID.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.AuthToken">
+            <summary>
+            Gets or sets the Meta Graph API access token.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.PhoneNumber">
+            <summary>
+            Gets or sets the sender phone number.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppSenderConfig.UrlService">
+            <summary>
+            Gets or sets optional custom service URL or Meta Graph API endpoint.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Entities.WhatsAppUsage">
+            <summary>
+            Tracks monthly or billing-period WhatsApp message usage and quotas per company.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.CompanyId">
+            <summary>
+            Gets or sets the company identifier.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.Used">
+            <summary>
+            Gets or sets the count of messages dispatched in the period.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.Limit">
+            <summary>
+            Gets or sets the message quota limit for the period.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.Unlimited">
+            <summary>
+            Gets or sets whether message sending is unlimited for the company.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.StartDate">
+            <summary>
+            Gets or sets the billing period start timestamp.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Entities.WhatsAppUsage.EndDate">
+            <summary>
+            Gets or sets the optional billing period end timestamp.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Helpers.AwsSesSmtpCredentialConverter">
+            <summary>
+            Helper to convert AWS IAM credentials into Amazon SES SMTP credentials using SigV4 algorithm.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.Helpers.AwsSesSmtpCredentialConverter.ConvertIamToSmtpCredentials(System.String,System.String,System.String)">
+            <summary>
+            Converts an AWS IAM access key and secret key into Amazon SES SMTP credentials.
+            </summary>
+            <param name="iamAccessKey">The AWS IAM access key ID.</param>
+            <param name="iamSecretKey">The AWS IAM secret access key.</param>
+            <param name="region">The AWS region (defaults to "us-east-1").</param>
+            <returns>A tuple containing the SMTP username and generated SMTP password.</returns>
+        </member>
+        <member name="T:Acontplus.Notifications.Models.EmailModel">
+            <summary>
+            Model representing an email message and its delivery configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.SmtpServer">
+            <summary>
+            Gets or sets the SMTP server host or IP address.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.SmtpPort">
+            <summary>
+            Gets or sets the SMTP server port number.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Username">
+            <summary>
+            Gets or sets the username for SMTP authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.EncryptedPassword">
+            <summary>
+            Gets or sets the encrypted password bytes for secure storage.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Password">
+            <summary>
+            Gets or sets the plaintext password for SMTP authentication.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.UseSsl">
+            <summary>
+            Gets or sets whether SSL/TLS encryption is used.
+            </summary>
+        </member>
         <member name="P:Acontplus.Notifications.Models.EmailModel.CheckCertificateRevocation">
             <summary>
             Gets or sets whether to check SSL/TLS certificate revocation with the certificate authority.
             Defaults to <see langword="true"/> to prevent MITM attacks (CWE-295).
             </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.SenderName">
+            <summary>
+            Gets or sets the display name of the email sender.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.SenderEmail">
+            <summary>
+            Gets or sets the sender's email address.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.RecipientEmail">
+            <summary>
+            Gets or sets the primary recipient email address. Multiple addresses can be semicolon- or comma-separated.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Cc">
+            <summary>
+            Gets or sets the carbon copy (CC) recipient email addresses.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Subject">
+            <summary>
+            Gets or sets the email subject line.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.IsHtml">
+            <summary>
+            Gets or sets whether the body content is HTML.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Template">
+            <summary>
+            Gets or sets optional template name or identifier.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Logo">
+            <summary>
+            Gets or sets optional logo URL or base64 data for templated emails.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Body">
+            <summary>
+            Gets or sets the body content of the email.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Models.EmailModel.Files">
+            <summary>
+            Gets or sets attachments included with the email.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.Models.EmailModel.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Notifications.Models.EmailModel"/> class.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Services.AmazonSesService">
+            <summary>
+            Email delivery service implementing <see cref="T:Acontplus.Notifications.Abstractions.IMailKitService"/> using the Amazon Simple Email Service (SES) v2 API.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.AmazonSesService.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Notifications.Services.AmazonSesService},Microsoft.Extensions.Caching.Memory.IMemoryCache)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Notifications.Services.AmazonSesService"/> class.
+            </summary>
+            <param name="configuration">The application configuration.</param>
+            <param name="logger">The logger instance.</param>
+            <param name="memoryCache">The memory cache instance for template caching.</param>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.AmazonSesService.SendAsync(Acontplus.Notifications.Models.EmailModel,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Notifications.Services.AmazonSesService.SendBulkAsync(System.Collections.Generic.IEnumerable{Acontplus.Notifications.Models.EmailModel},System.Threading.CancellationToken)">
+            <summary>
+            Sends a collection of individual emails in batches asynchronously.
+            </summary>
+            <param name="emails">The collection of emails to send.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns><c>true</c> if all emails were sent successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.AmazonSesService.SendTemplatedBulkAsync(System.String,System.Collections.Generic.IEnumerable{Acontplus.Notifications.Services.AmazonSesService.BulkEmailDestination},System.Threading.CancellationToken)">
+            <summary>
+            Sends templated emails to multiple destinations using an SES template in batches.
+            </summary>
+            <param name="templateName">The name of the SES email template.</param>
+            <param name="destinations">The collection of destinations and replacement template data.</param>
+            <param name="ct">Cancellation token.</param>
+            <returns><c>true</c> if all destinations were sent successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.AmazonSesService.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Notifications.Services.AmazonSesService.BulkEmailDestination">
+            <summary>
+            Represents a destination recipient and optional replacement data for SES bulk templated sending.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Services.AmazonSesService.BulkEmailDestination.Destination">
+            <summary>
+            Gets or sets the SES destination containing recipient email addresses.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Notifications.Services.AmazonSesService.BulkEmailDestination.ReplacementTemplateData">
+            <summary>
+            Gets or sets JSON-serialized template replacement data specific to this destination.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Notifications.Services.MailKitService">
+            <summary>
+            Email delivery service implementing <see cref="T:Acontplus.Notifications.Abstractions.IMailKitService"/> using MailKit/MimeKit with connection pooling and retry policies.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.MailKitService.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Notifications.Services.MailKitService})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Notifications.Services.MailKitService"/> class.
+            </summary>
+            <param name="configuration">The application configuration.</param>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Notifications.Services.MailKitService.SendAsync(Acontplus.Notifications.Models.EmailModel,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Notifications.Services.MailKitService.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Notifications.Services.MailKitService.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged and optionally managed resources used by the service.
+            </summary>
+            <param name="disposing"><c>true</c> to release managed resources; otherwise, <c>false</c>.</param>
         </member>
         <member name="T:Acontplus.Notifications.WhatsApp.Abstractions.IWhatsAppService">
             <summary>

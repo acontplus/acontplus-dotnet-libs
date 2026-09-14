@@ -45,12 +45,23 @@ public class ReportDefinitionCache : IDisposable
     private readonly SemaphoreSlim _cleanupLock = new(1, 1);
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportDefinitionCache"/> class.
+    /// </summary>
+    /// <param name="maxSize">The maximum number of entries to retain in cache.</param>
+    /// <param name="ttl">The time-to-live expiration for cached entries.</param>
     public ReportDefinitionCache(int maxSize, TimeSpan ttl)
     {
         _maxSize = maxSize;
         _ttl = ttl;
     }
 
+    /// <summary>
+    /// Gets a cached report definition stream, or creates and caches it using the specified factory.
+    /// </summary>
+    /// <param name="key">The cache key (report path).</param>
+    /// <param name="factory">The asynchronous factory delegate producing the report stream.</param>
+    /// <returns>A seekable memory stream containing the report definition.</returns>
     public async Task<MemoryStream> GetOrAddAsync(string key, Func<string, Task<MemoryStream>> factory)
     {
         // Try to get existing non-expired entry
@@ -136,6 +147,9 @@ public class ReportDefinitionCache : IDisposable
         }
     }
 
+    /// <summary>
+    /// Removes and disposes all cached report definitions.
+    /// </summary>
     public void Clear()
     {
         foreach (var entry in _cache.Values)
@@ -145,6 +159,7 @@ public class ReportDefinitionCache : IDisposable
         _cache.Clear();
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         if (!_disposed)

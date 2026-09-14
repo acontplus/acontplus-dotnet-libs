@@ -20,6 +20,11 @@ namespace Acontplus.Reports.Services
         private readonly SemaphoreSlim _concurrencyLimiter;
         private bool _disposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RdlcReportService"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="options">The report configuration options.</param>
         public RdlcReportService(ILogger<RdlcReportService> logger, IOptions<ReportOptions> options)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -271,6 +276,7 @@ namespace Acontplus.Reports.Services
             return response;
         }
 
+        /// <inheritdoc />
         public async Task<ReportResponse> GetErrorAsync()
         {
             var baseDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Resources");
@@ -313,12 +319,17 @@ namespace Acontplus.Reports.Services
         }
 
 
+        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases unmanaged and optionally managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
@@ -333,6 +344,9 @@ namespace Acontplus.Reports.Services
             _disposed = true;
         }
 
+        /// <summary>
+        /// Finalizes an instance of the <see cref="RdlcReportService"/> class.
+        /// </summary>
         ~RdlcReportService()
         {
             Dispose(false);

@@ -664,6 +664,15 @@
             QuestPDF license tier configuration
             </summary>
         </member>
+        <member name="F:Acontplus.Reports.Dtos.QuestPdfLicenseType.Community">
+            <summary>Community license for non-commercial or qualifying organizations.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Dtos.QuestPdfLicenseType.Professional">
+            <summary>Professional commercial license.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Dtos.QuestPdfLicenseType.Enterprise">
+            <summary>Enterprise commercial license.</summary>
+        </member>
         <member name="T:Acontplus.Reports.Dtos.QuestPdfHeaderFooterOptions">
             <summary>
             Configuration for the document-level header or footer band
@@ -1065,6 +1074,90 @@
         <member name="P:Acontplus.Reports.Dtos.QuestPdfTextBlock.PaddingBottom">
             <summary>Spacing in points added below this block</summary>
         </member>
+        <member name="T:Acontplus.Reports.Dtos.RdlcPrinterDto">
+            <summary>
+            Data transfer object containing printer and print job configuration for RDLC reports.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.Copies">
+            <summary>Gets or sets the number of copies to print.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.DeviceInfo">
+            <summary>Gets or sets device information XML string for formatting the output.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.FileName">
+            <summary>Gets or sets the output file name.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.Format">
+            <summary>Gets or sets the rendering format.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.LogoDirectory">
+            <summary>Gets or sets the directory path containing the company logo.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.LogoName">
+            <summary>Gets or sets the file name of the company logo.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.PrinterName">
+            <summary>Gets or sets the name of the target printer.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrinterDto.ReportsDirectory">
+            <summary>Gets or sets the directory path containing the RDLC report definition.</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.RdlcPrintRequestDto">
+            <summary>
+            Request DTO containing data sources and report parameters for printing an RDLC report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrintRequestDto.DataSources">
+            <summary>Gets or sets data sources for the RDLC report, keyed by dataset name.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.RdlcPrintRequestDto.ReportParams">
+            <summary>Gets or sets parameters to be passed to the RDLC report.</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.ReportPropsDto">
+            <summary>
+            Properties describing an RDLC report definition and requested rendering format.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportPropsDto.ReportPath">
+            <summary>Gets or sets the file system or resource path to the RDLC report definition.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportPropsDto.ReportName">
+            <summary>Gets or sets the display name or output file name of the report.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportPropsDto.ReportFormat">
+            <summary>Gets or sets the rendering output format (e.g. PDF, EXCEL, WORD).</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Dtos.ReportResponse">
+            <summary>
+            Represents a generated report response containing the file payload, MIME content type, and download filename.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportResponse.FileContents">
+            <summary>Gets or sets the rendered binary report file contents.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportResponse.ContentType">
+            <summary>Gets or sets the MIME content type of the rendered report.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Dtos.ReportResponse.FileDownloadName">
+            <summary>Gets or sets the file name suggested for download.</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.ReportResponse.Dispose">
+            <summary>
+            Releases the resources used by the <see cref="T:Acontplus.Reports.Dtos.ReportResponse"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.ReportResponse.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and optionally managed resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Dtos.ReportResponse.Finalize">
+            <summary>
+            Finalizes an instance of the <see cref="T:Acontplus.Reports.Dtos.ReportResponse"/> class.
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Enums.ExcelHorizontalAlignment">
             <summary>Horizontal cell alignment for Excel output</summary>
         </member>
@@ -1104,10 +1197,82 @@
         <member name="F:Acontplus.Reports.Enums.ExcelAggregateType.Max">
             <summary>MAX formula</summary>
         </member>
+        <member name="T:Acontplus.Reports.Enums.FileFormats">
+            <summary>
+            Defines MIME content types and file extensions supported by report rendering engines.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.FileFormats.FileContentType">
+            <summary>
+            Supported MIME content types for exported reports.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.PDF">
+            <summary>Portable Document Format (application/pdf).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.EXCEL">
+            <summary>Legacy Microsoft Excel spreadsheet (application/vnd.ms-excel).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.EXCELOPENXML">
+            <summary>OpenXML Microsoft Excel workbook (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.WORDOPENXML">
+            <summary>OpenXML Microsoft Word document (application/vnd.openxmlformats-officedocument.wordprocessingml.document).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.HTML5">
+            <summary>HTML5 markup document (text/html).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileContentType.IMAGE">
+            <summary>JPEG image format (image/jpeg).</summary>
+        </member>
+        <member name="T:Acontplus.Reports.Enums.FileFormats.FileExtension">
+            <summary>
+            Standard file extensions corresponding to supported report formats.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.PDF">
+            <summary>.pdf file extension.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.EXCEL">
+            <summary>.xls file extension.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.EXCELOPENXML">
+            <summary>.xlsx file extension.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.WORDOPENXML">
+            <summary>.docx file extension.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.HTML5">
+            <summary>.html file extension.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.FileFormats.FileExtension.IMAGE">
+            <summary>.jpg file extension.</summary>
+        </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfPageSize">
             <summary>
             Page size presets for QuestPDF documents
             </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.A4">
+            <summary>ISO A4 format (210 x 297 mm).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.A3">
+            <summary>ISO A3 format (297 x 420 mm).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.A5">
+            <summary>ISO A5 format (148 x 210 mm).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Letter">
+            <summary>North American Letter format (8.5 x 11 in).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Legal">
+            <summary>North American Legal format (8.5 x 14 in).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Tabloid">
+            <summary>North American Tabloid format (11 x 17 in).</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Executive">
+            <summary>Executive format (7.25 x 10.5 in).</summary>
         </member>
         <member name="F:Acontplus.Reports.Enums.QuestPdfPageSize.Thermal80mm">
             <summary>Thermal/receipt-style narrow format (80mm wide)</summary>
@@ -1117,10 +1282,25 @@
             Page orientation for QuestPDF documents
             </summary>
         </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageOrientation.Portrait">
+            <summary>Vertical portrait orientation.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfPageOrientation.Landscape">
+            <summary>Horizontal landscape orientation.</summary>
+        </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfColumnAlignment">
             <summary>
             Column content alignment within QuestPDF table cells
             </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfColumnAlignment.Left">
+            <summary>Left alignment.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfColumnAlignment.Center">
+            <summary>Center alignment.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfColumnAlignment.Right">
+            <summary>Right alignment.</summary>
         </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfSectionType">
             <summary>
@@ -1149,7 +1329,7 @@
             <summary>Render a master DataTable with a filtered detail sub-table per row (master-detail)</summary>
         </member>
         <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.TwoColumn">
-            <summary>Render two child sections side by side in two columns</summary>
+            <summary>Render two child sections side by subject in two columns</summary>
         </member>
         <member name="F:Acontplus.Reports.Enums.QuestPdfSectionType.InvoiceHeader">
             <summary>Render a first-class SRI Ecuador invoice / voucher header block</summary>
@@ -1158,6 +1338,18 @@
             <summary>
             Horizontal cell alignment for numeric totals row
             </summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfAggregateType.None">
+            <summary>No aggregate calculation.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfAggregateType.Sum">
+            <summary>Sum of numeric values.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfAggregateType.Count">
+            <summary>Count of items.</summary>
+        </member>
+        <member name="F:Acontplus.Reports.Enums.QuestPdfAggregateType.Average">
+            <summary>Arithmetic average of values.</summary>
         </member>
         <member name="T:Acontplus.Reports.Enums.QuestPdfBarcodeType">
             <summary>
@@ -1172,38 +1364,125 @@
         </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportGenerationException">
             <summary>
-            Exception thrown when report generation fails
+            Exception thrown when report generation fails.
             </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Exceptions.ReportGenerationException.ReportPath">
+            <summary>Gets the report definition path, if specified.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Exceptions.ReportGenerationException.ReportFormat">
+            <summary>Gets the requested rendering format, if specified.</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportGenerationException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> class with a specified error message.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportGenerationException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> class with a specified error message and inner exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportGenerationException.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> class with report path and format context.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="reportPath">The report path being rendered.</param>
+            <param name="reportFormat">The rendering format requested.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportGenerationException.#ctor(System.String,System.String,System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> class with context and inner exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="reportPath">The report path being rendered.</param>
+            <param name="reportFormat">The rendering format requested.</param>
+            <param name="innerException">The inner exception that caused the failure.</param>
         </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportSizeExceededException">
             <summary>
-            Exception thrown when report size exceeds maximum allowed
+            Exception thrown when report size exceeds maximum allowed size.
             </summary>
         </member>
         <member name="M:Acontplus.Reports.Exceptions.ReportSizeExceededException.#ctor(System.Int64,System.Int64)">
             <summary>
-            Exception thrown when report size exceeds maximum allowed
+            Exception thrown when report size exceeds maximum allowed size.
             </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Exceptions.ReportSizeExceededException.ReportSize">
+            <summary>Gets the size in bytes of the generated report.</summary>
+        </member>
+        <member name="P:Acontplus.Reports.Exceptions.ReportSizeExceededException.MaxSize">
+            <summary>Gets the maximum allowed size in bytes.</summary>
         </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportTimeoutException">
             <summary>
-            Exception thrown when report generation times out
+            Exception thrown when report generation times out.
             </summary>
+        </member>
+        <member name="P:Acontplus.Reports.Exceptions.ReportTimeoutException.TimeoutSeconds">
+            <summary>Gets the timeout threshold in seconds.</summary>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportTimeoutException.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportTimeoutException"/> class with a specified timeout.
+            </summary>
+            <param name="timeoutSeconds">The elapsed seconds when timeout occurred.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportTimeoutException.#ctor(System.String,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportTimeoutException"/> class with report path and timeout.
+            </summary>
+            <param name="reportPath">The report path that timed out.</param>
+            <param name="timeoutSeconds">The elapsed seconds when timeout occurred.</param>
         </member>
         <member name="T:Acontplus.Reports.Exceptions.ReportNotFoundException">
             <summary>
-            Exception thrown when report file is not found
+            Exception thrown when report file is not found.
             </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportNotFoundException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportNotFoundException"/> class.
+            </summary>
+            <param name="reportPath">The missing report file path.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.ReportNotFoundException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.ReportNotFoundException"/> class with an inner exception.
+            </summary>
+            <param name="reportPath">The missing report file path.</param>
+            <param name="innerException">The exception that is the cause of the failure.</param>
         </member>
         <member name="T:Acontplus.Reports.Exceptions.InvalidReportPathException">
             <summary>
-            Exception thrown when an invalid or potentially malicious report path is detected
+            Exception thrown when an invalid or potentially malicious report path is detected.
             </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.InvalidReportPathException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.InvalidReportPathException"/> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Exceptions.InvalidReportPathException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Exceptions.InvalidReportPathException"/> class with a message and inner exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="innerException">The inner exception.</param>
         </member>
         <member name="M:Acontplus.Reports.Exceptions.InvalidReportPathException.FromSecurityException(System.Security.SecurityException,System.String)">
             <summary>
-            Creates an InvalidReportPathException from a SecurityException thrown by PathSecurityValidator
+            Creates an InvalidReportPathException from a SecurityException thrown by PathSecurityValidator.
             </summary>
+            <param name="securityException">The underlying security exception.</param>
+            <param name="reportPath">The optional invalid report path.</param>
+            <returns>A new <see cref="T:Acontplus.Reports.Exceptions.InvalidReportPathException"/> instance.</returns>
         </member>
         <member name="T:Acontplus.Reports.Extensions.ServiceCollectionExtensions">
             <summary>
@@ -1259,6 +1538,18 @@
             <summary>
             Registers only the ClosedXML service with custom configuration.
             </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Helpers.RdlcHelpers">
+            <summary>
+            Helper methods for loading and working with RDLC report definition files.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Helpers.RdlcHelpers.LoadReportDefinition(System.String)">
+            <summary>
+            Loads an RDLC report definition from a file path into a seekable <see cref="T:System.IO.MemoryStream"/>.
+            </summary>
+            <param name="filePath">The file path to the RDLC report definition.</param>
+            <returns>A new <see cref="T:System.IO.MemoryStream"/> positioned at the beginning.</returns>
         </member>
         <member name="T:Acontplus.Reports.Interfaces.IClosedXmlReportService">
             <summary>
@@ -1383,6 +1674,11 @@
             Validates that all required QuestPDF dependencies and licence settings are
             properly configured without generating a full document.
             Throws <see cref="T:Acontplus.Reports.Exceptions.ReportGenerationException"/> on misconfiguration.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Reports.Interfaces.IRdlcPrinterService">
+            <summary>
+            Service contract for printing RDLC reports directly to physical or network printers.
             </summary>
         </member>
         <member name="M:Acontplus.Reports.Interfaces.IRdlcPrinterService.PrintAsync(Acontplus.Reports.Dtos.RdlcPrinterDto,Acontplus.Reports.Dtos.RdlcPrintRequestDto,System.Threading.CancellationToken)">
@@ -1510,16 +1806,59 @@
         <member name="M:Acontplus.Reports.Services.QuestPdfReportService.ValidateConfiguration">
             <inheritdoc />
         </member>
+        <member name="M:Acontplus.Reports.Services.QuestPdfReportService.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Reports.Services.RdlcPrinterService">
+            <summary>
+            Service for rendering RDLC reports directly to physical printers on Windows systems.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcPrinterService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Reports.Services.RdlcPrinterService},Microsoft.Extensions.Options.IOptions{Acontplus.Reports.Configuration.ReportOptions},Acontplus.Reports.Services.ReportDefinitionCache)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Services.RdlcPrinterService"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+            <param name="options">The report configuration options.</param>
+            <param name="cache">The report definition cache.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcPrinterService.PrintAsync(Acontplus.Reports.Dtos.RdlcPrinterDto,Acontplus.Reports.Dtos.RdlcPrintRequestDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Reports.Services.RdlcReportService">
             <summary>
             High-performance RDLC report generation service with async support, caching, and concurrency control
             </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcReportService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Reports.Services.RdlcReportService},Microsoft.Extensions.Options.IOptions{Acontplus.Reports.Configuration.ReportOptions})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Services.RdlcReportService"/> class.
+            </summary>
+            <param name="logger">The logger instance.</param>
+            <param name="options">The report configuration options.</param>
         </member>
         <member name="M:Acontplus.Reports.Services.RdlcReportService.GetReportAsync(System.Data.DataSet,System.Data.DataSet,System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Reports.Services.RdlcReportService.GetReport(System.Data.DataSet,System.Data.DataSet,System.Boolean)">
             <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcReportService.GetErrorAsync">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcReportService.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcReportService.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and optionally managed resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Services.RdlcReportService.Finalize">
+            <summary>
+            Finalizes an instance of the <see cref="T:Acontplus.Reports.Services.RdlcReportService"/> class.
+            </summary>
         </member>
         <member name="T:Acontplus.Reports.Services.CachedReportDefinition">
             <summary>
@@ -1530,6 +1869,29 @@
             <summary>
             Thread-safe cache for report definitions with size limits and TTL
             </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.#ctor(System.Int32,System.TimeSpan)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Reports.Services.ReportDefinitionCache"/> class.
+            </summary>
+            <param name="maxSize">The maximum number of entries to retain in cache.</param>
+            <param name="ttl">The time-to-live expiration for cached entries.</param>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.GetOrAddAsync(System.String,System.Func{System.String,System.Threading.Tasks.Task{System.IO.MemoryStream}})">
+            <summary>
+            Gets a cached report definition stream, or creates and caches it using the specified factory.
+            </summary>
+            <param name="key">The cache key (report path).</param>
+            <param name="factory">The asynchronous factory delegate producing the report stream.</param>
+            <returns>A seekable memory stream containing the report definition.</returns>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.Clear">
+            <summary>
+            Removes and disposes all cached report definitions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.Dispose">
+            <inheritdoc />
         </member>
     </members>
 </doc>

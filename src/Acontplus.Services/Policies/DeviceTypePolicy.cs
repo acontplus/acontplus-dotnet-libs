@@ -5,9 +5,21 @@ namespace Acontplus.Services.Policies;
 /// </summary>
 public class DeviceTypeRequirement : IAuthorizationRequirement
 {
+    /// <summary>
+    /// Gets the list of allowed device types.
+    /// </summary>
     public List<DeviceType> AllowedDeviceTypes { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether device headers must be validated.
+    /// </summary>
     public bool RequireDeviceValidation { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeviceTypeRequirement"/> class.
+    /// </summary>
+    /// <param name="allowedDeviceTypes">The list of allowed device types.</param>
+    /// <param name="requireDeviceValidation">Whether device header validation is required.</param>
     public DeviceTypeRequirement(List<DeviceType> allowedDeviceTypes, bool requireDeviceValidation = true)
     {
         AllowedDeviceTypes = allowedDeviceTypes ?? throw new ArgumentNullException(nameof(allowedDeviceTypes));
@@ -23,6 +35,11 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
     private readonly IDeviceDetectionService _deviceDetectionService;
     private readonly ILogger<DeviceTypeHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeviceTypeHandler"/> class.
+    /// </summary>
+    /// <param name="deviceDetectionService">The device detection service.</param>
+    /// <param name="logger">The logger instance.</param>
     public DeviceTypeHandler(
         IDeviceDetectionService deviceDetectionService,
         ILogger<DeviceTypeHandler> logger)
@@ -31,6 +48,7 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         DeviceTypeRequirement requirement)
@@ -86,12 +104,22 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
 /// </summary>
 public static class DeviceTypePolicyExtensions
 {
+    /// <summary>
+    /// Registers the device type authorization handler into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddDeviceTypeAuthorization(this IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, DeviceTypeHandler>();
         return services;
     }
 
+    /// <summary>
+    /// Adds preconfigured device type authorization policies to the authorization options.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <returns>The authorization options for chaining.</returns>
     public static AuthorizationOptions AddDeviceTypePolicies(this AuthorizationOptions options)
     {
         // Policy for mobile-only access

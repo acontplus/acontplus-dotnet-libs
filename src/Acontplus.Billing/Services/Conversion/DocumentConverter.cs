@@ -4,8 +4,12 @@ using System.Globalization;
 
 namespace Acontplus.Billing.Services.Conversion;
 
+/// <summary>
+/// Service that converts electronic documents (<see cref="ComprobanteElectronico"/>) into HTML representations (RIDE visual format).
+/// </summary>
 public class DocumentConverter : IDocumentConverter
 {
+    /// <inheritdoc />
     public string CreateHtml(ComprobanteElectronico comprobanteElectronico)
     {
         var assembly = typeof(DocumentConverter).Assembly;

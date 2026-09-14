@@ -7,11 +7,16 @@ public class SecurityHeaderService : ISecurityHeaderService
 {
     private readonly ILogger<SecurityHeaderService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityHeaderService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public SecurityHeaderService(ILogger<SecurityHeaderService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public void ApplySecurityHeaders(HttpContext context, RequestContextConfiguration configuration)
     {
         if (!configuration.EnableSecurityHeaders)
@@ -47,6 +52,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         _logger.LogDebug("Applied security headers to response");
     }
 
+    /// <inheritdoc />
     public string GenerateCspNonce()
     {
         using var rng = RandomNumberGenerator.Create();
@@ -58,6 +64,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         return nonce;
     }
 
+    /// <inheritdoc />
     public bool ValidateSecurityHeaders(HttpContext context)
     {
         var requiredHeaders = new[]
@@ -82,6 +89,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         return true;
     }
 
+    /// <inheritdoc />
     public Dictionary<string, string> GetRecommendedHeaders(bool isDevelopment)
     {
         var headers = new Dictionary<string, string>

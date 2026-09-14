@@ -5,9 +5,21 @@ namespace Acontplus.Services.Policies;
 /// </summary>
 public class RequireClientIdRequirement : IAuthorizationRequirement
 {
+    /// <summary>
+    /// Gets the list of allowed client IDs, or null if any non-empty client ID is permitted.
+    /// </summary>
     public List<string>? AllowedClientIds { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether anonymous requests (missing Client-Id) are permitted.
+    /// </summary>
     public bool AllowAnonymous { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RequireClientIdRequirement"/> class.
+    /// </summary>
+    /// <param name="allowedClientIds">Optional list of allowed client IDs.</param>
+    /// <param name="allowAnonymous">Whether anonymous access is allowed.</param>
     public RequireClientIdRequirement(List<string>? allowedClientIds = null, bool allowAnonymous = false)
     {
         AllowedClientIds = allowedClientIds;
@@ -22,11 +34,16 @@ public class RequireClientIdHandler : AuthorizationHandler<RequireClientIdRequir
 {
     private readonly ILogger<RequireClientIdHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RequireClientIdHandler"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
     public RequireClientIdHandler(ILogger<RequireClientIdHandler> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         RequireClientIdRequirement requirement)
@@ -83,6 +100,12 @@ public class RequireClientIdHandler : AuthorizationHandler<RequireClientIdRequir
 /// </summary>
 public static class ClientIdPolicyExtensions
 {
+    /// <summary>
+    /// Registers the Client-Id authorization handler into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="allowedClientIds">Optional allowed client IDs.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddClientIdAuthorization(
         this IServiceCollection services,
         List<string>? allowedClientIds = null)
@@ -91,6 +114,12 @@ public static class ClientIdPolicyExtensions
         return services;
     }
 
+    /// <summary>
+    /// Adds preconfigured Client-Id authorization policies to the authorization options.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <param name="allowedClientIds">Optional allowed client IDs.</param>
+    /// <returns>The authorization options for chaining.</returns>
     public static AuthorizationOptions AddClientIdPolicies(
         this AuthorizationOptions options,
         List<string>? allowedClientIds = null)

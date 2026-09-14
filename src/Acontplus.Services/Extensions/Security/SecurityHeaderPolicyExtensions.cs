@@ -1,7 +1,16 @@
 namespace Acontplus.Services.Extensions.Security;
 
+/// <summary>
+/// Extension methods for configuring security header policies and Content Security Policy (CSP).
+/// </summary>
 public static class SecurityHeaderPolicyExtensions
 {
+    /// <summary>
+    /// Configures security headers and Content Security Policy (CSP) based on the application environment.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="environment">The web host environment.</param>
+    /// <returns>The application builder for chaining.</returns>
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app, IWebHostEnvironment environment)
     {
         var policyCollection = new HeaderPolicyCollection()

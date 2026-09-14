@@ -9,6 +9,12 @@ public class SecurityHeaderActionFilter : IActionFilter
     private readonly RequestContextConfiguration _configuration;
     private readonly ILogger<SecurityHeaderActionFilter> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityHeaderActionFilter"/> class.
+    /// </summary>
+    /// <param name="securityHeaderService">The security header service.</param>
+    /// <param name="configuration">The request context configuration options.</param>
+    /// <param name="logger">The logger instance.</param>
     public SecurityHeaderActionFilter(
         ISecurityHeaderService securityHeaderService,
         IOptions<RequestContextConfiguration> configuration,
@@ -19,6 +25,7 @@ public class SecurityHeaderActionFilter : IActionFilter
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <inheritdoc />
     public void OnActionExecuting(ActionExecutingContext context)
     {
         // Apply security headers before action execution
@@ -34,6 +41,7 @@ public class SecurityHeaderActionFilter : IActionFilter
         }
     }
 
+    /// <inheritdoc />
     public void OnActionExecuted(ActionExecutedContext context)
     {
         // Validate that security headers were applied correctly

@@ -22,11 +22,13 @@ public class DataEncryptionService : IDataEncryptionService
         _protector = provider.CreateProtector(protectorKey);
     }
 
+    /// <inheritdoc />
     public byte[] EncryptToBytes(string plainText)
     {
         return _protector.Protect(Encoding.UTF8.GetBytes(plainText));
     }
 
+    /// <inheritdoc />
     public string DecryptFromBytes(byte[] encryptedData)
     {
         return Encoding.UTF8.GetString(_protector.Unprotect(encryptedData));
