@@ -49,9 +49,6 @@ public class CustomerService(
                         })
                 };
 
-                // If you have multiple validation errors, you can add them to the list
-                // validationErrors.Add(anotherError);
-
                 return Result<CustomerDto, DomainErrors>.Failure(DomainErrors.Multiple(validationErrors));
             }
 

@@ -61,20 +61,33 @@ public static class ClaimsPrincipalExtensions
 
         try
         {
-            // Manejo de tipos comunes
-            return typeof(T) == typeof(string)
-                ? (T)(object)claim
-                : typeof(T) == typeof(int)
-                ? (T)(object)Convert.ToInt32(claim)
-                : typeof(T) == typeof(long)
-                ? (T)(object)Convert.ToInt64(claim)
-                : typeof(T) == typeof(bool)
-                ? (T)(object)Convert.ToBoolean(claim)
-                : typeof(T) == typeof(Guid) ? (T)(object)Guid.Parse(claim) : (T)Convert.ChangeType(claim, typeof(T));
+            return ConvertClaimValue<T>(claim);
         }
         catch
         {
             return default;
         }
+    }
+
+    private static T ConvertClaimValue<T>(string claim)
+    {
+        var targetType = typeof(T);
+
+        if (targetType == typeof(string))
+            return (T)(object)claim;
+
+        if (targetType == typeof(int))
+            return (T)(object)Convert.ToInt32(claim);
+
+        if (targetType == typeof(long))
+            return (T)(object)Convert.ToInt64(claim);
+
+        if (targetType == typeof(bool))
+            return (T)(object)Convert.ToBoolean(claim);
+
+        if (targetType == typeof(Guid))
+            return (T)(object)Guid.Parse(claim);
+
+        return (T)Convert.ChangeType(claim, targetType);
     }
 }

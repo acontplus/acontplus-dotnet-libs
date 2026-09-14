@@ -77,10 +77,10 @@ public class RdlcPrinterService : IRdlcPrinterService
 
                 return result;
             }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                _logger.LogWarning(
+                _logger.LogWarning(ex,
                     "Print job {PrintJobId} timed out after {Duration}ms (limit: {Timeout}s)",
                     printJobId, duration, _options.PrintJobTimeoutSeconds);
                 throw new ReportTimeoutException(_options.PrintJobTimeoutSeconds);
@@ -401,7 +401,7 @@ public class RdlcPrinterService : IRdlcPrinterService
         }
     }
 
-    private async Task SetReportParametersAsync(
+    private static async Task SetReportParametersAsync(
         LocalReport lr,
         RdlcPrinterDto rdlcPrinter,
         RdlcPrintRequestDto printRequest,

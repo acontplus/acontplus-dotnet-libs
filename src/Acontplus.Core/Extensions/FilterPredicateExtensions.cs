@@ -139,21 +139,17 @@ public static class FilterPredicateExtensions
         }
 
         // Handle enum comparisons
-        if (propertyExpression.Type.IsEnum && value is string enumString)
+        if (propertyExpression.Type.IsEnum && value is string enumString &&
+            Enum.TryParse(propertyExpression.Type, enumString, true, out var enumValue))
         {
-            if (Enum.TryParse(propertyExpression.Type, enumString, true, out var enumValue))
-            {
-                return Expression.Equal(propertyExpression, Expression.Constant(enumValue, propertyExpression.Type));
-            }
+            return Expression.Equal(propertyExpression, Expression.Constant(enumValue, propertyExpression.Type));
         }
 
         // Handle boolean comparisons
-        if (propertyExpression.Type == typeof(bool) && value is string boolString)
+        if (propertyExpression.Type == typeof(bool) && value is string boolString &&
+            bool.TryParse(boolString, out var boolValue))
         {
-            if (bool.TryParse(boolString, out var boolValue))
-            {
-                return Expression.Equal(propertyExpression, Expression.Constant(boolValue, typeof(bool)));
-            }
+            return Expression.Equal(propertyExpression, Expression.Constant(boolValue, typeof(bool)));
         }
 
         // Default equality comparison

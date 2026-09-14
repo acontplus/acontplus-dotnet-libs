@@ -141,8 +141,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing QueryAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing QueryAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -200,8 +199,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing GetDataSetAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing GetDataSetAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -242,8 +240,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing ExecuteNonQueryAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing ExecuteNonQueryAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -289,8 +286,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing QuerySingleOrDefaultAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing QuerySingleOrDefaultAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -336,8 +332,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing QueryFirstOrDefaultAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing QueryFirstOrDefaultAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -522,8 +517,7 @@ public class AdoRepository(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating and opening connection for '{ConnectionName}'.", connectionStringName);
-            throw;
+            throw new RepositoryException($"Error creating and opening connection for '{connectionStringName}'.", ex);
         }
     }
 
@@ -597,8 +591,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing ExecuteScalarAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing ExecuteScalarAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -721,8 +714,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing GetPagedAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing GetPagedAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -785,10 +777,8 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Unexpected error executing GetPagedFromStoredProcedureAsync for '{StoredProcedureName}'.",
-                    storedProcedureName);
-                throw;
+                throw new RepositoryException(
+                    $"Unexpected error executing GetPagedFromStoredProcedureAsync for '{storedProcedureName}'.", ex);
             }
             finally
             {
@@ -844,8 +834,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing GetFilteredAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing GetFilteredAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -893,10 +882,8 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Unexpected error executing GetFilteredFromStoredProcedureAsync for '{StoredProcedureName}'.",
-                    storedProcedureName);
-                throw;
+                throw new RepositoryException(
+                    $"Unexpected error executing GetFilteredFromStoredProcedureAsync for '{storedProcedureName}'.", ex);
             }
             finally
             {
@@ -962,8 +949,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing GetFilteredDataSetAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing GetFilteredDataSetAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -1018,8 +1004,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing QueryMultipleAsync for '{Sql}'.", sql);
-                throw;
+                throw new RepositoryException($"Unexpected error executing QueryMultipleAsync for '{sql}'.", ex);
             }
             finally
             {
@@ -1042,63 +1027,69 @@ public class AdoRepository(
             return 0;
         }
 
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
+        return await RetryPolicy.ExecuteAsync(
+            ct => ExecuteBatchWithTransactionAsync(commandList, options, ct),
+            cancellationToken);
+    }
+
+    private async Task<int> ExecuteBatchWithTransactionAsync(
+        List<(string Sql, Dictionary<string, object>? Parameters)> commandList,
+        CommandOptionsDto? options,
+        CancellationToken ct)
+    {
+        DbConnection? connectionToClose = null;
+        DbTransaction? transaction = null;
+        try
         {
-            DbConnection? connectionToClose = null;
-            DbTransaction? transaction = null;
-            try
+            var connection = await GetOpenConnectionAsync(null, ct);
+            if (_currentConnection == null)
             {
-                var connection = await GetOpenConnectionAsync(null, ct);
-                if (_currentConnection == null)
-                {
-                    connectionToClose = connection;
-                }
-
-                // Start transaction if not already in one
-                if (_currentTransaction == null)
-                {
-                    transaction = await connection.BeginTransactionAsync(cancellationToken);
-                }
-
-                var totalAffected = await ExecuteBatchCommandsInternalAsync(connection, transaction, commandList, options, ct);
-
-                if (transaction != null)
-                {
-                    await transaction.CommitAsync(cancellationToken);
-                }
-
-                return totalAffected;
+                connectionToClose = connection;
             }
-            catch (SqlException ex)
+
+            // Start transaction if not already in one
+            if (_currentTransaction == null)
             {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                }
-
-                SqlServerExceptionHandler.HandleSqlException(ex, _logger, nameof(ExecuteBatchNonQueryAsync));
-                throw;
+                transaction = await connection.BeginTransactionAsync(ct);
             }
-            catch (Exception ex)
+
+            var totalAffected = await ExecuteBatchCommandsInternalAsync(connection, transaction, commandList, options, ct);
+
+            if (transaction != null)
             {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                }
-
-                _logger.LogError(ex, "Unexpected error executing ExecuteBatchNonQueryAsync.");
-                throw;
+                await transaction.CommitAsync(ct);
             }
-            finally
+
+            return totalAffected;
+        }
+        catch (SqlException ex)
+        {
+            await RollbackTransactionSafelyAsync(transaction, ct);
+            SqlServerExceptionHandler.HandleSqlException(ex, _logger, nameof(ExecuteBatchNonQueryAsync));
+            throw;
+        }
+        catch (Exception ex)
+        {
+            await RollbackTransactionSafelyAsync(transaction, ct);
+            throw new RepositoryException("Unexpected error executing ExecuteBatchNonQueryAsync.", ex);
+        }
+        finally
+        {
+            if (transaction != null)
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
-
-                await CloseConnectionSafelyAsync(connectionToClose);
+                await transaction.DisposeAsync();
             }
-        }, cancellationToken);
+
+            await CloseConnectionSafelyAsync(connectionToClose);
+        }
+    }
+
+    private static async Task RollbackTransactionSafelyAsync(DbTransaction? transaction, CancellationToken ct)
+    {
+        if (transaction != null)
+        {
+            await transaction.RollbackAsync(ct);
+        }
     }
 
     private async Task<int> ExecuteBatchCommandsInternalAsync(
@@ -1185,8 +1176,7 @@ public class AdoRepository(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error executing BulkInsertAsync for table '{TableName}'.", tableName);
-                throw;
+                throw new RepositoryException($"Unexpected error executing BulkInsertAsync for table '{tableName}'.", ex);
             }
             finally
             {

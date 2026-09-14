@@ -75,12 +75,12 @@ public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
             {
                 Name = swaggerInfoSection["ContactName"] ?? "Support Team",
                 Email = swaggerInfoSection["ContactEmail"] ?? "support@example.com",
-                Url = new Uri(swaggerInfoSection["ContactUrl"] ?? "https://example.com/support")
+                Url = Uri.TryCreate(swaggerInfoSection["ContactUrl"], UriKind.Absolute, out var contactUri) ? contactUri : null
             },
             License = new OpenApiLicense
             {
                 Name = swaggerInfoSection["LicenseName"] ?? "MIT",
-                Url = new Uri(swaggerInfoSection["LicenseUrl"] ?? "https://opensource.org/licenses/MIT")
+                Url = Uri.TryCreate(swaggerInfoSection["LicenseUrl"], UriKind.Absolute, out var licenseUri) ? licenseUri : null
             }
         };
 

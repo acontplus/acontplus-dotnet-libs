@@ -17,6 +17,8 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
     }
 
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Logging action filter intentionally captures failed request metrics and logs failure before rethrowing.")]
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -30,7 +32,7 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
 
         try
         {
-            var result = await next();
+            await next();
             stopwatch.Stop();
 
             // Log successful completion

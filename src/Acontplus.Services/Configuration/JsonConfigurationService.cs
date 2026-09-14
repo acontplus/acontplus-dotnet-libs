@@ -60,8 +60,12 @@ public static class JsonConfigurationService
     /// <param name="useStrictMode">Whether to use strict JSON validation</param>
     public static void ConfigureAspNetCore(IServiceCollection services, bool isDevelopment, bool useStrictMode = false)
     {
-        var jsonOptions = useStrictMode ? GetOptions(strictMode: true) :
-                         isDevelopment ? GetOptions(prettyFormat: true) : GetOptions();
+        var jsonOptions = (useStrictMode, isDevelopment) switch
+        {
+            (true, _) => GetOptions(strictMode: true),
+            (false, true) => GetOptions(prettyFormat: true),
+            _ => GetOptions()
+        };
 
         services.ConfigureHttpJsonOptions(options =>
         {

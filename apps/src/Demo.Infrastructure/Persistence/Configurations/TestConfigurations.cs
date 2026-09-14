@@ -6,12 +6,6 @@ public class WhatsAppUsageConfiguration : BaseEntityTypeConfiguration<WhatsAppUs
     {
         base.Configure(builder);
 
-        // builder
-        //     .HasOne<Company>()
-        //     .WithMany(c => c.WhatsAppUsages)
-        //     .HasForeignKey(x => x.CompanyId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
         builder
             .HasIndex(x => x.CompanyId)
             .HasDatabaseName("UX_WhatsAppUsage_CompanyId")

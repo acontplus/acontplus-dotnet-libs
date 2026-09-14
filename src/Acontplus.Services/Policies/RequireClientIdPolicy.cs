@@ -79,14 +79,12 @@ public class RequireClientIdHandler : AuthorizationHandler<RequireClientIdRequir
         }
 
         // Validate against allowed client IDs if specified
-        if (requirement.AllowedClientIds?.Any() == true)
+        if (requirement.AllowedClientIds != null && requirement.AllowedClientIds.Count > 0 &&
+            !requirement.AllowedClientIds.Contains(clientId, StringComparer.OrdinalIgnoreCase))
         {
-            if (!requirement.AllowedClientIds.Contains(clientId, StringComparer.OrdinalIgnoreCase))
-            {
-                _logger.LogWarning("Client-Id '{ClientId}' is not in the allowed list", clientId);
-                context.Fail();
-                return Task.CompletedTask;
-            }
+            _logger.LogWarning("Client ID '{ClientId}' is not in the allowed list", clientId);
+            context.Fail();
+            return Task.CompletedTask;
         }
 
         _logger.LogDebug("Client-Id '{ClientId}' validation successful", clientId);

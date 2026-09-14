@@ -221,7 +221,6 @@ public class DocumentConverter : IDocumentConverter
                                             <tbody>" + GetDetails(data) + @"</tbody>
                                         </table>
                                     </div>";
-                ;
                 break;
             case "04" when data.InfoNotaCredito is { } nc:
                 infoComp = @" <div class=""row"">

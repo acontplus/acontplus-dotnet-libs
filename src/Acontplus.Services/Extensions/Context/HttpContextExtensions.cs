@@ -116,9 +116,14 @@ public static class HttpContextExtensions
     /// <returns>The parsed device type, or null if not set or invalid.</returns>
     public static DeviceType? GetDeviceType(this HttpContext context)
     {
-        return context.Items.TryGetValue(DeviceTypeKey, out var value) && value is string typeString
-            ? Enum.TryParse<DeviceType>(typeString, ignoreCase: true, out var deviceType) ? deviceType : null
-            : (DeviceType?)null;
+        if (context.Items.TryGetValue(DeviceTypeKey, out var value) &&
+            value is string typeString &&
+            Enum.TryParse<DeviceType>(typeString, ignoreCase: true, out var deviceType))
+        {
+            return deviceType;
+        }
+
+        return null;
     }
 
     /// <summary>

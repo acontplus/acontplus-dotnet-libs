@@ -134,12 +134,5 @@ public class BaseEntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEn
         builder.HasIndex(x => x.CreatedAt)
             .HasFilter("is_deleted = false")
             .HasDatabaseName($"ix_{tableName}_created_at_active");
-
-        // Consider adding these indexes if needed:
-        // builder.HasIndex(x => x.UpdatedAt)
-        //     .HasDatabaseName($"ix_{tableName}_updated_at");
-        //
-        // builder.HasIndex(x => new { x.IsActive, x.UpdatedAt })
-        //     .HasDatabaseName($"ix_{tableName}_active_updated");
     }
 }

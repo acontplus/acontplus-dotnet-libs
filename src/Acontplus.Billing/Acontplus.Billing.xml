@@ -9,6 +9,21 @@
             Configuration settings for connecting to SRI web services.
             </summary>
         </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.ReceptionUrl">
+            <summary>
+            Gets or sets the SRI reception web service URL.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.AuthorizationUrl">
+            <summary>
+            Gets or sets the SRI authorization web service URL.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.TimeoutSeconds">
+            <summary>
+            Gets or sets the timeout in seconds for SRI service requests.
+            </summary>
+        </member>
         <member name="T:Acontplus.Billing.Constants.DocumentTypes">
             <summary>
             SRI Electronic Document Type Codes (Ecuador)
@@ -63,6 +78,21 @@
         <member name="T:Acontplus.Billing.Constants.ValidationRules">
             <summary>
             Validation rules and constraint constants for SRI electronic document validation.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.RucLength">
+            <summary>
+            Expected length of an Ecuadorian RUC identifier.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.CedulaLength">
+            <summary>
+            Expected length of an Ecuadorian cédula identifier.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.AccessKeyLength">
+            <summary>
+            Expected length of the SRI 49-digit access key (clave de acceso).
             </summary>
         </member>
         <member name="T:Acontplus.Billing.Helpers.ResourceHelper">
@@ -1543,6 +1573,11 @@
             Base class for electronic billing document models.
             </summary>
         </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocumentBase.ClaveAcceso">
+            <summary>
+            Gets or sets the electronic document access key (clave de acceso).
+            </summary>
+        </member>
         <member name="T:Acontplus.Billing.Models.Documents.XmlSriFileModel">
             <summary>
             Model representing an extracted SRI XML electronic document file and its parsed metadata.
@@ -1581,6 +1616,16 @@
         <member name="T:Acontplus.Billing.Models.Responses.ResponseBase">
             <summary>
             Base class for SRI web service response models.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseBase.Estado">
+            <summary>
+            Gets or sets the response status code or state from the SRI service.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseBase.Mensaje">
+            <summary>
+            Gets or sets the descriptive response message.
             </summary>
         </member>
         <member name="T:Acontplus.Billing.Models.Responses.ResponseSri">

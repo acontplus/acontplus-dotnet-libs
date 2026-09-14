@@ -646,6 +646,29 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
     }
 
     /// <inheritdoc />
+    public virtual async Task<int> DeleteAsync(Expression<Func<TEntity, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteAsync)}_Predicate");
+        try
+        {
+            ArgumentNullException.ThrowIfNull(predicate);
+            var entities = await _dbSet.Where(predicate).ToListAsync(cancellationToken).ConfigureAwait(false);
+            if (entities.Count > 0)
+            {
+                _dbSet.RemoveRange(entities);
+            }
+
+            return entities.Count;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error deleting entities by predicate for type {EntityType}", typeof(TEntity).Name);
+            throw new RepositoryException("Error deleting entities by predicate", ex);
+        }
+    }
+
+    /// <inheritdoc />
     public virtual async Task<bool> DeleteByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteByIdAsync)}");
@@ -684,29 +707,6 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         }
     }
 
-    /// <inheritdoc />
-    public virtual async Task<int> DeleteAsync(Expression<Func<TEntity, bool>> predicate,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(DeleteAsync)}_Predicate");
-        try
-        {
-            ArgumentNullException.ThrowIfNull(predicate);
-            var entities = await _dbSet.Where(predicate).ToListAsync(cancellationToken).ConfigureAwait(false);
-            if (entities.Count > 0)
-            {
-                _dbSet.RemoveRange(entities);
-            }
-
-            return entities.Count;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Error deleting entities by predicate for type {EntityType}", typeof(TEntity).Name);
-            throw new RepositoryException("Error deleting entities by predicate", ex);
-        }
-    }
-
     #endregion
 
     #region Bulk Operations
@@ -728,31 +728,6 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         {
             _logger?.LogError(ex, "Error in BulkDeleteAsync for entity {EntityType}", typeof(TEntity).Name);
             throw new RepositoryException("Error performing bulk delete", ex);
-        }
-    }
-
-    /// <inheritdoc />
-    public virtual async Task<int> BulkUpdateAsync<TProperty>(
-        Expression<Func<TEntity, bool>> predicate,
-        Expression<Func<TEntity, TProperty>> propertyExpression,
-        TProperty newValue,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(BulkUpdateAsync)}");
-        try
-        {
-            ArgumentNullException.ThrowIfNull(predicate);
-            ArgumentNullException.ThrowIfNull(propertyExpression);
-
-            return await _dbSet
-                .Where(predicate)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(propertyExpression, newValue), cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Error in BulkUpdateAsync for entity {EntityType}", typeof(TEntity).Name);
-            throw new RepositoryException("Error performing bulk update", ex);
         }
     }
 
@@ -779,6 +754,31 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         {
             _logger?.LogError(ex, "Error in BulkInsertAsync for entity {EntityType}", typeof(TEntity).Name);
             throw new RepositoryException("Error performing bulk insert", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<int> BulkUpdateAsync<TProperty>(
+        Expression<Func<TEntity, bool>> predicate,
+        Expression<Func<TEntity, TProperty>> propertyExpression,
+        TProperty newValue,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(BulkUpdateAsync)}");
+        try
+        {
+            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(propertyExpression);
+
+            return await _dbSet
+                .Where(predicate)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(propertyExpression, newValue), cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error in BulkUpdateAsync for entity {EntityType}", typeof(TEntity).Name);
+            throw new RepositoryException("Error performing bulk update", ex);
         }
     }
 

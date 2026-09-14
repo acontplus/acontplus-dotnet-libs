@@ -14,7 +14,7 @@ public static class CommandParameterBuilder
     public static void AddParameter(DbCommand cmd, string name, object value)
     {
         var param = cmd.CreateParameter();
-        param.ParameterName = name.StartsWith("@") ? name : $"@{name}";
+        param.ParameterName = name.StartsWith('@') ? name : $"@{name}";
         param.Value = value;
         cmd.Parameters.Add(param);
     }

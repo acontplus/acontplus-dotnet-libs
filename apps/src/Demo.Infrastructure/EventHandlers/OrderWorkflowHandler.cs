@@ -35,9 +35,9 @@ public class OrderWorkflowHandler(
         {
             await Task.WhenAll(tasks);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogInformation("OrderWorkflowHandler is stopping.");
+            _logger.LogInformation(ex, "OrderWorkflowHandler is stopping.");
         }
         catch (Exception ex)
         {
@@ -51,8 +51,9 @@ public class OrderWorkflowHandler(
         await foreach (var orderEvent in _eventSubscriber.SubscribeAsync<OrderCreatedEvent>(stoppingToken))
         {
             _logger.LogInformation(
-                "🔄 Auto-processing Order {OrderId} - triggering processing workflow",
-                orderEvent.OrderId);
+                "🔄 Auto-processing Order {OrderId} for {CustomerName} - triggering processing workflow",
+                orderEvent.OrderId,
+                orderEvent.CustomerName);
 
             // Simulate order processing logic
             await Task.Delay(200, stoppingToken);
@@ -74,8 +75,9 @@ public class OrderWorkflowHandler(
         await foreach (var processedEvent in _eventSubscriber.SubscribeAsync<OrderProcessedEvent>(stoppingToken))
         {
             _logger.LogInformation(
-                "📦 Preparing shipment for Order {OrderId}",
-                processedEvent.OrderId);
+                "📦 Preparing shipment for Order {OrderId} processed by {ProcessedBy}",
+                processedEvent.OrderId,
+                processedEvent.ProcessedBy);
 
             // Simulate shipping preparation
             await Task.Delay(150, stoppingToken);

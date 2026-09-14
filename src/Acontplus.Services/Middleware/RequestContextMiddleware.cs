@@ -37,17 +37,15 @@ public sealed class RequestContextMiddleware(
         }
 
         // 2. Request Identification
-        var requestId = SanitizeHeader(context.Request.Headers["Request-Id"]) ??
+        var requestId = SanitizeHeader(context.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.RequestId]) ??
                         Guid.NewGuid().ToString();
-        _logger.LogDebug("Processing request with RequestId: {RequestId}", requestId);
-
         var correlationId = SanitizeHeader(context.Request.Headers["Correlation-Id"]) ??
                             requestId;
-        _logger.LogDebug("Using CorrelationId: {CorrelationId}", correlationId);
-
         var tenantId = SanitizeHeader(context.Request.Headers["Tenant-Id"]) ??
                        requestId;
-        _logger.LogDebug("Using TenantId: {TenantId}", tenantId);
+        _logger.LogDebug(
+            "Processing request: RequestId: {RequestId}, CorrelationId: {CorrelationId}, TenantId: {TenantId}",
+            requestId, correlationId, tenantId);
 
         // 3. Client Context
         var clientId = ValidateClientId(context);

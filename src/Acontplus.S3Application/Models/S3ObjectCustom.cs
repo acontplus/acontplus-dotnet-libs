@@ -108,8 +108,8 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="contentType">Optional custom MIME type.</param>
     public async Task Initialize(string filePath, IFormFile file, string? s3ObjectKey = null, string? contentType = null)
     {
-        if (file == null) throw new ArgumentNullException(nameof(file));
-        if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
         ThrowIfDisposed();
         var fileExt = Path.GetExtension(file.FileName);
         S3ObjectKey = s3ObjectKey ?? $"{filePath}{Guid.NewGuid()}{fileExt}";
@@ -128,7 +128,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="s3ObjectKey">The S3 object key (path/filename).</param>
     public void Initialize(string s3ObjectKey)
     {
-        if (string.IsNullOrEmpty(s3ObjectKey)) throw new ArgumentNullException(nameof(s3ObjectKey));
+        ArgumentException.ThrowIfNullOrEmpty(s3ObjectKey);
         ThrowIfDisposed();
         S3ObjectKey = s3ObjectKey;
         S3ObjectUrl = $"https://{BucketName}.s3.{Region}.amazonaws.com/{S3ObjectKey}";
@@ -141,7 +141,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="contentType">Optional MIME type.</param>
     public void SetContent(byte[] content, string? contentType = null)
     {
-        if (content == null) throw new ArgumentNullException(nameof(content));
+        ArgumentNullException.ThrowIfNull(content);
         ThrowIfDisposed();
         Content = content;
         if (contentType != null)
@@ -175,7 +175,7 @@ public sealed class S3ObjectCustom : IDisposable
 
     private void ThrowIfDisposed()
     {
-        if (_disposed) throw new ObjectDisposedException(nameof(S3ObjectCustom));
+        ObjectDisposedException.ThrowIf(_disposed, this);
     }
 
     /// <summary>

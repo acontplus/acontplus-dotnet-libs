@@ -46,26 +46,35 @@ public static class ErrorTypeExtensions
             _ => HttpStatusCode.InternalServerError
         };
 
+    private const string WarningSeverity = "warning";
+    private const string ErrorSeverity = "error";
+    private const string ValidationCategory = "validation";
+    private const string BusinessCategory = "business";
+    private const string SecurityCategory = "security";
+    private const string PerformanceCategory = "performance";
+    private const string IntegrationCategory = "integration";
+    private const string SystemCategory = "system";
+
     /// <summary>Returns a lowercase severity string (<c>"warning"</c> or <c>"error"</c>) for use in API responses.</summary>
     public static string ToSeverityString(this ErrorType errorType) =>
         errorType switch
         {
-            ErrorType.Validation => "warning",
-            ErrorType.BadRequest => "warning",
-            ErrorType.NotFound => "warning",
-            ErrorType.Conflict => "warning",
-            ErrorType.MethodNotAllowed => "warning",
-            ErrorType.NotAcceptable => "warning",
-            ErrorType.PayloadTooLarge => "warning",
-            ErrorType.UriTooLong => "warning",
-            ErrorType.UnsupportedMediaType => "warning",
-            ErrorType.RangeNotSatisfiable => "warning",
-            ErrorType.ExpectationFailed => "warning",
-            ErrorType.PreconditionFailed => "warning",
-            ErrorType.PreconditionRequired => "warning",
-            ErrorType.RequestHeadersTooLarge => "warning",
-            ErrorType.UnavailableForLegal => "warning",
-            _ => "error"
+            ErrorType.Validation or
+            ErrorType.BadRequest or
+            ErrorType.NotFound or
+            ErrorType.Conflict or
+            ErrorType.MethodNotAllowed or
+            ErrorType.NotAcceptable or
+            ErrorType.PayloadTooLarge or
+            ErrorType.UriTooLong or
+            ErrorType.UnsupportedMediaType or
+            ErrorType.RangeNotSatisfiable or
+            ErrorType.ExpectationFailed or
+            ErrorType.PreconditionFailed or
+            ErrorType.PreconditionRequired or
+            ErrorType.RequestHeadersTooLarge or
+            ErrorType.UnavailableForLegal => WarningSeverity,
+            _ => ErrorSeverity
         };
 
     /// <summary>Returns a lowercase category string (e.g., <c>"validation"</c>, <c>"security"</c>) for grouping errors in API responses.</summary>
@@ -73,41 +82,39 @@ public static class ErrorTypeExtensions
         errorType switch
         {
             // Validation & Input Errors
-            ErrorType.Validation => "validation",
-            ErrorType.BadRequest => "validation",
-            ErrorType.PayloadTooLarge => "validation",
-            ErrorType.UriTooLong => "validation",
-            ErrorType.UnsupportedMediaType => "validation",
-            ErrorType.RangeNotSatisfiable => "validation",
-            ErrorType.ExpectationFailed => "validation",
-            ErrorType.RequestHeadersTooLarge => "validation",
+            ErrorType.Validation or
+            ErrorType.BadRequest or
+            ErrorType.PayloadTooLarge or
+            ErrorType.UriTooLong or
+            ErrorType.UnsupportedMediaType or
+            ErrorType.RangeNotSatisfiable or
+            ErrorType.ExpectationFailed or
+            ErrorType.RequestHeadersTooLarge => ValidationCategory,
 
             // Business Logic Errors
-            ErrorType.NotFound => "business",
-            ErrorType.Conflict => "business",
-            ErrorType.MethodNotAllowed => "business",
-            ErrorType.NotAcceptable => "business",
-            ErrorType.PreconditionFailed => "business",
-            ErrorType.PreconditionRequired => "business",
-            ErrorType.UnavailableForLegal => "business",
+            ErrorType.NotFound or
+            ErrorType.Conflict or
+            ErrorType.MethodNotAllowed or
+            ErrorType.NotAcceptable or
+            ErrorType.PreconditionFailed or
+            ErrorType.PreconditionRequired or
+            ErrorType.UnavailableForLegal => BusinessCategory,
 
             // Security Errors
-            ErrorType.Unauthorized => "security",
-            ErrorType.Forbidden => "security",
-            ErrorType.NetworkAuthRequired => "security",
+            ErrorType.Unauthorized or
+            ErrorType.Forbidden or
+            ErrorType.NetworkAuthRequired => SecurityCategory,
 
             // Performance Errors
-            ErrorType.RateLimited => "performance",
-            ErrorType.RequestTimeout => "performance",
-            ErrorType.Timeout => "performance",
+            ErrorType.RateLimited or
+            ErrorType.RequestTimeout or
+            ErrorType.Timeout => PerformanceCategory,
 
             // Integration Errors
-            ErrorType.External => "integration",
+            ErrorType.External => IntegrationCategory,
 
             // System Errors
-            ErrorType.Internal => "system",
-
-            _ => "system"
+            _ => SystemCategory
         };
 
     /// <summary>
@@ -117,7 +124,7 @@ public static class ErrorTypeExtensions
     public static ReadOnlySpan<char> ToSeveritySpan(this ErrorType errorType) =>
         errorType switch
         {
-            ErrorType.Validation => "warning",
-            _ => "error"
+            ErrorType.Validation => WarningSeverity,
+            _ => ErrorSeverity
         };
 }

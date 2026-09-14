@@ -35,17 +35,17 @@ public static class SecurityHeaderPolicyExtensions
 
         if (useStrictCsp)
         {
-            ConfigureStrictCSP(policyCollection, environment, cspConfig);
+            ConfigureStrictCSP(policyCollection, cspConfig);
         }
         else
         {
-            ConfigurePermissiveCSP(policyCollection, environment, cspConfig);
+            ConfigurePermissiveCSP(policyCollection, cspConfig);
         }
 
         return app.UseSecurityHeaders(policyCollection);
     }
 
-    private static void ConfigurePermissiveCSP(HeaderPolicyCollection policyCollection, IWebHostEnvironment environment, CspConfiguration cspConfig)
+    private static void ConfigurePermissiveCSP(HeaderPolicyCollection policyCollection, CspConfiguration cspConfig)
     {
         policyCollection.AddContentSecurityPolicy(builder =>
         {
@@ -90,7 +90,7 @@ public static class SecurityHeaderPolicyExtensions
         });
     }
 
-    private static void ConfigureStrictCSP(HeaderPolicyCollection policyCollection, IWebHostEnvironment environment, CspConfiguration cspConfig)
+    private static void ConfigureStrictCSP(HeaderPolicyCollection policyCollection, CspConfiguration cspConfig)
     {
         policyCollection.AddContentSecurityPolicy(builder =>
         {

@@ -1893,5 +1893,11 @@
         <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.Dispose">
             <inheritdoc />
         </member>
+        <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:Acontplus.Reports.Services.ReportDefinitionCache"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
     </members>
 </doc>

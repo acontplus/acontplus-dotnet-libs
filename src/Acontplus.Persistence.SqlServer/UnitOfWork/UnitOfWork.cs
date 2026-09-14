@@ -199,9 +199,8 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to commit transaction");
                 await RollbackAsync(cancellationToken);
-                throw;
+                throw new UnitOfWorkException("Failed to commit transaction", ex);
             }
         }
 
@@ -222,8 +221,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to rollback transaction");
-                throw;
+                throw new UnitOfWorkException("Failed to rollback transaction", ex);
             }
         }
 

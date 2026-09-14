@@ -63,14 +63,11 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
         try
         {
             // Validate device headers if required
-            if (requirement.RequireDeviceValidation)
+            if (requirement.RequireDeviceValidation && !_deviceDetectionService.ValidateDeviceHeaders(httpContext))
             {
-                if (!_deviceDetectionService.ValidateDeviceHeaders(httpContext))
-                {
-                    _logger.LogWarning("Device header validation failed");
-                    context.Fail();
-                    return Task.CompletedTask;
-                }
+                _logger.LogWarning("Device header validation failed");
+                context.Fail();
+                return Task.CompletedTask;
             }
 
             // Detect device type

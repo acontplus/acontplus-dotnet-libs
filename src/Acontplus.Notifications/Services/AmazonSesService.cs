@@ -27,7 +27,6 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         RegexOptions.Compiled | RegexOptions.IgnoreCase,
         TimeSpan.FromMilliseconds(100));
 
-    private readonly IConfiguration _configuration;
     private readonly ILogger<AmazonSesService> _logger;
     private readonly IMemoryCache _templateCache;
     private readonly AmazonSimpleEmailServiceV2Client _sesClient;
@@ -58,15 +57,15 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         ILogger<AmazonSesService> logger,
         IMemoryCache? memoryCache = null)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _templateCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache), "IMemoryCache must be registered in DI container");
         _serviceStopwatch = Stopwatch.StartNew();
 
         // Initialize SES v2 client with configuration
-        var sesRegion = _configuration.GetValue("AWS:SES:Region", "us-east-1");
-        _defaultFromEmail = _configuration.GetValue<string>("AWS:SES:DefaultFromEmail");
-        _templatesPath = _configuration.GetValue<string>("Templates:Path") ??
+        var sesRegion = configuration.GetValue("AWS:SES:Region", "us-east-1");
+        _defaultFromEmail = configuration.GetValue<string>("AWS:SES:DefaultFromEmail");
+        _templatesPath = configuration.GetValue<string>("Templates:Path") ??
                          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates");
 
         var sesConfig = new AmazonSimpleEmailServiceV2Config
@@ -78,22 +77,22 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         };
 
         // Use IAM roles or AWS SDK default credential chain
-        var accessKey = _configuration.GetValue<string>("AWS:SES:AccessKey");
-        var secretKey = _configuration.GetValue<string>("AWS:SES:SecretKey");
+        var accessKey = configuration.GetValue<string>("AWS:SES:AccessKey");
+        var secretKey = configuration.GetValue<string>("AWS:SES:SecretKey");
 
         _sesClient = !string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey)
             ? new AmazonSimpleEmailServiceV2Client(accessKey, secretKey, sesConfig)
             : new AmazonSimpleEmailServiceV2Client(sesConfig);
 
         // Configure rate limiting
-        _maxSendRate = _configuration.GetValue("AWS:SES:MaxSendRate", DefaultMaxSendRate);
+        _maxSendRate = configuration.GetValue("AWS:SES:MaxSendRate", DefaultMaxSendRate);
         _rateLimitWindow = TimeSpan.FromSeconds(1);
         _rateLimitSemaphore = new SemaphoreSlim(_maxSendRate, _maxSendRate);
         _sendTimestamps = new ConcurrentQueue<DateTime>();
 
         // Bulk sending configuration
-        _batchSize = Math.Min(_configuration.GetValue("AWS:SES:BatchSize", DefaultBatchSize), MaxSesBulkRecipients);
-        _batchDelay = TimeSpan.FromMilliseconds(_configuration.GetValue("AWS:SES:BatchDelayMs", DefaultBatchDelayMs));
+        _batchSize = Math.Min(configuration.GetValue("AWS:SES:BatchSize", DefaultBatchSize), MaxSesBulkRecipients);
+        _batchDelay = TimeSpan.FromMilliseconds(configuration.GetValue("AWS:SES:BatchDelayMs", DefaultBatchDelayMs));
 
         // Configure retry policies with circuit breaker pattern
         _retryPolicy = CreateRetryPolicy();
@@ -119,7 +118,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
                 _logger.LogDebug("Sending email via SES v2 to {RecipientEmail}", email.RecipientEmail);
 
-                var response = await _sesClient.SendEmailAsync(sendRequest, ct).ConfigureAwait(false);
+                await _sesClient.SendEmailAsync(sendRequest, ct).ConfigureAwait(false);
 
                 RecordSendTimestamp();
                 return true;
@@ -127,9 +126,8 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Failed to send email to {RecipientEmail}", email.RecipientEmail);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            throw;
+            throw new InvalidOperationException($"Failed to send email to {email.RecipientEmail}", ex);
         }
     }
 
@@ -510,19 +508,16 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         {
             CleanupOldTimestamps();
 
-            if (_sendTimestamps.Count >= _maxSendRate)
+            if (_sendTimestamps.Count >= _maxSendRate && _sendTimestamps.TryPeek(out var oldestTimestamp))
             {
-                if (_sendTimestamps.TryPeek(out var oldestTimestamp))
+                var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
+                if (timeToWait > TimeSpan.Zero)
                 {
-                    var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
-                    if (timeToWait > TimeSpan.Zero)
-                    {
-                        _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}",
-                            _sendTimestamps.Count, _maxSendRate, timeToWait);
+                    _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}",
+                        _sendTimestamps.Count, _maxSendRate, timeToWait);
 
-                        await Task.Delay(timeToWait, ct).ConfigureAwait(false);
-                        CleanupOldTimestamps();
-                    }
+                    await Task.Delay(timeToWait, ct).ConfigureAwait(false);
+                    CleanupOldTimestamps();
                 }
             }
         }
@@ -767,7 +762,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         }
     }
 
-    private Activity? StartActivity([CallerMemberName] string operationName = "")
+    private Activity? StartActivity(string operationName)
     {
         var activity = new Activity(operationName);
         activity.SetTag("service", "AmazonSES");

@@ -53,6 +53,7 @@ public abstract class Entity<TId> : IEntityWithDomainEvents where TId : notnull
     /// <param name="a">The first entity to compare.</param>
     /// <param name="b">The second entity to compare.</param>
     /// <returns>true if the entities are equal; otherwise, false.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S3875:\"operator==\" should not be overloaded on reference types", Justification = "Entities in DDD define identity-based equality via Id, which is the expected domain semantic.")]
     public static bool operator ==(Entity<TId>? a, Entity<TId>? b)
     {
         return a is null && b is null || a is not null && b is not null && a.Equals(b);

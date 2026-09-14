@@ -67,17 +67,14 @@ public static class PictureHelper
     public static string? TryGetExtension(byte[] array)
     {
         // check for simple formats first
-        foreach (var imageFormat in ImageFormats)
+        foreach (var imageFormat in ImageFormats.Where(f => array.IsImage(f.magic)))
         {
-            if (array.IsImage(imageFormat.magic))
+            if (imageFormat.magic != Svg_xml_small && imageFormat.magic != Svg_xml_capital)
             {
-                if (imageFormat.magic != Svg_xml_small && imageFormat.magic != Svg_xml_capital)
-                {
-                    return imageFormat.extension;
-                }
-
-                return MatchesSvgXml(array, imageFormat.magic.Count) ? imageFormat.extension : null;
+                return imageFormat.extension;
             }
+
+            return MatchesSvgXml(array, imageFormat.magic.Count) ? imageFormat.extension : null;
         }
 
         return null;

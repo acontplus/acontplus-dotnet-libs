@@ -79,9 +79,7 @@ public static class OpenTelemetryExtensions
             else
             {
                 // UseOtlpExporter registers OTLP for all three signals (traces, metrics, logs) in one call.
-                var protocol = options.OtlpProtocol.ToLowerInvariant() == "http"
-                    ? OtlpExportProtocol.HttpProtobuf
-                    : OtlpExportProtocol.Grpc;
+                var protocol = ResolveOtlpProtocol(options.OtlpProtocol);
                 otelBuilder.UseOtlpExporter(protocol, new Uri(options.OtlpEndpoint));
             }
         }
@@ -186,9 +184,7 @@ public static class OpenTelemetryExtensions
             builder.AddOtlpExporter(otlpOptions =>
             {
                 otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = options.OtlpProtocol.ToLowerInvariant() == "http"
-                    ? OtlpExportProtocol.HttpProtobuf
-                    : OtlpExportProtocol.Grpc;
+                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
             });
         }
 
@@ -256,9 +252,7 @@ public static class OpenTelemetryExtensions
             builder.AddOtlpExporter(otlpOptions =>
             {
                 otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = options.OtlpProtocol.ToLowerInvariant() == "http"
-                    ? OtlpExportProtocol.HttpProtobuf
-                    : OtlpExportProtocol.Grpc;
+                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
             });
         }
 
@@ -292,9 +286,7 @@ public static class OpenTelemetryExtensions
             builder.AddOtlpExporter(otlpOptions =>
             {
                 otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = options.OtlpProtocol.ToLowerInvariant() == "http"
-                    ? OtlpExportProtocol.HttpProtobuf
-                    : OtlpExportProtocol.Grpc;
+                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
             });
         }
 
@@ -386,4 +378,9 @@ public static class OpenTelemetryExtensions
         services.AddSingleton(_ => new Meter(meterName, version));
         return services;
     }
+
+    private static OtlpExportProtocol ResolveOtlpProtocol(string protocol) =>
+        string.Equals(protocol, "http", StringComparison.OrdinalIgnoreCase)
+            ? OtlpExportProtocol.HttpProtobuf
+            : OtlpExportProtocol.Grpc;
 }

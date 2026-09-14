@@ -1051,6 +1051,174 @@
             Implementation of device detection service for identifying device types and capabilities.
             </summary>
         </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.MobilePattern">
+            <remarks>
+            Pattern:<br/>
+            <code>(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)</code><br/>
+            Options:<br/>
+            <code>RegexOptions.IgnoreCase</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ 1st capture group.<br/>
+                ○ Match with 6 alternative expressions, atomically.<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Mm].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Bb].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Ll].<br/>
+                        ○ Match a character in the set [Ee].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                        ○ Match a character in the set [Rr].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Pp].<br/>
+                        ○ Match with 3 alternative expressions, atomically.<br/>
+                            ○ Match a sequence of expressions.<br/>
+                                ○ Match a character in the set [Hh].<br/>
+                                ○ Match a character in the set [Oo].<br/>
+                                ○ Match a character in the set [Nn].<br/>
+                                ○ Match a character in the set [Ee].<br/>
+                            ○ Match a sequence of expressions.<br/>
+                                ○ Match a character in the set [Aa].<br/>
+                                ○ Match a character in the set [Dd].<br/>
+                            ○ Match a sequence of expressions.<br/>
+                                ○ Match a character in the set [Oo].<br/>
+                                ○ Match a character in the set [Dd].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Bb].<br/>
+                        ○ Match a character in the set [Ll].<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Cc].<br/>
+                        ○ Match a character in the set [Kk\u212A].<br/>
+                        ○ Match a character in the set [Bb].<br/>
+                        ○ Match a character in the set [Ee].<br/>
+                        ○ Match a character in the set [Rr] exactly 2 times.<br/>
+                        ○ Match a character in the set [Yy].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Ww].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Ww].<br/>
+                        ○ Match a character in the set [Ss].<br/>
+                        ○ Match ' '.<br/>
+                        ○ Match a character in the set [Pp].<br/>
+                        ○ Match a character in the set [Hh].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Ee].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Pp].<br/>
+                        ○ Match a character in the set [Ee].<br/>
+                        ○ Match a character in the set [Rr].<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match ' '.<br/>
+                        ○ Match a character in the set [Mm].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.TabletPattern">
+            <remarks>
+            Pattern:<br/>
+            <code>(iPad|Android(?!.*Mobile)|Tablet)</code><br/>
+            Options:<br/>
+            <code>RegexOptions.IgnoreCase</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ 1st capture group.<br/>
+                ○ Match with 3 alternative expressions, atomically.<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Pp].<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                        ○ Match a character in the set [Rr].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                        ○ Zero-width negative lookahead.<br/>
+                            ○ Match a character other than '\n' greedily any number of times.<br/>
+                            ○ Match a character in the set [Mm].<br/>
+                            ○ Match a character in the set [Oo].<br/>
+                            ○ Match a character in the set [Bb].<br/>
+                            ○ Match a character in the set [Ii].<br/>
+                            ○ Match a character in the set [Ll].<br/>
+                            ○ Match a character in the set [Ee].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Tt].<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Bb].<br/>
+                        ○ Match a character in the set [Ll].<br/>
+                        ○ Match a character in the set [Ee].<br/>
+                        ○ Match a character in the set [Tt].<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.DesktopPattern">
+            <remarks>
+            Pattern:<br/>
+            <code>(Windows NT|Macintosh|Linux(?!.*Android))</code><br/>
+            Options:<br/>
+            <code>RegexOptions.IgnoreCase</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ 1st capture group.<br/>
+                ○ Match with 3 alternative expressions, atomically.<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Ww].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Dd].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Ww].<br/>
+                        ○ Match a character in the set [Ss].<br/>
+                        ○ Match ' '.<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Tt].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Mm].<br/>
+                        ○ Match a character in the set [Aa].<br/>
+                        ○ Match a character in the set [Cc].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Tt].<br/>
+                        ○ Match a character in the set [Oo].<br/>
+                        ○ Match a character in the set [Ss].<br/>
+                        ○ Match a character in the set [Hh].<br/>
+                    ○ Match a sequence of expressions.<br/>
+                        ○ Match a character in the set [Ll].<br/>
+                        ○ Match a character in the set [Ii].<br/>
+                        ○ Match a character in the set [Nn].<br/>
+                        ○ Match a character in the set [Uu].<br/>
+                        ○ Match a character in the set [Xx].<br/>
+                        ○ Zero-width negative lookahead.<br/>
+                            ○ Match a character other than '\n' greedily any number of times.<br/>
+                            ○ Match a character in the set [Aa].<br/>
+                            ○ Match a character in the set [Nn].<br/>
+                            ○ Match a character in the set [Dd].<br/>
+                            ○ Match a character in the set [Rr].<br/>
+                            ○ Match a character in the set [Oo].<br/>
+                            ○ Match a character in the set [Ii].<br/>
+                            ○ Match a character in the set [Dd].<br/>
+            </code>
+            </remarks>
+        </member>
         <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.DeviceDetectionService})">
             <summary>
             Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.DeviceDetectionService"/> class.
@@ -1151,6 +1319,114 @@
         </member>
         <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.GetRecommendedHeaders(System.Boolean)">
             <inheritdoc />
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.MobilePattern_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the MobilePattern method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.MobilePattern_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.MobilePattern_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.MobilePattern_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TabletPattern_1">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the TabletPattern method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.TabletPattern_1.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TabletPattern_1.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.TabletPattern_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.DesktopPattern_2">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the DesktopPattern method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.DesktopPattern_2.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.DesktopPattern_2.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.DesktopPattern_2.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_indexOfAnyStrings_OrdinalIgnoreCase_1743A99BF6FE8ADCDFD1512EFC35E64658FCD76B451F1F08C6763AEC246952E1">
+            <summary>Supports searching for the specified strings.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_indexOfAnyStrings_OrdinalIgnoreCase_34FCF024E46BCDEAF086CFB052A91EF3CCFBBB32B54D4B47CCB6368C91193AA7">
+            <summary>Supports searching for the specified strings.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_indexOfAnyStrings_OrdinalIgnoreCase_36E794949D7F86A8C0EDF682EC4E0F2C022F44CE02AB32F8998AA459F23C0F7C">
+            <summary>Supports searching for the specified strings.</summary>
         </member>
     </members>
 </doc>

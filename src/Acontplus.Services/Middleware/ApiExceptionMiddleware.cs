@@ -267,7 +267,7 @@ public class ApiExceptionMiddleware
         }
 
         var logLevel = GetLogLevel(ex);
-        _logger.Log(logLevel, ex, logMessage.ToString());
+        _logger.Log(logLevel, ex, "{LogDetails}", logMessage.ToString());
     }
 
     private static LogLevel GetLogLevel(Exception ex)

@@ -96,7 +96,7 @@ public static class DataTableMapper
             }
         }
 
-        if (requiredPropertiesNotSet.Any())
+        if (requiredPropertiesNotSet.Count > 0)
         {
             throw new InvalidOperationException(
                 $"Required properties not set: {string.Join(", ", requiredPropertiesNotSet)}");
@@ -159,20 +159,7 @@ public static class DataTableMapper
             // Handle special cases first
             if (underlyingType == typeof(bool))
             {
-                if (value is string strValue)
-                {
-                    if (bool.TryParse(strValue, out var boolResult))
-                        return boolResult;
-                    // Handle common boolean string representations
-                    return strValue.ToLowerInvariant() switch
-                    {
-                        "1" or "yes" or "y" => true,
-                        "0" or "no" or "n" => false,
-                        _ => false
-                    };
-                }
-                if (value is int intValue)
-                    return intValue != 0;
+                return ConvertBooleanValue(value) ?? false;
             }
 
             if (underlyingType == typeof(int) && value is string intStr)
@@ -180,33 +167,15 @@ public static class DataTableMapper
                 return int.TryParse(intStr, out var intResult) ? intResult : 0;
             }
 
-            if (underlyingType == typeof(byte[]) && value is string base64Str)
+            if (underlyingType == typeof(byte[]))
             {
-                try
-                {
-                    return Convert.FromBase64String(base64Str);
-                }
-                catch
-                {
-                    return null;
-                }
+                return ConvertByteArrayValue(value);
             }
 
             // Handle List<T> types
             if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
             {
-                if (value is string jsonStr)
-                {
-                    try
-                    {
-                        return JsonSerializer.Deserialize(jsonStr, targetType, JsonExtensions.DefaultOptions);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
-                return null;
+                return ConvertListValue(value, targetType);
             }
 
             // Handle string to string conversion explicitly to avoid unnecessary Convert.ChangeType
@@ -226,6 +195,59 @@ public static class DataTableMapper
             // Return default value for value types, null for reference types
             return underlyingType.IsValueType ? Activator.CreateInstance(underlyingType) : null;
         }
+    }
+
+    private static object? ConvertBooleanValue(object value)
+    {
+        if (value is string strValue)
+        {
+            if (bool.TryParse(strValue, out var boolResult))
+                return boolResult;
+
+            return strValue.ToLowerInvariant() switch
+            {
+                "1" or "yes" or "y" => true,
+                "0" or "no" or "n" => false,
+                _ => false
+            };
+        }
+
+        if (value is int intValue)
+            return intValue != 0;
+
+        return null;
+    }
+
+    private static byte[]? ConvertByteArrayValue(object value)
+    {
+        if (value is string base64Str)
+        {
+            try
+            {
+                return Convert.FromBase64String(base64Str);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static object? ConvertListValue(object value, Type targetType)
+    {
+        if (value is string jsonStr)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize(jsonStr, targetType, JsonExtensions.DefaultOptions);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static bool IsNullableType(Type type)

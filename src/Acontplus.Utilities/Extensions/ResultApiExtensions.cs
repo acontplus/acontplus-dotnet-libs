@@ -140,6 +140,108 @@ public static class ResultApiExtensions
         );
     }
 
+    /// <summary>
+    /// Converts a result to an <see cref="IActionResult"/>.
+    /// </summary>
+    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static IActionResult ToActionResult<TValue>(
+        this SuccessWithWarnings<TValue> successWithWarnings,
+        string? correlationId = null)
+    {
+        return successWithWarnings.Warnings.HasWarnings
+            ? CreateWarningResponse(
+                successWithWarnings.Value,
+                successWithWarnings.Warnings,
+                correlationId)
+            : CreateSuccessResponse(successWithWarnings.Value, correlationId);
+    }
+
+    // New overload to accept success message
+    /// <summary>
+    /// Converts a result to an <see cref="IActionResult"/>.
+    /// </summary>
+    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
+    /// <param name="successMessage">Optional custom success message.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static IActionResult ToActionResult<TValue>(
+        this SuccessWithWarnings<TValue> successWithWarnings,
+        string successMessage,
+        string? correlationId = null)
+    {
+        return successWithWarnings.Warnings.HasWarnings
+            ? CreateWarningResponse(
+                successWithWarnings.Value,
+                successWithWarnings.Warnings,
+                correlationId) // warnings don't carry message currently
+            : CreateSuccessResponse(successWithWarnings.Value, successMessage, correlationId);
+    }
+
+    /// <summary>
+    /// Converts ApiResponse&lt;T&gt; to IActionResult
+    /// </summary>
+    public static IActionResult ToActionResult<T>(this ApiResponse<T> response)
+    {
+        return response.ToBaseResponse().ToActionResult();
+    }
+
+    /// <summary>
+    /// Converts base ApiResponse to IActionResult with full status code support
+    /// </summary>
+    public static IActionResult ToActionResult(this ApiResponse response)
+    {
+        return response.StatusCode switch
+        {
+            // Success (2xx)
+            HttpStatusCode.OK => new OkObjectResult(response),
+            HttpStatusCode.Created => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Created },
+            HttpStatusCode.Accepted => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Accepted },
+            HttpStatusCode.NoContent => new NoContentResult(),
+
+            // Client Errors (4xx)
+            HttpStatusCode.BadRequest => new BadRequestObjectResult(response),
+            HttpStatusCode.Unauthorized => new UnauthorizedObjectResult(response),
+            HttpStatusCode.Forbidden => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Forbidden },
+            HttpStatusCode.NotFound => new NotFoundObjectResult(response),
+            HttpStatusCode.Conflict => new ConflictObjectResult(response),
+            HttpStatusCode.UnprocessableEntity => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.UnprocessableEntity },
+            HttpStatusCode.TooManyRequests => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.TooManyRequests },
+            HttpStatusCode.RequestEntityTooLarge => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.RequestEntityTooLarge },
+            HttpStatusCode.RequestUriTooLong => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.RequestUriTooLong },
+            HttpStatusCode.UnsupportedMediaType => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.UnsupportedMediaType },
+            (HttpStatusCode)428 => new ObjectResult(response) { StatusCode = 428 }, // PreconditionRequired
+            (HttpStatusCode)431 => new ObjectResult(response) { StatusCode = 431 }, // RequestHeaderFieldsTooLarge
+            (HttpStatusCode)451 => new ObjectResult(response) { StatusCode = 451 }, // UnavailableForLegalReasons
+
+            // Server Errors (5xx)
+            HttpStatusCode.InternalServerError => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.InternalServerError },
+            HttpStatusCode.NotImplemented => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.NotImplemented },
+            HttpStatusCode.BadGateway => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.BadGateway },
+            HttpStatusCode.ServiceUnavailable => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.ServiceUnavailable },
+            HttpStatusCode.GatewayTimeout => new ObjectResult(response)
+            { StatusCode = (int)HttpStatusCode.GatewayTimeout },
+            (HttpStatusCode)507 => new ObjectResult(response) { StatusCode = 507 }, // InsufficientStorage
+            (HttpStatusCode)508 => new ObjectResult(response) { StatusCode = 508 }, // LoopDetected
+            (HttpStatusCode)510 => new ObjectResult(response) { StatusCode = 510 }, // NotExtended
+            (HttpStatusCode)511 => new ObjectResult(response) { StatusCode = 511 }, // NetworkAuthenticationRequired
+
+            _ => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.InternalServerError }
+        };
+    }
+
     #endregion
 
     #region Async Action Results
@@ -357,6 +459,98 @@ public static class ResultApiExtensions
         );
     }
 
+    /// <summary>
+    /// Converts a result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToMinimalApiResult<TValue>(
+        this SuccessWithWarnings<TValue> successWithWarnings,
+        string? correlationId = null)
+    {
+        return successWithWarnings.Warnings.HasWarnings
+            ? CreateWarningResult(
+                successWithWarnings.Value,
+                successWithWarnings.Warnings,
+                correlationId)
+            : CreateSuccessResult(successWithWarnings.Value, correlationId);
+    }
+
+    // New overload to accept success message for minimal API
+    /// <summary>
+    /// Converts a result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
+    /// <param name="successMessage">Optional custom success message.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToMinimalApiResult<TValue>(
+        this SuccessWithWarnings<TValue> successWithWarnings,
+        string successMessage,
+        string? correlationId = null)
+    {
+        return successWithWarnings.Warnings.HasWarnings
+            ? CreateWarningResult(
+                successWithWarnings.Value,
+                successWithWarnings.Warnings,
+                correlationId) // warnings don't carry message currently
+            : CreateSuccessResult(successWithWarnings.Value, successMessage, correlationId);
+    }
+
+    /// <summary>
+    /// Converts ApiResponse&lt;T&gt; to IResult (for Minimal APIs)
+    /// </summary>
+    public static IResult ToMinimalApiResult<T>(this ApiResponse<T> response)
+    {
+        return response.ToBaseResponse().ToMinimalApiResult();
+    }
+
+    /// <summary>
+    /// Converts ApiResponse to IResult for Minimal APIs
+    /// </summary>
+    public static IResult ToMinimalApiResult(this ApiResponse response)
+    {
+        return response.StatusCode switch
+        {
+            // Success (2xx)
+            HttpStatusCode.OK => TypedResults.Ok(response),
+            HttpStatusCode.Created => TypedResults.Created(string.Empty, response),
+            HttpStatusCode.Accepted => TypedResults.Accepted(string.Empty, response),
+            HttpStatusCode.NoContent => TypedResults.NoContent(),
+
+            // Client Errors (4xx)
+            HttpStatusCode.BadRequest => TypedResults.BadRequest(response),
+            HttpStatusCode.Unauthorized => TypedResults.Json(response, statusCode: 401),
+            HttpStatusCode.Forbidden => TypedResults.Json(response, statusCode: 403),
+            HttpStatusCode.NotFound => TypedResults.NotFound(response),
+            HttpStatusCode.Conflict => TypedResults.Conflict(response),
+            HttpStatusCode.UnprocessableEntity => TypedResults.UnprocessableEntity(response),
+            HttpStatusCode.TooManyRequests => TypedResults.Json(response, statusCode: 429),
+            HttpStatusCode.RequestEntityTooLarge => TypedResults.Json(response, statusCode: 413),
+            HttpStatusCode.RequestUriTooLong => TypedResults.Json(response, statusCode: 414),
+            HttpStatusCode.UnsupportedMediaType => TypedResults.Json(response, statusCode: 415),
+            (HttpStatusCode)428 => TypedResults.Json(response, statusCode: 428), // PreconditionRequired
+            (HttpStatusCode)431 => TypedResults.Json(response, statusCode: 431), // RequestHeaderFieldsTooLarge
+            (HttpStatusCode)451 => TypedResults.Json(response, statusCode: 451), // UnavailableForLegalReasons
+
+            // Server Errors (5xx)
+            HttpStatusCode.InternalServerError => TypedResults.Json(response, statusCode: 500),
+            HttpStatusCode.NotImplemented => TypedResults.Json(response, statusCode: 501),
+            HttpStatusCode.BadGateway => TypedResults.Json(response, statusCode: 502),
+            HttpStatusCode.ServiceUnavailable => TypedResults.Json(response, statusCode: 503),
+            HttpStatusCode.GatewayTimeout => TypedResults.Json(response, statusCode: 504),
+            (HttpStatusCode)507 => TypedResults.Json(response, statusCode: 507), // InsufficientStorage
+            (HttpStatusCode)508 => TypedResults.Json(response, statusCode: 508), // LoopDetected
+            (HttpStatusCode)510 => TypedResults.Json(response, statusCode: 510), // NotExtended
+            (HttpStatusCode)511 => TypedResults.Json(response, statusCode: 511), // NetworkAuthenticationRequired
+
+            _ => TypedResults.Json(response, statusCode: 500)
+        };
+    }
+
     #endregion
 
     #region Async Minimal API Results
@@ -461,91 +655,6 @@ public static class ResultApiExtensions
 
     #endregion
 
-    #region SuccessWithWarnings Extensions
-
-    /// <summary>
-    /// Converts a result to an <see cref="IActionResult"/>.
-    /// </summary>
-    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
-    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static IActionResult ToActionResult<TValue>(
-        this SuccessWithWarnings<TValue> successWithWarnings,
-        string? correlationId = null)
-    {
-        return successWithWarnings.Warnings.HasWarnings
-            ? CreateWarningResponse(
-                successWithWarnings.Value,
-                successWithWarnings.Warnings,
-                correlationId)
-            : CreateSuccessResponse(successWithWarnings.Value, correlationId);
-    }
-
-    // New overload to accept success message
-    /// <summary>
-    /// Converts a result to an <see cref="IActionResult"/>.
-    /// </summary>
-    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
-    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
-    /// <param name="successMessage">Optional custom success message.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static IActionResult ToActionResult<TValue>(
-        this SuccessWithWarnings<TValue> successWithWarnings,
-        string successMessage,
-        string? correlationId = null)
-    {
-        return successWithWarnings.Warnings.HasWarnings
-            ? CreateWarningResponse(
-                successWithWarnings.Value,
-                successWithWarnings.Warnings,
-                correlationId) // warnings don't carry message currently
-            : CreateSuccessResponse(successWithWarnings.Value, successMessage, correlationId);
-    }
-
-    /// <summary>
-    /// Converts a result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
-    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToMinimalApiResult<TValue>(
-        this SuccessWithWarnings<TValue> successWithWarnings,
-        string? correlationId = null)
-    {
-        return successWithWarnings.Warnings.HasWarnings
-            ? CreateWarningResult(
-                successWithWarnings.Value,
-                successWithWarnings.Warnings,
-                correlationId)
-            : CreateSuccessResult(successWithWarnings.Value, correlationId);
-    }
-
-    // New overload to accept success message for minimal API
-    /// <summary>
-    /// Converts a result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <typeparam name="TValue">The underlying entity or payload type.</typeparam>
-    /// <param name="successWithWarnings">The success object containing value and warnings.</param>
-    /// <param name="successMessage">Optional custom success message.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToMinimalApiResult<TValue>(
-        this SuccessWithWarnings<TValue> successWithWarnings,
-        string successMessage,
-        string? correlationId = null)
-    {
-        return successWithWarnings.Warnings.HasWarnings
-            ? CreateWarningResult(
-                successWithWarnings.Value,
-                successWithWarnings.Warnings,
-                correlationId) // warnings don't carry message currently
-            : CreateSuccessResult(successWithWarnings.Value, successMessage, correlationId);
-    }
-
-    #endregion
 
     #region CRUD-Specific Extensions (Synchronous)
 
@@ -564,120 +673,6 @@ public static class ResultApiExtensions
         );
     }
 
-    // POST: 201 Created (with Location header)
-    /// <summary>
-    /// Executes the ToCreatedActionResult operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <param name="locationUri">The locationUri parameter.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static IActionResult ToCreatedActionResult<T>(this Result<T, DomainError> result, string locationUri)
-    {
-        return result.Match<IActionResult>(
-            value => CreateCreatedActionResult(value, locationUri),
-            error => error.ToApiResponse<T>(null, null).ToActionResult()
-        );
-    }
-
-    // PUT: 200 OK or 204 NoContent
-    /// <summary>
-    /// Executes the ToPutActionResult operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static IActionResult ToPutActionResult<T>(this Result<T, DomainError> result)
-    {
-        return result.Match<IActionResult>(
-            value => CreatePutActionResult(value),
-            error => error.ToApiResponse<T>(null, null).ToActionResult()
-        );
-    }
-
-    // DELETE: 204 NoContent or 404 NotFound
-    /// <summary>
-    /// Converts a DELETE operation result to an <see cref="IActionResult"/> (200 OK or 204 No Content).
-    /// </summary>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static IActionResult ToDeleteActionResult(this Result<bool, DomainError> result)
-    {
-        return result.Match<IActionResult>(
-            deleted => CreateDeleteActionResult(deleted),
-            error => error.ToApiResponse<bool>(null, null).ToActionResult()
-        );
-    }
-
-    // Minimal API: GET: 200 OK or 204 NoContent
-    /// <summary>
-    /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToGetMinimalApiResult<T>(this Result<T, DomainError> result, string? correlationId = null)
-    {
-        return result.Match<IResult>(
-            value => CreateGetMinimalApiResult(value),
-            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
-        );
-    }
-
-    // Minimal API: POST: 201 Created (with Location header)
-    /// <summary>
-    /// Executes the ToCreatedMinimalApiResult operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <param name="locationUri">The locationUri parameter.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToCreatedMinimalApiResult<T>(this Result<T, DomainError> result, string locationUri, string? correlationId = null)
-    {
-        return result.Match<IResult>(
-            value => CreateCreatedMinimalApiResult(value, locationUri),
-            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
-        );
-    }
-
-    // Minimal API: PUT: 200 OK or 204 NoContent
-    /// <summary>
-    /// Executes the ToPutMinimalApiResult operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToPutMinimalApiResult<T>(this Result<T, DomainError> result, string? correlationId = null)
-    {
-        return result.Match<IResult>(
-            value => CreatePutMinimalApiResult(value),
-            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
-        );
-    }
-
-    // Minimal API: DELETE: 204 NoContent or 404 NotFound
-    /// <summary>
-    /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <param name="result">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static IResult ToDeleteMinimalApiResult(this Result<bool, DomainError> result, string? correlationId = null)
-    {
-        return result.Match<IResult>(
-            deleted => CreateDeleteMinimalApiResult(deleted),
-            error => error.ToApiResponse<bool>(correlationId).ToMinimalApiResult()
-        );
-    }
-
-    #endregion
-
-    #region CRUD-Specific Extensions for DomainErrors (Synchronous)
-
-    // GET: 200 OK or 204 NoContent
     /// <summary>
     /// Converts a GET operation result to an <see cref="IActionResult"/> (200 OK or error response).
     /// </summary>
@@ -700,6 +695,21 @@ public static class ResultApiExtensions
     /// <param name="result">The source domain result or asynchronous result task.</param>
     /// <param name="locationUri">The locationUri parameter.</param>
     /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static IActionResult ToCreatedActionResult<T>(this Result<T, DomainError> result, string locationUri)
+    {
+        return result.Match<IActionResult>(
+            value => CreateCreatedActionResult(value, locationUri),
+            error => error.ToApiResponse<T>(null, null).ToActionResult()
+        );
+    }
+
+    /// <summary>
+    /// Executes the ToCreatedActionResult operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <param name="locationUri">The locationUri parameter.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
     public static IActionResult ToCreatedActionResult<T>(this Result<T, DomainErrors> result, string locationUri)
     {
         return result.Match<IActionResult>(
@@ -709,6 +719,20 @@ public static class ResultApiExtensions
     }
 
     // PUT: 200 OK or 204 NoContent
+    /// <summary>
+    /// Executes the ToPutActionResult operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static IActionResult ToPutActionResult<T>(this Result<T, DomainError> result)
+    {
+        return result.Match<IActionResult>(
+            value => CreatePutActionResult(value),
+            error => error.ToApiResponse<T>(null, null).ToActionResult()
+        );
+    }
+
     /// <summary>
     /// Executes the ToPutActionResult operation.
     /// </summary>
@@ -729,6 +753,19 @@ public static class ResultApiExtensions
     /// </summary>
     /// <param name="result">The source domain result or asynchronous result task.</param>
     /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static IActionResult ToDeleteActionResult(this Result<bool, DomainError> result)
+    {
+        return result.Match<IActionResult>(
+            deleted => CreateDeleteActionResult(deleted),
+            error => error.ToApiResponse<bool>(null, null).ToActionResult()
+        );
+    }
+
+    /// <summary>
+    /// Converts a DELETE operation result to an <see cref="IActionResult"/> (200 OK or 204 No Content).
+    /// </summary>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
     public static IActionResult ToDeleteActionResult(this Result<bool, DomainErrors> result)
     {
         return result.Match<IActionResult>(
@@ -738,6 +775,21 @@ public static class ResultApiExtensions
     }
 
     // Minimal API: GET: 200 OK or 204 NoContent
+    /// <summary>
+    /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToGetMinimalApiResult<T>(this Result<T, DomainError> result, string? correlationId = null)
+    {
+        return result.Match<IResult>(
+            value => CreateGetMinimalApiResult(value),
+            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
+        );
+    }
+
     /// <summary>
     /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
     /// </summary>
@@ -762,6 +814,22 @@ public static class ResultApiExtensions
     /// <param name="locationUri">The locationUri parameter.</param>
     /// <param name="correlationId">Optional correlation ID for request tracing.</param>
     /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToCreatedMinimalApiResult<T>(this Result<T, DomainError> result, string locationUri, string? correlationId = null)
+    {
+        return result.Match<IResult>(
+            value => CreateCreatedMinimalApiResult(value, locationUri),
+            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
+        );
+    }
+
+    /// <summary>
+    /// Executes the ToCreatedMinimalApiResult operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <param name="locationUri">The locationUri parameter.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
     public static IResult ToCreatedMinimalApiResult<T>(this Result<T, DomainErrors> result, string locationUri, string? correlationId = null)
     {
         return result.Match<IResult>(
@@ -778,6 +846,21 @@ public static class ResultApiExtensions
     /// <param name="result">The source domain result or asynchronous result task.</param>
     /// <param name="correlationId">Optional correlation ID for request tracing.</param>
     /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToPutMinimalApiResult<T>(this Result<T, DomainError> result, string? correlationId = null)
+    {
+        return result.Match<IResult>(
+            value => CreatePutMinimalApiResult(value),
+            error => error.ToApiResponse<T>(correlationId).ToMinimalApiResult()
+        );
+    }
+
+    /// <summary>
+    /// Executes the ToPutMinimalApiResult operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
     public static IResult ToPutMinimalApiResult<T>(this Result<T, DomainErrors> result, string? correlationId = null)
     {
         return result.Match<IResult>(
@@ -787,6 +870,20 @@ public static class ResultApiExtensions
     }
 
     // Minimal API: DELETE: 204 NoContent or 404 NotFound
+    /// <summary>
+    /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <param name="result">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static IResult ToDeleteMinimalApiResult(this Result<bool, DomainError> result, string? correlationId = null)
+    {
+        return result.Match<IResult>(
+            deleted => CreateDeleteMinimalApiResult(deleted),
+            error => error.ToApiResponse<bool>(correlationId).ToMinimalApiResult()
+        );
+    }
+
     /// <summary>
     /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
     /// </summary>
@@ -818,106 +915,6 @@ public static class ResultApiExtensions
         return result.ToGetActionResult();
     }
 
-    // POST: 201 Created (async)
-    /// <summary>
-    /// Executes the ToCreatedActionResultAsync operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <param name="locationUri">The locationUri parameter.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static async Task<IActionResult> ToCreatedActionResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string locationUri)
-    {
-        var result = await resultTask;
-        return result.ToCreatedActionResult(locationUri);
-    }
-
-    // PUT: 200 OK or 204 NoContent (async)
-    /// <summary>
-    /// Executes the ToPutActionResultAsync operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static async Task<IActionResult> ToPutActionResultAsync<T>(this Task<Result<T, DomainError>> resultTask)
-    {
-        var result = await resultTask;
-        return result.ToPutActionResult();
-    }
-
-    // DELETE: 204 NoContent or 404 NotFound (async)
-    /// <summary>
-    /// Converts a DELETE operation result to an <see cref="IActionResult"/> (200 OK or 204 No Content).
-    /// </summary>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
-    public static async Task<IActionResult> ToDeleteActionResultAsync(this Task<Result<bool, DomainError>> resultTask)
-    {
-        var result = await resultTask;
-        return result.ToDeleteActionResult();
-    }
-
-    // Minimal API: GET: 200 OK or 204 NoContent (async)
-    /// <summary>
-    /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static async Task<IResult> ToGetMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string? correlationId = null)
-    {
-        var result = await resultTask;
-        return result.ToGetMinimalApiResult(correlationId);
-    }
-
-    // Minimal API: POST: 201 Created (async)
-    /// <summary>
-    /// Executes the ToCreatedMinimalApiResultAsync operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <param name="locationUri">The locationUri parameter.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static async Task<IResult> ToCreatedMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string locationUri, string? correlationId = null)
-    {
-        var result = await resultTask;
-        return result.ToCreatedMinimalApiResult(locationUri, correlationId);
-    }
-
-    // Minimal API: PUT: 200 OK or 204 NoContent (async)
-    /// <summary>
-    /// Executes the ToPutMinimalApiResultAsync operation.
-    /// </summary>
-    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static async Task<IResult> ToPutMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string? correlationId = null)
-    {
-        var result = await resultTask;
-        return result.ToPutMinimalApiResult(correlationId);
-    }
-
-    // Minimal API: DELETE: 204 NoContent or 404 NotFound (async)
-    /// <summary>
-    /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
-    /// </summary>
-    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
-    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
-    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
-    public static async Task<IResult> ToDeleteMinimalApiResultAsync(this Task<Result<bool, DomainError>> resultTask, string? correlationId = null)
-    {
-        var result = await resultTask;
-        return result.ToDeleteMinimalApiResult(correlationId);
-    }
-
-    #endregion
-
-    #region CRUD-Specific Extensions for DomainErrors (Async)
-
-    // GET: 200 OK or 204 NoContent (async)
     /// <summary>
     /// Converts a GET operation result to an <see cref="IActionResult"/> (200 OK or error response).
     /// </summary>
@@ -938,6 +935,19 @@ public static class ResultApiExtensions
     /// <param name="resultTask">The source domain result or asynchronous result task.</param>
     /// <param name="locationUri">The locationUri parameter.</param>
     /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static async Task<IActionResult> ToCreatedActionResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string locationUri)
+    {
+        var result = await resultTask;
+        return result.ToCreatedActionResult(locationUri);
+    }
+
+    /// <summary>
+    /// Executes the ToCreatedActionResultAsync operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <param name="locationUri">The locationUri parameter.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
     public static async Task<IActionResult> ToCreatedActionResultAsync<T>(this Task<Result<T, DomainErrors>> resultTask, string locationUri)
     {
         var result = await resultTask;
@@ -945,6 +955,18 @@ public static class ResultApiExtensions
     }
 
     // PUT: 200 OK or 204 NoContent (async)
+    /// <summary>
+    /// Executes the ToPutActionResultAsync operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static async Task<IActionResult> ToPutActionResultAsync<T>(this Task<Result<T, DomainError>> resultTask)
+    {
+        var result = await resultTask;
+        return result.ToPutActionResult();
+    }
+
     /// <summary>
     /// Executes the ToPutActionResultAsync operation.
     /// </summary>
@@ -963,6 +985,17 @@ public static class ResultApiExtensions
     /// </summary>
     /// <param name="resultTask">The source domain result or asynchronous result task.</param>
     /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
+    public static async Task<IActionResult> ToDeleteActionResultAsync(this Task<Result<bool, DomainError>> resultTask)
+    {
+        var result = await resultTask;
+        return result.ToDeleteActionResult();
+    }
+
+    /// <summary>
+    /// Converts a DELETE operation result to an <see cref="IActionResult"/> (200 OK or 204 No Content).
+    /// </summary>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <returns>An <see cref="IActionResult"/> representing the HTTP response.</returns>
     public static async Task<IActionResult> ToDeleteActionResultAsync(this Task<Result<bool, DomainErrors>> resultTask)
     {
         var result = await resultTask;
@@ -970,6 +1003,19 @@ public static class ResultApiExtensions
     }
 
     // Minimal API: GET: 200 OK or 204 NoContent (async)
+    /// <summary>
+    /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static async Task<IResult> ToGetMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string? correlationId = null)
+    {
+        var result = await resultTask;
+        return result.ToGetMinimalApiResult(correlationId);
+    }
+
     /// <summary>
     /// Converts a GET operation result to a Minimal API <see cref="IResult"/>.
     /// </summary>
@@ -992,6 +1038,20 @@ public static class ResultApiExtensions
     /// <param name="locationUri">The locationUri parameter.</param>
     /// <param name="correlationId">Optional correlation ID for request tracing.</param>
     /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static async Task<IResult> ToCreatedMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string locationUri, string? correlationId = null)
+    {
+        var result = await resultTask;
+        return result.ToCreatedMinimalApiResult(locationUri, correlationId);
+    }
+
+    /// <summary>
+    /// Executes the ToCreatedMinimalApiResultAsync operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <param name="locationUri">The locationUri parameter.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
     public static async Task<IResult> ToCreatedMinimalApiResultAsync<T>(this Task<Result<T, DomainErrors>> resultTask, string locationUri, string? correlationId = null)
     {
         var result = await resultTask;
@@ -1006,6 +1066,19 @@ public static class ResultApiExtensions
     /// <param name="resultTask">The source domain result or asynchronous result task.</param>
     /// <param name="correlationId">Optional correlation ID for request tracing.</param>
     /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static async Task<IResult> ToPutMinimalApiResultAsync<T>(this Task<Result<T, DomainError>> resultTask, string? correlationId = null)
+    {
+        var result = await resultTask;
+        return result.ToPutMinimalApiResult(correlationId);
+    }
+
+    /// <summary>
+    /// Executes the ToPutMinimalApiResultAsync operation.
+    /// </summary>
+    /// <typeparam name="T">The underlying entity or payload type.</typeparam>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
     public static async Task<IResult> ToPutMinimalApiResultAsync<T>(this Task<Result<T, DomainErrors>> resultTask, string? correlationId = null)
     {
         var result = await resultTask;
@@ -1013,6 +1086,18 @@ public static class ResultApiExtensions
     }
 
     // Minimal API: DELETE: 204 NoContent or 404 NotFound (async)
+    /// <summary>
+    /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
+    /// </summary>
+    /// <param name="resultTask">The source domain result or asynchronous result task.</param>
+    /// <param name="correlationId">Optional correlation ID for request tracing.</param>
+    /// <returns>An <see cref="IResult"/> representing the Minimal API response.</returns>
+    public static async Task<IResult> ToDeleteMinimalApiResultAsync(this Task<Result<bool, DomainError>> resultTask, string? correlationId = null)
+    {
+        var result = await resultTask;
+        return result.ToDeleteMinimalApiResult(correlationId);
+    }
+
     /// <summary>
     /// Converts a DELETE operation result to a Minimal API <see cref="IResult"/>.
     /// </summary>
@@ -1075,14 +1160,14 @@ public static class ResultApiExtensions
     {
         var options = new ApiResponseOptions
         {
-            Message = message ?? errors?.FirstOrDefault().Message,
+            Message = message ?? (errors is { Count: > 0 } ? errors[0].Message : null),
             Errors = errors?.ToApiErrors(),
             Warnings = warnings?.ToApiErrors(),
             CorrelationId = correlationId,
             StatusCode = errors?.GetMostSevereError().GetHttpStatusCode() ?? HttpStatusCode.OK
         };
 
-        return errors == null || !errors.Any()
+        return errors is null or { Count: 0 }
             ? ApiResponse<T>.Success(data!, options)
             : ApiResponse<T>.Failure(errors.ToApiErrors(), options);
     }
@@ -1291,10 +1376,26 @@ public static class ResultApiExtensions
     /// <summary>
     /// Converts domain errors into API error representations.
     /// </summary>
+    /// <param name="warnings)">The warnings) parameter.</param>
+    /// <returns>The operation result.</returns>
+    public static IReadOnlyList<ApiError>? ToApiErrors(this DomainWarnings warnings)
+        => (IReadOnlyList<ApiError>?)warnings.Warnings.Select(w => w.ToApiError());
+
+    /// <summary>
+    /// Converts domain errors into API error representations.
+    /// </summary>
     /// <param name="errors)">The errors) parameter.</param>
     /// <returns>The operation result.</returns>
     public static ApiError[] ToApiErrorArray(this DomainErrors errors)
         => errors.ToApiErrors()?.ToArray() ?? Array.Empty<ApiError>();
+
+    /// <summary>
+    /// Converts domain errors into API error representations.
+    /// </summary>
+    /// <param name="warnings)">The warnings) parameter.</param>
+    /// <returns>The operation result.</returns>
+    public static ApiError[] ToApiErrorArray(this DomainWarnings warnings)
+        => warnings.ToApiErrors()?.ToArray() ?? Array.Empty<ApiError>();
 
     // ================ Error Analysis Helpers ================
     /// <summary>
@@ -1583,117 +1684,6 @@ public static class ResultApiExtensions
             : ApiResponse.Failure(response.Errors ?? Array.Empty<ApiError>(), options);
     }
 
-    /// <summary>
-    /// Converts ApiResponse&lt;T&gt; to IActionResult
-    /// </summary>
-    public static IActionResult ToActionResult<T>(this ApiResponse<T> response)
-    {
-        return response.ToBaseResponse().ToActionResult();
-    }
-
-    /// <summary>
-    /// Converts ApiResponse&lt;T&gt; to IResult (for Minimal APIs)
-    /// </summary>
-    public static IResult ToMinimalApiResult<T>(this ApiResponse<T> response)
-    {
-        return response.ToBaseResponse().ToMinimalApiResult();
-    }
-
-    /// <summary>
-    /// Converts base ApiResponse to IActionResult with full status code support
-    /// </summary>
-    public static IActionResult ToActionResult(this ApiResponse response)
-    {
-        return response.StatusCode switch
-        {
-            // Success (2xx)
-            HttpStatusCode.OK => new OkObjectResult(response),
-            HttpStatusCode.Created => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Created },
-            HttpStatusCode.Accepted => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Accepted },
-            HttpStatusCode.NoContent => new NoContentResult(),
-
-            // Client Errors (4xx)
-            HttpStatusCode.BadRequest => new BadRequestObjectResult(response),
-            HttpStatusCode.Unauthorized => new UnauthorizedObjectResult(response),
-            HttpStatusCode.Forbidden => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.Forbidden },
-            HttpStatusCode.NotFound => new NotFoundObjectResult(response),
-            HttpStatusCode.Conflict => new ConflictObjectResult(response),
-            HttpStatusCode.UnprocessableEntity => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.UnprocessableEntity },
-            HttpStatusCode.TooManyRequests => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.TooManyRequests },
-            HttpStatusCode.RequestEntityTooLarge => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.RequestEntityTooLarge },
-            HttpStatusCode.RequestUriTooLong => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.RequestUriTooLong },
-            HttpStatusCode.UnsupportedMediaType => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.UnsupportedMediaType },
-            (HttpStatusCode)428 => new ObjectResult(response) { StatusCode = 428 }, // PreconditionRequired
-            (HttpStatusCode)431 => new ObjectResult(response) { StatusCode = 431 }, // RequestHeaderFieldsTooLarge
-            (HttpStatusCode)451 => new ObjectResult(response) { StatusCode = 451 }, // UnavailableForLegalReasons
-
-            // Server Errors (5xx)
-            HttpStatusCode.InternalServerError => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.InternalServerError },
-            HttpStatusCode.NotImplemented => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.NotImplemented },
-            HttpStatusCode.BadGateway => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.BadGateway },
-            HttpStatusCode.ServiceUnavailable => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.ServiceUnavailable },
-            HttpStatusCode.GatewayTimeout => new ObjectResult(response)
-            { StatusCode = (int)HttpStatusCode.GatewayTimeout },
-            (HttpStatusCode)507 => new ObjectResult(response) { StatusCode = 507 }, // InsufficientStorage
-            (HttpStatusCode)508 => new ObjectResult(response) { StatusCode = 508 }, // LoopDetected
-            (HttpStatusCode)510 => new ObjectResult(response) { StatusCode = 510 }, // NotExtended
-            (HttpStatusCode)511 => new ObjectResult(response) { StatusCode = 511 }, // NetworkAuthenticationRequired
-
-            _ => new ObjectResult(response) { StatusCode = (int)HttpStatusCode.InternalServerError }
-        };
-    }
-
-    /// <summary>
-    /// Converts ApiResponse to IResult for Minimal APIs
-    /// </summary>
-    public static IResult ToMinimalApiResult(this ApiResponse response)
-    {
-        return response.StatusCode switch
-        {
-            // Success (2xx)
-            HttpStatusCode.OK => TypedResults.Ok(response),
-            HttpStatusCode.Created => TypedResults.Created(string.Empty, response),
-            HttpStatusCode.Accepted => TypedResults.Accepted(string.Empty, response),
-            HttpStatusCode.NoContent => TypedResults.NoContent(),
-
-            // Client Errors (4xx)
-            HttpStatusCode.BadRequest => TypedResults.BadRequest(response),
-            HttpStatusCode.Unauthorized => TypedResults.Json(response, statusCode: 401),
-            HttpStatusCode.Forbidden => TypedResults.Json(response, statusCode: 403),
-            HttpStatusCode.NotFound => TypedResults.NotFound(response),
-            HttpStatusCode.Conflict => TypedResults.Conflict(response),
-            HttpStatusCode.UnprocessableEntity => TypedResults.UnprocessableEntity(response),
-            HttpStatusCode.TooManyRequests => TypedResults.Json(response, statusCode: 429),
-            HttpStatusCode.RequestEntityTooLarge => TypedResults.Json(response, statusCode: 413),
-            HttpStatusCode.RequestUriTooLong => TypedResults.Json(response, statusCode: 414),
-            HttpStatusCode.UnsupportedMediaType => TypedResults.Json(response, statusCode: 415),
-            (HttpStatusCode)428 => TypedResults.Json(response, statusCode: 428), // PreconditionRequired
-            (HttpStatusCode)431 => TypedResults.Json(response, statusCode: 431), // RequestHeaderFieldsTooLarge
-            (HttpStatusCode)451 => TypedResults.Json(response, statusCode: 451), // UnavailableForLegalReasons
-
-            // Server Errors (5xx)
-            HttpStatusCode.InternalServerError => TypedResults.Json(response, statusCode: 500),
-            HttpStatusCode.NotImplemented => TypedResults.Json(response, statusCode: 501),
-            HttpStatusCode.BadGateway => TypedResults.Json(response, statusCode: 502),
-            HttpStatusCode.ServiceUnavailable => TypedResults.Json(response, statusCode: 503),
-            HttpStatusCode.GatewayTimeout => TypedResults.Json(response, statusCode: 504),
-            (HttpStatusCode)507 => TypedResults.Json(response, statusCode: 507), // InsufficientStorage
-            (HttpStatusCode)508 => TypedResults.Json(response, statusCode: 508), // LoopDetected
-            (HttpStatusCode)510 => TypedResults.Json(response, statusCode: 510), // NotExtended
-            (HttpStatusCode)511 => TypedResults.Json(response, statusCode: 511), // NetworkAuthenticationRequired
-
-            _ => TypedResults.Json(response, statusCode: 500)
-        };
-    }
 
     /// <summary>
     /// Adds pagination metadata with enhanced details
@@ -1901,21 +1891,6 @@ public static class ResultApiExtensions
 
     #region Domain Warnings Extensions
 
-    /// <summary>
-    /// Converts domain errors into API error representations.
-    /// </summary>
-    /// <param name="warnings)">The warnings) parameter.</param>
-    /// <returns>The operation result.</returns>
-    public static IReadOnlyList<ApiError>? ToApiErrors(this DomainWarnings warnings)
-        => (IReadOnlyList<ApiError>?)warnings.Warnings.Select(w => w.ToApiError());
-
-    /// <summary>
-    /// Converts domain errors into API error representations.
-    /// </summary>
-    /// <param name="warnings)">The warnings) parameter.</param>
-    /// <returns>The operation result.</returns>
-    public static ApiError[] ToApiErrorArray(this DomainWarnings warnings)
-        => warnings.ToApiErrors()?.ToArray() ?? Array.Empty<ApiError>();
 
     /// <summary>
     /// Converts the result to an API response.

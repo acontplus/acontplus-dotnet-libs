@@ -292,6 +292,14 @@ public interface IRepository<TEntity>
     Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Deletes entities matching the predicate.
+    /// </summary>
+    /// <param name="predicate">The filter predicate</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The number of entities deleted</returns>
+    Task<int> DeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Deletes an entity by its ID.
     /// </summary>
     /// <param name="id">The entity ID</param>
@@ -306,14 +314,6 @@ public interface IRepository<TEntity>
     /// <param name="cancellationToken">Cancellation token</param>
     Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Deletes entities matching the predicate.
-    /// </summary>
-    /// <param name="predicate">The filter predicate</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The number of entities deleted</returns>
-    Task<int> DeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
-
     #endregion
 
     #region Bulk Operations
@@ -325,6 +325,14 @@ public interface IRepository<TEntity>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The number of entities deleted</returns>
     Task<int> BulkDeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bulk inserts multiple entities.
+    /// </summary>
+    /// <param name="entities">The entities to insert</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The number of entities inserted</returns>
+    Task<int> BulkInsertAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Bulk updates a specific property for entities matching the predicate.
@@ -340,14 +348,6 @@ public interface IRepository<TEntity>
         Expression<Func<TEntity, TProperty>> propertyExpression,
         TProperty newValue,
         CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Bulk inserts multiple entities.
-    /// </summary>
-    /// <param name="entities">The entities to insert</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The number of entities inserted</returns>
-    Task<int> BulkInsertAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Bulk updates entities matching the predicate using an update expression.

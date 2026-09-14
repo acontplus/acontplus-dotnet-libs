@@ -50,7 +50,7 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
     var entitiesWithEvents = ChangeTracker
       .Entries<IEntityWithDomainEvents>()
-      .Where(e => e.Entity.DomainEvents.Any())
+      .Where(e => e.Entity.DomainEvents.Count > 0)
       .Select(e => e.Entity)
       .ToList();
 
@@ -130,15 +130,13 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
   private static void ConfigureGlobalFilters(ModelBuilder builder)
   {
-    foreach (var entityType in builder.Model.GetEntityTypes())
+    foreach (var entityType in builder.Model.GetEntityTypes()
+               .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType)))
     {
-      if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-      {
-        var parameter = Expression.Parameter(entityType.ClrType, "e");
-        var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
-        var condition = Expression.Lambda(Expression.Not(property), parameter);
-        builder.Entity(entityType.ClrType).HasQueryFilter(condition);
-      }
+      var parameter = Expression.Parameter(entityType.ClrType, "e");
+      var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+      var condition = Expression.Lambda(Expression.Not(property), parameter);
+      builder.Entity(entityType.ClrType).HasQueryFilter(condition);
     }
   }
 
@@ -149,32 +147,46 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
   {
     foreach (var entityType in builder.Model.GetEntityTypes())
     {
-      foreach (var property in entityType.GetProperties()
-                 .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
+      ConfigureEntityTypeDateTimeProperties(builder, entityType);
+    }
+  }
+
+  private static void ConfigureEntityTypeDateTimeProperties(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType)
+  {
+    foreach (var property in entityType.GetProperties())
+    {
+      if (property.ClrType == typeof(DateTime))
       {
-        if (property.ClrType == typeof(DateTime))
-        {
-          builder.Entity(entityType.ClrType)
-            .Property<DateTime>(property.Name)
-            .HasConversion(
-              v => v.Kind == DateTimeKind.Unspecified
-                ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
-                : v.ToUniversalTime(),
-              v => v);
-        }
-        else
-        {
-          builder.Entity(entityType.ClrType)
-            .Property<DateTime?>(property.Name)
-            .HasConversion(
-              v => v.HasValue
-                ? v.Value.Kind == DateTimeKind.Unspecified
-                  ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
-                  : v.Value.ToUniversalTime()
-                : (DateTime?)null,
-              v => v);
-        }
+        ConfigureDateTimeProperty(builder, entityType, property.Name);
+      }
+      else if (property.ClrType == typeof(DateTime?))
+      {
+        ConfigureNullableDateTimeProperty(builder, entityType, property.Name);
       }
     }
+  }
+
+  private static void ConfigureDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
+  {
+    builder.Entity(entityType.ClrType)
+      .Property<DateTime>(propertyName)
+      .HasConversion(
+        v => v.Kind == DateTimeKind.Unspecified
+          ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
+          : v.ToUniversalTime(),
+        v => v);
+  }
+
+  private static void ConfigureNullableDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
+  {
+    builder.Entity(entityType.ClrType)
+      .Property<DateTime?>(propertyName)
+      .HasConversion(
+        v => v.HasValue
+          ? v.Value.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)
+            : v.Value.ToUniversalTime()
+          : (DateTime?)null,
+        v => v);
   }
 }

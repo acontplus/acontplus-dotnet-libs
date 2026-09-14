@@ -45,7 +45,7 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
                 "At least one worksheet must be provided.",
                 request.FileDownloadName, "XLSX");
 
-        await AcquireSlotAsync(cancellationToken, request.FileDownloadName);
+        await AcquireSlotAsync(request.FileDownloadName, cancellationToken);
 
         var sw = Stopwatch.StartNew();
 
@@ -449,7 +449,7 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
             _ => XLAlignmentHorizontalValues.General
         };
 
-    private async Task AcquireSlotAsync(CancellationToken cancellationToken, string reportName)
+    private async Task AcquireSlotAsync(string reportName, CancellationToken cancellationToken)
     {
         try
         {

@@ -128,13 +128,13 @@ public class XmlSriFileService : IXmlSriFileService
             }
         }
 
-        private string GetAttributeValue(XmlDocument xmlDocument, string tagName, string attributeName)
+        private static string GetAttributeValue(XmlDocument xmlDocument, string tagName, string attributeName)
         {
             return xmlDocument.GetElementsByTagName(tagName)[0]?.Attributes?[attributeName]?.Value ??
                    throw new InvalidOperationException($"Attribute '{attributeName}' not found in tag '{tagName}'");
         }
 
-        private string GetInnerText(XmlDocument xmlDocument, string parentTagName, string childTagName)
+        private static string GetInnerText(XmlDocument xmlDocument, string parentTagName, string childTagName)
         {
             return xmlDocument.GetElementsByTagName(parentTagName)[0]?.SelectSingleNode(childTagName)?.InnerText ??
                    throw new InvalidOperationException($"Tag '{childTagName}' not found in '{parentTagName}'");

@@ -813,6 +813,14 @@
             <param name="entity">The entity to delete</param>
             <param name="cancellationToken">Cancellation token</param>
         </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Deletes entities matching the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities deleted</returns>
+        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteByIdAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Deletes an entity by its ID.
@@ -828,14 +836,6 @@
             <param name="entities">The entities to delete</param>
             <param name="cancellationToken">Cancellation token</param>
         </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
-            <summary>
-            Deletes entities matching the predicate.
-            </summary>
-            <param name="predicate">The filter predicate</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>The number of entities deleted</returns>
-        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkDeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
             <summary>
             Bulk deletes entities matching the predicate.
@@ -843,6 +843,14 @@
             <param name="predicate">The filter predicate</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>The number of entities deleted</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Bulk inserts multiple entities.
+            </summary>
+            <param name="entities">The entities to insert</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities inserted</returns>
         </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
             <summary>
@@ -854,14 +862,6 @@
             <param name="newValue">The new value</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>The number of entities updated</returns>
-        </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
-            <summary>
-            Bulk inserts multiple entities.
-            </summary>
-            <param name="entities">The entities to insert</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>The number of entities inserted</returns>
         </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,`0}},System.Threading.CancellationToken)">
             <summary>
@@ -2076,6 +2076,13 @@
             Base class for domain event handlers
             </summary>
             <typeparam name="TDomainEvent">The type of domain event to handle</typeparam>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.BaseDomainEventHandler`1.CanHandle(`0)">
+            <summary>
+            Determines whether this handler can handle the specified domain event.
+            </summary>
+            <param name="domainEvent">The domain event to evaluate.</param>
+            <returns><c>true</c> if the event can be handled; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:Acontplus.Core.Domain.Common.Events.BaseDomainEventHandler`1.HandleAsync(`0,System.Threading.CancellationToken)">
             <summary>

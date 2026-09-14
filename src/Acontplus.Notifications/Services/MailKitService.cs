@@ -31,6 +31,7 @@ public class MailKitService : IMailKitService, IDisposable
     private readonly ConcurrentDictionary<string, int> _authAttemptCount = new();
     private readonly TimeSpan _minAuthInterval;
     private readonly int _maxAuthAttemptsPerHour;
+    private const string TooManyLoginAttempts = "too many login attempts";
     private static readonly char[] EmailSeparators = [',', ';', '|'];
     private static readonly JsonSerializerOptions TemplateJsonOptions = new()
     {
@@ -55,7 +56,7 @@ public class MailKitService : IMailKitService, IDisposable
             {
                 _logger.LogDebug(ex, "Caught SmtpProtocolException: {Message}", ex.Message);
                 // Don't retry auth-related errors here - handle them separately
-                return !ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) &&
+                return !ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) &&
                        !ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) &&
                        (ex.Message.Contains("Service not available", StringComparison.OrdinalIgnoreCase) ||
                         ex.Message.Contains("temporarily unavailable", StringComparison.OrdinalIgnoreCase));
@@ -65,7 +66,7 @@ public class MailKitService : IMailKitService, IDisposable
                 _logger.LogDebug(ex, "Caught SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
                 // Only retry 4xx errors that are not authentication related
                 return (int)ex.StatusCode >= 400 && (int)ex.StatusCode < 500 &&
-                       !ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) &&
+                       !ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) &&
                        !ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase);
             })
             .Or<System.Net.Sockets.SocketException>()
@@ -80,13 +81,13 @@ public class MailKitService : IMailKitService, IDisposable
             .Handle<SmtpProtocolException>(ex =>
             {
                 _logger.LogDebug(ex, "Caught authentication-related SmtpProtocolException: {Message}", ex.Message);
-                return ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) ||
+                return ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) ||
                        ex.Message.Contains("authentication failed", StringComparison.OrdinalIgnoreCase);
             })
             .Or<SmtpCommandException>(ex =>
             {
                 _logger.LogDebug(ex, "Caught authentication-related SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
-                return ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) ||
+                return ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) ||
                        ex.Message.Contains("authentication failed", StringComparison.OrdinalIgnoreCase) ||
                        (int)ex.StatusCode == 535; // Authentication failed status code
             })
@@ -152,16 +153,15 @@ public class MailKitService : IMailKitService, IDisposable
                 // Add timeout configurations
                 newClient.Timeout = 30000; // 30 seconds timeout
 
-                _logger.LogInformation("Connecting to SMTP server {SmtpServer}:{SmtpPort}...", email.SmtpServer, email.SmtpPort);
+                _logger.LogInformation("Connecting and authenticating to SMTP server {SmtpServer}:{SmtpPort} for {SenderEmail}...", email.SmtpServer, email.SmtpPort, email.SenderEmail);
                 await newClient.ConnectAsync(email.SmtpServer, email.SmtpPort, MailKit.Security.SecureSocketOptions.Auto, ct);
 
                 // Record authentication attempt
                 RecordAuthenticationAttempt(serverKey);
 
-                _logger.LogInformation("Authenticating with SMTP server for {SenderEmail}...", email.SenderEmail);
                 await newClient.AuthenticateAsync(email.SenderEmail!, email.Password, ct);
 
-                _logger.LogInformation("Successfully connected and authenticated to SMTP server.");
+                _logger.LogInformation("Successfully connected and authenticated to SMTP server {SmtpServer}:{SmtpPort}.", email.SmtpServer, email.SmtpPort);
 
                 // Reset auth attempt count on successful authentication
                 _authAttemptCount.TryRemove(serverKey, out _);

@@ -23,6 +23,13 @@ public abstract class BaseDomainEventHandler<TDomainEvent> : IDomainEventHandler
     where TDomainEvent : IDomainEvent
 {
     /// <summary>
+    /// Determines whether this handler can handle the specified domain event.
+    /// </summary>
+    /// <param name="domainEvent">The domain event to evaluate.</param>
+    /// <returns><c>true</c> if the event can be handled; otherwise, <c>false</c>.</returns>
+    public virtual bool CanHandle(TDomainEvent domainEvent) => domainEvent != null;
+
+    /// <summary>
     /// Handles the domain event asynchronously
     /// </summary>
     /// <param name="domainEvent">The domain event to handle</param>

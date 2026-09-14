@@ -43,120 +43,7 @@ public static class SimpleEntityRegistration
     {
         foreach (var entityType in entityTypes)
         {
-            // Check if entity is a valid simple entity (concrete class with public Id property)
-            var isValidEntity = entityType.IsClass &&
-                                !entityType.IsAbstract &&
-                                HasIdProperty(entityType);
-            if (!isValidEntity)
-            {
-                Console.WriteLine(
-                    $"Skipping type {entityType.Name} as it's not a valid simple entity (must be a concrete class with an Id property).");
-                continue;
-            }
-
-            var entityBuilder = modelBuilder.Entity(entityType);
-            string? determinedTableName = null;
-            string? determinedSchemaName = null;
-            var isTableNameExplicitlyProvided = false;
-            var isSchemaNameExplicitlyProvided = false;
-
-            // 1. Prioritize nameMap for both table and schema
-            if (nameMap != null && nameMap.TryGetValue(entityType, out var mapConfig))
-            {
-                if (mapConfig.table != null)
-                {
-                    determinedTableName = mapConfig.table;
-                    isTableNameExplicitlyProvided = true;
-                }
-
-                if (mapConfig.schema != null)
-                {
-                    determinedSchemaName = mapConfig.schema;
-                    isSchemaNameExplicitlyProvided = true;
-                }
-            }
-
-            // 2. If not set by nameMap, check [Table] attribute
-            var tableAttribute = entityType.GetCustomAttribute<TableAttribute>();
-            if (tableAttribute != null)
-            {
-                if (!isTableNameExplicitlyProvided && tableAttribute.Name != null)
-                {
-                    determinedTableName = tableAttribute.Name;
-                    isTableNameExplicitlyProvided = true;
-                }
-
-                if (!isSchemaNameExplicitlyProvided && tableAttribute.Schema != null)
-                {
-                    determinedSchemaName = tableAttribute.Schema;
-                    isSchemaNameExplicitlyProvided = true;
-                }
-            }
-
-            // 3. If table name is still null, try to get it from DbSet property, then fallback to class name
-            if (determinedTableName == null)
-            {
-                if (dbContextType != null && typeof(DbContext).IsAssignableFrom(dbContextType))
-                {
-                    var dbSetProperty = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                        .FirstOrDefault(p => p.PropertyType.IsGenericType &&
-                                             p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>) &&
-                                             p.PropertyType.GetGenericArguments()[0] == entityType);
-                    if (dbSetProperty != null)
-                    {
-                        determinedTableName = dbSetProperty.Name;
-                    }
-                }
-
-                determinedTableName ??= entityType.Name;
-            }
-
-            // Apply the determined name and schema based on explicit intent
-            if (isTableNameExplicitlyProvided)
-            {
-                entityBuilder.ToTable(determinedTableName!, determinedSchemaName);
-            }
-            else if (isSchemaNameExplicitlyProvided)
-            {
-                entityBuilder.Metadata.SetSchema(determinedSchemaName);
-            }
-
-            // 4. Apply the EntityTypeConfiguration for common properties/conventions
-            try
-            {
-                var keyType = GetPrimaryKeyType(entityType);
-                var baseConfigurationType = typeof(SimpleEntityTypeConfiguration<>).MakeGenericType(entityType);
-                var baseConfiguration = Activator.CreateInstance(baseConfigurationType);
-                modelBuilder.ApplyConfiguration((dynamic)baseConfiguration!);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(
-                    $"Warning: Could not apply base configuration for entity {entityType.Name}: {ex.Message}");
-            }
-
-            // 5. Apply any specific custom configuration for this entity
-            if (customConfigurations != null && customConfigurations.TryGetValue(entityType, out var customConfigType))
-            {
-                if (!typeof(IEntityTypeConfiguration<>).MakeGenericType(entityType).IsAssignableFrom(customConfigType))
-                {
-                    Console.WriteLine(
-                        $"Warning: Custom configuration type {customConfigType.Name} for entity {entityType.Name} does not implement IEntityTypeConfiguration<{entityType.Name}>. Skipping custom configuration for this entity.");
-                }
-                else
-                {
-                    try
-                    {
-                        var customConfigInstance = Activator.CreateInstance(customConfigType);
-                        modelBuilder.ApplyConfiguration((dynamic)customConfigInstance!);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(
-                            $"Warning: Could not apply custom configuration for entity {entityType.Name}: {ex.Message}");
-                    }
-                }
-            }
+            RegisterSingleEntity(modelBuilder, dbContextType, nameMap, customConfigurations, entityType);
         }
     }
 
@@ -166,6 +53,157 @@ public static class SimpleEntityRegistration
     public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
         RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
 
+    private static void RegisterSingleEntity(
+        ModelBuilder modelBuilder,
+        Type dbContextType,
+        Dictionary<Type, (string schema, string table)>? nameMap,
+        Dictionary<Type, Type>? customConfigurations,
+        Type entityType)
+    {
+        if (!IsValidEntity(entityType))
+        {
+            Console.WriteLine(
+                $"Skipping type {entityType.Name} as it's not a valid simple entity (must be a concrete class with an Id property).");
+            return;
+        }
+
+        var entityBuilder = modelBuilder.Entity(entityType);
+        var naming = ResolveTableAndSchema(entityType, dbContextType, nameMap);
+        ApplyTableAndSchema(entityBuilder, naming);
+
+        ApplyBaseConfiguration(modelBuilder, entityType);
+        ApplyCustomConfiguration(modelBuilder, entityType, customConfigurations);
+    }
+
+    private static bool IsValidEntity(Type entityType) =>
+        entityType.IsClass && !entityType.IsAbstract && HasIdProperty(entityType);
+
+    private readonly record struct TableNamingInfo(
+        string TableName,
+        string? SchemaName,
+        bool IsTableExplicit,
+        bool IsSchemaExplicit);
+
+    private static TableNamingInfo ResolveTableAndSchema(
+        Type entityType,
+        Type? dbContextType,
+        Dictionary<Type, (string schema, string table)>? nameMap)
+    {
+        string? tableName = null;
+        string? schemaName = null;
+        var isTableExplicit = false;
+        var isSchemaExplicit = false;
+
+        // 1. Prioritize nameMap
+        if (nameMap != null && nameMap.TryGetValue(entityType, out var mapConfig))
+        {
+            if (mapConfig.table != null)
+            {
+                tableName = mapConfig.table;
+                isTableExplicit = true;
+            }
+
+            if (mapConfig.schema != null)
+            {
+                schemaName = mapConfig.schema;
+                isSchemaExplicit = true;
+            }
+        }
+
+        // 2. Check [Table] attribute
+        var tableAttribute = entityType.GetCustomAttribute<TableAttribute>();
+        if (tableAttribute != null)
+        {
+            if (!isTableExplicit && tableAttribute.Name != null)
+            {
+                tableName = tableAttribute.Name;
+                isTableExplicit = true;
+            }
+
+            if (!isSchemaExplicit && tableAttribute.Schema != null)
+            {
+                schemaName = tableAttribute.Schema;
+                isSchemaExplicit = true;
+            }
+        }
+
+        // 3. Fallback to DbSet property or class name
+        if (tableName == null)
+        {
+            tableName = ResolveDbSetTableName(dbContextType, entityType) ?? entityType.Name;
+        }
+
+        return new TableNamingInfo(tableName, schemaName, isTableExplicit, isSchemaExplicit);
+    }
+
+    private static string? ResolveDbSetTableName(Type? dbContextType, Type entityType)
+    {
+        if (dbContextType == null || !typeof(DbContext).IsAssignableFrom(dbContextType))
+            return null;
+
+        var dbSetProperty = dbContextType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .FirstOrDefault(p => p.PropertyType.IsGenericType &&
+                                 p.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>) &&
+                                 p.PropertyType.GetGenericArguments()[0] == entityType);
+
+        return dbSetProperty?.Name;
+    }
+
+    private static void ApplyTableAndSchema(EntityTypeBuilder entityBuilder, TableNamingInfo naming)
+    {
+        if (naming.IsTableExplicit)
+        {
+            entityBuilder.ToTable(naming.TableName, naming.SchemaName);
+        }
+        else if (naming.IsSchemaExplicit)
+        {
+            entityBuilder.Metadata.SetSchema(naming.SchemaName);
+        }
+    }
+
+    private static void ApplyBaseConfiguration(ModelBuilder modelBuilder, Type entityType)
+    {
+        try
+        {
+            var baseConfigurationType = typeof(SimpleEntityTypeConfiguration<>).MakeGenericType(entityType);
+            var baseConfiguration = Activator.CreateInstance(baseConfigurationType);
+            modelBuilder.ApplyConfiguration((dynamic)baseConfiguration!);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Warning: Could not apply base configuration for entity {entityType.Name}: {ex.Message}");
+        }
+    }
+
+    private static void ApplyCustomConfiguration(
+        ModelBuilder modelBuilder,
+        Type entityType,
+        Dictionary<Type, Type>? customConfigurations)
+    {
+        if (customConfigurations == null || !customConfigurations.TryGetValue(entityType, out var customConfigType))
+            return;
+
+        if (!typeof(IEntityTypeConfiguration<>).MakeGenericType(entityType).IsAssignableFrom(customConfigType))
+        {
+            Console.WriteLine(
+                $"Warning: Custom configuration type {customConfigType.Name} for entity {entityType.Name} does not implement IEntityTypeConfiguration<{entityType.Name}>. Skipping custom configuration for this entity.");
+            return;
+        }
+
+        try
+        {
+            var customConfigInstance = Activator.CreateInstance(customConfigType);
+            modelBuilder.ApplyConfiguration((dynamic)customConfigInstance!);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Warning: Could not apply custom configuration for entity {entityType.Name}: {ex.Message}");
+        }
+    }
+
+
     /// <summary>
     ///     Helper method to check if a type has an Id property (for simple entities)
     /// </summary>
@@ -173,15 +211,6 @@ public static class SimpleEntityRegistration
     {
         var idProperty = entityType.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
         return idProperty != null && idProperty.CanRead && idProperty.CanWrite;
-    }
-
-    /// <summary>
-    ///     Helper method to get the type of the Id property
-    /// </summary>
-    private static Type GetIdPropertyType(Type entityType)
-    {
-        var idProperty = entityType.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
-        return idProperty?.PropertyType ?? typeof(int);
     }
 
     /// <summary>

@@ -10,21 +10,6 @@ public class UserRepository : BaseRepository<Usuario>, IUserRepository
     {
         IQueryable<Usuario> query = _dbSet;
 
-        // Apply specific filters based on pagination DTO
-        //if (!string.IsNullOrEmpty(pagination.TextSearch))
-        //{
-        //    query = query.Where(u => u.FirstName.Contains(pagination.TextSearch) ||
-        //                            u.LastName.Contains(pagination.TextSearch) ||
-        //                            u.Email.Contains(pagination.TextSearch));
-        //}
-
-        //if (pagination.UserId > 0)
-        //{
-        //    query = query.Where(u => u.Id == pagination.UserId);
-        //}
-
-        // Example of sorting - you might want to make this more dynamic
-        //query = query.OrderBy(u => u.LastName);
         query = query.OrderBy(u => u.Username);
 
         // Get total count for pagination metadata

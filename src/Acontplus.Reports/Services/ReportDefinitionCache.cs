@@ -5,7 +5,7 @@ namespace Acontplus.Reports.Services;
 /// <summary>
 /// Cache entry for report definitions with expiration
 /// </summary>
-internal class CachedReportDefinition : IDisposable
+internal sealed class CachedReportDefinition : IDisposable
 {
     public MemoryStream Stream { get; }
     public DateTime CreatedAt { get; }
@@ -26,9 +26,18 @@ internal class CachedReportDefinition : IDisposable
 
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (!_disposed)
         {
-            Stream?.Dispose();
+            if (disposing)
+            {
+                Stream.Dispose();
+            }
             _disposed = true;
         }
     }
@@ -162,10 +171,23 @@ public class ReportDefinitionCache : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="ReportDefinitionCache"/> and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (!_disposed)
         {
-            Clear();
-            _cleanupLock.Dispose();
+            if (disposing)
+            {
+                Clear();
+                _cleanupLock.Dispose();
+            }
             _disposed = true;
         }
     }

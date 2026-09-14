@@ -22,7 +22,7 @@ public abstract class DomainException : Exception
     /// <param name="code">The specific error code.</param>
     /// <param name="message">The error message that explains the reason for the exception.</param>
     /// <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
-    public DomainException(ErrorType type, string code, string message, Exception? inner = null)
+    protected DomainException(ErrorType type, string code, string message, Exception? inner = null)
         : base(message, inner)
     {
         ErrorType = type;

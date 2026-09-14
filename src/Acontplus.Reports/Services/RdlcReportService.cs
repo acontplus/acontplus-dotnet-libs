@@ -14,6 +14,7 @@ namespace Acontplus.Reports.Services
     /// </summary>
     public class RdlcReportService : IRdlcReportService, IDisposable
     {
+        private const string UnknownValue = "Unknown";
         private readonly ILogger<RdlcReportService> _logger;
         private readonly ReportOptions _options;
         private readonly ConcurrentDictionary<string, Lazy<MemoryStream>> _reportCache = new();
@@ -103,9 +104,9 @@ namespace Acontplus.Reports.Services
                     _concurrencyLimiter.Release();
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
-                _logger.LogWarning("Report cancelled: {Path}", reportProps?.ReportPath ?? "Unknown");
+                _logger.LogWarning(ex, "Report cancelled: {Path}", reportProps?.ReportPath ?? UnknownValue);
                 throw;
             }
             catch (ReportGenerationException)
@@ -114,10 +115,10 @@ namespace Acontplus.Reports.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating report: {Path}", reportProps?.ReportPath ?? "Unknown");
+                _logger.LogError(ex, "Error generating report: {Path}", reportProps?.ReportPath ?? UnknownValue);
                 throw new ReportGenerationException("Report generation failed",
-                    reportProps?.ReportPath ?? "Unknown",
-                    reportProps?.ReportFormat ?? "Unknown", ex);
+                    reportProps?.ReportPath ?? UnknownValue,
+                    reportProps?.ReportFormat ?? UnknownValue, ex);
             }
         }
 
@@ -186,7 +187,7 @@ namespace Acontplus.Reports.Services
             return resolvedPath;
         }
 
-        private void AddDataSources(LocalReport lr, DataSet parameters, DataSet data)
+        private static void AddDataSources(LocalReport lr, DataSet parameters, DataSet data)
         {
             if (parameters.Tables.Contains("DataSources"))
             {

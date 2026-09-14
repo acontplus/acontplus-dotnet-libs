@@ -214,20 +214,16 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            foreach (var param in ctor.GetParameters())
+            foreach (var param in ctor.GetParameters().Where(p => p.Name is not null))
             {
-                if (param.Name is not null)
-                    allParamNames.Add(param.Name);
+                allParamNames.Add(param.Name!);
             }
         }
 
-        foreach (var ruleName in ctorParamRules.Keys)
+        foreach (var ruleName in ctorParamRules.Keys.Where(ruleName => !allParamNames.Contains(ruleName)))
         {
-            if (!allParamNames.Contains(ruleName))
-            {
-                throw new InvalidOperationException(
-                    $"{pair}: ForCtorParam rule names parameter '{ruleName}' which does not exist on any constructor of '{targetType.Name}'");
-            }
+            throw new InvalidOperationException(
+                $"{pair}: ForCtorParam rule names parameter '{ruleName}' which does not exist on any constructor of '{targetType.Name}'");
         }
     }
 
@@ -1097,7 +1093,7 @@ internal static class ExpressionBuilder
 
         Expression mappingBody;
 
-        if (inProgress.Contains(nestedPair))
+        if (!inProgress.Add(nestedPair))
         {
             // Cycle detected: create a deferred Lazy<Func<TNestedSource, TNestedTarget>>
             mappingBody = BuildDeferredCyclicMapping(sourceAccess, nestedSourceType, nestedTargetType, registry);
@@ -1105,7 +1101,6 @@ internal static class ExpressionBuilder
         else
         {
             // No cycle: recurse to build nested mapping expression
-            inProgress.Add(nestedPair);
             try
             {
                 var nestedLambda = BuildMappingExpression(nestedPair, config: null, registry, inProgress);

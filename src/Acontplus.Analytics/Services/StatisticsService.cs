@@ -141,7 +141,7 @@ public class StatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
                 cancellationToken
             );
 
-            if (result == null || !result.Any())
+            if (result == null || result.Count == 0)
             {
                 var error = DomainError.NotFound("AGGREGATED_STATS_NOT_FOUND",
                     "No aggregated statistics were found for the specified parameters.");
@@ -176,7 +176,7 @@ public class StatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
                 cancellationToken
             );
 
-            if (result == null || !result.Any())
+            if (result == null || result.Count == 0)
             {
                 var error = DomainError.NotFound("TRENDS_NOT_FOUND",
                     "No trend data found for the specified parameters.");

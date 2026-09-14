@@ -62,7 +62,7 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
     var entitiesWithEvents = ChangeTracker
       .Entries<IEntityWithDomainEvents>()
-      .Where(e => e.Entity.DomainEvents.Any())
+      .Where(e => e.Entity.DomainEvents.Count > 0)
       .Select(e => e.Entity)
       .ToList();
 
@@ -145,15 +145,13 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
   private static void ConfigureGlobalFilters(ModelBuilder modelBuilder)
   {
-    foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+               .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType)))
     {
-      if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-      {
-        var parameter = Expression.Parameter(entityType.ClrType, "e");
-        var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
-        var condition = Expression.Lambda(Expression.Not(property), parameter);
-        modelBuilder.Entity(entityType.ClrType).HasQueryFilter(condition);
-      }
+      var parameter = Expression.Parameter(entityType.ClrType, "e");
+      var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+      var condition = Expression.Lambda(Expression.Not(property), parameter);
+      modelBuilder.Entity(entityType.ClrType).HasQueryFilter(condition);
     }
   }
 

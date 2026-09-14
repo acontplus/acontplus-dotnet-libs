@@ -43,7 +43,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         }
 
         // X-XSS-Protection: Enable XSS filtering
-        context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+        context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.XXSSProtection] = "1; mode=block";
 
         // Permissions-Policy: Control browser features
         context.Response.Headers["Permissions-Policy"] =
@@ -78,7 +78,7 @@ public class SecurityHeaderService : ISecurityHeaderService
             .Where(header => !context.Response.Headers.ContainsKey(header))
             .ToList();
 
-        if (missingHeaders.Any())
+        if (missingHeaders.Count > 0)
         {
             _logger.LogWarning("Missing security headers: {MissingHeaders}",
                 string.Join(", ", missingHeaders));

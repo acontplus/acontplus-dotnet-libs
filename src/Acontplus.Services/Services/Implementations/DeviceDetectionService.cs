@@ -5,22 +5,21 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of device detection service for identifying device types and capabilities.
 /// </summary>
-public class DeviceDetectionService : IDeviceDetectionService
+public partial class DeviceDetectionService : IDeviceDetectionService
 {
+    private const string ChromeBrowser = "Chrome";
+    private static readonly TimeSpan DefaultRegexTimeout = TimeSpan.FromSeconds(1);
     private readonly ILogger<DeviceDetectionService> _logger;
 
     // Regex patterns for device detection
-    private static readonly Regex MobilePattern = new(
-        @"(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex MobilePattern();
 
-    private static readonly Regex TabletPattern = new(
-        @"(iPad|Android(?!.*Mobile)|Tablet)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(iPad|Android(?!.*Mobile)|Tablet)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TabletPattern();
 
-    private static readonly Regex DesktopPattern = new(
-        @"(Windows NT|Macintosh|Linux(?!.*Android))",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(Windows NT|Macintosh|Linux(?!.*Android))", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex DesktopPattern();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeviceDetectionService"/> class.
@@ -122,21 +121,21 @@ public class DeviceDetectionService : IDeviceDetectionService
         return true;
     }
 
-    private DeviceType DetectFromUserAgent(string userAgent)
+    private static DeviceType DetectFromUserAgent(string userAgent)
     {
         if (string.IsNullOrWhiteSpace(userAgent))
             return DeviceType.Unknown;
 
         // Check for tablet first (more specific)
-        if (TabletPattern.IsMatch(userAgent))
+        if (TabletPattern().IsMatch(userAgent))
             return DeviceType.Tablet;
 
         // Check for mobile
-        if (MobilePattern.IsMatch(userAgent))
+        if (MobilePattern().IsMatch(userAgent))
             return DeviceType.Mobile;
 
         // Check for desktop
-        if (DesktopPattern.IsMatch(userAgent))
+        if (DesktopPattern().IsMatch(userAgent))
             return DeviceType.Desktop;
 
         // Default to web for unknown patterns
@@ -161,11 +160,11 @@ public class DeviceDetectionService : IDeviceDetectionService
     {
         return userAgent switch
         {
-            var ua when ua.Contains("Chrome", StringComparison.OrdinalIgnoreCase) &&
-                       !ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => "Chrome",
+            var ua when ua.Contains(ChromeBrowser, StringComparison.OrdinalIgnoreCase) &&
+                       !ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => ChromeBrowser,
             var ua when ua.Contains("Firefox", StringComparison.OrdinalIgnoreCase) => "Firefox",
             var ua when ua.Contains("Safari", StringComparison.OrdinalIgnoreCase) &&
-                       !ua.Contains("Chrome", StringComparison.OrdinalIgnoreCase) => "Safari",
+                       !ua.Contains(ChromeBrowser, StringComparison.OrdinalIgnoreCase) => "Safari",
             var ua when ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => "Edge",
             var ua when ua.Contains("Opera", StringComparison.OrdinalIgnoreCase) => "Opera",
             _ => null
@@ -181,7 +180,7 @@ public class DeviceDetectionService : IDeviceDetectionService
         {
             var pattern = browser switch
             {
-                "Chrome" => @"Chrome/(\d+\.\d+)",
+                ChromeBrowser => @"Chrome/(\d+\.\d+)",
                 "Firefox" => @"Firefox/(\d+\.\d+)",
                 "Safari" => @"Version/(\d+\.\d+)",
                 "Edge" => @"Edge/(\d+\.\d+)",
@@ -191,7 +190,7 @@ public class DeviceDetectionService : IDeviceDetectionService
 
             if (pattern != null)
             {
-                var match = Regex.Match(userAgent, pattern, RegexOptions.IgnoreCase);
+                var match = Regex.Match(userAgent, pattern, RegexOptions.IgnoreCase, DefaultRegexTimeout);
                 if (match.Success)
                     return match.Groups[1].Value;
             }

@@ -40,9 +40,9 @@ public class OrderNotificationHandler(
                     orderEvent.OrderId);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogInformation("OrderNotificationHandler is stopping.");
+            _logger.LogInformation(ex, "OrderNotificationHandler is stopping.");
         }
         catch (Exception ex)
         {

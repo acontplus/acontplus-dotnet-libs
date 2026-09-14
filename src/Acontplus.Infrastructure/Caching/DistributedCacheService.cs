@@ -145,9 +145,9 @@ public class DistributedCacheService : ICacheService
     public T GetOrCreate<T>(string key, Func<T> factory, TimeSpan? expiration = null)
     {
         var value = Get<T>(key);
-        if (value != null)
+        if (!EqualityComparer<T>.Default.Equals(value, default))
         {
-            return value;
+            return value!;
         }
 
         value = factory();
@@ -160,9 +160,9 @@ public class DistributedCacheService : ICacheService
         CancellationToken ct = default)
     {
         var value = await GetAsync<T>(key, ct);
-        if (value != null)
+        if (!EqualityComparer<T>.Default.Equals(value, default))
         {
-            return value;
+            return value!;
         }
 
         value = await factory();

@@ -367,22 +367,22 @@
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteAsync(`0,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteByIdAsync(System.Int32,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkDeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkUpdateAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,`0}},System.Threading.CancellationToken)">
