@@ -298,8 +298,8 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
     private async Task<SendEmailRequest> BuildSendEmailRequestAsync(EmailModel email, CancellationToken ct)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
-        ArgumentException.ThrowIfNullOrEmpty(email.RecipientEmail, nameof(email.RecipientEmail));
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail);
+        ArgumentException.ThrowIfNullOrEmpty(email.RecipientEmail);
 
         var request = new SendEmailRequest
         {

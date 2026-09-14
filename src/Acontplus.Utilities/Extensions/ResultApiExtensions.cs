@@ -1193,8 +1193,8 @@ public static class ResultApiExtensions
     /// <returns>An <see cref="ApiResponse"/> instance containing the result status and payload.</returns>
     public static ApiResponse<T> ToApiResponse<T>(
         this DomainError error,
-        string? correlationId = null,
-        DomainWarnings? warnings = null)
+        string? correlationId,
+        DomainWarnings? warnings)
         => CreateApiResponse<T>(
             errors: new[] { error },
             warnings: warnings?.Warnings,

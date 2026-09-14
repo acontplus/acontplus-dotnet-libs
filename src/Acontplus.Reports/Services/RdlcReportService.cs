@@ -104,9 +104,8 @@ namespace Acontplus.Reports.Services
                     _concurrencyLimiter.Release();
                 }
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
-                _logger.LogWarning(ex, "Report cancelled: {Path}", reportProps?.ReportPath ?? UnknownValue);
                 throw;
             }
             catch (ReportGenerationException)

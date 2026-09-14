@@ -39,11 +39,6 @@
             Provides methods for registering EF Core entity types with the SQL Server model builder.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.GetPrimaryKeyType(System.Type)">
-            <summary>
-                Gets the primary key type for an entity that inherits from BaseEntity
-            </summary>
-        </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.BaseEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
             <summary>
                 Registers auditable entities with the ModelBuilder, applying base configurations,
@@ -137,11 +132,6 @@
         <member name="T:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration">
             <summary>
             Provides methods for registering simple (non-auditable) EF Core entity types with the SQL Server model builder.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.GetPrimaryKeyType(System.Type)">
-            <summary>
-                Gets the primary key type for an entity that inherits from Entity&lt;TKey&gt;
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">

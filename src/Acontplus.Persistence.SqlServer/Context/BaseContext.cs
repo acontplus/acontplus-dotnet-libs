@@ -145,13 +145,16 @@ public abstract class BaseContext(DbContextOptions options) : DbContext(options)
 
   private static void ConfigureGlobalFilters(ModelBuilder modelBuilder)
   {
-    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-               .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType)))
+    var clrTypes = modelBuilder.Model.GetEntityTypes()
+               .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType))
+               .Select(e => e.ClrType);
+
+    foreach (var clrType in clrTypes)
     {
-      var parameter = Expression.Parameter(entityType.ClrType, "e");
+      var parameter = Expression.Parameter(clrType, "e");
       var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
       var condition = Expression.Lambda(Expression.Not(property), parameter);
-      modelBuilder.Entity(entityType.ClrType).HasQueryFilter(condition);
+      modelBuilder.Entity(clrType).HasQueryFilter(condition);
     }
   }
 

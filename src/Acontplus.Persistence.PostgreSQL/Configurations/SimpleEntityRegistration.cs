@@ -8,25 +8,6 @@ namespace Acontplus.Persistence.PostgreSQL.Configurations;
 /// </summary>
 public static class SimpleEntityRegistration
 {
-    /// <summary>
-    /// Gets the primary key type for an entity that inherits from Entity&lt;TKey&gt;
-    /// </summary>
-    private static Type GetPrimaryKeyType(Type entityType)
-    {
-        // Look for Entity<TKey> in the inheritance chain
-        var currentType = entityType;
-        while (currentType != null)
-        {
-            if (currentType.IsGenericType &&
-                currentType.GetGenericTypeDefinition() == typeof(Entity<>))
-            {
-                return currentType.GetGenericArguments()[0]; // Return TKey
-            }
-            currentType = currentType.BaseType;
-        }
-        // Fallback to common key types if not found
-        return typeof(int);
-    }
 
     /// <summary>
     /// Registers non-auditable entities with the ModelBuilder, applying base configurations,

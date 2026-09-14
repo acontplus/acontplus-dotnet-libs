@@ -67,7 +67,7 @@ public class AtsXmlService : IAtsXmlService
         return atsMs.ToArray();
     }
 
-    private void WritePurchaseNode(XmlTextWriter xtr, IEnumerable<Purchase> purchases,
+    private static void WritePurchaseNode(XmlTextWriter xtr, IEnumerable<Purchase> purchases,
         IEnumerable<WithholdingTax> withholdingTaxes)
     {
         xtr.WriteStartElement("compras");

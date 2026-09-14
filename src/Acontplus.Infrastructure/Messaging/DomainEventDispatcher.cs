@@ -56,7 +56,7 @@ public sealed class DomainEventDispatcher(
             try
             {
                 // Call HandleAsync method via reflection
-                var handleMethod = handlerType.GetMethod(nameof(IDomainEventHandler<IDomainEvent>.HandleAsync));
+                var handleMethod = handlerType.GetMethod(nameof(IDomainEventHandler<>.HandleAsync));
                 if (handleMethod != null)
                 {
                     var task = (Task?)handleMethod.Invoke(handler, [domainEvent, CancellationToken.None]);

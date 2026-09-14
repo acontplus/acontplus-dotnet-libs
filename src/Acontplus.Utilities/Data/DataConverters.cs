@@ -236,7 +236,7 @@ public static class DataConverters
     /// <returns>The serialized JSON string.</returns>
     public static string SerializeObjectCustom<T>(T? data)
     {
-        if (data == null)
+        if (data is null)
             return "null";
 
         // If it's a DataTable or DataSet, use our specialized methods

@@ -74,7 +74,10 @@ public static class PictureHelper
                 return imageFormat.extension;
             }
 
-            return MatchesSvgXml(array, imageFormat.magic.Count) ? imageFormat.extension : null;
+            if (MatchesSvgXml(array, imageFormat.magic.Count))
+            {
+                return imageFormat.extension;
+            }
         }
 
         return null;

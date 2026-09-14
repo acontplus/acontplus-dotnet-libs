@@ -47,10 +47,12 @@ public static class JsonHelper
             }
 
             // Try case-insensitive match
-            foreach (var prop in document.RootElement.EnumerateObject()
-                         .Where(p => string.Equals(p.Name, propertyName, StringComparison.OrdinalIgnoreCase)))
+            foreach (var prop in document.RootElement.EnumerateObject())
             {
-                return JsonSerializer.Deserialize<T>(prop.Value.GetRawText(), JsonExtensions.DefaultOptions);
+                if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return JsonSerializer.Deserialize<T>(prop.Value.GetRawText(), JsonExtensions.DefaultOptions);
+                }
             }
 
             return default;

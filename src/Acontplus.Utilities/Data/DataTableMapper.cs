@@ -105,20 +105,8 @@ public static class DataTableMapper
 
     private static bool IsRequiredProperty(PropertyInfo property)
     {
-        // Check if property has the 'required' modifier by checking its backing field
-        var backingField = property.DeclaringType?.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-            .FirstOrDefault(f => f.Name.StartsWith($"<{property.Name}>"));
-
-        return backingField != null && backingField.CustomAttributes.Any(attr =>
+        return property.CustomAttributes.Any(attr =>
             attr.AttributeType.FullName == "System.Runtime.CompilerServices.RequiredMemberAttribute");
-    }
-
-    private static bool IsDefaultValue(PropertyInfo property, object instance)
-    {
-        var value = property.GetValue(instance);
-        return value == null || (property.PropertyType == typeof(string)
-            ? string.IsNullOrEmpty((string)value)
-            : value.Equals(GetDefaultValue(property.PropertyType)));
     }
 
     private static object? GetDefaultValue(Type type)

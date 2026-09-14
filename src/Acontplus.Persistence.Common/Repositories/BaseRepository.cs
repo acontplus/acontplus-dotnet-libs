@@ -1273,12 +1273,12 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         ArgumentNullException.ThrowIfNull(pagination);
         if (pagination.PageIndex < 1)
         {
-            throw new ArgumentException("Page index must be greater than 0.", nameof(pagination.PageIndex));
+            throw new ArgumentException("Page index must be greater than 0.", nameof(pagination));
         }
 
         if (pagination.PageSize < 1 || pagination.PageSize > 500) // Max page size guard
         {
-            throw new ArgumentException("Page size must be between 1 and 500.", nameof(pagination.PageSize));
+            throw new ArgumentException("Page size must be between 1 and 500.", nameof(pagination));
         }
     }
 

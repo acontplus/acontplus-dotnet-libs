@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Persistence.SqlServer.Exceptions;
+namespace Acontplus.Persistence.SqlServer.Exceptions;
 
 /// <summary>
 ///     Exception thrown when an error occurs within the UnitOfWork operations.
@@ -32,29 +32,4 @@ public class UnitOfWorkException : Exception
     public UnitOfWorkException(string message, Exception innerException) : base(message, innerException)
     {
     }
-
-    // You can add more constructors or properties if specific error codes or contexts are needed.
-    // For example, if you want to categorize UoW errors:
-    /*
-    public UnitOfWorkException(string? message, Exception? innerException, UnitOfWorkErrorType errorType)
-        : base(message, innerException)
-    {
-        ErrorType = errorType;
-    }
-
-    public UnitOfWorkErrorType ErrorType { get; }
-    */
 }
-
-/*
-// Example of an enum for specific error types, if you choose to implement it
-public enum UnitOfWorkErrorType
-{
-    Unknown = 0,
-    TransactionFailed = 1,
-    RepositoryCreationFailed = 2,
-    SaveChangesFailed = 3,
-    NoActiveTransaction = 4,
-    // ... add more as needed
-}
-*/

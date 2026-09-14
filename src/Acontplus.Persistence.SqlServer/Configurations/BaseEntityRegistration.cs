@@ -8,27 +8,6 @@ namespace Acontplus.Persistence.SqlServer.Configurations;
 /// </summary>
 public static class BaseEntityRegistration
 {
-    /// <summary>
-    ///     Gets the primary key type for an entity that inherits from BaseEntity
-    /// </summary>
-    private static Type GetPrimaryKeyType(Type entityType)
-    {
-        // Look for Entity<TKey> in the inheritance chain since BaseEntity inherits from Entity<int>
-        var currentType = entityType;
-        while (currentType != null)
-        {
-            if (currentType.IsGenericType &&
-                currentType.GetGenericTypeDefinition() == typeof(Entity<>))
-            {
-                return currentType.GetGenericArguments()[0]; // Return TKey
-            }
-
-            currentType = currentType.BaseType;
-        }
-
-        // Fallback to int since BaseEntity uses Entity<int>
-        return typeof(int);
-    }
 
     /// <summary>
     ///     Registers auditable entities with the ModelBuilder, applying base configurations,

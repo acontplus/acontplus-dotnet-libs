@@ -220,10 +220,11 @@ internal static class ExpressionBuilder
             }
         }
 
-        foreach (var ruleName in ctorParamRules.Keys.Where(ruleName => !allParamNames.Contains(ruleName)))
+        var invalidRule = ctorParamRules.Keys.FirstOrDefault(ruleName => !allParamNames.Contains(ruleName));
+        if (invalidRule != null)
         {
             throw new InvalidOperationException(
-                $"{pair}: ForCtorParam rule names parameter '{ruleName}' which does not exist on any constructor of '{targetType.Name}'");
+                $"{pair}: ForCtorParam rule names parameter '{invalidRule}' which does not exist on any constructor of '{targetType.Name}'");
         }
     }
 
@@ -672,7 +673,7 @@ internal static class ExpressionBuilder
         {
             // For Nullable<T>, check .HasValue
             nullCheck = Expression.Not(
-                Expression.Property(sourceAccess, nameof(Nullable<int>.HasValue)));
+                Expression.Property(sourceAccess, nameof(Nullable<>.HasValue)));
         }
         else
         {
@@ -1223,7 +1224,7 @@ internal static class ExpressionBuilder
         {
             // Nullable<T>: check .HasValue
             nullCheck = Expression.Not(
-                Expression.Property(sourceAccess, nameof(Nullable<int>.HasValue)));
+                Expression.Property(sourceAccess, nameof(Nullable<>.HasValue)));
         }
         else
         {

@@ -94,7 +94,7 @@ public class XmlSriFileService : IXmlSriFileService
             });
         }
 
-        private void SetVersionAndFechaEmision(XmlDocument xmlComprobante, string codDoc, out string versionComp,
+        private static void SetVersionAndFechaEmision(XmlDocument xmlComprobante, string codDoc, out string versionComp,
             out string fechaEmision)
         {
             switch (codDoc)

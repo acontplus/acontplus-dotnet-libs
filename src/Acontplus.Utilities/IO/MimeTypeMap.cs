@@ -702,12 +702,9 @@ public static class MimeTypeMap
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="extension"/> is null.</exception>
     public static string GetMimeType(string extension)
     {
-        if (extension == null)
-        {
-            throw new ArgumentNullException("extension");
-        }
+        ArgumentNullException.ThrowIfNull(extension);
 
-        if (!extension.StartsWith("."))
+        if (!extension.StartsWith('.'))
         {
             extension = "." + extension;
         }

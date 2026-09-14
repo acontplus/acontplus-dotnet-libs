@@ -24,7 +24,7 @@ public class NullableDateTimeConverter : JsonConverter<DateTime?>
             var str = reader.GetString();
             if (string.IsNullOrWhiteSpace(str))
                 return null;
-            if (DateTime.TryParse(str, out var date))
+            if (DateTime.TryParse(str, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
                 return date;
         }
         return reader.TokenType == JsonTokenType.Null ? null : throw new JsonException("Invalid date format.");
@@ -34,7 +34,7 @@ public class NullableDateTimeConverter : JsonConverter<DateTime?>
     public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
     {
         if (value.HasValue)
-            writer.WriteStringValue(value.Value.ToString(_dateFormat));
+            writer.WriteStringValue(value.Value.ToString(_dateFormat, CultureInfo.InvariantCulture));
         else
             writer.WriteNullValue();
     }

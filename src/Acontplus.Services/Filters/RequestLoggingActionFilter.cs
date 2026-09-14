@@ -17,8 +17,6 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
     }
 
     /// <inheritdoc />
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
-        Justification = "Logging action filter intentionally captures failed request metrics and logs failure before rethrowing.")]
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -30,11 +28,17 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
             "Request started: {Method} {Path} - CorrelationId: {CorrelationId}",
             request.Method, request.Path, correlationId);
 
-        try
-        {
-            await next();
-            stopwatch.Stop();
+        var executedContext = await next();
+        stopwatch.Stop();
 
+        if (executedContext.Exception != null && !executedContext.ExceptionHandled)
+        {
+            _logger.LogError(executedContext.Exception,
+                "Request failed: {Method} {Path} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
+                request.Method, request.Path, stopwatch.ElapsedMilliseconds, correlationId);
+        }
+        else
+        {
             // Log successful completion
             _logger.LogInformation(
                 "Request completed: {Method} {Path} - Status: {StatusCode} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
@@ -48,16 +52,6 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
                     "Slow request detected: {Method} {Path} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
                     request.Method, request.Path, stopwatch.ElapsedMilliseconds, correlationId);
             }
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-
-            _logger.LogError(ex,
-                "Request failed: {Method} {Path} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
-                request.Method, request.Path, stopwatch.ElapsedMilliseconds, correlationId);
-
-            throw;
         }
     }
 }
