@@ -26,6 +26,7 @@ public class ValidationError
 public static class XmlValidator
 {
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(500);
+    private static readonly JsonSerializerOptions IndentedJsonOptions = new() { WriteIndented = true };
 
     /// <summary>
     ///     Validates the provided XmlDocument against an XSD schema file.
@@ -37,15 +38,8 @@ public static class XmlValidator
     {
         var validationErrors = new List<ValidationError>();
 
-        if (xmlDocument == null)
-        {
-            throw new ArgumentNullException(nameof(xmlDocument));
-        }
-
-        if (xsdStream == null)
-        {
-            throw new ArgumentNullException(nameof(xsdStream));
-        }
+        ArgumentNullException.ThrowIfNull(xmlDocument);
+        ArgumentNullException.ThrowIfNull(xsdStream);
 
         try
         {
@@ -102,13 +96,11 @@ public static class XmlValidator
             };
 
             // Validate XmlDocument
-            using (var stringReader = new StringReader(xmlDocument.OuterXml))
-            using (var reader = XmlReader.Create(stringReader, settings))
+            using var stringReader = new StringReader(xmlDocument.OuterXml);
+            using var reader = XmlReader.Create(stringReader, settings);
+            while (reader.Read())
             {
-                while (reader.Read())
-                {
-                    // Reading through the stream triggers schema validation callbacks.
-                }
+                // Reading through the stream triggers schema validation callbacks.
             }
         }
         catch (XmlException ex)
@@ -143,7 +135,7 @@ public static class XmlValidator
             return;
         }
 
-        var json = JsonSerializer.Serialize(errors, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(errors, IndentedJsonOptions);
 
         File.WriteAllText(outputFilePath, json);
     }

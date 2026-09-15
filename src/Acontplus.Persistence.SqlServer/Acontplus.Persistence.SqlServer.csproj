@@ -27,22 +27,20 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-
     <!-- SourceLink configuration for enterprise-grade debugging -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
     <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Acontplus.Persistence.Common" />
     <PackageReference Include="Dapper" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Polly" />
+    <ProjectReference Include="../Acontplus.Persistence.Common/Acontplus.Persistence.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Images\icon.png" Pack="true" PackagePath="\" />

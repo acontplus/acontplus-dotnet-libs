@@ -150,31 +150,11 @@ internal static class ExpressionBuilder
         var (selectedCtor, argExpressions) = SelectBestConstructor(
             targetType, sourceParam, sourceProperties, ctorParamRules);
 
-        // Build the NewExpression with constructor arguments
-        var newExpr = Expression.New(selectedCtor, argExpressions);
-
-        // Determine which property names are already covered by constructor parameters
-        var ctorParamNames = new HashSet<string>(
-            selectedCtor.GetParameters().Select(p => p.Name!),
-            StringComparer.OrdinalIgnoreCase);
-
-        // Build member bindings for remaining settable properties NOT covered by constructor
+        var (newExpr, ctorParamNames) = CreateNewExpressionWithCoveredParams(selectedCtor, argExpressions);
         var bindings = new List<MemberBinding>();
 
-        foreach (var destProp in targetProperties)
+        foreach (var destProp in GetSettableCandidateProperties(targetProperties, ctorParamNames))
         {
-            // Skip properties already set via constructor parameter
-            if (ctorParamNames.Contains(destProp.Name))
-                continue;
-
-            // Skip init-only properties — these can only be set via constructor
-            if (IsInitOnlySetter(destProp))
-                continue;
-
-            // Skip non-writable properties
-            if (!HasWritableSetter(destProp))
-                continue;
-
             var binding = BuildMemberBinding(
                 destProp, sourceParam, sourceProperties, config, registry, inProgress);
 
@@ -244,49 +224,11 @@ internal static class ExpressionBuilder
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
-    {
-        var constructors = targetType.GetConstructors();
-
-        ConstructorInfo? bestCtor = null;
-        Expression[]? bestArgs = null;
-        var bestParamCount = -1;
-
-        // Track unsatisfied parameters for error reporting
-        List<string>? unsatisfiedParams = null;
-
-        foreach (var ctor in constructors)
-        {
-            var (allSatisfied, args, currentUnsatisfied) = TryResolveConstructorArguments(
-                ctor, sourceParam, sourceProperties, ctorParamRules);
-            var paramCount = ctor.GetParameters().Length;
-
-            if (allSatisfied && paramCount > bestParamCount)
-            {
-                bestCtor = ctor;
-                bestArgs = args;
-                bestParamCount = paramCount;
-            }
-
-            // Track the constructor with most parameters for error message
-            if (!allSatisfied && (unsatisfiedParams is null || paramCount > (unsatisfiedParams.Count + bestParamCount)))
-            {
-                unsatisfiedParams = currentUnsatisfied;
-            }
-        }
-
-        if (bestCtor is null || bestArgs is null)
-        {
-            var paramList = unsatisfiedParams is not null
-                ? string.Join(", ", unsatisfiedParams)
-                : "unknown";
-
-            throw new InvalidOperationException(
-                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable. Unsatisfied parameters: {paramList}");
-        }
-
-        return (bestCtor, bestArgs);
-    }
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        FindBestConstructor(
+            targetType,
+            ctor => TryResolveConstructorArguments(ctor, sourceParam, sourceProperties, ctorParamRules),
+            string.Empty);
 
     private static (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied) TryResolveConstructorArguments(
         ConstructorInfo ctor,
@@ -1388,28 +1330,11 @@ internal static class ExpressionBuilder
         var (selectedCtor, argExpressions) = SelectBestProjectionConstructor(
             targetType, sourceParam, sourceProperties, ctorParamRules);
 
-        // Build the NewExpression with constructor arguments
-        var newExpr = Expression.New(selectedCtor, argExpressions);
-
-        // Determine which property names are already covered by constructor parameters
-        var ctorParamNames = new HashSet<string>(
-            selectedCtor.GetParameters().Select(p => p.Name!),
-            StringComparer.OrdinalIgnoreCase);
-
-        // Build member bindings for remaining settable properties NOT covered by constructor
+        var (newExpr, ctorParamNames) = CreateNewExpressionWithCoveredParams(selectedCtor, argExpressions);
         var bindings = new List<MemberBinding>();
 
-        foreach (var destProp in targetProperties)
+        foreach (var destProp in GetSettableCandidateProperties(targetProperties, ctorParamNames))
         {
-            if (ctorParamNames.Contains(destProp.Name))
-                continue;
-
-            if (IsInitOnlySetter(destProp))
-                continue;
-
-            if (!HasWritableSetter(destProp))
-                continue;
-
             var binding = BuildProjectionMemberBinding(
                 destProp, sourceParam, sourceProperties, config, inProgress);
 
@@ -1438,10 +1363,37 @@ internal static class ExpressionBuilder
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        FindBestConstructor(
+            targetType,
+            ctor => TryResolveProjectionConstructorArguments(ctor, sourceParam, sourceProperties, ctorParamRules),
+            string.Empty);
+
+    private static (NewExpression NewExpr, HashSet<string> CtorParamNames) CreateNewExpressionWithCoveredParams(
+        ConstructorInfo ctor,
+        Expression[] argExpressions)
+    {
+        var newExpr = Expression.New(ctor, argExpressions);
+        var ctorParamNames = new HashSet<string>(
+            ctor.GetParameters().Select(p => p.Name!),
+            StringComparer.OrdinalIgnoreCase);
+        return (newExpr, ctorParamNames);
+    }
+
+    private static IEnumerable<PropertyInfo> GetSettableCandidateProperties(
+        PropertyInfo[] targetProperties,
+        HashSet<string> coveredCtorParamNames) =>
+        targetProperties.Where(p =>
+            !coveredCtorParamNames.Contains(p.Name) &&
+            !IsInitOnlySetter(p) &&
+            HasWritableSetter(p));
+
+    private static (ConstructorInfo Constructor, Expression[] Arguments) FindBestConstructor(
+        Type targetType,
+        Func<ConstructorInfo, (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied)> tryResolveArguments,
+        string errorSuffix)
     {
         var constructors = targetType.GetConstructors();
-
         ConstructorInfo? bestCtor = null;
         Expression[]? bestArgs = null;
         var bestParamCount = -1;
@@ -1449,8 +1401,7 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            var (allSatisfied, args, currentUnsatisfied) = TryResolveProjectionConstructorArguments(
-                ctor, sourceParam, sourceProperties, ctorParamRules);
+            var (allSatisfied, args, currentUnsatisfied) = tryResolveArguments(ctor);
             var paramCount = ctor.GetParameters().Length;
 
             if (allSatisfied && paramCount > bestParamCount)
@@ -1460,7 +1411,6 @@ internal static class ExpressionBuilder
                 bestParamCount = paramCount;
             }
 
-            // Track the constructor with most parameters for error message
             if (!allSatisfied && (unsatisfiedParams is null || paramCount > (unsatisfiedParams.Count + bestParamCount)))
             {
                 unsatisfiedParams = currentUnsatisfied;
@@ -1474,7 +1424,7 @@ internal static class ExpressionBuilder
                 : "unknown";
 
             throw new InvalidOperationException(
-                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable. Unsatisfied parameters: {paramList}");
+                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable{errorSuffix}. Unsatisfied parameters: {paramList}");
         }
 
         return (bestCtor, bestArgs);

@@ -29,39 +29,7 @@ public static class FilterQueryExtensions
     /// <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
     /// <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
     public static T? GetFilterValue<T>(this FilterQuery query, string key, T? defaultValue = default)
-    {
-        if (query.Filters == null || !query.Filters.TryGetValue(key, out var raw) || raw == null)
-            return defaultValue;
-
-        // 1. Direct cast — no allocation, covers exact-type and already-boxed matches
-        if (raw is T typed)
-            return typed;
-
-        // 2. Unwrap nullable so conversion targets the underlying type (int? → int, etc.)
-        var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
-        var stringValue = raw.ToString();
-
-        if (string.IsNullOrEmpty(stringValue))
-            return defaultValue;
-
-        // 3. Convert.ChangeType — fast for all IConvertible primitives and string-origin values
-        try
-        {
-            return (T)Convert.ChangeType(stringValue, targetType);
-        }
-        catch { /* fall through */ }
-
-        // 4. TypeDescriptor — enums, Guid, custom type converters
-        try
-        {
-            var converter = TypeDescriptor.GetConverter(targetType);
-            if (converter.CanConvertFrom(typeof(string)))
-                return (T?)converter.ConvertFromInvariantString(stringValue);
-        }
-        catch { /* fall through */ }
-
-        return defaultValue;
-    }
+        => query.Filters.GetFilterValue(key, defaultValue);
 
     /// <summary>
     /// Tries to get a filter value by key with type safety and conversion support.
@@ -74,14 +42,13 @@ public static class FilterQueryExtensions
     /// <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
     public static bool TryGetFilterValue<T>(this FilterQuery query, string key, out T? value)
     {
-        if (query.Filters == null || !query.Filters.ContainsKey(key))
+        if (query.Filters == null)
         {
             value = default;
             return false;
         }
 
-        value = GetFilterValue<T>(query, key);
-        return value is not null;
+        return query.Filters.TryGetFilterValue(key, out value);
     }
 
     /// <summary>

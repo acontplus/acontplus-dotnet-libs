@@ -50,11 +50,6 @@
             Registers entities with default conventions and base configuration.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.IsAssignableToGenericType(System.Type,System.Type)">
-            <summary>
-            Helper method to check if a type is assignable to a generic type definition
-            </summary>
-        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
             <summary>
             Registers entities, explicitly setting schemas for specified types.
@@ -72,52 +67,22 @@
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1">
             <summary>
-            Base configuration class for Entity Framework Core entity type configurations.
+            Base configuration class for Entity Framework Core entity type configurations in PostgreSQL.
             Provides common configuration for entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
             </summary>
             <typeparam name="TEntity">The entity type being configured.</typeparam>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures the entity type.
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
-        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigurePrimaryKey(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures the primary key for the entity.
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureTimestamps(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures timestamp properties (CreatedAt, UpdatedAt, DeletedAt).
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureStatusFields(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures status-related boolean fields (IsActive, IsDeleted, IsMobileRequest).
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureExternalUserTracking(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures external user tracking fields (CreatedBy, UpdatedBy, DeletedBy).
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureSoftDeleteAndIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures soft delete query filter and indexes.
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1.ConfigureIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
-            <summary>
-            Configures database indexes for the entity, including standard and partial indexes.
-            </summary>
-            <param name="builder">The builder used to configure the entity type.</param>
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.EntityTypeConfiguration`1">
             <summary>
@@ -145,11 +110,6 @@
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
             <summary>
             Registers entities with default conventions and base configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.HasIdProperty(System.Type)">
-            <summary>
-            Helper method to check if a type has an Id property (for simple entities)
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
@@ -183,60 +143,21 @@
             Base EF Core database context for PostgreSQL with support for domain events, timestamp auditing, and soft deletes.
             </summary>
             <remarks>
-            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
-            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
-            <see cref="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor"/>, which is registered as a singleton by <c>AddPostgresPersistence</c>.
-            This context only manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>) and the
-            hard-delete → soft-delete conversion.
+            Audit identity fields are populated automatically by <see cref="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor"/>.
             </remarks>
-            <param name="options">The options to be used by the DbContext.</param>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
             <summary>
-            Base EF Core database context for PostgreSQL with support for domain events, timestamp auditing, and soft deletes.
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext"/> class.
             </summary>
-            <remarks>
-            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
-            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
-            <see cref="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor"/>, which is registered as a singleton by <c>AddPostgresPersistence</c>.
-            This context only manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>) and the
-            hard-delete → soft-delete conversion.
-            </remarks>
             <param name="options">The options to be used by the DbContext.</param>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher)">
             <summary>
-            Initializes a new instance with a domain event dispatcher.
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Context.BaseContext"/> class with a domain event dispatcher.
             </summary>
             <param name="options">The options to be used by the DbContext.</param>
             <param name="eventDispatcher">The domain event dispatcher.</param>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.SaveChangesAsync(System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.SaveChanges">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.UpdateTimestamps">
-            <summary>
-            Stamps <c>CreatedAt</c> on added entities and <c>UpdatedAt</c> on modified entities.
-            User-identity fields are handled by <see cref="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor"/>.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.HandleSoftDeletes">
-            <summary>
-            Converts hard-deletes into soft-deletes and handles restore logic.
-            User-identity fields on deletion (<c>DeletedBy</c>, <c>DeletedByUserId</c>) are handled
-            by <see cref="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor"/>.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Context.BaseContext.ConfigureDateTimeProperties(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <summary>
-            Applies UTC-aware value converters to all <see cref="T:System.DateTime"/> and nullable DateTime properties.
-            </summary>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.DependencyInjection.PostgresServiceCollectionExtensions">
             <summary>
@@ -335,28 +256,27 @@
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException">
             <summary>
-            Exception thrown when an error occurs within the UnitOfWork operations.
+            Exception thrown when an error occurs within the PostgreSQL UnitOfWork operations.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException"/> class.
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException" /> class.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException"/> class with a specified error message.
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException" /> class with a specified error message.
             </summary>
             <param name="message">The message that describes the error.</param>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException.#ctor(System.String,System.Exception)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException"/> class with a specified error message
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.PostgreSQL.Exceptions.UnitOfWorkException" /> class with a specified error message
             and a reference to the inner exception that is the cause of this exception.
             </summary>
             <param name="message">The error message that explains the reason for the exception.</param>
-            <param name="innerException">The exception that is the cause of the current exception, or a null reference
-            (Nothing in Visual Basic) if no inner exception is specified.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor">
             <summary>
@@ -365,7 +285,7 @@
             <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
             </summary>
             <remarks>
-            Registered automatically by <c>AddPostgresPersistence</c>.  Resolves
+            Registered automatically by <c>AddPostgresPersistence</c>. Resolves
             <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
             safe to use with <c>AddDbContextPool</c> (singleton-compatible).
             </remarks>
@@ -377,16 +297,10 @@
             <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
             </summary>
             <remarks>
-            Registered automatically by <c>AddPostgresPersistence</c>.  Resolves
+            Registered automatically by <c>AddPostgresPersistence</c>. Resolves
             <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
             safe to use with <c>AddDbContextPool</c> (singleton-compatible).
             </remarks>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Interceptors.AuditSaveChangesInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
-            <inheritdoc/>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Mapping.DataTableNameMapper">
             <summary>
@@ -408,8 +322,12 @@
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.ToListAsync``1(System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
             <summary>
-            Maps a DbDataReader to a List of entities of type T with support for records and init-only properties
+            Maps a DbDataReader to a List of entities of type T with support for records and init-only properties.
             </summary>
+            <typeparam name="T">The entity type to map to.</typeparam>
+            <param name="reader">The data reader.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A list of mapped entities.</returns>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.ToList``1(System.Data.Common.DbDataReader)">
             <summary>
@@ -421,205 +339,59 @@
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Mapping.DbDataReaderMapper.MapToObject``1(System.Data.Common.DbDataReader)">
             <summary>
-            Maps a single row from a SqlDataReader to an object of type T using reflection.
+            Maps a single row from a DbDataReader to an object of type T using reflection.
             </summary>
+            <typeparam name="T">The target class type.</typeparam>
+            <param name="reader">The data reader.</param>
+            <returns>A task that resolves to the mapped object or null.</returns>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository">
             <summary>
-            Provides ADO.NET data access operations with retry policy and optional transaction sharing.
+            Provides ADO.NET data access operations with retry policy and optional transaction sharing for PostgreSQL.
             Enhanced with PostgreSQL error handling, domain error mapping, and flexible filter parameter strategies.
-            Optimized for PostgreSQL with high-performance, scalable operations.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
             <summary>
-            Provides ADO.NET data access operations with retry policy and optional transaction sharing.
+            Provides ADO.NET data access operations with retry policy and optional transaction sharing for PostgreSQL.
             Enhanced with PostgreSQL error handling, domain error mapping, and flexible filter parameter strategies.
-            Optimized for PostgreSQL with high-performance, scalable operations.
             </summary>
         </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.RetryPolicy">
-            <summary>
-            Lazy-loaded retry policy based on configuration.
-            </summary>
+        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ProviderName">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SetTransaction(System.Data.Common.DbTransaction)">
-            <summary>
-            Sets the current database transaction from the Unit of Work.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.CreateConnection(System.String)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SetConnection(System.Data.Common.DbConnection)">
-            <summary>
-            Sets the current database connection from the Unit of Work.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.IsTransientException(System.Exception)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ClearTransaction">
-            <summary>
-            Clears the current transaction and connection.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.IsProviderException(System.Exception)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetConnectionString(System.String)">
-            <summary>
-            Retrieves a connection string from configuration, caching it for subsequent calls.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.HandleProviderException(System.Exception,System.String)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetOpenConnectionAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Creates and opens a new NpgsqlConnection.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.CreateDataAdapter(System.Data.Common.DbCommand)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.CreateCommand(System.Data.Common.DbConnection,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-            Creates and configures a NpgsqlCommand.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SanitizeIdentifier(System.String)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.QueryAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a SQL query and maps results to a list of objects.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildPagedSql(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetDataSetAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a SQL query and returns a DataSet.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ExecuteNonQueryAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a non-query SQL command.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.QuerySingleOrDefaultAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a SQL query designed to return a single row or null.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.QueryFirstOrDefaultAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a SQL query and returns the first row or null.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ExecuteScalarAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a query and returns a single scalar value.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ExistsAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Checks if any rows exist for the given query.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.CountAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Gets the count of rows for the given query.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.LongCountAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Gets the long count of rows for the given query.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a paginated SQL query with automatic count query.
-            Uses PostgreSQL LIMIT-OFFSET with parallel query support.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a paginated SQL query with custom count query.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.AddTableNamesOutputParameter(System.Data.Common.DbCommand,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a paginated stored procedure/function.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a filtered SQL query with sorting and search capabilities (non-paginated).
-            Automatically builds parameters from FilterRequest and applies ORDER BY clause.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a filtered stored procedure/function (non-paginated).
-            Passes filter criteria to the stored procedure without pagination parameters.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.GetFilteredDataSetAsync(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes a filtered query and returns a DataSet (non-paginated).
-            Useful for reports that need multiple result sets with filtering and sorting.
-            Supports flexible filter parameter strategy via CommandOptionsDto.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.QueryMultipleAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes multiple queries in a single batch.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ExecuteBatchNonQueryAsync(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,System.Collections.Generic.Dictionary{System.String,System.Object}}},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Executes multiple non-query commands in a batch.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BulkInsertAsync``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Bulk insert using PostgreSQL COPY command for optimal performance.
-            </summary>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BulkInsertAsync(System.Data.DataTable,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Bulk insert from DataTable using PostgreSQL COPY command.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.QueryAsyncEnumerable``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
-            <summary>
-            Streams query results as an async enumerable for memory-efficient processing.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildFilterParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-            Builds query parameters from FilterRequest using flexible strategy.
-            Strategy is determined by CommandOptionsDto.UseJsonFilters flag.
-            - UseJsonFilters = false (default): Individual parameters for raw SQL queries
-            - UseJsonFilters = true: JSONB serialized parameters for PostgreSQL functions
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildFilterParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-            Builds query parameters from PaginationRequest using flexible strategy.
-            Strategy is determined by CommandOptionsDto.UseJsonFilters flag.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildStoredProcedureParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-            Builds stored procedure/function parameters from FilterRequest.
-            Automatically uses JSON strategy for PostgreSQL functions unless explicitly overridden.
-            Uses PostgreSQL naming conventions (lowercase with underscores).
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildStoredProcedureParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
-            <summary>
-            Builds stored procedure/function parameters from PaginationRequest.
-            Automatically uses JSON strategy for PostgreSQL functions unless explicitly overridden.
-            Uses PostgreSQL naming conventions (lowercase with underscores).
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest)">
-            <summary>
-            Builds pagination metadata for PagedResult.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ConvertToSnakeCase(System.String)">
-            <summary>
-            Converts a string to snake_case for PostgreSQL naming conventions.
-            </summary>
+            <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.SnakeCaseRegex">
             <remarks>
@@ -634,127 +406,44 @@
             </code>
             </remarks>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.BuildFilteredSql(System.String,Acontplus.Core.Dtos.Requests.FilterRequest)">
-            <summary>
-            Builds filtered SQL with ORDER BY clause based on FilterRequest.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.AdoRepository.ValidateAndSanitizeSortColumn(System.String)">
-            <summary>
-            Validates and sanitizes sort column names to prevent SQL injection (CWE-89).
-            Uses a strict multi-layer validation approach - regex, length checks, and comprehensive keyword blacklist.
-            </summary>
-        </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository">
             <summary>
             Dapper-based repository implementation for PostgreSQL.
-            Provides simplified data access with automatic object mapping.
+            Provides simplified data access with automatic object mapping and PostgreSQL optimizations.
             </summary>
-            <remarks>
-            This implementation uses Dapper for lightweight ORM functionality with:
-            <list type="bullet">
-            <item><description>Automatic type mapping</description></item>
-            <item><description>Retry policies with exponential backoff</description></item>
-            <item><description>Transaction support via Unit of Work</description></item>
-            <item><description>PostgreSQL-specific optimizations (LIMIT-OFFSET pagination)</description></item>
-            </list>
-            </remarks>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository},Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
             <summary>
             Dapper-based repository implementation for PostgreSQL.
-            Provides simplified data access with automatic object mapping.
-            </summary>
-            <remarks>
-            This implementation uses Dapper for lightweight ORM functionality with:
-            <list type="bullet">
-            <item><description>Automatic type mapping</description></item>
-            <item><description>Retry policies with exponential backoff</description></item>
-            <item><description>Transaction support via Unit of Work</description></item>
-            <item><description>PostgreSQL-specific optimizations (LIMIT-OFFSET pagination)</description></item>
-            </list>
-            </remarks>
-        </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.RetryPolicy">
-            <summary>
-            Lazy-loaded retry policy based on configuration.
+            Provides simplified data access with automatic object mapping and PostgreSQL optimizations.
             </summary>
         </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.DefaultTimeout">
-            <summary>
-            Gets the default command timeout from configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.ProviderName">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QueryFirstOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.CreateConnection(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QuerySingleOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.IsTransientException(System.Exception)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.ExecuteAsync(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SanitizeIdentifier(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.ExecuteScalarAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="P:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.DefaultOrderByClause">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QueryMultipleAsync``2(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GenerateCountQuery(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.QueryMultipleAsync``3(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.BuildPagedSql(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Dapper.DynamicParameters)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
-            <inheritdoc />
-        </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SetTransaction(System.Data.Common.DbTransaction)">
-            <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SetConnection(System.Data.Common.DbConnection)">
-            <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.ClearTransaction">
-            <inheritdoc />
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetConnectionAsync(System.Threading.CancellationToken)">
-            <summary>
-            Gets a connection for the operation. Returns a tuple with the connection and whether it should be disposed.
-            When using a shared connection (from UnitOfWork), it should NOT be disposed by the caller.
-            When creating a new connection, it SHOULD be disposed by the caller.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.ExecuteWithConnectionAsync``1(System.Func{System.Data.Common.DbConnection,System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
-            <summary>
-            Executes an operation with proper connection lifecycle management.
-            Automatically handles connection disposal for owned connections only.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SafeColumnNameRegex">
-            <remarks>
-            Pattern:<br/>
-            <code>^[a-zA-Z_][a-zA-Z0-9_]*$</code><br/>
-            Explanation:<br/>
-            <code>
-            ○ Match if at the beginning of the string.<br/>
-            ○ Match a character in the set [A-Z_a-z].<br/>
-            ○ Match a character in the set [0-9A-Z_a-z] atomically any number of times.<br/>
-            ○ Match if at the end of the string or if before an ending newline.<br/>
-            </code>
-            </remarks>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SafeFunctionNameRegex">
             <remarks>
@@ -771,42 +460,15 @@
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1">
             <summary>
-            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work for PostgreSQL.
             </summary>
             <typeparam name="TContext">The EF Core database context type.</typeparam>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.#ctor(`0,Acontplus.Core.Abstractions.Persistence.IAdoRepository,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork{`0}})">
             <summary>
-            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work for PostgreSQL.
             </summary>
             <typeparam name="TContext">The EF Core database context type.</typeparam>
-        </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.CurrentDbTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.CurrentDbConnection">
-            <inheritdoc/>
-        </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.AdoRepository">
-            <inheritdoc/>
-        </member>
-        <member name="P:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.HasActiveTransaction">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.GetRepository``1">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.SaveChangesAsync(System.Threading.CancellationToken)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.Dispose">
-            <inheritdoc/>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.UnitOfWork.UnitOfWork`1.DisposeAsync">
-            <inheritdoc/>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Utilities.DiagnosticConfig">
             <summary>
@@ -933,98 +595,66 @@
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1">
-            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeColumnNameRegex method.</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.Instance">
-            <summary>Cached, thread-safe singleton instance.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.#ctor">
-            <summary>Initializes the instance.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory">
-            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.CreateInstance">
-            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner">
-            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
-            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if a possible match was found; false if no more matches are possible.</returns>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2">
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1">
             <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeFunctionNameRegex method.</summary>
         </member>
-        <member name="F:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.Instance">
+        <member name="F:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.Instance">
             <summary>Cached, thread-safe singleton instance.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.#ctor">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.#ctor">
             <summary>Initializes the instance.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory">
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory">
             <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.CreateInstance">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.CreateInstance">
             <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner">
+        <member name="T:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner">
             <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
             <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
             <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if a possible match was found; false if no more matches are possible.</returns>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_2.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SafeFunctionNameRegex_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
             <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_3">
+        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_2">
             <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SanitizeRegex method.</summary>
         </member>
-        <member name="F:System.Text.RegularExpressions.Generated.SanitizeRegex_3.Instance">
+        <member name="F:System.Text.RegularExpressions.Generated.SanitizeRegex_2.Instance">
             <summary>Cached, thread-safe singleton instance.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_3.#ctor">
+        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_2.#ctor">
             <summary>Initializes the instance.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory">
+        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory">
             <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory.CreateInstance">
+        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory.CreateInstance">
             <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
         </member>
-        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory.Runner">
+        <member name="T:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory.Runner">
             <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
             <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
             <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if a possible match was found; false if no more matches are possible.</returns>
         </member>
-        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_3.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+        <member name="M:System.Text.RegularExpressions.Generated.SanitizeRegex_2.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
             <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
             <param name="inputSpan">The text being scanned by the regular expression.</param>
             <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
@@ -1040,9 +670,6 @@
         </member>
         <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_asciiLettersAndDigitsAndDotUnderscore">
             <summary>Supports searching for characters in or not in ".0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_asciiWordChars">
-            <summary>Supports searching for characters in or not in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".</summary>
         </member>
         <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_ascii_10000780000000000000800">
             <summary>Supports searching for characters in or not in " ;&lt;=&gt;s".</summary>

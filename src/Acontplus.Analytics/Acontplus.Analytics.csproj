@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -27,21 +26,17 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-
     <!-- SourceLink configuration for enterprise-grade debugging -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
     <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="README.md" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="Images\icon.png">
       <PackagePath>\</PackagePath>
@@ -49,9 +44,7 @@
     </None>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Acontplus.Utilities" />
+    <ProjectReference Include="../Acontplus.Utilities/Acontplus.Utilities.csproj" />
   </ItemGroup>
-
 </Project>

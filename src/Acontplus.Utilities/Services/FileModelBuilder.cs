@@ -54,7 +54,7 @@ public static class FileModelBuilder
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="file"/> is null.</exception>
     public static async Task<FileModel> CreateCompressedAsync(IFormFile file, Func<byte[], byte[]> compressor)
     {
-        if (file == null) throw new ArgumentNullException(nameof(file));
+        ArgumentNullException.ThrowIfNull(file);
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);

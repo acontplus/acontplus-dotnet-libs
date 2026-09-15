@@ -47,7 +47,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
         }
     }
 
-    private void ParseInfoFactura(XmlNode nodeInfoFactura, ComprobanteElectronico comprobante)
+    private static void ParseInfoFactura(XmlNode nodeInfoFactura, ComprobanteElectronico comprobante)
     {
         var infoFac = new InfoFactura
         {

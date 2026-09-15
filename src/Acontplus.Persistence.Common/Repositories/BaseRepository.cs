@@ -1276,7 +1276,7 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
             throw new ArgumentException("Page index must be greater than 0.", nameof(pagination));
         }
 
-        if (pagination.PageSize < 1 || pagination.PageSize > 500) // Max page size guard
+        if (pagination.PageSize is < 1 or > 500) // Max page size guard
         {
             throw new ArgumentException("Page size must be between 1 and 500.", nameof(pagination));
         }

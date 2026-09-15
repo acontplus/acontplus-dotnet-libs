@@ -115,11 +115,9 @@ public sealed class S3ObjectCustom : IDisposable
         S3ObjectKey = s3ObjectKey ?? $"{filePath}{Guid.NewGuid()}{fileExt}";
         S3ObjectUrl = $"https://{BucketName}.s3.{Region}.amazonaws.com/{S3ObjectKey}";
         ContentType = contentType ?? file.ContentType;
-        using (var ms = new MemoryStream())
-        {
-            await file.CopyToAsync(ms);
-            Content = ms.ToArray();
-        }
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        Content = ms.ToArray();
     }
 
     /// <summary>

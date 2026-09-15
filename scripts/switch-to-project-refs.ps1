@@ -2,38 +2,40 @@ param(
     [switch]$Restore = $false
 )
 
-$workspaceRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptDir = $PSScriptRoot
+Set-Location $scriptDir
+$workspaceRoot = Split-Path -Parent $scriptDir
 $backupSuffix = ".packageref.backup"
 
 function Switch-ToProjectReferences {
     $srcPath = Join-Path $workspaceRoot "src"
     $appsPath = Join-Path $workspaceRoot "apps"
-    
+
     $allCsprojFiles = @()
     if (Test-Path $srcPath) { $allCsprojFiles += Get-ChildItem -Path $srcPath -Recurse -Filter "*.csproj" }
     if (Test-Path $appsPath) { $allCsprojFiles += Get-ChildItem -Path $appsPath -Recurse -Filter "*.csproj" }
-    
+
     foreach ($csprojFile in $allCsprojFiles) {
         # Backup original
         Copy-Item $csprojFile.FullName "$($csprojFile.FullName)$backupSuffix" -Force
-        
+
         [xml]$csproj = Get-Content $csprojFile.FullName
         $modified = $false
-        
+
         foreach ($itemGroup in $csproj.Project.ItemGroup) {
             if ($itemGroup.PackageReference) {
                 $toRemove = @()
                 $toAdd = @()
-                
+
                 foreach ($packageRef in $itemGroup.PackageReference) {
                     if ($packageRef.Include -like "Acontplus.*") {
                         # Find corresponding project
-                        $projectPath = Get-ChildItem -Path $srcPath -Recurse -Filter "*.csproj" | 
-                            Where-Object { 
+                        $projectPath = Get-ChildItem -Path $srcPath -Recurse -Filter "*.csproj" |
+                            Where-Object {
                                 [xml]$proj = Get-Content $_.FullName
                                 $proj.Project.PropertyGroup.PackageId -eq $packageRef.Include
                             } | Select-Object -First 1
-                        
+
                         if ($projectPath) {
                             $relativePath = [System.IO.Path]::GetRelativePath($csprojFile.Directory.FullName, $projectPath.FullName)
                             $toRemove += $packageRef
@@ -42,12 +44,12 @@ function Switch-ToProjectReferences {
                         }
                     }
                 }
-                
+
                 # Remove PackageReferences and add ProjectReferences
                 foreach ($ref in $toRemove) {
                     $itemGroup.RemoveChild($ref) | Out-Null
                 }
-                
+
                 foreach ($projPath in $toAdd) {
                     $projectRef = $csproj.CreateElement("ProjectReference")
                     $projectRef.SetAttribute("Include", $projPath)
@@ -55,7 +57,7 @@ function Switch-ToProjectReferences {
                 }
             }
         }
-        
+
         if ($modified) {
             $csproj.Save($csprojFile.FullName)
             Write-Host "Converted $($csprojFile.Name) to project references" -ForegroundColor Green
@@ -66,11 +68,11 @@ function Switch-ToProjectReferences {
 function Restore-PackageReferences {
     $srcPath = Join-Path $workspaceRoot "src"
     $appsPath = Join-Path $workspaceRoot "apps"
-    
+
     $backupFiles = @()
     if (Test-Path $srcPath) { $backupFiles += Get-ChildItem -Path $srcPath -Recurse -Filter "*$backupSuffix" }
     if (Test-Path $appsPath) { $backupFiles += Get-ChildItem -Path $appsPath -Recurse -Filter "*$backupSuffix" }
-    
+
     foreach ($backupFile in $backupFiles) {
         $originalFile = $backupFile.FullName -replace [regex]::Escape($backupSuffix), ""
         Move-Item $backupFile.FullName $originalFile -Force

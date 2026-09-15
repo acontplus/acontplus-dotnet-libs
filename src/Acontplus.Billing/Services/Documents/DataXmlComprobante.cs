@@ -174,7 +174,7 @@ public class DataXmlComprobante
             GetImpuestoRetencion(comp, xmlComp.GetElementsByTagName(TagImpuestos)[0]);
     }
 
-    private void GetInfoTributaria(ComprobanteElectronico ce, XmlNode nodeInfoTrib)
+    private static void GetInfoTributaria(ComprobanteElectronico ce, XmlNode nodeInfoTrib)
     {
         ce.InfoTributaria = new InfoTributaria
         {

@@ -9,9 +9,9 @@ namespace Acontplus.Utilities.IO;
     Justification = "MIME type registry dictionary contains intentional standard MIME type literals")]
 public static class MimeTypeMap
 {
-    private static readonly Lazy<IDictionary<string, string>> Mappings = new(BuildMappings);
+    private static readonly Lazy<Dictionary<string, string>> Mappings = new(BuildMappings);
 
-    private static IDictionary<string, string> BuildMappings()
+    private static Dictionary<string, string> BuildMappings()
     {
         var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {

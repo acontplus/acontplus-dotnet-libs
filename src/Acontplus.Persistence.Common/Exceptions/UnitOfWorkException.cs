@@ -1,9 +1,9 @@
-namespace Acontplus.Persistence.PostgreSQL.Exceptions;
+namespace Acontplus.Persistence.Common.Exceptions;
 
 /// <summary>
-/// Exception thrown when an error occurs within the PostgreSQL UnitOfWork operations.
+/// Exception thrown when an error occurs within UnitOfWork operations.
 /// </summary>
-public class UnitOfWorkException : Common.Exceptions.UnitOfWorkException
+public class UnitOfWorkException : Exception
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitOfWorkException" /> class.

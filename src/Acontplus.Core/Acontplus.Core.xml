@@ -4782,9 +4782,9 @@
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithFilter(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,System.Object)">
             <summary>Returns a copy of <paramref name="filter"/> with a single additional filter entry.</summary>
         </member>
-        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0)">
             <summary>
-            Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+            Retrieves a filter value from the dictionary by key and converts it to <typeparamref name="T"/>.
             <para>
             Conversion priority:
             <list type="number">
@@ -4798,6 +4798,25 @@
             </para>
             </summary>
             <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filters">The filters dictionary.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+            <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0@)">
+            <summary>
+            Tries to retrieve and convert a filter value from the dictionary by key.
+            </summary>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filters">The filters dictionary.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
+            <summary>
+            Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
             <param name="filter">The filter request.</param>
             <param name="key">The filter key to retrieve.</param>
             <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
@@ -4806,8 +4825,6 @@
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0@)">
             <summary>
             Tries to retrieve and convert a filter value by key.
-            Returns <c>true</c> when the key exists <em>and</em> the value converts successfully to
-            <typeparamref name="T"/>; <c>false</c> when the key is absent or conversion fails.
             </summary>
             <typeparam name="T">Target type, including nullable value types.</typeparam>
             <param name="filter">The filter request.</param>

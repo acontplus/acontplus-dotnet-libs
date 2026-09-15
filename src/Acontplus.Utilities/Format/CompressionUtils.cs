@@ -102,10 +102,7 @@ public static class CompressionUtils
     /// <param name="decompressedColumnName">The name of the column to store decompressed strings.</param>
     public static void DecompressColumn(DataTable? table, string compressedColumnName, string decompressedColumnName)
     {
-        if (table == null)
-        {
-            throw new ArgumentNullException(nameof(table));
-        }
+        ArgumentNullException.ThrowIfNull(table);
 
         if (!table.Columns.Contains(compressedColumnName))
         {

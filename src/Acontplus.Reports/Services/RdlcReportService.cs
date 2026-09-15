@@ -262,10 +262,11 @@ namespace Acontplus.Reports.Services
             lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
         }
 
-        private ReportResponse BuildReportResponse(ReportPropsDto reportProps, byte[] fileReport)
+        private static ReportResponse BuildReportResponse(ReportPropsDto reportProps, byte[] fileReport)
         {
-            TryParse(reportProps.ReportFormat.ToUpper(), out FileFormats.FileContentType fc);
-            TryParse(reportProps.ReportFormat.ToUpper(), out FileFormats.FileExtension fe);
+            var format = reportProps.ReportFormat.ToUpperInvariant();
+            _ = Enum.TryParse<FileFormats.FileContentType>(format, ignoreCase: true, out var fc);
+            _ = Enum.TryParse<FileFormats.FileExtension>(format, ignoreCase: true, out var fe);
 
             var response = new ReportResponse
             {

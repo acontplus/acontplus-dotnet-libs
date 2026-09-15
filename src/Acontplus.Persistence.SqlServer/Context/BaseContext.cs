@@ -1,3 +1,5 @@
+using Acontplus.Core.Domain.Common.Events;
+
 namespace Acontplus.Persistence.SqlServer.Context;
 
 /// <summary>
@@ -5,241 +7,79 @@ namespace Acontplus.Persistence.SqlServer.Context;
 /// </summary>
 public class SqlServerModelBuilderOptions
 {
-  /// <summary>Gets or sets a value indicating whether decimal precision/scale conversion is applied. Defaults to <c>true</c>.</summary>
-  public bool EnableDecimalConversion { get; set; } = true;
-  /// <summary>Gets or sets a value indicating whether string properties are mapped as non-Unicode. Defaults to <c>true</c>.</summary>
-  public bool EnableNonUnicodeStrings { get; set; } = true;
+    /// <summary>Gets or sets a value indicating whether decimal precision/scale conversion is applied. Defaults to <c>true</c>.</summary>
+    public bool EnableDecimalConversion { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether string properties are mapped as non-Unicode. Defaults to <c>true</c>.</summary>
+    public bool EnableNonUnicodeStrings { get; set; } = true;
 }
 
 /// <summary>
 /// Base EF Core database context for SQL Server with support for domain events, timestamp auditing, and soft deletes.
 /// </summary>
 /// <remarks>
-/// Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
-/// <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
-/// <see cref="Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>, which is registered as a singleton by <c>AddSqlServerPersistence</c>.
-/// This context only manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>) and the
-/// hard-delete → soft-delete conversion.
+/// Audit identity fields are populated automatically by <see cref="Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>.
 /// </remarks>
-/// <param name="options">The options to be used by the DbContext.</param>
-public abstract class BaseContext(DbContextOptions options) : DbContext(options)
+public abstract class BaseContext : Common.Context.BaseContext
 {
-  private readonly IDomainEventDispatcher? _eventDispatcher;
-  private readonly SqlServerModelBuilderOptions _sqlServerOptions = new();
+    private readonly SqlServerModelBuilderOptions _sqlServerOptions = new();
 
-  /// <summary>
-  /// Initializes a new instance with a domain event dispatcher.
-  /// </summary>
-  /// <param name="options">The options to be used by the DbContext.</param>
-  /// <param name="eventDispatcher">The domain event dispatcher.</param>
-  protected BaseContext(DbContextOptions options, IDomainEventDispatcher eventDispatcher)
-    : this(options)
-  {
-    _eventDispatcher = eventDispatcher;
-  }
-
-  /// <inheritdoc/>
-  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-  {
-    await DispatchDomainEventsAsync(cancellationToken);
-    UpdateTimestamps();
-    HandleSoftDeletes();
-    return await base.SaveChangesAsync(cancellationToken);
-  }
-
-  /// <inheritdoc/>
-  public override int SaveChanges()
-  {
-    DispatchDomainEventsAsync(CancellationToken.None).GetAwaiter().GetResult();
-    UpdateTimestamps();
-    HandleSoftDeletes();
-    return base.SaveChanges();
-  }
-
-  private async Task DispatchDomainEventsAsync(CancellationToken cancellationToken = default)
-  {
-    if (_eventDispatcher is null) return;
-
-    var entitiesWithEvents = ChangeTracker
-      .Entries<IEntityWithDomainEvents>()
-      .Where(e => e.Entity.DomainEvents.Count > 0)
-      .Select(e => e.Entity)
-      .ToList();
-
-    foreach (var entity in entitiesWithEvents)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseContext"/> class.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    protected BaseContext(DbContextOptions options) : base(options)
     {
-      cancellationToken.ThrowIfCancellationRequested();
-      var events = entity.DomainEvents.ToArray();
-      entity.ClearDomainEvents();
-      foreach (var domainEvent in events)
-      {
-        cancellationToken.ThrowIfCancellationRequested();
-        await _eventDispatcher.Dispatch(domainEvent);
-      }
-    }
-  }
-
-  /// <summary>
-  /// Stamps <c>CreatedAt</c> on added entities and <c>UpdatedAt</c> on modified entities.
-  /// User-identity fields are handled by <see cref="Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>.
-  /// </summary>
-  private void UpdateTimestamps()
-  {
-    foreach (var entry in ChangeTracker.Entries<BaseEntity>()
-               .Where(e => e.State is EntityState.Added or EntityState.Modified))
-    {
-      if (entry.State == EntityState.Added)
-        entry.Entity.CreatedAt = DateTime.UtcNow;
-      else
-        entry.Entity.UpdatedAt = DateTime.UtcNow;
-    }
-  }
-
-  /// <summary>
-  /// Converts hard-deletes into soft-deletes and handles restore logic.
-  /// User-identity fields on deletion (<c>DeletedBy</c>, <c>DeletedByUserId</c>) are handled
-  /// by <see cref="Acontplus.Persistence.SqlServer.Interceptors.AuditSaveChangesInterceptor"/>.
-  /// </summary>
-  private void HandleSoftDeletes()
-  {
-    var entries = ChangeTracker.Entries<BaseEntity>()
-      .Where(e => e.State == EntityState.Deleted ||
-                  e.Property(nameof(BaseEntity.IsDeleted)).IsModified)
-      .ToList();
-
-    foreach (var entry in entries)
-    {
-      var entity = entry.Entity;
-
-      if (entry.State == EntityState.Deleted || entity.IsDeleted)
-      {
-        // Convert hard-delete into a soft-delete
-        entry.State = EntityState.Modified;
-        entity.IsDeleted = true;
-        entity.IsActive = false;
-        entity.DeletedAt = DateTime.UtcNow;
-      }
-      else if (!entity.IsDeleted && entity.DeletedAt is not null)
-      {
-        // Restore from soft-delete — clear all deletion stamps
-        entity.DeletedAt = null;
-        entity.DeletedByUserId = null;
-        entity.DeletedBy = null;
-        entity.IsActive = true;
-        entity.UpdatedAt = DateTime.UtcNow;
-      }
-    }
-  }
-
-  /// <inheritdoc/>
-  protected override void OnModelCreating(ModelBuilder modelBuilder)
-  {
-    base.OnModelCreating(modelBuilder);
-
-    ConfigureGlobalFilters(modelBuilder);
-    ConfigureDateTimeProperties(modelBuilder);
-
-    if (Database.IsSqlServer())
-      ApplySqlServerConfigurations(modelBuilder);
-  }
-
-  private static void ConfigureGlobalFilters(ModelBuilder modelBuilder)
-  {
-    var clrTypes = modelBuilder.Model.GetEntityTypes()
-               .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType))
-               .Select(e => e.ClrType);
-
-    foreach (var clrType in clrTypes)
-    {
-      var parameter = Expression.Parameter(clrType, "e");
-      var property = Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
-      var condition = Expression.Lambda(Expression.Not(property), parameter);
-      modelBuilder.Entity(clrType).HasQueryFilter(condition);
-    }
-  }
-
-  /// <summary>
-  /// Applies UTC-aware value converters to all <see cref="DateTime"/> and nullable DateTime properties.
-  /// </summary>
-  protected virtual void ConfigureDateTimeProperties(ModelBuilder builder)
-  {
-    foreach (var entityType in builder.Model.GetEntityTypes())
-    {
-      ConfigureEntityTypeDateTimeProperties(builder, entityType);
-    }
-  }
-
-  private static void ConfigureEntityTypeDateTimeProperties(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType)
-  {
-    foreach (var property in entityType.GetProperties())
-    {
-      if (property.ClrType == typeof(DateTime))
-      {
-        ConfigureDateTimeProperty(builder, entityType, property.Name);
-      }
-      else if (property.ClrType == typeof(DateTime?))
-      {
-        ConfigureNullableDateTimeProperty(builder, entityType, property.Name);
-      }
-    }
-  }
-
-  private static void ConfigureDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
-  {
-    builder.Entity(entityType.ClrType)
-      .Property<DateTime>(propertyName)
-      .HasConversion(
-        v => v.Kind == DateTimeKind.Unspecified
-          ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
-          : v.ToUniversalTime(),
-        v => v);
-  }
-
-  private static void ConfigureNullableDateTimeProperty(ModelBuilder builder, Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType entityType, string propertyName)
-  {
-    builder.Entity(entityType.ClrType)
-      .Property<DateTime?>(propertyName)
-      .HasConversion(
-        v => ConvertToUtc(v),
-        v => v);
-  }
-
-  private static DateTime? ConvertToUtc(DateTime? value)
-  {
-    if (!value.HasValue)
-    {
-      return null;
     }
 
-    return value.Value.Kind == DateTimeKind.Unspecified
-      ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)
-      : value.Value.ToUniversalTime();
-  }
-
-  /// <summary>
-  /// Applies SQL Server-specific model configurations such as decimal precision and non-Unicode string mappings.
-  /// </summary>
-  protected virtual void ApplySqlServerConfigurations(ModelBuilder builder)
-  {
-    if (_sqlServerOptions.EnableDecimalConversion)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseContext"/> class with a domain event dispatcher.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
+    /// <param name="eventDispatcher">The domain event dispatcher.</param>
+    protected BaseContext(DbContextOptions options, IDomainEventDispatcher eventDispatcher)
+        : base(options, eventDispatcher)
     {
-      foreach (var property in builder.Model.GetEntityTypes()
-                 .SelectMany(t => t.GetProperties())
-                 .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
-      {
-        property.SetPrecision(18);
-        property.SetScale(2);
-      }
     }
 
-    if (_sqlServerOptions.EnableNonUnicodeStrings)
+    /// <inheritdoc/>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-      foreach (var property in builder.Model.GetEntityTypes()
-                 .SelectMany(t => t.GetProperties())
-                 .Where(p => p.ClrType == typeof(string) && p.GetColumnType() == null))
-      {
-        property.SetIsUnicode(false);
-      }
+        base.OnModelCreating(modelBuilder);
+
+        if (Database.IsSqlServer())
+        {
+            ApplySqlServerConfigurations(modelBuilder);
+        }
     }
-  }
+
+    /// <summary>
+    /// Applies SQL Server-specific model configurations such as decimal precision and non-Unicode string mappings.
+    /// </summary>
+    /// <param name="builder">The ModelBuilder instance.</param>
+    protected virtual void ApplySqlServerConfigurations(ModelBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        if (_sqlServerOptions.EnableDecimalConversion)
+        {
+            foreach (var property in builder.Model.GetEntityTypes()
+                         .SelectMany(t => t.GetProperties())
+                         .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+            {
+                property.SetPrecision(18);
+                property.SetScale(2);
+            }
+        }
+
+        if (_sqlServerOptions.EnableNonUnicodeStrings)
+        {
+            foreach (var property in builder.Model.GetEntityTypes()
+                         .SelectMany(t => t.GetProperties())
+                         .Where(p => p.ClrType == typeof(string) && p.GetColumnType() == null))
+            {
+                property.SetIsUnicode(false);
+            }
+        }
+    }
 }

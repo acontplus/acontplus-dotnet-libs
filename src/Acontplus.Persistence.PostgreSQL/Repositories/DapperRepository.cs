@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using Acontplus.Core.Enums;
+using System.Text.RegularExpressions;
 using Acontplus.Persistence.Common.Configuration;
+using Acontplus.Persistence.Common.Repositories;
 using Dapper;
 using Microsoft.Extensions.Options;
 
@@ -8,17 +9,8 @@ namespace Acontplus.Persistence.PostgreSQL.Repositories;
 
 /// <summary>
 /// Dapper-based repository implementation for PostgreSQL.
-/// Provides simplified data access with automatic object mapping.
+/// Provides simplified data access with automatic object mapping and PostgreSQL optimizations.
 /// </summary>
-/// <remarks>
-/// This implementation uses Dapper for lightweight ORM functionality with:
-/// <list type="bullet">
-/// <item><description>Automatic type mapping</description></item>
-/// <item><description>Retry policies with exponential backoff</description></item>
-/// <item><description>Transaction support via Unit of Work</description></item>
-/// <item><description>PostgreSQL-specific optimizations (LIMIT-OFFSET pagination)</description></item>
-/// </list>
-/// </remarks>
 [SuppressMessage("SonarQube", "csharpsquid:S2077",
     Justification = "Dynamic SQL for pagination and sanitized procedure names; all filter values and pagination arguments are bound via Dapper DynamicParameters.")]
 [SuppressMessage("Security", "S2077:FormattingSQLQueriesIsSecuritySensitive",
@@ -26,331 +18,41 @@ namespace Acontplus.Persistence.PostgreSQL.Repositories;
 public partial class DapperRepository(
     IConfiguration configuration,
     ILogger<DapperRepository> logger,
-    IOptions<PersistenceResilienceOptions> resilienceOptions) : IDapperRepository
+    IOptions<PersistenceResilienceOptions> resilienceOptions) : BaseDapperRepository(configuration, logger, resilienceOptions)
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly ConcurrentDictionary<string, string> _connectionStrings = new();
-    private readonly ILogger<DapperRepository> _logger = logger;
-    private readonly PersistenceResilienceOptions _resilienceOptions = resilienceOptions?.Value ?? new PersistenceResilienceOptions();
-    private DbConnection? _currentConnection;
-    private DbTransaction? _currentTransaction;
-    private AsyncRetryPolicy? _retryPolicy;
-
-    /// <summary>
-    /// Lazy-loaded retry policy based on configuration.
-    /// </summary>
-    private AsyncRetryPolicy RetryPolicy
-    {
-        get
-        {
-            if (_retryPolicy != null)
-                return _retryPolicy;
-
-            if (!_resilienceOptions.RetryPolicy.Enabled)
-            {
-                _retryPolicy = Policy
-                    .Handle<NpgsqlException>(ex => false)
-                    .RetryAsync(0);
-                return _retryPolicy;
-            }
-
-            var maxRetries = _resilienceOptions.RetryPolicy.MaxRetries;
-            var baseDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.BaseDelaySeconds);
-            var maxDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.MaxDelaySeconds);
-            var exponentialBackoff = _resilienceOptions.RetryPolicy.ExponentialBackoff;
-
-            _retryPolicy = Policy
-                .Handle<NpgsqlException>(PostgresExceptionHandler.IsTransientException)
-                .Or<TimeoutException>()
-                .WaitAndRetryAsync(
-                    maxRetries,
-                    retryAttempt =>
-                    {
-                        if (exponentialBackoff)
-                        {
-                            var calculatedDelay = TimeSpan.FromSeconds(
-                                _resilienceOptions.RetryPolicy.BaseDelaySeconds * Math.Pow(2, retryAttempt - 1));
-                            return calculatedDelay > maxDelay ? maxDelay : calculatedDelay;
-                        }
-                        return baseDelay;
-                    },
-                    (exception, timeSpan, retryCount, context) =>
-                    {
-                        _logger.LogWarning(
-                            exception,
-                            "[Dapper Repository] Retry {RetryCount}/{MaxRetries} after {Delay}ms for PostgreSQL operation",
-                            retryCount,
-                            maxRetries,
-                            timeSpan.TotalMilliseconds);
-                    });
-
-            return _retryPolicy;
-        }
-    }
-
-    /// <summary>
-    /// Gets the default command timeout from configuration.
-    /// </summary>
-    private int DefaultTimeout => _resilienceOptions.Timeout.DefaultCommandTimeoutSeconds;
-
-    #region Query Methods
+    /// <inheritdoc />
+    protected override string ProviderName => "PostgreSQL";
 
     /// <inheritdoc />
-    public async Task<IEnumerable<T>> QueryAsync<T>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                return await connection.QueryAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
+    protected override DbConnection CreateConnection(string connectionString) => new NpgsqlConnection(connectionString);
 
     /// <inheritdoc />
-    public async Task<T?> QueryFirstOrDefaultAsync<T>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                return await connection.QueryFirstOrDefaultAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
+    protected override bool IsTransientException(Exception exception) =>
+        exception is NpgsqlException npgEx && PostgresExceptionHandler.IsTransientException(npgEx);
 
     /// <inheritdoc />
-    public async Task<T?> QuerySingleOrDefaultAsync<T>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                return await connection.QuerySingleOrDefaultAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
-
-    #endregion
-
-    #region Execute Methods
+    protected override string SanitizeIdentifier(string identifier) => $"\"{identifier}\"";
 
     /// <inheritdoc />
-    public async Task<int> ExecuteAsync(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                return await connection.ExecuteAsync(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
+    protected override string DefaultOrderByClause => "ORDER BY 1";
 
     /// <inheritdoc />
-    public async Task<T?> ExecuteScalarAsync<T>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                return await connection.ExecuteScalarAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
-
-    #endregion
-
-    #region Multiple Result Sets
+    protected override string GenerateCountQuery(string sql) => $"SELECT COUNT(*) FROM ({sql}) AS count_query";
 
     /// <inheritdoc />
-    public async Task<(IEnumerable<T1> First, IEnumerable<T2> Second)> QueryMultipleAsync<T1, T2>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
+    protected override string BuildPagedSql(string sql, string orderByClause, PaginationRequest pagination, DynamicParameters parameters)
     {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
+        var offset = pagination.PageIndex * pagination.PageSize;
+        parameters.Add("@Offset", offset);
+        parameters.Add("@Limit", pagination.PageSize);
 
-                using var multi = await connection.QueryMultipleAsync(commandDefinition);
-                var first = await multi.ReadAsync<T1>();
-                var second = await multi.ReadAsync<T2>();
-                return (first, second);
-            }, ct);
-        }, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<(IEnumerable<T1> First, IEnumerable<T2> Second, IEnumerable<T3> Third)> QueryMultipleAsync<T1, T2, T3>(
-        string sql,
-        object? parameters = null,
-        int? commandTimeout = null,
-        CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                using var multi = await connection.QueryMultipleAsync(commandDefinition);
-                var first = await multi.ReadAsync<T1>();
-                var second = await multi.ReadAsync<T2>();
-                var third = await multi.ReadAsync<T3>();
-                return (first, second, third);
-            }, ct);
-        }, cancellationToken);
-    }
-
-    #endregion
-
-    #region Paged Query Methods
-
-    /// <inheritdoc />
-    public async Task<PagedResult<T>> GetPagedAsync<T>(
-        string sql,
-        PaginationRequest pagination,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
-    {
-        var countSql = GenerateCountQuery(sql);
-        return await GetPagedAsync<T>(sql, countSql, pagination, commandTimeout, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<PagedResult<T>> GetPagedAsync<T>(
-        string sql,
-        string countSql,
-        PaginationRequest pagination,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(pagination);
-
-                // PostgreSQL uses LIMIT-OFFSET syntax
-                var offset = pagination.PageIndex * pagination.PageSize;
-                dynamicParams.Add("@Offset", offset);
-                dynamicParams.Add("@Limit", pagination.PageSize);
-
-                var orderByClause = BuildOrderByClause(pagination);
-
-                // PostgreSQL pagination with LIMIT-OFFSET
-                var pagedSql = $@"{sql}
+        return $@"{sql}
 {orderByClause}
 LIMIT @Limit OFFSET @Offset";
-
-                // Execute both queries
-                var combinedSql = $"{countSql}; {pagedSql}";
-
-                var commandDefinition = new CommandDefinition(
-                    combinedSql,
-                    dynamicParams,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    cancellationToken: ct);
-
-                using var multi = await connection.QueryMultipleAsync(commandDefinition);
-                var totalCount = await multi.ReadSingleAsync<int>();
-                var items = (await multi.ReadAsync<T>()).ToList();
-
-                return new PagedResult<T>(
-                    items,
-                    totalCount,
-                    pagination.PageIndex,
-                    pagination.PageSize);
-            }, ct);
-        }, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
+    public override async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
         string storedProcedureName,
         PaginationRequest pagination,
         int? commandTimeout = null,
@@ -366,19 +68,16 @@ LIMIT @Limit OFFSET @Offset";
                 dynamicParams.Add("@p_sort_column", pagination.SortBy);
                 dynamicParams.Add("@p_sort_direction", pagination.SortDirection.ToString().ToLowerInvariant());
 
-                // PostgreSQL functions typically return results directly
                 var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_page_index, @p_page_size, @p_sort_column, @p_sort_direction)";
 
                 var commandDefinition = new CommandDefinition(
                     sql,
                     dynamicParams,
-                    _currentTransaction,
+                    CurrentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     cancellationToken: ct);
 
                 var items = (await connection.QueryAsync<T>(commandDefinition)).ToList();
-
-                // For PostgreSQL, typically need a separate count query or the function returns it
                 var totalCount = items.Count;
 
                 return new PagedResult<T>(
@@ -390,39 +89,8 @@ LIMIT @Limit OFFSET @Offset";
         }, cancellationToken);
     }
 
-    #endregion
-
-    #region Filtered Query Methods
-
     /// <inheritdoc />
-    public async Task<IEnumerable<T>> GetFilteredAsync<T>(
-        string sql,
-        FilterRequest filter,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(filter);
-                var orderByClause = BuildOrderByClause(filter);
-                var filteredSql = $"{sql} {orderByClause}";
-
-                var commandDefinition = new CommandDefinition(
-                    filteredSql,
-                    dynamicParams,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    cancellationToken: ct);
-
-                return await connection.QueryAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
+    public override async Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
         string storedProcedureName,
         FilterRequest filter,
         int? commandTimeout = null,
@@ -436,13 +104,12 @@ LIMIT @Limit OFFSET @Offset";
                 dynamicParams.Add("@p_sort_column", filter.SortBy);
                 dynamicParams.Add("@p_sort_direction", filter.SortDirection.ToString().ToLowerInvariant());
 
-                // Call PostgreSQL function
                 var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_sort_column, @p_sort_direction)";
 
                 var commandDefinition = new CommandDefinition(
                     sql,
                     dynamicParams,
-                    _currentTransaction,
+                    CurrentTransaction,
                     commandTimeout ?? DefaultTimeout,
                     cancellationToken: ct);
 
@@ -451,168 +118,8 @@ LIMIT @Limit OFFSET @Offset";
         }, cancellationToken);
     }
 
-    #endregion
-
-    #region Transaction Support
-
-    /// <inheritdoc />
-    public void SetTransaction(DbTransaction transaction) => _currentTransaction = transaction;
-
-    /// <inheritdoc />
-    public void SetConnection(DbConnection connection) => _currentConnection = connection;
-
-    /// <inheritdoc />
-    public void ClearTransaction()
-    {
-        _currentTransaction = null;
-        _currentConnection = null;
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets a connection for the operation. Returns a tuple with the connection and whether it should be disposed.
-    /// When using a shared connection (from UnitOfWork), it should NOT be disposed by the caller.
-    /// When creating a new connection, it SHOULD be disposed by the caller.
-    /// </summary>
-    private async Task<(DbConnection Connection, bool ShouldDispose)> GetConnectionAsync(CancellationToken cancellationToken)
-    {
-        if (_currentConnection != null)
-        {
-            if (_currentConnection.State != ConnectionState.Open)
-            {
-                await _currentConnection.OpenAsync(cancellationToken);
-            }
-            // Shared connection from UnitOfWork - DO NOT dispose
-            return (_currentConnection, ShouldDispose: false);
-        }
-
-        var connectionString = GetConnectionString();
-        var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
-        // New connection created - caller should dispose
-        return (connection, ShouldDispose: true);
-    }
-
-    /// <summary>
-    /// Executes an operation with proper connection lifecycle management.
-    /// Automatically handles connection disposal for owned connections only.
-    /// </summary>
-    private async Task<TResult> ExecuteWithConnectionAsync<TResult>(
-        Func<DbConnection, Task<TResult>> operation,
-        CancellationToken cancellationToken)
-    {
-        var (connection, shouldDispose) = await GetConnectionAsync(cancellationToken);
-        try
-        {
-            return await operation(connection);
-        }
-        finally
-        {
-            if (shouldDispose)
-            {
-                await connection.DisposeAsync();
-            }
-        }
-    }
-
-    private string GetConnectionString(string connectionName = "DefaultConnection")
-    {
-        return _connectionStrings.GetOrAdd(connectionName, name =>
-        {
-            var connectionString = _configuration.GetConnectionString(name);
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException(
-                    $"Connection string '{name}' not found in configuration.");
-            }
-            return connectionString;
-        });
-    }
-
-    private static DynamicParameters BuildDynamicParameters(PaginationRequest pagination)
-    {
-        var parameters = new DynamicParameters();
-
-        if (pagination.Filters != null)
-        {
-            foreach (var filter in pagination.Filters)
-            {
-                parameters.Add($"@{filter.Key}", filter.Value);
-            }
-        }
-
-        if (!string.IsNullOrEmpty(pagination.SearchTerm))
-        {
-            parameters.Add("@SearchTerm", $"%{pagination.SearchTerm}%");
-        }
-
-        return parameters;
-    }
-
-    private static DynamicParameters BuildDynamicParameters(FilterRequest filter)
-    {
-        var parameters = new DynamicParameters();
-
-        if (filter.Filters != null)
-        {
-            foreach (var f in filter.Filters)
-            {
-                parameters.Add($"@{f.Key}", f.Value);
-            }
-        }
-
-        if (!string.IsNullOrEmpty(filter.SearchTerm))
-        {
-            parameters.Add("@SearchTerm", $"%{filter.SearchTerm}%");
-        }
-
-        return parameters;
-    }
-
-    private static string BuildOrderByClause(PaginationRequest pagination)
-    {
-        if (string.IsNullOrEmpty(pagination.SortBy))
-        {
-            return "ORDER BY 1"; // PostgreSQL requires ORDER BY for LIMIT/OFFSET
-        }
-
-        var direction = pagination.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
-        var sanitizedColumn = SanitizeColumnName(pagination.SortBy);
-        return $"ORDER BY {sanitizedColumn} {direction}";
-    }
-
-    private static string BuildOrderByClause(FilterRequest filter)
-    {
-        if (string.IsNullOrEmpty(filter.SortBy))
-        {
-            return string.Empty;
-        }
-
-        var direction = filter.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
-        var sanitizedColumn = SanitizeColumnName(filter.SortBy);
-        return $"ORDER BY {sanitizedColumn} {direction}";
-    }
-
-    private static string GenerateCountQuery(string sql) => $"SELECT COUNT(*) FROM ({sql}) AS count_query";
-
-    [GeneratedRegex(@"^[a-zA-Z_][a-zA-Z0-9_]*$")]
-    private static partial Regex SafeColumnNameRegex();
-
     [GeneratedRegex(@"^[a-zA-Z_][a-zA-Z0-9_.]*$")]
     private static partial Regex SafeFunctionNameRegex();
-
-    private static string SanitizeColumnName(string columnName)
-    {
-        if (!SafeColumnNameRegex().IsMatch(columnName))
-        {
-            throw new ArgumentException($"Invalid column name: {columnName}");
-        }
-        // PostgreSQL uses double quotes for identifiers
-        return $"\"{columnName}\"";
-    }
 
     private static string SanitizeFunctionName(string functionName)
     {
@@ -622,6 +129,4 @@ LIMIT @Limit OFFSET @Offset";
         }
         return functionName;
     }
-
-    #endregion
 }

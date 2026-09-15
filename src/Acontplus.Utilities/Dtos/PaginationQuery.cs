@@ -38,11 +38,17 @@ public sealed record PaginationQuery(
         const string filtersKey = "filters";
 
         // Parse page index with fallback to 1
-        int.TryParse(context.Request.Query[pageIndexKey], out var pageIndex);
-        pageIndex = pageIndex == 0 ? 1 : pageIndex;
+        if (!int.TryParse(context.Request.Query[pageIndexKey], out var pageIndex) || pageIndex < 1)
+        {
+            pageIndex = 1;
+        }
 
         // Parse page size with fallback to 10 and max limit of 1000
-        int.TryParse(context.Request.Query[pageSizeKey], out var pageSize);
+        if (!int.TryParse(context.Request.Query[pageSizeKey], out var pageSize))
+        {
+            pageSize = 10;
+        }
+
         pageSize = pageSize switch
         {
             < 1 => 10,
@@ -51,8 +57,8 @@ public sealed record PaginationQuery(
         };
 
         // Parse sort direction with enum parsing
-        Enum.TryParse<SortDirection>(context.Request.Query[sortDirectionKey],
-                                   ignoreCase: true, out var sortDirection);
+        _ = Enum.TryParse<SortDirection>(context.Request.Query[sortDirectionKey],
+            ignoreCase: true, out var sortDirection);
 
         // Parse filters from query parameters
         var filters = new Dictionary<string, object>();
