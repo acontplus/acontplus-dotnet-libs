@@ -97,8 +97,7 @@
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration">
             <summary>
-            Provides methods for registering simple entities with the Entity Framework ModelBuilder,
-            supporting custom schema/table names and entity configurations.
+            Provides methods for registering simple (non-auditable) EF Core entity types with the PostgreSQL model builder.
             </summary>
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
@@ -445,10 +444,10 @@
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.BuildPagedSql(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Dapper.DynamicParameters)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.CreatePagedStoredProcedureCommand``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.CreateFilteredStoredProcedureCommand(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.PostgreSQL.Repositories.DapperRepository.SafeFunctionNameRegex">

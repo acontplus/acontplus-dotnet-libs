@@ -260,6 +260,61 @@
             <param name="nameConfigs">Array of entity type, schema, and table name tuples.</param>
             <returns>A dictionary of entity type to schema/table tuples.</returns>
         </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider">
+            <summary>
+            Provides reusable registration logic for EF Core entity types across database providers.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.#ctor(System.Type,System.Func{System.Type,System.Boolean},System.String)">
+            <summary>
+            Provides reusable registration logic for EF Core entity types across database providers.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.Register(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with the ModelBuilder applying base and custom configurations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.Register(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
+            <summary>
+            Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schemas for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schema and/or table names for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with specific custom configurations.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.AuditableEntityRegistrationProvider">
+            <summary>
+            Entity registration provider for auditable entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.AuditableEntityRegistrationProvider.#ctor(System.Type,System.String)">
+            <summary>
+            Entity registration provider for auditable entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.SimpleEntityRegistrationProvider">
+            <summary>
+            Entity registration provider for simple entities not inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.SimpleEntityRegistrationProvider.#ctor(System.Type,System.String)">
+            <summary>
+            Entity registration provider for simple entities not inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Context.BaseContext">
             <summary>
             Base EF Core database context with support for domain events, timestamp auditing, and soft deletes.
@@ -896,11 +951,21 @@
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreatePagedStoredProcedureCommand``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Creates provider-specific command definition and total count extractor for stored procedure paging.
+            </summary>
+        </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreateFilteredStoredProcedureCommand(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Creates provider-specific command definition for filtered stored procedure execution.
+            </summary>
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
             <inheritdoc />

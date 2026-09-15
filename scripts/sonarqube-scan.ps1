@@ -194,6 +194,7 @@ $beginArgs = @(
     "/d:sonar.scm.provider=git",
     "/d:sonar.sourceEncoding=UTF-8",
     "/d:sonar.projectBaseDir=$repoRoot",
+    "/d:sonar.dotnet.excludeTestProjects=true",
     "/d:sonar.exclusions=$exclusions",
     "/d:sonar.cpd.exclusions=**/Migrations/**,**/tests/**,**/bin/**,**/obj/**,**/apps/**",
     "/d:sonar.coverage.exclusions=**/tests/**,**/Migrations/**,**/apps/**",

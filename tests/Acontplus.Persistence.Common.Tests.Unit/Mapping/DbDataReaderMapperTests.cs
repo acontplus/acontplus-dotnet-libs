@@ -65,8 +65,8 @@ public class DbDataReaderMapperTests
 
         var result = await reader.ToListAsync<SampleDto>(TestContext.Current.CancellationToken);
 
-        Assert.Single(result);
-        Assert.Equal(0, result[0].Id);
-        Assert.Equal(0m, result[0].Amount);
+        var single = Assert.Single(result);
+        Assert.Equal(0, single.Id);
+        Assert.Equal(0m, single.Amount);
     }
 }

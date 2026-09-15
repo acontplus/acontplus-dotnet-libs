@@ -125,7 +125,7 @@ public class DataXmlComprobante
         GetDetails(comp, xmlComp.GetElementsByTagName(TagDetalles)[0]);
     }
 
-    private void ProcessNotaCredito(XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessNotaCredito(XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         var nodeNc = xmlComp.GetElementsByTagName("notaCredito")[0];
         comp.VersionComp = nodeNc?.Attributes?[TagVersion]?.Value ?? string.Empty;

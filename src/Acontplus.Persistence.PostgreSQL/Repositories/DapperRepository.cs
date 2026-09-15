@@ -52,70 +52,49 @@ LIMIT @Limit OFFSET @Offset";
     }
 
     /// <inheritdoc />
-    public override async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
+    protected override (CommandDefinition Command, Func<List<T>, int> TotalCountExtractor) CreatePagedStoredProcedureCommand<T>(
         string storedProcedureName,
         PaginationRequest pagination,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
+        int? commandTimeout,
+        CancellationToken cancellationToken)
     {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(pagination);
-                dynamicParams.Add("@p_page_index", pagination.PageIndex);
-                dynamicParams.Add("@p_page_size", pagination.PageSize);
-                dynamicParams.Add("@p_sort_column", pagination.SortBy);
-                dynamicParams.Add("@p_sort_direction", pagination.SortDirection.ToString().ToLowerInvariant());
+        var dynamicParams = BuildDynamicParameters(pagination);
+        dynamicParams.Add("@p_page_index", pagination.PageIndex);
+        dynamicParams.Add("@p_page_size", pagination.PageSize);
+        dynamicParams.Add("@p_sort_column", pagination.SortBy);
+        dynamicParams.Add("@p_sort_direction", pagination.SortDirection.ToString().ToLowerInvariant());
 
-                var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_page_index, @p_page_size, @p_sort_column, @p_sort_direction)";
+        var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_page_index, @p_page_size, @p_sort_column, @p_sort_direction)";
 
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    dynamicParams,
-                    CurrentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    cancellationToken: ct);
+        var command = new CommandDefinition(
+            sql,
+            dynamicParams,
+            CurrentTransaction,
+            commandTimeout ?? DefaultTimeout,
+            cancellationToken: cancellationToken);
 
-                var items = (await connection.QueryAsync<T>(commandDefinition)).ToList();
-                var totalCount = items.Count;
-
-                return new PagedResult<T>(
-                    items,
-                    totalCount,
-                    pagination.PageIndex,
-                    pagination.PageSize);
-            }, ct);
-        }, cancellationToken);
+        return (command, items => items.Count);
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
+    protected override CommandDefinition CreateFilteredStoredProcedureCommand(
         string storedProcedureName,
         FilterRequest filter,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
+        int? commandTimeout,
+        CancellationToken cancellationToken)
     {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(filter);
-                dynamicParams.Add("@p_sort_column", filter.SortBy);
-                dynamicParams.Add("@p_sort_direction", filter.SortDirection.ToString().ToLowerInvariant());
+        var dynamicParams = BuildDynamicParameters(filter);
+        dynamicParams.Add("@p_sort_column", filter.SortBy);
+        dynamicParams.Add("@p_sort_direction", filter.SortDirection.ToString().ToLowerInvariant());
 
-                var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_sort_column, @p_sort_direction)";
+        var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_sort_column, @p_sort_direction)";
 
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    dynamicParams,
-                    CurrentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    cancellationToken: ct);
-
-                return await connection.QueryAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
+        return new CommandDefinition(
+            sql,
+            dynamicParams,
+            CurrentTransaction,
+            commandTimeout ?? DefaultTimeout,
+            cancellationToken: cancellationToken);
     }
 
     [GeneratedRegex(@"^[a-zA-Z_][a-zA-Z0-9_.]*$")]

@@ -3,11 +3,13 @@ using Acontplus.Persistence.Common.Configurations;
 namespace Acontplus.Persistence.PostgreSQL.Configurations;
 
 /// <summary>
-/// Provides methods for registering simple entities with the Entity Framework ModelBuilder,
-/// supporting custom schema/table names and entity configurations.
+/// Provides methods for registering simple (non-auditable) EF Core entity types with the PostgreSQL model builder.
 /// </summary>
 public static class SimpleEntityRegistration
 {
+    private static readonly EntityRegistrationProvider RegistrationProvider = new SimpleEntityRegistrationProvider(
+        typeof(SimpleEntityTypeConfiguration<>));
+
     /// <summary>
     /// Registers non-auditable entities with the ModelBuilder, applying base configurations,
     /// custom schema/table names, and optional specific entity configurations.
@@ -18,22 +20,13 @@ public static class SimpleEntityRegistration
         Dictionary<Type, (string schema, string table)>? nameMap,
         Dictionary<Type, Type>? customConfigurations,
         params Type[] entityTypes) =>
-        EntityRegistrationHelper.RegisterEntities(
-            modelBuilder,
-            new EntityRegistrationOptions(
-                dbContextType,
-                typeof(SimpleEntityTypeConfiguration<>),
-                EntityRegistrationHelper.IsValidSimpleEntity,
-                "must be a concrete class not inheriting from BaseEntity with an Id property",
-                nameMap,
-                customConfigurations),
-            entityTypes);
+        RegistrationProvider.Register(modelBuilder, dbContextType, nameMap, customConfigurations, entityTypes);
 
     /// <summary>
     /// Registers entities with default conventions and base configuration.
     /// </summary>
     public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null, null, entityTypes);
+        RegistrationProvider.Register(modelBuilder, dbContextType, entityTypes);
 
     /// <summary>
     /// Registers entities, explicitly setting schemas for specified types.
@@ -42,11 +35,7 @@ public static class SimpleEntityRegistration
         ModelBuilder modelBuilder,
         Type dbContextType,
         params (Type entityType, string schema)[] entitySchemas) =>
-        EntityRegistrationHelper.RegisterEntitiesWithSchemas(
-            (mb, ctx, map, _, types) => RegisterEntities(mb, ctx, map, null, types),
-            modelBuilder,
-            dbContextType,
-            entitySchemas);
+        RegistrationProvider.RegisterWithSchemas(modelBuilder, dbContextType, entitySchemas);
 
     /// <summary>
     /// Registers entities, explicitly setting schema and/or table names for specified types.
@@ -55,11 +44,7 @@ public static class SimpleEntityRegistration
         ModelBuilder modelBuilder,
         Type dbContextType,
         params (Type entityType, string schema, string table)[] nameConfigs) =>
-        EntityRegistrationHelper.RegisterEntitiesWithNames(
-            (mb, ctx, map, _, types) => RegisterEntities(mb, ctx, map, null, types),
-            modelBuilder,
-            dbContextType,
-            nameConfigs);
+        RegistrationProvider.RegisterWithNames(modelBuilder, dbContextType, nameConfigs);
 
     /// <summary>
     /// Registers entities with specific custom configurations.
@@ -69,5 +54,5 @@ public static class SimpleEntityRegistration
         Type dbContextType,
         Dictionary<Type, Type> customConfigurations,
         params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null, customConfigurations, entityTypes);
+        RegistrationProvider.RegisterWithCustomConfigurations(modelBuilder, dbContextType, customConfigurations, entityTypes);
 }

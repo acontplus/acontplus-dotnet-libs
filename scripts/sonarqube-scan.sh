@@ -165,6 +165,7 @@ if [ "$EXPORT_ONLY" != "true" ]; then
       /d:sonar.scm.provider="git" \
       /d:sonar.sourceEncoding="UTF-8" \
       /d:sonar.projectBaseDir="$REPO_ROOT" \
+      /d:sonar.dotnet.excludeTestProjects="true" \
       /d:sonar.exclusions="$EXCLUSIONS" \
       /d:sonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**,**/apps/**" \
       /d:sonar.coverage.exclusions="**/tests/**,**/Migrations/**,**/apps/**" \

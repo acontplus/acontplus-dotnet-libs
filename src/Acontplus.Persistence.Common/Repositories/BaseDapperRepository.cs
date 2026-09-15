@@ -338,12 +338,40 @@ public abstract partial class BaseDapperRepository(
         }, cancellationToken);
     }
 
+    /// <summary>
+    /// Creates provider-specific command definition and total count extractor for stored procedure paging.
+    /// </summary>
+    protected abstract (CommandDefinition Command, Func<List<T>, int> TotalCountExtractor) CreatePagedStoredProcedureCommand<T>(
+        string storedProcedureName,
+        PaginationRequest pagination,
+        int? commandTimeout,
+        CancellationToken cancellationToken);
+
     /// <inheritdoc />
-    public abstract Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
+    public virtual async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
         string storedProcedureName,
         PaginationRequest pagination,
         int? commandTimeout = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+    {
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
+        {
+            return await ExecuteWithConnectionAsync(async connection =>
+            {
+                var (commandDefinition, totalCountExtractor) = CreatePagedStoredProcedureCommand<T>(
+                    storedProcedureName, pagination, commandTimeout, ct);
+
+                var items = (await connection.QueryAsync<T>(commandDefinition)).ToList();
+                var totalCount = totalCountExtractor(items);
+
+                return new PagedResult<T>(
+                    items,
+                    totalCount,
+                    pagination.PageIndex,
+                    pagination.PageSize);
+            }, ct);
+        }, cancellationToken);
+    }
 
     #endregion
 
@@ -376,12 +404,33 @@ public abstract partial class BaseDapperRepository(
         }, cancellationToken);
     }
 
+    /// <summary>
+    /// Creates provider-specific command definition for filtered stored procedure execution.
+    /// </summary>
+    protected abstract CommandDefinition CreateFilteredStoredProcedureCommand(
+        string storedProcedureName,
+        FilterRequest filter,
+        int? commandTimeout,
+        CancellationToken cancellationToken);
+
     /// <inheritdoc />
-    public abstract Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
+    public virtual async Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
         string storedProcedureName,
         FilterRequest filter,
         int? commandTimeout = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+    {
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
+        {
+            return await ExecuteWithConnectionAsync(async connection =>
+            {
+                var commandDefinition = CreateFilteredStoredProcedureCommand(
+                    storedProcedureName, filter, commandTimeout, ct);
+
+                return await connection.QueryAsync<T>(commandDefinition);
+            }, ct);
+        }, cancellationToken);
+    }
 
     #endregion
 

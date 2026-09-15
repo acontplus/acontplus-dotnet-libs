@@ -45,68 +45,47 @@ FETCH NEXT @PageSize ROWS ONLY";
     }
 
     /// <inheritdoc />
-    public override async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
+    protected override (CommandDefinition Command, Func<List<T>, int> TotalCountExtractor) CreatePagedStoredProcedureCommand<T>(
         string storedProcedureName,
         PaginationRequest pagination,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
+        int? commandTimeout,
+        CancellationToken cancellationToken)
     {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(pagination);
-                dynamicParams.Add("@PageIndex", pagination.PageIndex);
-                dynamicParams.Add("@PageSize", pagination.PageSize);
-                dynamicParams.Add("@SortColumn", pagination.SortBy);
-                dynamicParams.Add("@SortDirection", pagination.SortDirection.ToString());
-                dynamicParams.Add("@TotalCount", dbType: DbType.Int32, direction: ParameterDirection.Output);
+        var dynamicParams = BuildDynamicParameters(pagination);
+        dynamicParams.Add("@PageIndex", pagination.PageIndex);
+        dynamicParams.Add("@PageSize", pagination.PageSize);
+        dynamicParams.Add("@SortColumn", pagination.SortBy);
+        dynamicParams.Add("@SortDirection", pagination.SortDirection.ToString());
+        dynamicParams.Add("@TotalCount", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var commandDefinition = new CommandDefinition(
-                    storedProcedureName,
-                    dynamicParams,
-                    CurrentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    CommandType.StoredProcedure,
-                    cancellationToken: ct);
+        var command = new CommandDefinition(
+            storedProcedureName,
+            dynamicParams,
+            CurrentTransaction,
+            commandTimeout ?? DefaultTimeout,
+            CommandType.StoredProcedure,
+            cancellationToken: cancellationToken);
 
-                var items = (await connection.QueryAsync<T>(commandDefinition)).ToList();
-                var totalCount = dynamicParams.Get<int>("@TotalCount");
-
-                return new PagedResult<T>(
-                    items,
-                    totalCount,
-                    pagination.PageIndex,
-                    pagination.PageSize);
-            }, ct);
-        }, cancellationToken);
+        return (command, _ => dynamicParams.Get<int>("@TotalCount"));
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<T>> GetFilteredFromStoredProcedureAsync<T>(
+    protected override CommandDefinition CreateFilteredStoredProcedureCommand(
         string storedProcedureName,
         FilterRequest filter,
-        int? commandTimeout = null,
-        CancellationToken cancellationToken = default)
+        int? commandTimeout,
+        CancellationToken cancellationToken)
     {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
-            {
-                var dynamicParams = BuildDynamicParameters(filter);
-                dynamicParams.Add("@SortColumn", filter.SortBy);
-                dynamicParams.Add("@SortDirection", filter.SortDirection.ToString());
+        var dynamicParams = BuildDynamicParameters(filter);
+        dynamicParams.Add("@SortColumn", filter.SortBy);
+        dynamicParams.Add("@SortDirection", filter.SortDirection.ToString());
 
-                var commandDefinition = new CommandDefinition(
-                    storedProcedureName,
-                    dynamicParams,
-                    CurrentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    CommandType.StoredProcedure,
-                    cancellationToken: ct);
-
-                return await connection.QueryAsync<T>(commandDefinition);
-            }, ct);
-        }, cancellationToken);
+        return new CommandDefinition(
+            storedProcedureName,
+            dynamicParams,
+            CurrentTransaction,
+            commandTimeout ?? DefaultTimeout,
+            CommandType.StoredProcedure,
+            cancellationToken: cancellationToken);
     }
 }
