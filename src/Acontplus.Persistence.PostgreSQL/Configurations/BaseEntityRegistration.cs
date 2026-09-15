@@ -14,24 +14,25 @@ public static class BaseEntityRegistration
     public static void RegisterEntities(
         ModelBuilder modelBuilder,
         Type dbContextType,
-        Dictionary<Type, (string schema, string table)> nameMap,
-        Dictionary<Type, Type> customConfigurations,
+        Dictionary<Type, (string schema, string table)>? nameMap,
+        Dictionary<Type, Type>? customConfigurations,
         params Type[] entityTypes) =>
         EntityRegistrationHelper.RegisterEntities(
             modelBuilder,
-            dbContextType,
-            nameMap,
-            customConfigurations,
-            typeof(BaseEntityTypeConfiguration<>),
-            EntityRegistrationHelper.IsValidAuditableEntity,
-            "must be a concrete class inheriting from BaseEntity",
+            new EntityRegistrationOptions(
+                dbContextType,
+                typeof(BaseEntityTypeConfiguration<>),
+                EntityRegistrationHelper.IsValidAuditableEntity,
+                "must be a concrete class inheriting from BaseEntity",
+                nameMap,
+                customConfigurations),
             entityTypes);
 
     /// <summary>
     /// Registers entities with default conventions and base configuration.
     /// </summary>
     public static void RegisterEntities(ModelBuilder modelBuilder, Type dbContextType, params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null!, null!, entityTypes);
+        RegisterEntities(modelBuilder, dbContextType, null, null, entityTypes);
 
     /// <summary>
     /// Registers entities, explicitly setting schemas for specified types.
@@ -39,12 +40,12 @@ public static class BaseEntityRegistration
     public static void RegisterEntitiesWithSchemas(
         ModelBuilder modelBuilder,
         Type dbContextType,
-        params (Type entityType, string schema)[] entitySchemas)
-    {
-        var schemaMap = EntityRegistrationHelper.CreateSchemaMap(entitySchemas);
-        var entityTypes = entitySchemas.Select(x => x.entityType).ToArray();
-        RegisterEntities(modelBuilder, dbContextType, schemaMap, null!, entityTypes);
-    }
+        params (Type entityType, string schema)[] entitySchemas) =>
+        EntityRegistrationHelper.RegisterEntitiesWithSchemas(
+            (mb, ctx, map, _, types) => RegisterEntities(mb, ctx, map, null, types),
+            modelBuilder,
+            dbContextType,
+            entitySchemas);
 
     /// <summary>
     /// Registers entities, explicitly setting schema and/or table names for specified types.
@@ -52,12 +53,12 @@ public static class BaseEntityRegistration
     public static void RegisterEntitiesWithNames(
         ModelBuilder modelBuilder,
         Type dbContextType,
-        params (Type entityType, string schema, string table)[] nameConfigs)
-    {
-        var nameMap = EntityRegistrationHelper.CreateNameMap(nameConfigs);
-        var entityTypes = nameConfigs.Select(x => x.entityType).ToArray();
-        RegisterEntities(modelBuilder, dbContextType, nameMap, null!, entityTypes);
-    }
+        params (Type entityType, string schema, string table)[] nameConfigs) =>
+        EntityRegistrationHelper.RegisterEntitiesWithNames(
+            (mb, ctx, map, _, types) => RegisterEntities(mb, ctx, map, null, types),
+            modelBuilder,
+            dbContextType,
+            nameConfigs);
 
     /// <summary>
     /// Registers entities with specific custom configurations.
@@ -67,5 +68,5 @@ public static class BaseEntityRegistration
         Type dbContextType,
         Dictionary<Type, Type> customConfigurations,
         params Type[] entityTypes) =>
-        RegisterEntities(modelBuilder, dbContextType, null!, customConfigurations, entityTypes);
+        RegisterEntities(modelBuilder, dbContextType, null, customConfigurations, entityTypes);
 }

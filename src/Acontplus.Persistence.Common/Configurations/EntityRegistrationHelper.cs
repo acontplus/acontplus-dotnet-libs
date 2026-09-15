@@ -6,6 +6,17 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Acontplus.Persistence.Common.Configurations;
 
 /// <summary>
+/// Options and delegates for registering entities with the ModelBuilder.
+/// </summary>
+public sealed record EntityRegistrationOptions(
+    Type DbContextType,
+    Type BaseConfigurationTypeDefinition,
+    Func<Type, bool> IsValidEntity,
+    string InvalidEntityMessage,
+    Dictionary<Type, (string schema, string table)>? NameMap = null,
+    Dictionary<Type, Type>? CustomConfigurations = null);
+
+/// <summary>
 /// Provides unified helper methods for registering EF Core entity types with a model builder.
 /// Handles table naming, schema resolution, base configurations, and custom entity configurations.
 /// </summary>
@@ -18,41 +29,53 @@ public static class EntityRegistrationHelper
         bool IsSchemaExplicit);
 
     /// <summary>
-    /// Registers entities with the ModelBuilder using a specified base configuration type definition and entity validator.
+    /// Registers entities with the ModelBuilder using the provided registration options.
     /// </summary>
     /// <param name="modelBuilder">The EF Core ModelBuilder instance.</param>
-    /// <param name="dbContextType">The DbContext type, used to resolve DbSet property names as default table names.</param>
-    /// <param name="nameMap">Optional explicit mapping of entity types to schema and table names.</param>
-    /// <param name="customConfigurations">Optional explicit mapping of entity types to custom IEntityTypeConfiguration types.</param>
-    /// <param name="baseConfigurationTypeDefinition">The open generic type definition for the base entity configuration (e.g. BaseEntityTypeConfiguration&lt;&gt;).</param>
-    /// <param name="isValidEntity">Predicate function determining if a type is valid for registration.</param>
-    /// <param name="invalidEntityMessage">Description of the entity criteria for logging skipped types.</param>
+    /// <param name="options">The registration options and delegates.</param>
     /// <param name="entityTypes">The entity types to register.</param>
     public static void RegisterEntities(
         ModelBuilder modelBuilder,
-        Type dbContextType,
-        Dictionary<Type, (string schema, string table)>? nameMap,
-        Dictionary<Type, Type>? customConfigurations,
-        Type baseConfigurationTypeDefinition,
-        Func<Type, bool> isValidEntity,
-        string invalidEntityMessage,
+        EntityRegistrationOptions options,
         params Type[] entityTypes)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
-        ArgumentNullException.ThrowIfNull(isValidEntity);
+        ArgumentNullException.ThrowIfNull(options);
 
         foreach (var entityType in entityTypes)
         {
-            RegisterSingleEntity(
-                modelBuilder,
-                dbContextType,
-                nameMap,
-                customConfigurations,
-                baseConfigurationTypeDefinition,
-                isValidEntity,
-                invalidEntityMessage,
-                entityType);
+            RegisterSingleEntity(modelBuilder, options, entityType);
         }
+    }
+
+    /// <summary>
+    /// Helper to register entities with explicitly mapped schemas.
+    /// </summary>
+    public static void RegisterEntitiesWithSchemas(
+        Action<ModelBuilder, Type, Dictionary<Type, (string schema, string table)>?, Dictionary<Type, Type>?, Type[]> registerMethod,
+        ModelBuilder modelBuilder,
+        Type dbContextType,
+        params (Type entityType, string schema)[] entitySchemas)
+    {
+        ArgumentNullException.ThrowIfNull(registerMethod);
+        var schemaMap = CreateSchemaMap(entitySchemas);
+        var entityTypes = entitySchemas.Select(x => x.entityType).ToArray();
+        registerMethod(modelBuilder, dbContextType, schemaMap, null, entityTypes);
+    }
+
+    /// <summary>
+    /// Helper to register entities with explicitly mapped schemas and table names.
+    /// </summary>
+    public static void RegisterEntitiesWithNames(
+        Action<ModelBuilder, Type, Dictionary<Type, (string schema, string table)>?, Dictionary<Type, Type>?, Type[]> registerMethod,
+        ModelBuilder modelBuilder,
+        Type dbContextType,
+        params (Type entityType, string schema, string table)[] nameConfigs)
+    {
+        ArgumentNullException.ThrowIfNull(registerMethod);
+        var nameMap = CreateNameMap(nameConfigs);
+        var entityTypes = nameConfigs.Select(x => x.entityType).ToArray();
+        registerMethod(modelBuilder, dbContextType, nameMap, null, entityTypes);
     }
 
     /// <summary>
@@ -88,27 +111,22 @@ public static class EntityRegistrationHelper
 
     private static void RegisterSingleEntity(
         ModelBuilder modelBuilder,
-        Type? dbContextType,
-        Dictionary<Type, (string schema, string table)>? nameMap,
-        Dictionary<Type, Type>? customConfigurations,
-        Type baseConfigurationTypeDefinition,
-        Func<Type, bool> isValidEntity,
-        string invalidEntityMessage,
+        EntityRegistrationOptions options,
         Type entityType)
     {
-        if (!isValidEntity(entityType))
+        if (!options.IsValidEntity(entityType))
         {
             Console.WriteLine(
-                $"Skipping type {entityType.Name} as it's not a valid entity ({invalidEntityMessage}).");
+                $"Skipping type {entityType.Name} as it's not a valid entity ({options.InvalidEntityMessage}).");
             return;
         }
 
         var entityBuilder = modelBuilder.Entity(entityType);
-        var naming = ResolveTableAndSchema(entityType, dbContextType, nameMap);
+        var naming = ResolveTableAndSchema(entityType, options.DbContextType, options.NameMap);
         ApplyTableAndSchema(entityBuilder, naming);
 
-        ApplyBaseConfiguration(modelBuilder, entityType, baseConfigurationTypeDefinition);
-        ApplyCustomConfiguration(modelBuilder, entityType, customConfigurations);
+        ApplyBaseConfiguration(modelBuilder, entityType, options.BaseConfigurationTypeDefinition);
+        ApplyCustomConfiguration(modelBuilder, entityType, options.CustomConfigurations);
     }
 
     private static TableNamingInfo ResolveTableAndSchema(

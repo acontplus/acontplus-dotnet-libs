@@ -90,10 +90,12 @@ public sealed class MiniExcelReportService : IMiniExcelReportService, IDisposabl
             stream.Position = 0;
             var bytes = stream.ToArray();
 
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "MiniExcel workbook generated. Sheets: {Sheets}, Size: {Size:N0} bytes, Elapsed: {Ms}ms",
                     request.Worksheets.Count, bytes.Length, sw.ElapsedMilliseconds);
+            }
 
             return new ReportResponse
             {

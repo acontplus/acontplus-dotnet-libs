@@ -136,17 +136,7 @@ public class CircuitBreakerService : ICircuitBreakerService
         });
 
         // Database policy - strict
-        _policies["database"] = CreatePolicy("database", new PolicyConfig
-        {
-            CircuitBreakerExceptions = Math.Max(1, _config.CircuitBreaker.ExceptionsAllowedBeforeBreaking - 1),
-            CircuitBreakerDuration = Math.Max(10, _config.CircuitBreaker.DurationOfBreakSeconds + 60),
-            RetryCount = Math.Max(1, _config.RetryPolicy.MaxRetries - 1),
-            RetryBaseDelay = Math.Max(1, _config.RetryPolicy.BaseDelaySeconds),
-            RetryMaxDelay = Math.Max(5, _config.RetryPolicy.MaxDelaySeconds),
-            RetryExponentialBackoff = _config.RetryPolicy.ExponentialBackoff,
-            RetryBackoffMultiplier = 3.0,
-            TimeoutSeconds = Math.Max(10, _config.Timeout.DefaultTimeoutSeconds - 15)
-        });
+        _policies["database"] = CreatePolicy("database", CreateStrictPolicyConfig(60, 3.0, -15));
 
         // External service policy - very strict
         _policies["external"] = CreatePolicy("external", new PolicyConfig
@@ -161,18 +151,21 @@ public class CircuitBreakerService : ICircuitBreakerService
         });
 
         // Authentication policy - strict
-        _policies["auth"] = CreatePolicy("auth", new PolicyConfig
+        _policies["auth"] = CreatePolicy("auth", CreateStrictPolicyConfig(30, 2.5, -10));
+    }
+
+    private PolicyConfig CreateStrictPolicyConfig(int breakDurationOffset, double backoffMultiplier, int timeoutOffset) =>
+        new()
         {
             CircuitBreakerExceptions = Math.Max(1, _config.CircuitBreaker.ExceptionsAllowedBeforeBreaking - 1),
-            CircuitBreakerDuration = Math.Max(10, _config.CircuitBreaker.DurationOfBreakSeconds + 30),
+            CircuitBreakerDuration = Math.Max(10, _config.CircuitBreaker.DurationOfBreakSeconds + breakDurationOffset),
             RetryCount = Math.Max(1, _config.RetryPolicy.MaxRetries - 1),
             RetryBaseDelay = Math.Max(1, _config.RetryPolicy.BaseDelaySeconds),
             RetryMaxDelay = Math.Max(5, _config.RetryPolicy.MaxDelaySeconds),
             RetryExponentialBackoff = _config.RetryPolicy.ExponentialBackoff,
-            RetryBackoffMultiplier = 2.5,
-            TimeoutSeconds = Math.Max(10, _config.Timeout.DefaultTimeoutSeconds - 10)
-        });
-    }
+            RetryBackoffMultiplier = backoffMultiplier,
+            TimeoutSeconds = Math.Max(10, _config.Timeout.DefaultTimeoutSeconds + timeoutOffset)
+        };
 
     private IAsyncPolicy CreatePolicy(string policyName, PolicyConfig config)
     {

@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Text.RegularExpressions;
 using Acontplus.Core.Enums;
 using Acontplus.Core.Extensions;
@@ -51,27 +50,8 @@ public partial class AdoRepository(
     protected override string SanitizeIdentifier(string identifier) => $"\"{identifier}\"";
 
     /// <inheritdoc />
-    protected override string BuildPagedSql(string sql, PaginationRequest pagination)
-    {
-        var builder = new StringBuilder(sql);
-
-        if (!sql.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!string.IsNullOrEmpty(pagination.SortBy))
-            {
-                var safeSortBy = ValidateAndSanitizeSortColumn(pagination.SortBy);
-                var direction = pagination.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
-                builder.Append($" ORDER BY \"{safeSortBy}\" {direction}");
-            }
-            else
-            {
-                builder.Append(" ORDER BY 1 ASC");
-            }
-        }
-
-        builder.Append(" LIMIT @__Limit OFFSET @__Offset");
-        return builder.ToString();
-    }
+    protected override string BuildPagedSql(string sql, PaginationRequest pagination) =>
+        $"{AppendOrderByIfMissing(sql, pagination)} LIMIT @__Limit OFFSET @__Offset";
 
     /// <inheritdoc />
     protected override void AddTableNamesOutputParameter(DbCommand command, CommandOptionsDto options)
@@ -83,54 +63,27 @@ public partial class AdoRepository(
     }
 
     /// <inheritdoc />
-    public override async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
-        string storedProcedureName,
-        PaginationRequest pagination,
-        CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default)
+    protected override void AddTotalCountParameter(DbCommand command)
     {
-        ValidatePagination(pagination);
-        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
-
-        return await ExecuteWithConnectionAsync(async (connection, ct) =>
+        if (command is NpgsqlCommand npgCmd)
         {
-            var spParameters = BuildPostgresStoredProcedureParameters(pagination, options);
-            await using var cmd = (NpgsqlCommand)CreateCommand(connection, storedProcedureName, spParameters, options);
-
-            Ado.Parameters.CommandParameterBuilder.AddOutputParameter(cmd, "total_count", NpgsqlDbType.Integer, 0);
-
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            var items = await reader.ToListAsync<T>(ct);
-
-            await reader.CloseAsync();
-
-            var totalCount = cmd.Parameters["total_count"].Value != DBNull.Value
-                ? Convert.ToInt32(cmd.Parameters["total_count"].Value)
-                : 0;
-
-            var metadata = BuildPaginationMetadata(pagination);
-            return new PagedResult<T>(items, pagination.PageIndex, pagination.PageSize, totalCount, metadata);
-        }, nameof(GetPagedFromStoredProcedureAsync), cancellationToken);
+            Ado.Parameters.CommandParameterBuilder.AddOutputParameter(npgCmd, "total_count", NpgsqlDbType.Integer, 0);
+        }
     }
 
     /// <inheritdoc />
-    public override async Task<List<T>> GetFilteredFromStoredProcedureAsync<T>(
-        string storedProcedureName,
-        FilterRequest filter,
-        CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(filter);
-        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
+    protected override int ReadTotalCountParameter(DbCommand command) =>
+        command.Parameters["total_count"].Value != DBNull.Value
+            ? Convert.ToInt32(command.Parameters["total_count"].Value)
+            : 0;
 
-        return await ExecuteWithConnectionAsync(async (connection, ct) =>
-        {
-            var spParameters = BuildPostgresStoredProcedureParameters(filter, options);
-            await using var cmd = CreateCommand(connection, storedProcedureName, spParameters, options);
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            return await reader.ToListAsync<T>(ct);
-        }, nameof(GetFilteredFromStoredProcedureAsync), cancellationToken);
-    }
+    /// <inheritdoc />
+    protected override Dictionary<string, object> CreateStoredProcedureParameters(PaginationRequest pagination, CommandOptionsDto options) =>
+        BuildPostgresStoredProcedureParameters(pagination, options);
+
+    /// <inheritdoc />
+    protected override Dictionary<string, object> CreateStoredProcedureParameters(FilterRequest filter, CommandOptionsDto options) =>
+        BuildPostgresStoredProcedureParameters(filter, options);
 
     /// <inheritdoc />
     public override async Task<int> BulkInsertAsync(

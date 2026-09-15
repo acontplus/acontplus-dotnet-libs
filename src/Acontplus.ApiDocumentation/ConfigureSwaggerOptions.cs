@@ -14,21 +14,12 @@ namespace Acontplus.ApiDocumentation;
 /// <remarks>
 /// This configurator creates a distinct Swagger document for each discovered API version, using metadata from both the API version description and the application's configuration (such as contact and license info).
 /// </remarks>
-public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
+/// <param name="provider">The API version description provider used to enumerate API versions.</param>
+/// <param name="configuration">The application configuration for retrieving Swagger metadata.</param>
+public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider, IConfiguration configuration) : IConfigureNamedOptions<SwaggerGenOptions>
 {
-    private readonly IApiVersionDescriptionProvider _provider;
-    private readonly IConfiguration _configuration;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ConfigureSwaggerOptions"/> class.
-    /// </summary>
-    /// <param name="provider">The API version description provider used to enumerate API versions.</param>
-    /// <param name="configuration">The application configuration for retrieving Swagger metadata.</param>
-    public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider, IConfiguration configuration)
-    {
-        _provider = provider;
-        _configuration = configuration;
-    }
+    private readonly IApiVersionDescriptionProvider _provider = provider;
+    private readonly IConfiguration _configuration = configuration;
 
     /// <summary>
     /// Configures the <see cref="SwaggerGenOptions"/> for all discovered API versions.
@@ -48,10 +39,8 @@ public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
     /// </summary>
     /// <param name="name">The name of the options instance (not used).</param>
     /// <param name="options">The Swagger generation options to configure.</param>
-    public void Configure(string? name, SwaggerGenOptions options)
-    {
+    public void Configure(string? name, SwaggerGenOptions options) =>
         Configure(options);
-    }
 
     /// <summary>
     /// Creates the <see cref="OpenApiInfo"/> object for a given API version, including title, version, description, contact, and license information.

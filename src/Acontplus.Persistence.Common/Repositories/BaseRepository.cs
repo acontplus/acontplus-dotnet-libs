@@ -259,24 +259,9 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
             ValidatePagination(pagination);
             var query = BuildQuery(false, includeProperties);
 
-            if (predicate != null)
-            {
-                query = query.Where(predicate);
-            }
-
+            query = ApplyPredicate(query, predicate);
             var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-
-            if (orderBy != null)
-            {
-                query = orderByDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
-            }
-            else // Default sorting by ID if not specified
-            {
-                if (_idPropertyName != null)
-                {
-                    query = query.OrderBy(e => EF.Property<object>(e, _idPropertyName));
-                }
-            }
+            query = ApplyOrdering(query, orderBy, orderByDescending);
 
             var items = await query
                 .Skip((pagination.PageIndex - 1) * pagination.PageSize)
@@ -309,25 +294,9 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
             ArgumentNullException.ThrowIfNull(projection);
 
             var query = _dbSet.AsNoTracking();
-
-            if (predicate != null)
-            {
-                query = query.Where(predicate);
-            }
-
+            query = ApplyPredicate(query, predicate);
             var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-
-            if (orderBy != null)
-            {
-                query = orderByDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
-            }
-            else // Default sorting by ID if not specified
-            {
-                if (_idPropertyName != null)
-                {
-                    query = query.OrderBy(e => EF.Property<object>(e, _idPropertyName));
-                }
-            }
+            query = ApplyOrdering(query, orderBy, orderByDescending);
 
             var items = await query
                 .Skip((pagination.PageIndex - 1) * pagination.PageSize)
@@ -1176,6 +1145,29 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
         if (includeProperties is { Length: > 0 })
         {
             query = includeProperties.Aggregate(query, (current, include) => current.Include(include));
+        }
+
+        return query;
+    }
+
+    private static IQueryable<TEntity> ApplyPredicate(
+        IQueryable<TEntity> query,
+        Expression<Func<TEntity, bool>>? predicate) =>
+        predicate != null ? query.Where(predicate) : query;
+
+    private IQueryable<TEntity> ApplyOrdering(
+        IQueryable<TEntity> query,
+        Expression<Func<TEntity, object>>? orderBy,
+        bool orderByDescending)
+    {
+        if (orderBy != null)
+        {
+            return orderByDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+        }
+
+        if (_idPropertyName != null)
+        {
+            return query.OrderBy(e => EF.Property<object>(e, _idPropertyName));
         }
 
         return query;

@@ -174,23 +174,8 @@ public class DataXmlComprobante
             GetImpuestoRetencion(comp, xmlComp.GetElementsByTagName(TagImpuestos)[0]);
     }
 
-    private static void GetInfoTributaria(ComprobanteElectronico ce, XmlNode nodeInfoTrib)
-    {
-        ce.InfoTributaria = new InfoTributaria
-        {
-            Ambiente = nodeInfoTrib.SelectSingleNode("ambiente")?.InnerText ?? string.Empty,
-            TipoEmision = nodeInfoTrib.SelectSingleNode("tipoEmision")?.InnerText ?? string.Empty,
-            RazonSocial = nodeInfoTrib.SelectSingleNode("razonSocial")?.InnerText ?? string.Empty,
-            NombreComercial = nodeInfoTrib.SelectSingleNode("nombreComercial")?.InnerText ?? string.Empty,
-            Ruc = nodeInfoTrib.SelectSingleNode("ruc")?.InnerText ?? string.Empty,
-            ClaveAcceso = nodeInfoTrib.SelectSingleNode("claveAcceso")?.InnerText ?? string.Empty,
-            CodDoc = nodeInfoTrib.SelectSingleNode("codDoc")?.InnerText ?? string.Empty,
-            Estab = nodeInfoTrib.SelectSingleNode("estab")?.InnerText ?? string.Empty,
-            PtoEmi = nodeInfoTrib.SelectSingleNode("ptoEmi")?.InnerText ?? string.Empty,
-            Secuencial = nodeInfoTrib.SelectSingleNode("secuencial")?.InnerText ?? string.Empty,
-            DirMatriz = nodeInfoTrib.SelectSingleNode("dirMatriz")?.InnerText ?? string.Empty
-        };
-    }
+    private static void GetInfoTributaria(ComprobanteElectronico ce, XmlNode nodeInfoTrib) =>
+        new Acontplus.Billing.Services.Conversion.InfoTributariaParser().Parse(nodeInfoTrib, ce);
 
     /// <summary>
     /// Extracts credit note information from the XML node.
@@ -198,7 +183,7 @@ public class DataXmlComprobante
     /// <param name="codDoc">The document type code.</param>
     /// <param name="ce">The electronic receipt being populated.</param>
     /// <param name="nodeInfoNotaCredito">The XML node containing credit note info.</param>
-    public void GetInfoNotaCredito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaCredito)
+    public static void GetInfoNotaCredito(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoNotaCredito)
     {
         var infoFac = new InfoNotaCredito
         {
@@ -261,36 +246,38 @@ public class DataXmlComprobante
 
     private static void GetInfoFactura(string codDoc, ComprobanteElectronico ce, XmlNode nodeInfoFactura)
     {
-        var infoFac = new InfoFactura();
-        infoFac.FechaEmision = nodeInfoFactura.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty;
-        infoFac.DirEstablecimiento = nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento) == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty;
-        infoFac.ContribuyenteEspecial = nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial) == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty;
-        infoFac.ObligadoContabilidad = nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad) == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty;
-        infoFac.TipoIdentificacionComprador =
-            nodeInfoFactura.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty;
-        infoFac.RazonSocialComprador = nodeInfoFactura.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty;
-        infoFac.IdentificacionComprador = nodeInfoFactura.SelectSingleNode("identificacionComprador")?.InnerText ?? string.Empty;
-        infoFac.DireccionComprador = nodeInfoFactura.SelectSingleNode("direccionComprador") == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode("direccionComprador")?.InnerText ?? string.Empty;
-        infoFac.GuiaRemision = nodeInfoFactura.SelectSingleNode("guiaRemision") == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode("guiaRemision")?.InnerText ?? string.Empty;
-        infoFac.TotalSinImpuestos = nodeInfoFactura.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty;
-        infoFac.TotalDescuento = nodeInfoFactura.SelectSingleNode("totalDescuento")?.InnerText ?? string.Empty;
-        infoFac.Propina = nodeInfoFactura.SelectSingleNode("propina") == null
-            ? "0.00"
-            : nodeInfoFactura.SelectSingleNode("propina")?.InnerText ?? string.Empty;
-        infoFac.ImporteTotal = nodeInfoFactura.SelectSingleNode("importeTotal")?.InnerText ?? string.Empty;
-        infoFac.Moneda = nodeInfoFactura.SelectSingleNode(TagMoneda) == null
-            ? ""
-            : nodeInfoFactura.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty;
+        var infoFac = new InfoFactura
+        {
+            FechaEmision = nodeInfoFactura.SelectSingleNode(TagFechaEmision)?.InnerText ?? string.Empty,
+            DirEstablecimiento = nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento) == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode(TagDirEstablecimiento)?.InnerText ?? string.Empty,
+            ContribuyenteEspecial = nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial) == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode(TagContribuyenteEspecial)?.InnerText ?? string.Empty,
+            ObligadoContabilidad = nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad) == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode(TagObligadoContabilidad)?.InnerText ?? string.Empty,
+            TipoIdentificacionComprador =
+                nodeInfoFactura.SelectSingleNode("tipoIdentificacionComprador")?.InnerText ?? string.Empty,
+            RazonSocialComprador = nodeInfoFactura.SelectSingleNode("razonSocialComprador")?.InnerText ?? string.Empty,
+            IdentificacionComprador = nodeInfoFactura.SelectSingleNode("identificacionComprador")?.InnerText ?? string.Empty,
+            DireccionComprador = nodeInfoFactura.SelectSingleNode("direccionComprador") == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode("direccionComprador")?.InnerText ?? string.Empty,
+            GuiaRemision = nodeInfoFactura.SelectSingleNode("guiaRemision") == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode("guiaRemision")?.InnerText ?? string.Empty,
+            TotalSinImpuestos = nodeInfoFactura.SelectSingleNode(TagTotalSinImpuestos)?.InnerText ?? string.Empty,
+            TotalDescuento = nodeInfoFactura.SelectSingleNode("totalDescuento")?.InnerText ?? string.Empty,
+            Propina = nodeInfoFactura.SelectSingleNode("propina") == null
+                ? "0.00"
+                : nodeInfoFactura.SelectSingleNode("propina")?.InnerText ?? string.Empty,
+            ImporteTotal = nodeInfoFactura.SelectSingleNode("importeTotal")?.InnerText ?? string.Empty,
+            Moneda = nodeInfoFactura.SelectSingleNode(TagMoneda) == null
+                ? ""
+                : nodeInfoFactura.SelectSingleNode(TagMoneda)?.InnerText ?? string.Empty
+        };
 
         GetTotalTaxes(codDoc, infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
 

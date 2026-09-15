@@ -137,10 +137,12 @@
                 Default implementation of IConnectionStringProvider using IConfiguration.
                 Supports hierarchical, environment-based, and secure connection string resolution.
             </summary>
+            <param name="configuration">The application configuration root.</param>
         </member>
         <member name="M:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider"/> class.
+                Default implementation of IConnectionStringProvider using IConfiguration.
+                Supports hierarchical, environment-based, and secure connection string resolution.
             </summary>
             <param name="configuration">The application configuration root.</param>
         </member>
@@ -196,24 +198,39 @@
             </summary>
             <param name="builder">The entity type builder.</param>
         </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions">
+            <summary>
+            Options and delegates for registering entities with the ModelBuilder.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions.#ctor(System.Type,System.Type,System.Func{System.Type,System.Boolean},System.String,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type})">
+            <summary>
+            Options and delegates for registering entities with the ModelBuilder.
+            </summary>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper">
             <summary>
             Provides unified helper methods for registering EF Core entity types with a model builder.
             Handles table naming, schema resolution, base configurations, and custom entity configurations.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type,System.Func{System.Type,System.Boolean},System.String,System.Type[])">
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions,System.Type[])">
             <summary>
-            Registers entities with the ModelBuilder using a specified base configuration type definition and entity validator.
+            Registers entities with the ModelBuilder using the provided registration options.
             </summary>
             <param name="modelBuilder">The EF Core ModelBuilder instance.</param>
-            <param name="dbContextType">The DbContext type, used to resolve DbSet property names as default table names.</param>
-            <param name="nameMap">Optional explicit mapping of entity types to schema and table names.</param>
-            <param name="customConfigurations">Optional explicit mapping of entity types to custom IEntityTypeConfiguration types.</param>
-            <param name="baseConfigurationTypeDefinition">The open generic type definition for the base entity configuration (e.g. BaseEntityTypeConfiguration&lt;&gt;).</param>
-            <param name="isValidEntity">Predicate function determining if a type is valid for registration.</param>
-            <param name="invalidEntityMessage">Description of the entity criteria for logging skipped types.</param>
+            <param name="options">The registration options and delegates.</param>
             <param name="entityTypes">The entity types to register.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntitiesWithSchemas(System.Action{Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[]},Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Helper to register entities with explicitly mapped schemas.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntitiesWithNames(System.Action{Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[]},Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Helper to register entities with explicitly mapped schemas and table names.
+            </summary>
         </member>
         <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.IsValidAuditableEntity(System.Type)">
             <summary>
@@ -318,6 +335,22 @@
         <member name="M:Acontplus.Persistence.Common.DbContextFactory`1.GetContext(System.String)">
             <inheritdoc />
         </member>
+        <member name="T:Acontplus.Persistence.Common.DependencyInjection.PersistenceRegistrationExtensions">
+            <summary>
+            Provides extension methods for registering common persistence services, such as IAdoRepository and IUnitOfWork.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.DependencyInjection.PersistenceRegistrationExtensions.RegisterPersistenceCore``2(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Registers the ADO repository, UnitOfWork, and DbContext in the service collection.
+            Supports both keyed and standard scoped registrations.
+            </summary>
+            <typeparam name="TContext">The DbContext implementation type.</typeparam>
+            <typeparam name="TAdoRepository">The IAdoRepository implementation type.</typeparam>
+            <param name="services">The service collection.</param>
+            <param name="serviceKey">Optional service key for keyed registrations.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Exceptions.RepositoryException">
             <summary>
             Represents an exception that occurred within a repository operation.
@@ -340,10 +373,11 @@
             <summary>
             Represents a domain exception translated from a SQL error.
             </summary>
+            <param name="sqlErrorInfo">The SQL error info containing error type, code, message, and inner exception.</param>
         </member>
         <member name="M:Acontplus.Persistence.Common.Exceptions.SqlDomainException.#ctor(Acontplus.Persistence.Common.Exceptions.SqlErrorInfo)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlDomainException"/> class from SQL error information.
+            Represents a domain exception translated from a SQL error.
             </summary>
             <param name="sqlErrorInfo">The SQL error info containing error type, code, message, and inner exception.</param>
         </member>
@@ -583,6 +617,31 @@
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AddTableNamesOutputParameter(System.Data.Common.DbCommand,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
             <summary>
             Adds output parameter for table names if requested.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AppendOrderByIfMissing(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Appends the ORDER BY clause to the SQL query if not already present.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AddTotalCountParameter(System.Data.Common.DbCommand)">
+            <summary>
+            Adds provider-specific output parameter for total count in stored procedures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ReadTotalCountParameter(System.Data.Common.DbCommand)">
+            <summary>
+            Reads provider-specific output parameter value for total count in stored procedures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateStoredProcedureParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds provider-specific stored procedure parameters for pagination.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateStoredProcedureParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds provider-specific stored procedure parameters for filtering.
             </summary>
         </member>
         <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.RetryPolicy">
@@ -1125,6 +1184,22 @@
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecuteInTransactionAsync(System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
             <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Resilience.PersistenceResilienceHelper">
+            <summary>
+            Provides factory methods for creating shared resilience policies across persistence repositories.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Resilience.PersistenceResilienceHelper.CreateRetryPolicy(Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions,System.Func{System.Exception,System.Boolean},Microsoft.Extensions.Logging.ILogger,System.String,System.String)">
+            <summary>
+            Creates an asynchronous retry policy based on persistence resilience options.
+            </summary>
+            <param name="resilienceOptions">The configured resilience options.</param>
+            <param name="isTransientException">Predicate function to determine if an exception is transient.</param>
+            <param name="logger">Logger for emitting warning logs during retries.</param>
+            <param name="providerName">The database provider name.</param>
+            <param name="repositoryKind">Label for the repository kind, e.g. "ADO" or "Dapper".</param>
+            <returns>An <see cref="T:Polly.Retry.AsyncRetryPolicy"/> configured according to the resilience options.</returns>
         </member>
         <member name="T:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1">
             <summary>

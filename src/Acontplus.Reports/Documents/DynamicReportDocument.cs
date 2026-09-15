@@ -11,15 +11,10 @@ namespace Acontplus.Reports.Documents;
 /// QuestPDF <see cref="IDocument"/> implementation that composes a fully dynamic,
 /// data-driven PDF from a <see cref="QuestPdfReportRequest"/>.
 /// </summary>
-internal sealed class DynamicReportDocument : IDocument
+internal sealed class DynamicReportDocument(QuestPdfReportRequest request) : IDocument
 {
     private const string ColorWhite = "#FFFFFF";
-    private readonly QuestPdfReportRequest _request;
-
-    public DynamicReportDocument(QuestPdfReportRequest request)
-    {
-        _request = request ?? throw new ArgumentNullException(nameof(request));
-    }
+    private readonly QuestPdfReportRequest _request = request ?? throw new ArgumentNullException(nameof(request));
 
     // ── IDocument ────────────────────────────────────────────────────────────
 

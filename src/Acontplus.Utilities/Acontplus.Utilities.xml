@@ -2483,10 +2483,11 @@
             <summary>
             Converter for nullable DateTime values
             </summary>
+            <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
         </member>
         <member name="M:Acontplus.Utilities.Time.NullableDateTimeConverter.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Utilities.Time.NullableDateTimeConverter"/> class with a custom date format.
+            Converter for nullable DateTime values
             </summary>
             <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
         </member>

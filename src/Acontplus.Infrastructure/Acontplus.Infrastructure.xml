@@ -460,10 +460,11 @@
             <summary>
                 Health check for cache service.
             </summary>
+            <param name="cacheService">The cache service to evaluate.</param>
         </member>
         <member name="M:Acontplus.Infrastructure.HealthChecks.CacheHealthCheck.#ctor(Acontplus.Core.Abstractions.Infrastructure.Caching.ICacheService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.HealthChecks.CacheHealthCheck"/> class.
+                Health check for cache service.
             </summary>
             <param name="cacheService">The cache service to evaluate.</param>
         </member>
@@ -474,10 +475,11 @@
             <summary>
                 Health check for circuit breaker service.
             </summary>
+            <param name="circuitBreakerService">The circuit breaker service to evaluate.</param>
         </member>
         <member name="M:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck.#ctor(Acontplus.Core.Abstractions.Infrastructure.Resilience.ICircuitBreakerService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.HealthChecks.CircuitBreakerHealthCheck"/> class.
+                Health check for circuit breaker service.
             </summary>
             <param name="circuitBreakerService">The circuit breaker service to evaluate.</param>
         </member>

@@ -6,18 +6,10 @@ namespace Acontplus.Billing.Services.Conversion;
 /// <summary>
 /// Factory that registers and instantiates document-specific XML parsers indexed by document type code.
 /// </summary>
-public class DocumentParserFactory
+/// <param name="detailsParser">The line details parser to inject into document parsers.</param>
+public class DocumentParserFactory(IDetailsParser detailsParser)
 {
-    private readonly IDetailsParser _detailsParser;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DocumentParserFactory"/> class.
-    /// </summary>
-    /// <param name="detailsParser">The line details parser to inject into document parsers.</param>
-    public DocumentParserFactory(IDetailsParser detailsParser)
-    {
-        _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
-    }
+    private readonly IDetailsParser _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
 
     /// <summary>
     /// Creates and returns a dictionary of document type parsers keyed by SRI document type code.

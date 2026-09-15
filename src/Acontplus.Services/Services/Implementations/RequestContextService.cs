@@ -3,23 +3,14 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of request context service using HTTP context accessor.
 /// </summary>
-public class RequestContextService : IRequestContextService
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
+/// <param name="logger">The logger instance.</param>
+public class RequestContextService(
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<RequestContextService> logger) : IRequestContextService
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ILogger<RequestContextService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequestContextService"/> class.
-    /// </summary>
-    /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-    /// <param name="logger">The logger instance.</param>
-    public RequestContextService(
-        IHttpContextAccessor httpContextAccessor,
-        ILogger<RequestContextService> logger)
-    {
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    private readonly ILogger<RequestContextService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public string GetRequestId()

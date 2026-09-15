@@ -103,16 +103,12 @@ public static class DataTableMapper
         }
     }
 
-    private static bool IsRequiredProperty(PropertyInfo property)
-    {
-        return property.CustomAttributes.Any(attr =>
+    private static bool IsRequiredProperty(PropertyInfo property) =>
+        property.CustomAttributes.Any(attr =>
             attr.AttributeType.FullName == "System.Runtime.CompilerServices.RequiredMemberAttribute");
-    }
 
-    private static object? GetDefaultValue(Type type)
-    {
-        return type.IsValueType ? Activator.CreateInstance(type) : null;
-    }
+    private static object? GetDefaultValue(Type type) =>
+        type.IsValueType ? Activator.CreateInstance(type) : null;
 
     /// <summary>
     /// Maps all rows in a <see cref="DataTable"/> to a strongly typed list of <typeparamref name="T"/>.

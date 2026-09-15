@@ -363,9 +363,9 @@ public class Impuesto
 }
 
 /// <summary>
-/// Represents credit note header information in an SRI electronic credit note.
+/// Provides shared header information for SRI electronic modification notes (credit and debit notes).
 /// </summary>
-public class InfoNotaCredito
+public abstract class BaseInfoNotaModificatoria
 {
     /// <summary>Gets or sets the issuance date.</summary>
     public string FechaEmision { get; set; } = string.Empty;
@@ -403,14 +403,8 @@ public class InfoNotaCredito
     /// <summary>Gets or sets the total amount before taxes.</summary>
     public string TotalSinImpuestos { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the total modification amount.</summary>
-    public string ValorModificacion { get; set; } = string.Empty;
-
     /// <summary>Gets or sets the currency code.</summary>
     public string Moneda { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the reason for the credit note.</summary>
-    public string Motivo { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the list of tax totals.</summary>
     public List<TotalImpuesto>? TotalImpuestos { get; set; }
@@ -418,6 +412,18 @@ public class InfoNotaCredito
     /// <summary>Sets the total taxes list.</summary>
     /// <param name="obj">The total taxes list.</param>
     public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
+}
+
+/// <summary>
+/// Represents credit note header information in an SRI electronic credit note.
+/// </summary>
+public class InfoNotaCredito : BaseInfoNotaModificatoria
+{
+    /// <summary>Gets or sets the total modification amount.</summary>
+    public string ValorModificacion { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the reason for the credit note.</summary>
+    public string Motivo { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -808,62 +814,16 @@ public class InfoLiquidacionCompra
 /// <summary>
 /// Represents debit note header information in an SRI electronic debit note.
 /// </summary>
-public class InfoNotaDebito
+public class InfoNotaDebito : BaseInfoNotaModificatoria
 {
-    /// <summary>Gets or sets the issuance date.</summary>
-    public string FechaEmision { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the establishment address.</summary>
-    public string DirEstablecimiento { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the buyer identification type code.</summary>
-    public string TipoIdentificacionComprador { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the buyer legal or business name.</summary>
-    public string RazonSocialComprador { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the buyer identification number.</summary>
-    public string IdentificacionComprador { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets the special taxpayer resolution number.</summary>
-    public string ContribuyenteEspecial { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets whether required to keep accounting records.</summary>
-    public string ObligadoContabilidad { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets RISE regime indicator.</summary>
-    public string Rise { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets modified document type code.</summary>
-    public string CodDocModificado { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets modified document number.</summary>
-    public string NumDocModificado { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets modified document issuance date.</summary>
-    public string FechaEmisionDocSustento { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets total amount before taxes.</summary>
-    public string TotalSinImpuestos { get; set; } = string.Empty;
-
     /// <summary>Gets or sets total tax amount.</summary>
     public string ImpuestoTotal { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets currency code.</summary>
-    public string Moneda { get; set; } = string.Empty;
-
-    /// <summary>Gets or sets list of tax totals.</summary>
-    public List<TotalImpuesto>? TotalImpuestos { get; set; }
 
     /// <summary>Gets or sets list of debit reasons.</summary>
     public List<MotivoNotaDebito>? Motivos { get; set; }
 
     /// <summary>Gets or sets list of payments.</summary>
     public List<Pago>? Pagos { get; set; }
-
-    /// <summary>Sets the total taxes list.</summary>
-    /// <param name="obj">The total taxes list.</param>
-    public void CreateTotalTaxes(object? obj) => TotalImpuestos = obj as List<TotalImpuesto>;
 
     /// <summary>Sets the debit reasons list.</summary>
     /// <param name="obj">The debit reasons list.</param>

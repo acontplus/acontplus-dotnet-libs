@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Acontplus.Persistence.Common.Configuration;
+using Acontplus.Persistence.Common.Resilience;
 using Microsoft.Extensions.Options;
 
 namespace Acontplus.Persistence.Common.Repositories;
@@ -75,55 +76,8 @@ public abstract partial class BaseDapperRepository(
     /// <summary>
     /// Lazy-loaded retry policy based on configuration.
     /// </summary>
-    protected AsyncRetryPolicy RetryPolicy
-    {
-        get
-        {
-            if (_retryPolicy != null)
-                return _retryPolicy;
-
-            if (!_resilienceOptions.RetryPolicy.Enabled)
-            {
-                _retryPolicy = Policy
-                    .Handle<Exception>(_ => false)
-                    .RetryAsync(0);
-                return _retryPolicy;
-            }
-
-            var maxRetries = _resilienceOptions.RetryPolicy.MaxRetries;
-            var baseDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.BaseDelaySeconds);
-            var maxDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.MaxDelaySeconds);
-            var exponentialBackoff = _resilienceOptions.RetryPolicy.ExponentialBackoff;
-
-            _retryPolicy = Policy
-                .Handle<Exception>(IsTransientException)
-                .Or<TimeoutException>()
-                .WaitAndRetryAsync(
-                    maxRetries,
-                    retryAttempt =>
-                    {
-                        if (exponentialBackoff)
-                        {
-                            var calculatedDelay = TimeSpan.FromSeconds(
-                                _resilienceOptions.RetryPolicy.BaseDelaySeconds * Math.Pow(2, retryAttempt - 1));
-                            return calculatedDelay > maxDelay ? maxDelay : calculatedDelay;
-                        }
-                        return baseDelay;
-                    },
-                    (exception, timeSpan, retryCount, context) =>
-                    {
-                        _logger.LogWarning(
-                            exception,
-                            "[Dapper Repository] Retry {RetryCount}/{MaxRetries} after {Delay}ms for {ProviderName} operation",
-                            retryCount,
-                            maxRetries,
-                            timeSpan.TotalMilliseconds,
-                            ProviderName);
-                    });
-
-            return _retryPolicy;
-        }
-    }
+    protected AsyncRetryPolicy RetryPolicy =>
+        _retryPolicy ??= PersistenceResilienceHelper.CreateRetryPolicy(_resilienceOptions, IsTransientException, _logger, ProviderName, "Dapper");
 
     /// <summary>
     /// Gets the default command timeout in seconds from configuration.
@@ -266,58 +220,68 @@ public abstract partial class BaseDapperRepository(
     #region Multiple Result Sets
 
     /// <inheritdoc />
-    public virtual async Task<(IEnumerable<T1> First, IEnumerable<T2> Second)> QueryMultipleAsync<T1, T2>(
+    public virtual Task<(IEnumerable<T1> First, IEnumerable<T2> Second)> QueryMultipleAsync<T1, T2>(
         string sql,
         object? parameters = null,
         int? commandTimeout = null,
         CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
+        CancellationToken cancellationToken = default) =>
+        ExecuteQueryMultipleAsync(
+            sql,
+            parameters,
+            commandTimeout,
+            commandType,
+            async multi =>
             {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                using var multi = await connection.QueryMultipleAsync(commandDefinition);
                 var first = await multi.ReadAsync<T1>();
                 var second = await multi.ReadAsync<T2>();
                 return (first, second);
-            }, ct);
-        }, cancellationToken);
-    }
+            },
+            cancellationToken);
 
     /// <inheritdoc />
-    public virtual async Task<(IEnumerable<T1> First, IEnumerable<T2> Second, IEnumerable<T3> Third)> QueryMultipleAsync<T1, T2, T3>(
+    public virtual Task<(IEnumerable<T1> First, IEnumerable<T2> Second, IEnumerable<T3> Third)> QueryMultipleAsync<T1, T2, T3>(
         string sql,
         object? parameters = null,
         int? commandTimeout = null,
         CommandType? commandType = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await RetryPolicy.ExecuteAsync(async (ct) =>
-        {
-            return await ExecuteWithConnectionAsync(async connection =>
+        CancellationToken cancellationToken = default) =>
+        ExecuteQueryMultipleAsync(
+            sql,
+            parameters,
+            commandTimeout,
+            commandType,
+            async multi =>
             {
-                var commandDefinition = new CommandDefinition(
-                    sql,
-                    parameters,
-                    _currentTransaction,
-                    commandTimeout ?? DefaultTimeout,
-                    commandType,
-                    cancellationToken: ct);
-
-                using var multi = await connection.QueryMultipleAsync(commandDefinition);
                 var first = await multi.ReadAsync<T1>();
                 var second = await multi.ReadAsync<T2>();
                 var third = await multi.ReadAsync<T3>();
                 return (first, second, third);
+            },
+            cancellationToken);
+
+    private async Task<TReturn> ExecuteQueryMultipleAsync<TReturn>(
+        string sql,
+        object? parameters,
+        int? commandTimeout,
+        CommandType? commandType,
+        Func<SqlMapper.GridReader, Task<TReturn>> readFunc,
+        CancellationToken cancellationToken)
+    {
+        return await RetryPolicy.ExecuteAsync(async (ct) =>
+        {
+            return await ExecuteWithConnectionAsync(async connection =>
+            {
+                var commandDefinition = new CommandDefinition(
+                    sql,
+                    parameters,
+                    _currentTransaction,
+                    commandTimeout ?? DefaultTimeout,
+                    commandType,
+                    cancellationToken: ct);
+
+                using var multi = await connection.QueryMultipleAsync(commandDefinition);
+                return await readFunc(multi);
             }, ct);
         }, cancellationToken);
     }

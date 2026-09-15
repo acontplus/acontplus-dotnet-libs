@@ -940,62 +940,67 @@
         <member name="P:Acontplus.Billing.Models.Documents.Impuesto.Valor">
             <summary>Gets or sets the calculated tax amount.</summary>
         </member>
+        <member name="T:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria">
+            <summary>
+            Provides shared header information for SRI electronic modification notes (credit and debit notes).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.FechaEmision">
+            <summary>Gets or sets the issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.DirEstablecimiento">
+            <summary>Gets or sets the branch establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TipoIdentificacionComprador">
+            <summary>Gets or sets the buyer identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.RazonSocialComprador">
+            <summary>Gets or sets the buyer legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.IdentificacionComprador">
+            <summary>Gets or sets the buyer identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.ObligadoContabilidad">
+            <summary>Gets or sets whether required to keep accounting records.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.Rise">
+            <summary>Gets or sets RISE regime indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.CodDocModificado">
+            <summary>Gets or sets modified document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.NumDocModificado">
+            <summary>Gets or sets modified document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.FechaEmisionDocSustento">
+            <summary>Gets or sets modified document issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TotalSinImpuestos">
+            <summary>Gets or sets the total amount before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.Moneda">
+            <summary>Gets or sets the currency code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TotalImpuestos">
+            <summary>Gets or sets the list of tax totals.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.CreateTotalTaxes(System.Object)">
+            <summary>Sets the total taxes list.</summary>
+            <param name="obj">The total taxes list.</param>
+        </member>
         <member name="T:Acontplus.Billing.Models.Documents.InfoNotaCredito">
             <summary>
             Represents credit note header information in an SRI electronic credit note.
             </summary>
         </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.FechaEmision">
-            <summary>Gets or sets the issuance date.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.DirEstablecimiento">
-            <summary>Gets or sets the branch establishment address.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.TipoIdentificacionComprador">
-            <summary>Gets or sets the buyer identification type code.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.RazonSocialComprador">
-            <summary>Gets or sets the buyer legal or business name.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.IdentificacionComprador">
-            <summary>Gets or sets the buyer identification number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.ContribuyenteEspecial">
-            <summary>Gets or sets the special taxpayer resolution number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.ObligadoContabilidad">
-            <summary>Gets or sets whether required to keep accounting records.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.Rise">
-            <summary>Gets or sets RISE regime indicator.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.CodDocModificado">
-            <summary>Gets or sets modified document type code.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.NumDocModificado">
-            <summary>Gets or sets modified document number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.FechaEmisionDocSustento">
-            <summary>Gets or sets modified document issuance date.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.TotalSinImpuestos">
-            <summary>Gets or sets the total amount before taxes.</summary>
-        </member>
         <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.ValorModificacion">
             <summary>Gets or sets the total modification amount.</summary>
         </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.Moneda">
-            <summary>Gets or sets the currency code.</summary>
-        </member>
         <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.Motivo">
             <summary>Gets or sets the reason for the credit note.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.TotalImpuestos">
-            <summary>Gets or sets the list of tax totals.</summary>
-        </member>
-        <member name="M:Acontplus.Billing.Models.Documents.InfoNotaCredito.CreateTotalTaxes(System.Object)">
-            <summary>Sets the total taxes list.</summary>
-            <param name="obj">The total taxes list.</param>
         </member>
         <member name="T:Acontplus.Billing.Models.Documents.InfoCompRetencion">
             <summary>
@@ -1376,60 +1381,14 @@
             Represents debit note header information in an SRI electronic debit note.
             </summary>
         </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.FechaEmision">
-            <summary>Gets or sets the issuance date.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.DirEstablecimiento">
-            <summary>Gets or sets the establishment address.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.TipoIdentificacionComprador">
-            <summary>Gets or sets the buyer identification type code.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.RazonSocialComprador">
-            <summary>Gets or sets the buyer legal or business name.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.IdentificacionComprador">
-            <summary>Gets or sets the buyer identification number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.ContribuyenteEspecial">
-            <summary>Gets or sets the special taxpayer resolution number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.ObligadoContabilidad">
-            <summary>Gets or sets whether required to keep accounting records.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Rise">
-            <summary>Gets or sets RISE regime indicator.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.CodDocModificado">
-            <summary>Gets or sets modified document type code.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.NumDocModificado">
-            <summary>Gets or sets modified document number.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.FechaEmisionDocSustento">
-            <summary>Gets or sets modified document issuance date.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.TotalSinImpuestos">
-            <summary>Gets or sets total amount before taxes.</summary>
-        </member>
         <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.ImpuestoTotal">
             <summary>Gets or sets total tax amount.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Moneda">
-            <summary>Gets or sets currency code.</summary>
-        </member>
-        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.TotalImpuestos">
-            <summary>Gets or sets list of tax totals.</summary>
         </member>
         <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Motivos">
             <summary>Gets or sets list of debit reasons.</summary>
         </member>
         <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Pagos">
             <summary>Gets or sets list of payments.</summary>
-        </member>
-        <member name="M:Acontplus.Billing.Models.Documents.InfoNotaDebito.CreateTotalTaxes(System.Object)">
-            <summary>Sets the total taxes list.</summary>
-            <param name="obj">The total taxes list.</param>
         </member>
         <member name="M:Acontplus.Billing.Models.Documents.InfoNotaDebito.CreateMotivos(System.Object)">
             <summary>Sets the debit reasons list.</summary>
@@ -1677,10 +1636,13 @@
             <summary>
             Parser for converting raw SRI XML documents into strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/> objects.
             </summary>
+            <param name="documentTypeParsers">Dictionary mapping document type codes to their corresponding parsers.</param>
+            <param name="infoTributariaParser">Parser for tributary information.</param>
+            <param name="infoAdicionalParser">Parser for additional metadata fields.</param>
         </member>
         <member name="M:Acontplus.Billing.Services.Conversion.ComprobanteElectronicoParser.#ctor(System.Collections.Generic.IDictionary{System.String,Acontplus.Billing.Interfaces.Services.IDocumentTypeParser},Acontplus.Billing.Interfaces.Services.IInfoTributariaParser,Acontplus.Billing.Interfaces.Services.IInfoAdicionalParser)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Billing.Services.Conversion.ComprobanteElectronicoParser"/> class.
+            Parser for converting raw SRI XML documents into strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/> objects.
             </summary>
             <param name="documentTypeParsers">Dictionary mapping document type codes to their corresponding parsers.</param>
             <param name="infoTributariaParser">Parser for tributary information.</param>
@@ -1709,10 +1671,11 @@
             <summary>
             Factory that registers and instantiates document-specific XML parsers indexed by document type code.
             </summary>
+            <param name="detailsParser">The line details parser to inject into document parsers.</param>
         </member>
         <member name="M:Acontplus.Billing.Services.Conversion.DocumentParserFactory.#ctor(Acontplus.Billing.Interfaces.Services.IDetailsParser)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Billing.Services.Conversion.DocumentParserFactory"/> class.
+            Factory that registers and instantiates document-specific XML parsers indexed by document type code.
             </summary>
             <param name="detailsParser">The line details parser to inject into document parsers.</param>
         </member>

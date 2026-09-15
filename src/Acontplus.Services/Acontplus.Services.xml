@@ -652,10 +652,13 @@
             <summary>
             Action filter for applying security headers to responses.
             </summary>
+            <param name="securityHeaderService">The security header service.</param>
+            <param name="configuration">The request context configuration options.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Filters.SecurityHeaderActionFilter.#ctor(Acontplus.Services.Services.Abstractions.ISecurityHeaderService,Microsoft.Extensions.Options.IOptions{Acontplus.Services.Configuration.RequestContextConfiguration},Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.SecurityHeaderActionFilter})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.SecurityHeaderActionFilter"/> class.
+            Action filter for applying security headers to responses.
             </summary>
             <param name="securityHeaderService">The security header service.</param>
             <param name="configuration">The request context configuration options.</param>
@@ -671,10 +674,11 @@
             <summary>
             Action filter for automatic model validation with standardized error responses.
             </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Filters.ValidationActionFilter.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.ValidationActionFilter})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.ValidationActionFilter"/> class.
+            Action filter for automatic model validation with standardized error responses.
             </summary>
             <param name="logger">The logger instance.</param>
         </member>
@@ -712,10 +716,11 @@
             <summary>
             Middleware that generates and attaches a unique Content Security Policy (CSP) nonce to the request context.
             </summary>
+            <param name="next">The next middleware delegate.</param>
         </member>
         <member name="M:Acontplus.Services.Middleware.CspNonceMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Middleware.CspNonceMiddleware"/> class.
+            Middleware that generates and attaches a unique Content Security Policy (CSP) nonce to the request context.
             </summary>
             <param name="next">The next middleware delegate.</param>
         </member>
@@ -764,10 +769,12 @@
             <summary>
             Middleware that logs HTTP request execution times, response status codes, and assigns a request identifier.
             </summary>
+            <param name="next">The next middleware in the pipeline.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Middleware.RequestLoggingMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Middleware.RequestLoggingMiddleware})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Middleware.RequestLoggingMiddleware"/> class.
+            Middleware that logs HTTP request execution times, response status codes, and assigns a request identifier.
             </summary>
             <param name="next">The next middleware in the pipeline.</param>
             <param name="logger">The logger instance.</param>
@@ -1265,10 +1272,12 @@
             <summary>
             Implementation of request context service using HTTP context accessor.
             </summary>
+            <param name="httpContextAccessor">The HTTP context accessor.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Services.Implementations.RequestContextService.#ctor(Microsoft.AspNetCore.Http.IHttpContextAccessor,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.RequestContextService})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.RequestContextService"/> class.
+            Implementation of request context service using HTTP context accessor.
             </summary>
             <param name="httpContextAccessor">The HTTP context accessor.</param>
             <param name="logger">The logger instance.</param>

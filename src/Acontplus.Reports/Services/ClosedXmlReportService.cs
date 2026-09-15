@@ -79,10 +79,12 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
                 return stream.ToArray();
             }, cts.Token).ConfigureAwait(false);
 
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "ClosedXML workbook generated. Sheets: {Sheets}, Size: {Size:N0} bytes, Elapsed: {Ms}ms",
                     request.Worksheets.Count, bytes.Length, sw.ElapsedMilliseconds);
+            }
 
             return new ReportResponse
             {

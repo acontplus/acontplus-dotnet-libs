@@ -1590,7 +1590,7 @@ public static class ResultApiExtensions
     }
 
     // Paged Result Helpers
-    private static IActionResult CreatePagedSuccessResponse<T>(
+    private static ApiResponse<PagedResult<T>> BuildPagedSuccessApiResponse<T>(
         PagedResult<T> pagedResult,
         string? baseUrl,
         string? correlationId)
@@ -1621,42 +1621,20 @@ public static class ResultApiExtensions
         );
 
         ConfigureResponse?.Invoke(response.ToBaseResponse());
-        return new OkObjectResult(response);
+        return response;
     }
+
+    private static IActionResult CreatePagedSuccessResponse<T>(
+        PagedResult<T> pagedResult,
+        string? baseUrl,
+        string? correlationId) =>
+        new OkObjectResult(BuildPagedSuccessApiResponse(pagedResult, baseUrl, correlationId));
 
     private static IResult CreatePagedSuccessResult<T>(
         PagedResult<T> pagedResult,
         string? baseUrl,
-        string? correlationId)
-    {
-        // Add pagination metadata to the result
-        var metadata = new Dictionary<string, object>(pagedResult.Metadata ?? new Dictionary<string, object>());
-        metadata = metadata.WithPagination(
-            pagedResult.PageIndex,
-            pagedResult.PageSize,
-            pagedResult.TotalCount,
-            baseUrl != null ? (page => $"{baseUrl}?page={page}&size={pagedResult.PageSize}") : null
-        );
-
-        // Add correlation ID if provided
-        if (!string.IsNullOrEmpty(correlationId))
-        {
-            metadata = metadata.WithCorrelationId(correlationId);
-        }
-
-        var response = ApiResponse<PagedResult<T>>.Success(
-            data: pagedResult,
-            new ApiResponseOptions
-            {
-                Metadata = metadata,
-                CorrelationId = correlationId,
-                StatusCode = HttpStatusCode.OK
-            }
-        );
-
-        ConfigureResponse?.Invoke(response.ToBaseResponse());
-        return TypedResults.Ok(response);
-    }
+        string? correlationId) =>
+        TypedResults.Ok(BuildPagedSuccessApiResponse(pagedResult, baseUrl, correlationId));
 
     #endregion
 

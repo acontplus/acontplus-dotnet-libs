@@ -97,6 +97,12 @@
             data-driven PDF from a <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
             </summary>
         </member>
+        <member name="M:Acontplus.Reports.Documents.DynamicReportDocument.#ctor(Acontplus.Reports.Dtos.QuestPdfReportRequest)">
+            <summary>
+            QuestPDF <see cref="T:QuestPDF.Infrastructure.IDocument"/> implementation that composes a fully dynamic,
+            data-driven PDF from a <see cref="T:Acontplus.Reports.Dtos.QuestPdfReportRequest"/>.
+            </summary>
+        </member>
         <member name="M:Acontplus.Reports.Documents.DynamicReportDocument.ComposeSectionContent(QuestPDF.Infrastructure.IContainer,Acontplus.Reports.Dtos.QuestPdfSection,Acontplus.Reports.Enums.QuestPdfSectionType)">
             <summary>
             Dispatches to the correct compose method based on <paramref name="renderType"/>.

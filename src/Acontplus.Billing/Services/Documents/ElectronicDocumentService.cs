@@ -13,8 +13,6 @@ public class ElectronicDocumentService(IXmlDocumentParser<ComprobanteElectronico
         parser ?? throw new ArgumentNullException(nameof(parser));
 
     /// <inheritdoc />
-    public bool TryParseDocument(XmlDocument xmlSri, out ComprobanteElectronico comprobante, out string errorMessage)
-    {
-        return _parser.TryParse(xmlSri, out comprobante, out errorMessage);
-    }
+    public bool TryParseDocument(XmlDocument xmlSri, out ComprobanteElectronico comprobante, out string errorMessage) =>
+        _parser.TryParse(xmlSri, out comprobante, out errorMessage);
 }

@@ -5,18 +5,10 @@ namespace Acontplus.Services.Filters;
 /// <summary>
 /// Action filter for automatic model validation with standardized error responses.
 /// </summary>
-public class ValidationActionFilter : IActionFilter
+/// <param name="logger">The logger instance.</param>
+public class ValidationActionFilter(ILogger<ValidationActionFilter> logger) : IActionFilter
 {
-    private readonly ILogger<ValidationActionFilter> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ValidationActionFilter"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public ValidationActionFilter(ILogger<ValidationActionFilter> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<ValidationActionFilter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public void OnActionExecuting(ActionExecutingContext context)

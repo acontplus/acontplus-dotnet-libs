@@ -79,8 +79,6 @@ public abstract class Entity<TId> : IEntityWithDomainEvents where TId : notnull
     /// <typeparam name="T">The type of entity to create.</typeparam>
     /// <param name="id">The identifier for the new entity.</param>
     /// <returns>A new instance of the specified entity type.</returns>
-    protected static T Create<T>(TId id) where T : Entity<TId>, new()
-    {
-        return new T { Id = id };
-    }
+    protected static T Create<T>(TId id) where T : Entity<TId>, new() =>
+        new() { Id = id };
 }

@@ -270,7 +270,22 @@ internal static class ExpressionBuilder
         ParameterInfo param,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        ResolveConstructorParameterCore(
+            param,
+            sourceParam,
+            sourceProperties,
+            ctorParamRules,
+            IsAssignableForCtorParam,
+            BuildCtorParamValueExpression);
+
+    private static Expression? ResolveConstructorParameterCore(
+        ParameterInfo param,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules,
+        Func<Type, Type, bool> isAssignable,
+        Func<MemberExpression, Type, Type, Expression> buildValueExpr)
     {
         var paramName = param.Name ?? string.Empty;
         var paramType = param.ParameterType;
@@ -292,10 +307,10 @@ internal static class ExpressionBuilder
             var sourceProp = matchingSourceProps[0];
 
             // Check type assignability
-            if (IsAssignableForCtorParam(sourceProp.PropertyType, paramType))
+            if (isAssignable(sourceProp.PropertyType, paramType))
             {
                 var sourceAccess = Expression.Property(sourceParam, sourceProp);
-                return BuildCtorParamValueExpression(sourceAccess, sourceProp.PropertyType, paramType);
+                return buildValueExpr(sourceAccess, sourceProp.PropertyType, paramType);
             }
         }
 
@@ -1470,42 +1485,14 @@ internal static class ExpressionBuilder
         ParameterInfo param,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
-    {
-        var paramName = param.Name ?? string.Empty;
-        var paramType = param.ParameterType;
-
-        // Priority 1: ForCtorParam rule (expression-based)
-        if (ctorParamRules.TryGetValue(paramName, out var ctorRule))
-        {
-            var ruleBody = ReplaceParameter(ctorRule.Body, ctorRule.Parameters[0], sourceParam);
-            return EnsureType(ruleBody, paramType);
-        }
-
-        // Priority 2: Convention name match
-        var matchingSourceProps = sourceProperties
-            .Where(sp => string.Equals(sp.Name, paramName, StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-
-        if (matchingSourceProps.Length == 1)
-        {
-            var sourceProp = matchingSourceProps[0];
-
-            if (IsProjectionAssignable(sourceProp.PropertyType, paramType))
-            {
-                var sourceAccess = Expression.Property(sourceParam, sourceProp);
-                return BuildProjectionTypeConversion(sourceAccess, sourceProp.PropertyType, paramType);
-            }
-        }
-
-        // Priority 3: Declared default value
-        if (param.HasDefaultValue)
-        {
-            return Expression.Constant(param.DefaultValue, paramType);
-        }
-
-        return null;
-    }
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        ResolveConstructorParameterCore(
+            param,
+            sourceParam,
+            sourceProperties,
+            ctorParamRules,
+            IsProjectionAssignable,
+            BuildProjectionTypeConversion);
 
     /// <summary>
     /// Builds a member binding for a single destination property in projection mode.

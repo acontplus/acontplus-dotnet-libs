@@ -402,10 +402,10 @@
         <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.AddTableNamesOutputParameter(System.Data.Common.DbCommand,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.AddTotalCountParameter(System.Data.Common.DbCommand)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+        <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.ReadTotalCountParameter(System.Data.Common.DbCommand)">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.SqlServer.Repositories.AdoRepository.BulkInsertAsync(System.Data.DataTable,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">

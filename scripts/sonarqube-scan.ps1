@@ -179,6 +179,11 @@ if (Test-Path $propsFile) {
     Remove-Item $propsFile -Force -ErrorAction SilentlyContinue
 }
 
+$testResultsDir = Join-Path $repoRoot "TestResults"
+if (Test-Path $testResultsDir) {
+    Remove-Item $testResultsDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 $exclusions = "**/*.png,**/*.jpg,**/*.jpeg,**/*.gif,**/*.ico,**/*.pdf,**/*.pfx,**/*.snk,**/*.dll,**/*.exe,**/*.zip,**/bin/**,**/obj/**,**/.sonarqube-results/**,**/nupkgs/**,**/TestResults/**,**/.agents/**"
 
 $beginArgs = @(
@@ -190,7 +195,10 @@ $beginArgs = @(
     "/d:sonar.sourceEncoding=UTF-8",
     "/d:sonar.projectBaseDir=$repoRoot",
     "/d:sonar.exclusions=$exclusions",
-    "/d:sonar.cpd.exclusions=**/Migrations/**,**/tests/**,**/bin/**,**/obj/**",
+    "/d:sonar.cpd.exclusions=**/Migrations/**,**/tests/**,**/bin/**,**/obj/**,**/apps/**",
+    "/d:sonar.coverage.exclusions=**/tests/**,**/Migrations/**,**/apps/**",
+    "/d:sonar.cs.vstest.reportsPaths=TestResults/*.trx,**/*.trx",
+    "/d:sonar.cs.cobertura.reportsPaths=TestResults/*.cobertura.xml,**/*.cobertura.xml",
     "/d:sonar.python.version=3"
 )
 
@@ -218,7 +226,19 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Ok "Build completado"
 
-# ─── Paso 5: sonarscanner end ────────────────────────────────────────────────
+# ─── Paso 5: dotnet test con cobertura ───────────────────────────────────────
+
+Write-Step "dotnet test con cobertura (Release)"
+
+dotnet test --solution $slnx --configuration Release --no-build --coverage --coverage-output-format cobertura --results-directory $testResultsDir --report-xunit-trx
+if ($LASTEXITCODE -ne 0) {
+    Write-Fail "dotnet test falló (exit $LASTEXITCODE)"
+    dotnet-sonarscanner end /d:sonar.token="$Token"
+    exit $LASTEXITCODE
+}
+Write-Ok "Pruebas unitarias completadas y reporte de cobertura generado"
+
+# ─── Paso 6: sonarscanner end ────────────────────────────────────────────────
 
 Write-Step "sonarscanner end (enviando resultados a SonarQube)"
 
@@ -229,7 +249,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Ok "Resultados enviados"
 
-# ─── Paso 6: Esperar que se procese el análisis ──────────────────────────────
+# ─── Paso 7: Esperar que se procese el análisis ──────────────────────────────
 
 Write-Step "Esperando que SonarQube procese el análisis"
 
@@ -261,11 +281,11 @@ if (-not $processed) {
 }
 Write-Ok "Análisis procesado"
 
-# ─── Paso 7: Mostrar métricas ────────────────────────────────────────────────
+# ─── Paso 8: Mostrar métricas ────────────────────────────────────────────────
 
 Write-Step "Métricas del proyecto"
 
-$metrics  = "bugs,vulnerabilities,code_smells,coverage,sqale_rating,reliability_rating,security_rating,ncloc,duplicated_lines_density"
+$metrics  = "bugs,vulnerabilities,code_smells,coverage,sqale_rating,reliability_rating,security_rating,ncloc,duplicated_lines_density,tests,test_success_density"
 $measures = Invoke-SonarApi "GET" "/api/measures/component?component=$ProjectKey&metricKeys=$metrics"
 
 $ratingMap = @{ "1.0" = "A ✅"; "2.0" = "B 🟡"; "3.0" = "C 🟠"; "4.0" = "D 🔴"; "5.0" = "E ⛔" }
@@ -284,7 +304,14 @@ $table = @(
     [PSCustomObject]@{ Métrica = "Bugs";                Valor = "$($m["bugs"]) — $(Get-Rating $m["reliability_rating"])" }
     [PSCustomObject]@{ Métrica = "Vulnerabilities";     Valor = "$($m["vulnerabilities"]) — $(Get-Rating $m["security_rating"])" }
     [PSCustomObject]@{ Métrica = "Code Smells";         Valor = "$($m["code_smells"]) — $(Get-Rating $m["sqale_rating"])" }
-    [PSCustomObject]@{ Métrica = "Coverage";            Valor = "$($m["coverage"])%"                  }
+)
+
+if ($m.ContainsKey("tests")) {
+    $table += [PSCustomObject]@{ Métrica = "Unit Tests"; Valor = "$($m["tests"]) (éxito: $(if ($m["test_success_density"]) { "$($m["test_success_density"])%" } else { "100%" }))" }
+}
+
+$table += @(
+    [PSCustomObject]@{ Métrica = "Coverage";            Valor = "$(if ($m["coverage"]) { "$($m["coverage"])%" } else { "0.0%" })" }
     [PSCustomObject]@{ Métrica = "Duplicated Lines";    Valor = "$($m["duplicated_lines_density"])%"  }
 )
 

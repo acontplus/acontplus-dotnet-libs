@@ -511,11 +511,20 @@
             <typeparam name="TRealTime">Real-time statistics DTO type</typeparam>
             <typeparam name="TAggregated">Aggregated statistics DTO type</typeparam>
             <typeparam name="TTrend">Trend analysis DTO type</typeparam>
+            <param name="adoRepository">ADO repository for database operations</param>
+            <param name="dashboardSpName">Stored procedure name for dashboard stats</param>
+            <param name="realTimeSpName">Stored procedure name for real-time stats</param>
+            <param name="aggregatedSpName">Stored procedure name for aggregated stats</param>
+            <param name="trendsSpName">Stored procedure name for trend stats</param>
         </member>
         <member name="M:Acontplus.Analytics.Services.StatisticsService`4.#ctor(Acontplus.Core.Abstractions.Persistence.IAdoRepository,System.String,System.String,System.String,System.String)">
             <summary>
-            Initializes a new instance of the StatisticsService
+            Generic statistics service implementation with dynamic stored procedure support
             </summary>
+            <typeparam name="TDashboard">Dashboard statistics DTO type</typeparam>
+            <typeparam name="TRealTime">Real-time statistics DTO type</typeparam>
+            <typeparam name="TAggregated">Aggregated statistics DTO type</typeparam>
+            <typeparam name="TTrend">Trend analysis DTO type</typeparam>
             <param name="adoRepository">ADO repository for database operations</param>
             <param name="dashboardSpName">Stored procedure name for dashboard stats</param>
             <param name="realTimeSpName">Stored procedure name for real-time stats</param>

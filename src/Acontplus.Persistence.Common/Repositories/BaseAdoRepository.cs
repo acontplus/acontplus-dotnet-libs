@@ -4,7 +4,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Acontplus.Persistence.Common.Configuration;
+using Acontplus.Persistence.Common.Exceptions;
 using Acontplus.Persistence.Common.Mapping;
+using Acontplus.Persistence.Common.Resilience;
 using Microsoft.Extensions.Options;
 
 namespace Acontplus.Persistence.Common.Repositories;
@@ -90,57 +92,56 @@ public abstract class BaseAdoRepository(
     protected abstract void AddTableNamesOutputParameter(DbCommand command, CommandOptionsDto options);
 
     /// <summary>
+    /// Appends the ORDER BY clause to the SQL query if not already present.
+    /// </summary>
+    protected virtual string AppendOrderByIfMissing(string sql, PaginationRequest pagination)
+    {
+        var builder = new StringBuilder(sql);
+
+        if (!sql.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.IsNullOrEmpty(pagination.SortBy))
+            {
+                var safeSortBy = ValidateAndSanitizeSortColumn(pagination.SortBy);
+                var direction = pagination.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
+                builder.Append($" ORDER BY {SanitizeIdentifier(safeSortBy)} {direction}");
+            }
+            else
+            {
+                builder.Append(" ORDER BY 1 ASC");
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Adds provider-specific output parameter for total count in stored procedures.
+    /// </summary>
+    protected abstract void AddTotalCountParameter(DbCommand command);
+
+    /// <summary>
+    /// Reads provider-specific output parameter value for total count in stored procedures.
+    /// </summary>
+    protected abstract int ReadTotalCountParameter(DbCommand command);
+
+    /// <summary>
+    /// Builds provider-specific stored procedure parameters for pagination.
+    /// </summary>
+    protected virtual Dictionary<string, object> CreateStoredProcedureParameters(PaginationRequest pagination, CommandOptionsDto options) =>
+        BuildStoredProcedureParameters(pagination, options);
+
+    /// <summary>
+    /// Builds provider-specific stored procedure parameters for filtering.
+    /// </summary>
+    protected virtual Dictionary<string, object> CreateStoredProcedureParameters(FilterRequest filter, CommandOptionsDto options) =>
+        BuildStoredProcedureParameters(filter, options);
+
+    /// <summary>
     /// Lazy-loaded retry policy based on configuration.
     /// </summary>
-    protected AsyncRetryPolicy RetryPolicy
-    {
-        get
-        {
-            if (_retryPolicy != null)
-                return _retryPolicy;
-
-            if (!_resilienceOptions.RetryPolicy.Enabled)
-            {
-                _retryPolicy = Policy
-                    .Handle<Exception>(_ => false)
-                    .RetryAsync(0);
-                return _retryPolicy;
-            }
-
-            var maxRetries = _resilienceOptions.RetryPolicy.MaxRetries;
-            var baseDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.BaseDelaySeconds);
-            var maxDelay = TimeSpan.FromSeconds(_resilienceOptions.RetryPolicy.MaxDelaySeconds);
-            var exponentialBackoff = _resilienceOptions.RetryPolicy.ExponentialBackoff;
-
-            _retryPolicy = Policy
-                .Handle<Exception>(IsTransientException)
-                .Or<TimeoutException>()
-                .WaitAndRetryAsync(
-                    maxRetries,
-                    retryAttempt =>
-                    {
-                        if (exponentialBackoff)
-                        {
-                            var calculatedDelay = TimeSpan.FromSeconds(
-                                _resilienceOptions.RetryPolicy.BaseDelaySeconds * Math.Pow(2, retryAttempt - 1));
-                            return calculatedDelay > maxDelay ? maxDelay : calculatedDelay;
-                        }
-                        return baseDelay;
-                    },
-                    (exception, timeSpan, retryCount, _) =>
-                    {
-                        _logger.LogWarning(
-                            exception,
-                            "[ADO Repository] Retry {RetryCount}/{MaxRetries} after {Delay}ms for {ProviderName} operation",
-                            retryCount,
-                            maxRetries,
-                            timeSpan.TotalMilliseconds,
-                            ProviderName);
-                    });
-
-            return _retryPolicy;
-        }
-    }
+    protected AsyncRetryPolicy RetryPolicy =>
+        _retryPolicy ??= PersistenceResilienceHelper.CreateRetryPolicy(_resilienceOptions, IsTransientException, _logger, ProviderName, "ADO");
 
     /// <inheritdoc />
     public void SetTransaction(DbTransaction transaction) => _currentTransaction = transaction;
@@ -401,11 +402,33 @@ public abstract class BaseAdoRepository(
     }
 
     /// <inheritdoc />
-    public abstract Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
+    public virtual async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
         string storedProcedureName,
         PaginationRequest pagination,
         CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+    {
+        ValidatePagination(pagination);
+        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
+
+        return await ExecuteWithConnectionAsync(async (connection, ct) =>
+        {
+            var spParameters = CreateStoredProcedureParameters(pagination, options);
+            await using var cmd = CreateCommand(connection, storedProcedureName, spParameters, options);
+
+            AddTotalCountParameter(cmd);
+
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            var items = await reader.ToListAsync<T>(ct);
+
+            await reader.CloseAsync();
+
+            var totalCount = ReadTotalCountParameter(cmd);
+
+            var metadata = BuildPaginationMetadata(pagination);
+            return new PagedResult<T>(items, pagination.PageIndex, pagination.PageSize, totalCount, metadata);
+        }, nameof(GetPagedFromStoredProcedureAsync), cancellationToken);
+    }
 
     /// <inheritdoc />
     public virtual async Task<List<T>> GetFilteredAsync<T>(
@@ -422,11 +445,23 @@ public abstract class BaseAdoRepository(
     }
 
     /// <inheritdoc />
-    public abstract Task<List<T>> GetFilteredFromStoredProcedureAsync<T>(
+    public virtual async Task<List<T>> GetFilteredFromStoredProcedureAsync<T>(
         string storedProcedureName,
         FilterRequest filter,
         CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
+
+        return await ExecuteWithConnectionAsync(async (connection, ct) =>
+        {
+            var spParameters = CreateStoredProcedureParameters(filter, options);
+            await using var cmd = CreateCommand(connection, storedProcedureName, spParameters, options);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            return await reader.ToListAsync<T>(ct);
+        }, nameof(GetFilteredFromStoredProcedureAsync), cancellationToken);
+    }
 
     /// <inheritdoc />
     public virtual async Task<DataSet> GetFilteredDataSetAsync(
@@ -567,7 +602,7 @@ public abstract class BaseAdoRepository(
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error executing {Operation} for {ProviderName}", operationName, ProviderName);
-                throw;
+                throw new RepositoryException($"Error executing {operationName} for {ProviderName}.", ex);
             }
             finally
             {
@@ -930,13 +965,11 @@ public abstract class BaseAdoRepository(
             "CONVERT", "WAITFOR", "DELAY", "SHUTDOWN", "XP_", "SP_", "--", "/*", "*/", ";", "@@"
         };
 
-        foreach (var keyword in dangerousKeywords)
+        var dangerousKeyword = dangerousKeywords.FirstOrDefault(k => upperColumn.Contains(k, StringComparison.Ordinal));
+        if (dangerousKeyword != null)
         {
-            if (upperColumn.Contains(keyword, StringComparison.Ordinal))
-            {
-                _logger.LogWarning("Dangerous keyword '{Keyword}' detected in sort column: {ColumnName}", keyword, columnName);
-                throw new ArgumentException($"Sort column contains forbidden keyword '{keyword}': {columnName}", nameof(columnName));
-            }
+            _logger.LogWarning("Dangerous keyword '{Keyword}' detected in sort column: {ColumnName}", dangerousKeyword, columnName);
+            throw new ArgumentException($"Sort column contains forbidden keyword '{dangerousKeyword}': {columnName}", nameof(columnName));
         }
 
         return columnName;

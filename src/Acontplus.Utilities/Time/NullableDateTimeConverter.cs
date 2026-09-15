@@ -3,18 +3,10 @@ namespace Acontplus.Utilities.Time;
 /// <summary>
 /// Converter for nullable DateTime values
 /// </summary>
-public class NullableDateTimeConverter : JsonConverter<DateTime?>
+/// <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
+public class NullableDateTimeConverter(string dateFormat = "yyyy-MM-dd") : JsonConverter<DateTime?>
 {
-    private readonly string _dateFormat;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NullableDateTimeConverter"/> class with a custom date format.
-    /// </summary>
-    /// <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
-    public NullableDateTimeConverter(string dateFormat = "yyyy-MM-dd")
-    {
-        _dateFormat = dateFormat;
-    }
+    private readonly string _dateFormat = dateFormat;
 
     /// <inheritdoc />
     public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

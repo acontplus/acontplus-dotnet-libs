@@ -106,6 +106,17 @@ public static class FilterRequestExtensions
     }
 
     /// <summary>
+    /// Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">Target type, including nullable value types.</typeparam>
+    /// <param name="filter">The filter request.</param>
+    /// <param name="key">The filter key to retrieve.</param>
+    /// <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+    /// <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
+    public static T? GetFilterValue<T>(this FilterRequest filter, string key, T? defaultValue = default)
+        => filter.Filters.GetFilterValue(key, defaultValue);
+
+    /// <summary>
     /// Tries to retrieve and convert a filter value from the dictionary by key.
     /// </summary>
     /// <typeparam name="T">Target type, including nullable value types.</typeparam>
@@ -123,17 +134,6 @@ public static class FilterRequestExtensions
         value = GetFilterValue<T>(filters, key);
         return value is not null;
     }
-
-    /// <summary>
-    /// Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
-    /// </summary>
-    /// <typeparam name="T">Target type, including nullable value types.</typeparam>
-    /// <param name="filter">The filter request.</param>
-    /// <param name="key">The filter key to retrieve.</param>
-    /// <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
-    /// <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
-    public static T? GetFilterValue<T>(this FilterRequest filter, string key, T? defaultValue = default)
-        => filter.Filters.GetFilterValue(key, defaultValue);
 
     /// <summary>
     /// Tries to retrieve and convert a filter value by key.

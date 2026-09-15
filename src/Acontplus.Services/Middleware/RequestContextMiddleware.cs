@@ -110,7 +110,10 @@ public sealed class RequestContextMiddleware(
             // Referrer-Policy: Controls how much referrer information is sent with requests.
             case false:
                 context.Response.Headers["Referrer-Policy"] = _options.ReferrerPolicy;
-                _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", _options.ReferrerPolicy);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", _options.ReferrerPolicy);
+                }
                 break;
         }
     }

@@ -246,10 +246,8 @@ public static class DbDataReaderMapper
         return Task.FromResult(instance);
     }
 
-    private static object? GetDefaultValue(Type type)
-    {
-        return type.IsValueType ? Activator.CreateInstance(type) : null;
-    }
+    private static object? GetDefaultValue(Type type) =>
+        type.IsValueType ? Activator.CreateInstance(type) : null;
 
     /// <summary>
     /// Maps a single row from a DbDataReader to an object of type T using reflection.

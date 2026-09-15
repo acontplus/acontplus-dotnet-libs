@@ -11,10 +11,6 @@ public class EntityTypeConfiguration<TEntity> : IEntityTypeConfiguration<TEntity
     /// Configures the primary key for the entity.
     /// </summary>
     /// <param name="builder">The entity type builder.</param>
-    public virtual void Configure(EntityTypeBuilder<TEntity> builder)
-    {
-        // Configure the primary key
+    public virtual void Configure(EntityTypeBuilder<TEntity> builder) =>
         builder.HasKey(x => x.Id);
-        // Add more common configuration for non-auditable entities here if needed
-    }
 }

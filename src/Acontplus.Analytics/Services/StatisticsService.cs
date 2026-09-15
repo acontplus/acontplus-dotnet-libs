@@ -9,44 +9,32 @@ namespace Acontplus.Analytics.Services;
 /// <typeparam name="TRealTime">Real-time statistics DTO type</typeparam>
 /// <typeparam name="TAggregated">Aggregated statistics DTO type</typeparam>
 /// <typeparam name="TTrend">Trend analysis DTO type</typeparam>
+/// <param name="adoRepository">ADO repository for database operations</param>
+/// <param name="dashboardSpName">Stored procedure name for dashboard stats</param>
+/// <param name="realTimeSpName">Stored procedure name for real-time stats</param>
+/// <param name="aggregatedSpName">Stored procedure name for aggregated stats</param>
+/// <param name="trendsSpName">Stored procedure name for trend stats</param>
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2436:Types and methods should not have too many generic parameters",
     Justification = "Generic statistics abstraction requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2436",
     Justification = "Generic statistics abstraction requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
-public class StatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
+public class StatisticsService<TDashboard, TRealTime, TAggregated, TTrend>(
+    IAdoRepository adoRepository,
+    string dashboardSpName,
+    string realTimeSpName,
+    string aggregatedSpName,
+    string trendsSpName)
     : Interfaces.IStatisticsService<TDashboard, TRealTime, TAggregated, TTrend>
     where TDashboard : class
     where TRealTime : class
     where TAggregated : class
     where TTrend : class
 {
-    private readonly IAdoRepository _adoRepository;
-    private readonly string _dashboardSpName;
-    private readonly string _realTimeSpName;
-    private readonly string _aggregatedSpName;
-    private readonly string _trendsSpName;
-
-    /// <summary>
-    /// Initializes a new instance of the StatisticsService
-    /// </summary>
-    /// <param name="adoRepository">ADO repository for database operations</param>
-    /// <param name="dashboardSpName">Stored procedure name for dashboard stats</param>
-    /// <param name="realTimeSpName">Stored procedure name for real-time stats</param>
-    /// <param name="aggregatedSpName">Stored procedure name for aggregated stats</param>
-    /// <param name="trendsSpName">Stored procedure name for trend stats</param>
-    public StatisticsService(
-        IAdoRepository adoRepository,
-        string dashboardSpName,
-        string realTimeSpName,
-        string aggregatedSpName,
-        string trendsSpName)
-    {
-        _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
-        _dashboardSpName = dashboardSpName ?? throw new ArgumentNullException(nameof(dashboardSpName));
-        _realTimeSpName = realTimeSpName ?? throw new ArgumentNullException(nameof(realTimeSpName));
-        _aggregatedSpName = aggregatedSpName ?? throw new ArgumentNullException(nameof(aggregatedSpName));
-        _trendsSpName = trendsSpName ?? throw new ArgumentNullException(nameof(trendsSpName));
-    }
+    private readonly IAdoRepository _adoRepository = adoRepository ?? throw new ArgumentNullException(nameof(adoRepository));
+    private readonly string _dashboardSpName = dashboardSpName ?? throw new ArgumentNullException(nameof(dashboardSpName));
+    private readonly string _realTimeSpName = realTimeSpName ?? throw new ArgumentNullException(nameof(realTimeSpName));
+    private readonly string _aggregatedSpName = aggregatedSpName ?? throw new ArgumentNullException(nameof(aggregatedSpName));
+    private readonly string _trendsSpName = trendsSpName ?? throw new ArgumentNullException(nameof(trendsSpName));
 
     /// <summary>
     /// Get comprehensive dashboard statistics for a date range

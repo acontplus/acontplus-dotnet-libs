@@ -153,6 +153,9 @@ if [ "$EXPORT_ONLY" != "true" ]; then
       rm -f "$REPO_ROOT/sonar-project.properties"
     fi
 
+    echo -e "\n── Limpiando resultados de pruebas anteriores"
+    rm -rf "$REPO_ROOT/TestResults"
+
     echo -e "\n── Ejecutando dotnet-sonarscanner begin"
     dotnet-sonarscanner begin \
       /k:"$PROJECT_KEY" \
@@ -163,11 +166,23 @@ if [ "$EXPORT_ONLY" != "true" ]; then
       /d:sonar.sourceEncoding="UTF-8" \
       /d:sonar.projectBaseDir="$REPO_ROOT" \
       /d:sonar.exclusions="$EXCLUSIONS" \
-      /d:sonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**" \
+      /d:sonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**,**/apps/**" \
+      /d:sonar.coverage.exclusions="**/tests/**,**/Migrations/**,**/apps/**" \
+      /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx,**/*.trx" \
+      /d:sonar.cs.cobertura.reportsPaths="TestResults/*.cobertura.xml,**/*.cobertura.xml" \
       /d:sonar.python.version="3"
 
     echo -e "\n── Compilando solución (dotnet build Release)"
     dotnet build "$REPO_ROOT/acontplus-dotnet-libs.slnx" --configuration Release
+
+    echo -e "\n── Ejecutando pruebas unitarias con cobertura (dotnet test)"
+    dotnet test --solution "$REPO_ROOT/acontplus-dotnet-libs.slnx" \
+      --configuration Release \
+      --no-build \
+      --coverage \
+      --coverage-output-format cobertura \
+      --results-directory "$REPO_ROOT/TestResults" \
+      --report-xunit-trx
 
     echo -e "\n── Ejecutando dotnet-sonarscanner end"
     dotnet-sonarscanner end /d:sonar.token="$TOKEN"
@@ -181,7 +196,10 @@ if [ "$EXPORT_ONLY" != "true" ]; then
       -Dsonar.sourceEncoding="UTF-8" \
       -Dsonar.projectBaseDir="$REPO_ROOT" \
       -Dsonar.exclusions="$EXCLUSIONS" \
-      -Dsonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**"
+      -Dsonar.cpd.exclusions="**/Migrations/**,**/tests/**,**/bin/**,**/obj/**,**/apps/**" \
+      -Dsonar.coverage.exclusions="**/tests/**,**/Migrations/**,**/apps/**" \
+      -Dsonar.cs.vstest.reportsPaths="TestResults/*.trx,**/*.trx" \
+      -Dsonar.cs.cobertura.reportsPaths="TestResults/*.cobertura.xml,**/*.cobertura.xml"
   fi
 
   echo "  ✓ Escaneo completado y enviado a SonarQube"
@@ -215,7 +233,7 @@ fi
 
 # 5. Mostrar métricas
 echo -e "\n── Métricas de Calidad del Proyecto"
-METRICS="alert_status,bugs,vulnerabilities,code_smells,coverage,sqale_rating,reliability_rating,security_rating,ncloc,duplicated_lines,duplicated_blocks,duplicated_files,duplicated_lines_density"
+METRICS="alert_status,bugs,vulnerabilities,code_smells,coverage,sqale_rating,reliability_rating,security_rating,ncloc,duplicated_lines,duplicated_blocks,duplicated_files,duplicated_lines_density,tests,test_errors,test_failures,test_success_density"
 MEASURES_RES=$(curl -s -H "$AUTH_HEADER" "$SERVER_URL/api/measures/component?component=$PROJECT_KEY&metricKeys=$METRICS" || echo "{}")
 
 node -e "
@@ -231,7 +249,10 @@ console.log('📊 Líneas de Código:   ' + (m['ncloc'] || '0'));
 console.log('🐛 Bugs:               ' + (m['bugs'] || '0') + ' (' + getRating(m['reliability_rating']) + ')');
 console.log('🔓 Vulnerabilidades:   ' + (m['vulnerabilities'] || '0') + ' (' + getRating(m['security_rating']) + ')');
 console.log('👃 Code Smells:        ' + (m['code_smells'] || '0') + ' (' + getRating(m['sqale_rating']) + ')');
-console.log('🛡️ Cobertura:          ' + (m['coverage'] ? m['coverage'] + '%' : 'N/A'));
+if (m['tests']) {
+  console.log('🧪 Pruebas Unitarias:  ' + m['tests'] + ' (éxito: ' + (m['test_success_density'] ? m['test_success_density'] + '%' : '100%') + ')');
+}
+console.log('🛡️ Cobertura:          ' + (m['coverage'] ? m['coverage'] + '%' : '0.0%'));
 console.log('📄 Líneas Duplicadas:  ' + (m['duplicated_lines'] || '0'));
 console.log('📐 Duplicación:        ' + (m['duplicated_lines_density'] ? m['duplicated_lines_density'] + '%' : '0%'));
 console.log('🧱 Bloques Duplicados: ' + (m['duplicated_blocks'] || '0'));

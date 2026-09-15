@@ -2969,6 +2969,19 @@
             <summary>
             Base class for all domain-specific exceptions in the application.
             </summary>
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.DomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+            <summary>
+            Base class for all domain-specific exceptions in the application.
+            </summary>
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
         <member name="P:Acontplus.Core.Domain.Exceptions.DomainException.ErrorType">
             <summary>
@@ -2980,23 +2993,25 @@
             Gets the specific error code associated with this exception.
             </summary>
         </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.DomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+        <member name="T:Acontplus.Core.Domain.Exceptions.GenericDomainException">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> class.
+            General-purpose domain exception for cases that don't warrant a dedicated exception subclass.
+            Prefer creating a named subclass when the error has semantic meaning in the domain.
             </summary>
             <param name="type">The type of error.</param>
             <param name="code">The specific error code.</param>
             <param name="message">The error message that explains the reason for the exception.</param>
             <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
-        <member name="T:Acontplus.Core.Domain.Exceptions.GenericDomainException">
+        <member name="M:Acontplus.Core.Domain.Exceptions.GenericDomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
             <summary>
             General-purpose domain exception for cases that don't warrant a dedicated exception subclass.
             Prefer creating a named subclass when the error has semantic meaning in the domain.
             </summary>
-        </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.GenericDomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
-            <inheritdoc />
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.ISqlExceptionTranslator">
             <summary>
@@ -4803,15 +4818,6 @@
             <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
             <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
         </member>
-        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0@)">
-            <summary>
-            Tries to retrieve and convert a filter value from the dictionary by key.
-            </summary>
-            <typeparam name="T">Target type, including nullable value types.</typeparam>
-            <param name="filters">The filters dictionary.</param>
-            <param name="key">The filter key to retrieve.</param>
-            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
-        </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
             <summary>
             Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
@@ -4821,6 +4827,15 @@
             <param name="key">The filter key to retrieve.</param>
             <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
             <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0@)">
+            <summary>
+            Tries to retrieve and convert a filter value from the dictionary by key.
+            </summary>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filters">The filters dictionary.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
         </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0@)">
             <summary>

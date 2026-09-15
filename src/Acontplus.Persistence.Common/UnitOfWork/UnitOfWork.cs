@@ -91,7 +91,10 @@ public class UnitOfWork<TContext> : IUnitOfWork
             AdoRepository.SetTransaction(CurrentDbTransaction!);
             AdoRepository.SetConnection(connection);
 
-            _logger?.LogInformation("Transaction started with isolation level: {IsolationLevel}", isolationLevel);
+            if (_logger?.IsEnabled(LogLevel.Information) == true)
+            {
+                _logger.LogInformation("Transaction started with isolation level: {IsolationLevel}", isolationLevel);
+            }
 
             return new EfTransaction(_efTransaction, AdoRepository, _logger, OnTransactionDisposed);
         }
@@ -109,7 +112,10 @@ public class UnitOfWork<TContext> : IUnitOfWork
         try
         {
             var changes = await _context.SaveChangesAsync(cancellationToken);
-            _logger?.LogDebug("Saved {ChangeCount} changes to database", changes);
+            if (_logger?.IsEnabled(LogLevel.Debug) == true)
+            {
+                _logger.LogDebug("Saved {ChangeCount} changes to database", changes);
+            }
             return changes;
         }
         catch (DbUpdateConcurrencyException ex)

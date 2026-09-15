@@ -3,21 +3,12 @@ namespace Acontplus.Services.Middleware;
 /// <summary>
 /// Middleware that logs HTTP request execution times, response status codes, and assigns a request identifier.
 /// </summary>
-public class RequestLoggingMiddleware
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="logger">The logger instance.</param>
+public class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<RequestLoggingMiddleware> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequestLoggingMiddleware"/> class.
-    /// </summary>
-    /// <param name="next">The next middleware in the pipeline.</param>
-    /// <param name="logger">The logger instance.</param>
-    public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
+    private readonly RequestDelegate _next = next;
+    private readonly ILogger<RequestLoggingMiddleware> _logger = logger;
 
     /// <summary>
     /// Executes the middleware to time and log the request.
@@ -47,15 +38,21 @@ public class RequestLoggingMiddleware
 
             if (statusCode >= 400)
             {
-                _logger.LogWarning(
-                    "HTTP {Method} {Path} responded {StatusCode} in {Duration}ms (RequestId: {RequestId})",
-                    method, path, statusCode, duration, requestId);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning(
+                        "HTTP {Method} {Path} responded {StatusCode} in {Duration}ms (RequestId: {RequestId})",
+                        method, path, statusCode, duration, requestId);
+                }
             }
             else
             {
-                _logger.LogInformation(
-                    "HTTP {Method} {Path} responded {StatusCode} in {Duration}ms (RequestId: {RequestId})",
-                    method, path, statusCode, duration, requestId);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "HTTP {Method} {Path} responded {StatusCode} in {Duration}ms (RequestId: {RequestId})",
+                        method, path, statusCode, duration, requestId);
+                }
             }
         }
     }

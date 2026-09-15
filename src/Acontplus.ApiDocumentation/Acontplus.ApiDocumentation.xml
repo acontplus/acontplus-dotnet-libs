@@ -11,11 +11,16 @@
             <remarks>
             This configurator creates a distinct Swagger document for each discovered API version, using metadata from both the API version description and the application's configuration (such as contact and license info).
             </remarks>
+            <param name="provider">The API version description provider used to enumerate API versions.</param>
+            <param name="configuration">The application configuration for retrieving Swagger metadata.</param>
         </member>
         <member name="M:Acontplus.ApiDocumentation.ConfigureSwaggerOptions.#ctor(Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.ApiDocumentation.ConfigureSwaggerOptions"/> class.
+            Provides configuration for Swagger/OpenAPI generation options, supporting multiple API versions and dynamic metadata.
             </summary>
+            <remarks>
+            This configurator creates a distinct Swagger document for each discovered API version, using metadata from both the API version description and the application's configuration (such as contact and license info).
+            </remarks>
             <param name="provider">The API version description provider used to enumerate API versions.</param>
             <param name="configuration">The application configuration for retrieving Swagger metadata.</param>
         </member>

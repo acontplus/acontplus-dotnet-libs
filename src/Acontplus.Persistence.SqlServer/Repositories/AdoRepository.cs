@@ -1,8 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using Acontplus.Core.Enums;
 using Acontplus.Persistence.Common.Configuration;
-using Acontplus.Persistence.Common.Mapping;
 using Acontplus.Persistence.Common.Repositories;
 using Microsoft.Extensions.Options;
 
@@ -48,27 +45,8 @@ public class AdoRepository(
     protected override string SanitizeIdentifier(string identifier) => $"[{identifier}]";
 
     /// <inheritdoc />
-    protected override string BuildPagedSql(string sql, PaginationRequest pagination)
-    {
-        var builder = new StringBuilder(sql);
-
-        if (!sql.Contains("ORDER BY", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!string.IsNullOrEmpty(pagination.SortBy))
-            {
-                var safeSortBy = ValidateAndSanitizeSortColumn(pagination.SortBy);
-                var direction = pagination.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
-                builder.Append($" ORDER BY [{safeSortBy}] {direction}");
-            }
-            else
-            {
-                builder.Append(" ORDER BY 1 ASC");
-            }
-        }
-
-        builder.Append(" OFFSET @__Offset ROWS FETCH NEXT @__Fetch ROWS ONLY");
-        return builder.ToString();
-    }
+    protected override string BuildPagedSql(string sql, PaginationRequest pagination) =>
+        $"{AppendOrderByIfMissing(sql, pagination)} OFFSET @__Offset ROWS FETCH NEXT @__Fetch ROWS ONLY";
 
     /// <inheritdoc />
     protected override void AddTableNamesOutputParameter(DbCommand command, CommandOptionsDto options)
@@ -80,53 +58,19 @@ public class AdoRepository(
     }
 
     /// <inheritdoc />
-    public override async Task<PagedResult<T>> GetPagedFromStoredProcedureAsync<T>(
-        string storedProcedureName,
-        PaginationRequest pagination,
-        CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default)
+    protected override void AddTotalCountParameter(DbCommand command)
     {
-        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
-
-        return await ExecuteWithConnectionAsync(async (connection, ct) =>
+        if (command is SqlCommand sqlCmd)
         {
-            var spParameters = BuildStoredProcedureParameters(pagination, options);
-            await using var cmd = (SqlCommand)CreateCommand(connection, storedProcedureName, spParameters, options);
-
-            Ado.Parameters.CommandParameterBuilder.AddOutputParameter(cmd, "@TotalCount", SqlDbType.Int, 0);
-
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            var items = await reader.ToListAsync<T>(ct);
-
-            await reader.CloseAsync();
-
-            var totalCount = cmd.Parameters["@TotalCount"].Value != DBNull.Value
-                ? Convert.ToInt32(cmd.Parameters["@TotalCount"].Value)
-                : 0;
-
-            var metadata = BuildPaginationMetadata(pagination);
-            return new PagedResult<T>(items, pagination.PageIndex, pagination.PageSize, totalCount, metadata);
-        }, nameof(GetPagedFromStoredProcedureAsync), cancellationToken);
+            Ado.Parameters.CommandParameterBuilder.AddOutputParameter(sqlCmd, "@TotalCount", SqlDbType.Int, 0);
+        }
     }
 
     /// <inheritdoc />
-    public override async Task<List<T>> GetFilteredFromStoredProcedureAsync<T>(
-        string storedProcedureName,
-        FilterRequest filter,
-        CommandOptionsDto? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(filter);
-        options ??= new CommandOptionsDto { CommandType = CommandType.StoredProcedure };
-
-        return await ExecuteWithConnectionAsync(async (connection, ct) =>
-        {
-            var spParameters = BuildStoredProcedureParameters(filter, options);
-            await using var cmd = CreateCommand(connection, storedProcedureName, spParameters, options);
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            return await reader.ToListAsync<T>(ct);
-        }, nameof(GetFilteredFromStoredProcedureAsync), cancellationToken);
-    }
+    protected override int ReadTotalCountParameter(DbCommand command) =>
+        command.Parameters["@TotalCount"].Value != DBNull.Value
+            ? Convert.ToInt32(command.Parameters["@TotalCount"].Value)
+            : 0;
 
     /// <inheritdoc />
     public override async Task<int> BulkInsertAsync(

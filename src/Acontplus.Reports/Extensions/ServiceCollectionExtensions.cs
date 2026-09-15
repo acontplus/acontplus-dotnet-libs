@@ -23,7 +23,26 @@ public static class ServiceCollectionExtensions
     {
         // Configure options from configuration
         services.Configure<Configuration.ReportOptions>(configuration.GetSection(ReportsSectionName));
+        return RegisterReportCoreServices(services);
+    }
 
+    /// <summary>
+    /// Adds report generation services with custom configuration
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configureOptions">Action to configure report options</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection AddReportServices(
+        this IServiceCollection services,
+        Action<Configuration.ReportOptions> configureOptions)
+    {
+        // Configure options programmatically
+        services.Configure(configureOptions);
+        return RegisterReportCoreServices(services);
+    }
+
+    private static IServiceCollection RegisterReportCoreServices(IServiceCollection services)
+    {
         // Register services
         services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
         services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
@@ -39,43 +58,6 @@ public static class ServiceCollectionExtensions
         // Register report definition cache (constructed from configured options).
         // RdlcPrinterService depends on ReportDefinitionCache in its constructor,
         // so we always register one (even if caching is disabled, it won't be used).
-        services.AddSingleton<Services.ReportDefinitionCache>(sp =>
-        {
-            var opts = sp.GetRequiredService<IOptions<Configuration.ReportOptions>>().Value;
-            var max = Math.Max(1, opts.MaxCachedReportDefinitions);
-            var ttl = TimeSpan.FromMinutes(Math.Max(1, opts.CacheTtlMinutes));
-            return new Services.ReportDefinitionCache(max, ttl);
-        });
-
-        return services;
-    }
-
-    /// <summary>
-    /// Adds report generation services with custom configuration
-    /// </summary>
-    /// <param name="services">The service collection</param>
-    /// <param name="configureOptions">Action to configure report options</param>
-    /// <returns>The service collection for chaining</returns>
-    public static IServiceCollection AddReportServices(
-        this IServiceCollection services,
-        Action<Configuration.ReportOptions> configureOptions)
-    {
-        // Configure options programmatically
-        services.Configure(configureOptions);
-
-        // Register services
-        services.TryAddScoped<IRdlcReportService, Services.RdlcReportService>();
-        services.TryAddScoped<IQuestPdfReportService, Services.QuestPdfReportService>();
-        services.TryAddScoped<IMiniExcelReportService, Services.MiniExcelReportService>();
-        services.TryAddScoped<IClosedXmlReportService, Services.ClosedXmlReportService>();
-
-        // Register printer service only on Windows 6.1+
-        if (OperatingSystem.IsWindowsVersionAtLeast(6, 1))
-        {
-            AddPrinterServiceIfSupported(services);
-        }
-
-        // Register report definition cache (constructed from configured options).
         services.AddSingleton<Services.ReportDefinitionCache>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<Configuration.ReportOptions>>().Value;

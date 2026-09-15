@@ -108,7 +108,7 @@ public static class FilterPredicateExtensions
         return Expression.Lambda<Func<T, bool>>(rangeExpression, parameter);
     }
 
-    private static Expression? GetPropertyExpression<T>(ParameterExpression parameter, string propertyName)
+    private static MemberExpression? GetPropertyExpression<T>(ParameterExpression parameter, string propertyName)
     {
         try
         {
@@ -121,7 +121,7 @@ public static class FilterPredicateExtensions
         }
     }
 
-    private static Expression CreateComparisonExpression(Expression propertyExpression, Expression valueExpression, object value)
+    private static BinaryExpression CreateComparisonExpression(Expression propertyExpression, Expression valueExpression, object value)
     {
         // Handle null values
         if (value == null)
