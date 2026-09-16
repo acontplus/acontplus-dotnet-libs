@@ -221,6 +221,7 @@ public sealed class QuestPdfReportService : IQuestPdfReportService, IDisposable
             QuestPdfLicenseType.Enterprise => LicenseType.Enterprise,
             _ => LicenseType.Community
         };
+        QuestPDF.Settings.ThrowOnMissingFontFamilies = false;
     }
 
     private static string BuildFileName(QuestPdfReportRequest request)
