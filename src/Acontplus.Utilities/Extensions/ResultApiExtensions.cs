@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Acontplus.Core.Domain.Enums;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Acontplus.Utilities.Extensions;
 
@@ -20,10 +21,8 @@ public static class ResultApiExtensions
     /// Configures a global action to modify ApiResponse instances before they are returned.
     /// </summary>
     /// <param name="configureAction">The action to apply to each ApiResponse.</param>
-    public static void ConfigureApiResponses(Action<ApiResponse> configureAction)
-    {
+    public static void ConfigureApiResponses(Action<ApiResponse> configureAction) =>
         ConfigureResponse = configureAction;
-    }
 
     #endregion
 
@@ -184,10 +183,8 @@ public static class ResultApiExtensions
     /// <summary>
     /// Converts ApiResponse&lt;T&gt; to IActionResult
     /// </summary>
-    public static IActionResult ToActionResult<T>(this ApiResponse<T> response)
-    {
-        return response.ToBaseResponse().ToActionResult();
-    }
+    public static IActionResult ToActionResult<T>(this ApiResponse<T> response) =>
+        response.ToBaseResponse().ToActionResult();
 
     /// <summary>
     /// Converts base ApiResponse to IActionResult with full status code support
@@ -503,10 +500,8 @@ public static class ResultApiExtensions
     /// <summary>
     /// Converts ApiResponse&lt;T&gt; to IResult (for Minimal APIs)
     /// </summary>
-    public static IResult ToMinimalApiResult<T>(this ApiResponse<T> response)
-    {
-        return response.ToBaseResponse().ToMinimalApiResult();
-    }
+    public static IResult ToMinimalApiResult<T>(this ApiResponse<T> response) =>
+        response.ToBaseResponse().ToMinimalApiResult();
 
     /// <summary>
     /// Converts ApiResponse to IResult for Minimal APIs
@@ -1454,48 +1449,32 @@ public static class ResultApiExtensions
     #region Helper Methods
 
     // CRUD Success Helpers
-    private static IActionResult CreateGetActionResult<T>(T value)
-    {
-        return value is null ? new NoContentResult() : new OkObjectResult(value);
-    }
+    private static IActionResult CreateGetActionResult<T>(T value) =>
+        value is null ? new NoContentResult() : new OkObjectResult(value);
 
-    private static IActionResult CreateCreatedActionResult<T>(T value, string locationUri)
-    {
-        return new CreatedResult(locationUri, value);
-    }
+    private static CreatedResult CreateCreatedActionResult<T>(T value, string locationUri) =>
+        new CreatedResult(locationUri, value);
 
-    private static IActionResult CreatePutActionResult<T>(T value)
-    {
-        return value is null ? new NoContentResult() : new OkObjectResult(value);
-    }
+    private static IActionResult CreatePutActionResult<T>(T value) =>
+        value is null ? new NoContentResult() : new OkObjectResult(value);
 
-    private static IActionResult CreateDeleteActionResult(bool deleted)
-    {
-        return deleted ? new NoContentResult() : new NotFoundResult();
-    }
+    private static IActionResult CreateDeleteActionResult(bool deleted) =>
+        deleted ? new NoContentResult() : new NotFoundResult();
 
-    private static IResult CreateGetMinimalApiResult<T>(T value)
-    {
-        return value is null ? TypedResults.NoContent() : TypedResults.Ok(value);
-    }
+    private static IResult CreateGetMinimalApiResult<T>(T value) =>
+        value is null ? TypedResults.NoContent() : TypedResults.Ok(value);
 
-    private static IResult CreateCreatedMinimalApiResult<T>(T value, string locationUri)
-    {
-        return TypedResults.Created(locationUri, value);
-    }
+    private static Created<T> CreateCreatedMinimalApiResult<T>(T value, string locationUri) =>
+        TypedResults.Created(locationUri, value);
 
-    private static IResult CreatePutMinimalApiResult<T>(T value)
-    {
-        return value is null ? TypedResults.NoContent() : TypedResults.Ok(value);
-    }
+    private static IResult CreatePutMinimalApiResult<T>(T value) =>
+        value is null ? TypedResults.NoContent() : TypedResults.Ok(value);
 
-    private static IResult CreateDeleteMinimalApiResult(bool deleted)
-    {
-        return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
-    }
+    private static IResult CreateDeleteMinimalApiResult(bool deleted) =>
+        deleted ? TypedResults.NoContent() : TypedResults.NotFound();
 
     // New CreateSuccessResponse overload that accepts an explicit message
-    private static IActionResult CreateSuccessResponse<TValue>(TValue value, string successMessage, string? correlationId)
+    private static OkObjectResult CreateSuccessResponse<TValue>(TValue value, string successMessage, string? correlationId)
     {
         var response = ApiResponse<TValue>.Success(
             data: value,
@@ -1510,7 +1489,7 @@ public static class ResultApiExtensions
         return new OkObjectResult(response);
     }
 
-    private static IActionResult CreateSuccessResponse<TValue>(TValue value, string? correlationId)
+    private static OkObjectResult CreateSuccessResponse<TValue>(TValue value, string? correlationId)
     {
         var response = ApiResponse<TValue>.Success(
             data: value,
@@ -1524,7 +1503,7 @@ public static class ResultApiExtensions
         return new OkObjectResult(response);
     }
 
-    private static IActionResult CreateWarningResponse<TValue>(
+    private static OkObjectResult CreateWarningResponse<TValue>(
         TValue value,
         DomainWarnings warnings,
         string? correlationId)
@@ -1542,7 +1521,7 @@ public static class ResultApiExtensions
         return new OkObjectResult(response);
     }
 
-    private static IResult CreateSuccessResult<TValue>(TValue value, string? correlationId)
+    private static Ok<ApiResponse<TValue>> CreateSuccessResult<TValue>(TValue value, string? correlationId)
     {
         var response = ApiResponse<TValue>.Success(
             data: value,
@@ -1556,7 +1535,7 @@ public static class ResultApiExtensions
         return TypedResults.Ok(response);
     }
 
-    private static IResult CreateSuccessResult<TValue>(TValue value, string successMessage, string? correlationId)
+    private static Ok<ApiResponse<TValue>> CreateSuccessResult<TValue>(TValue value, string successMessage, string? correlationId)
     {
         var response = ApiResponse<TValue>.Success(
             data: value,
@@ -1571,7 +1550,7 @@ public static class ResultApiExtensions
         return TypedResults.Ok(response);
     }
 
-    private static IResult CreateWarningResult<TValue>(
+    private static Ok<ApiResponse<TValue>> CreateWarningResult<TValue>(
         TValue value,
         DomainWarnings warnings,
         string? correlationId)
@@ -1624,13 +1603,13 @@ public static class ResultApiExtensions
         return response;
     }
 
-    private static IActionResult CreatePagedSuccessResponse<T>(
+    private static OkObjectResult CreatePagedSuccessResponse<T>(
         PagedResult<T> pagedResult,
         string? baseUrl,
         string? correlationId) =>
         new OkObjectResult(BuildPagedSuccessApiResponse(pagedResult, baseUrl, correlationId));
 
-    private static IResult CreatePagedSuccessResult<T>(
+    private static Ok<ApiResponse<PagedResult<T>>> CreatePagedSuccessResult<T>(
         PagedResult<T> pagedResult,
         string? baseUrl,
         string? correlationId) =>
@@ -1708,7 +1687,7 @@ public static class ResultApiExtensions
         TimeSpan executionTime,
         int precision = 2)
     {
-        var result = metadata ?? new Dictionary<string, object>();
+        var result = metadata ?? [];
         result[ApiMetadataKeys.Duration] = new
         {
             Milliseconds = Math.Round(executionTime.TotalMilliseconds, precision),
@@ -1725,7 +1704,7 @@ public static class ResultApiExtensions
         this Dictionary<string, object>? metadata,
         string correlationId)
     {
-        var result = metadata ?? new Dictionary<string, object>();
+        var result = metadata ?? [];
         if (!result.ContainsKey(ApiMetadataKeys.CorrelationId))
         {
             result[ApiMetadataKeys.CorrelationId] = correlationId;

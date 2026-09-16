@@ -190,8 +190,11 @@ public class S3StorageService : IS3StorageService, IDisposable
             using var transferUtility = new TransferUtility(client);
             await transferUtility.UploadAsync(uploadRequest);
 
-            _logger.LogInformation("Successfully uploaded {Key} to bucket {Bucket}",
-                s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Successfully uploaded {Key} to bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
 
             return new S3Response
             {
@@ -227,8 +230,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
             await client.PutObjectAsync(request);
 
-            _logger.LogInformation("Successfully updated {Key} in bucket {Bucket}",
-                s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Successfully updated {Key} in bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
 
             return new S3Response
             {
@@ -257,8 +263,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
             await client.DeleteObjectAsync(request);
 
-            _logger.LogInformation("Successfully deleted {Key} from bucket {Bucket}",
-                s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Successfully deleted {Key} from bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
 
             return new S3Response
             {
@@ -332,10 +341,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 using var s3Response = await client.GetObjectAsync(request);
                 using var memoryStream = new MemoryStream();
-                await s3Response.ResponseStream.CopyToAsync(memoryStream);
-
-                _logger.LogInformation("Successfully retrieved {Key} from bucket {Bucket} ({Size} bytes)",
-                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName, memoryStream.Length);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Successfully retrieved {Key} from bucket {Bucket} ({Size} bytes)",
+                        s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName, memoryStream.Length);
+                }
 
                 return new S3Response
                 {

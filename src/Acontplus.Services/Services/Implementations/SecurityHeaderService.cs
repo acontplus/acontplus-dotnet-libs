@@ -3,18 +3,10 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of security header service for managing HTTP security headers.
 /// </summary>
-public class SecurityHeaderService : ISecurityHeaderService
+/// <param name="logger">The logger instance.</param>
+public class SecurityHeaderService(ILogger<SecurityHeaderService> logger) : ISecurityHeaderService
 {
-    private readonly ILogger<SecurityHeaderService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityHeaderService"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public SecurityHeaderService(ILogger<SecurityHeaderService> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<SecurityHeaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public void ApplySecurityHeaders(HttpContext context, RequestContextConfiguration configuration)
@@ -39,7 +31,10 @@ public class SecurityHeaderService : ISecurityHeaderService
         if (!string.IsNullOrEmpty(configuration.ReferrerPolicy))
         {
             context.Response.Headers["Referrer-Policy"] = configuration.ReferrerPolicy;
-            _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", configuration.ReferrerPolicy);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", configuration.ReferrerPolicy);
+            }
         }
 
         // X-XSS-Protection: Enable XSS filtering
@@ -113,8 +108,11 @@ public class SecurityHeaderService : ISecurityHeaderService
             headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com";
         }
 
-        _logger.LogDebug("Generated {Count} recommended security headers for {Environment}",
-            headers.Count, isDevelopment ? "development" : "production");
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Generated {Count} recommended security headers for {Environment}",
+                headers.Count, isDevelopment ? "development" : "production");
+        }
 
         return headers;
     }

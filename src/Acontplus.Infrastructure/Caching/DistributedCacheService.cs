@@ -3,21 +3,12 @@ namespace Acontplus.Infrastructure.Caching;
 /// <summary>
 ///     Distributed cache service implementation using Redis or other distributed cache.
 /// </summary>
-public class DistributedCacheService : ICacheService
+/// <param name="cache">The distributed cache instance.</param>
+/// <param name="logger">The logger instance.</param>
+public class DistributedCacheService(IDistributedCache cache, ILogger<DistributedCacheService> logger) : ICacheService
 {
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<DistributedCacheService> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DistributedCacheService"/> class.
-    /// </summary>
-    /// <param name="cache">The distributed cache instance.</param>
-    /// <param name="logger">The logger instance.</param>
-    public DistributedCacheService(IDistributedCache cache, ILogger<DistributedCacheService> logger)
-    {
-        _cache = cache;
-        _logger = logger;
-    }
+    private readonly IDistributedCache _cache = cache;
+    private readonly ILogger<DistributedCacheService> _logger = logger;
 
     /// <inheritdoc />
     public T? Get<T>(string key)
@@ -171,12 +162,10 @@ public class DistributedCacheService : ICacheService
     }
 
     /// <inheritdoc />
-    public void Clear()
-    {
+    public void Clear() =>
         // Note: Distributed cache doesn't support clearing all entries by design
         // This is a limitation of Redis and other distributed cache providers
         _logger.LogWarning("Clear operation not supported for distributed cache - this is a platform limitation");
-    }
 
     /// <inheritdoc />
     public Task ClearAsync(CancellationToken cancellationToken = default)
@@ -218,11 +207,8 @@ public class DistributedCacheService : ICacheService
     }
 
     /// <inheritdoc />
-    public void RemoveByPrefix(string prefix)
-    {
-        _logger.LogWarning(
-            "RemoveByPrefix is not supported for distributed cache. Use Redis-specific clients for pattern-based removal.");
-    }
+    public void RemoveByPrefix(string prefix) =>
+        _logger.LogWarning("RemoveByPrefix operation not natively supported for distributed cache - consider using tags or specific key tracking");
 
     /// <inheritdoc />
     public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
@@ -232,7 +218,7 @@ public class DistributedCacheService : ICacheService
     }
 
     /// <inheritdoc />
-    public CacheStatistics GetStatistics()
+    public static CacheStatistics GetStatistics()
     {
         // Note: Distributed cache providers (Redis, etc.) don't expose detailed statistics
         // through the IDistributedCache interface. For detailed Redis stats, use Redis-specific clients.

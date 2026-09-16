@@ -4,5 +4,7 @@
   <PropertyGroup>
     <!-- Explicitly mark test projects for SonarQube to avoid treating test files as production code -->
     <SonarQubeTestProject>true</SonarQubeTestProject>
+    <!-- Exclude test projects from SonarQube analysis per official SonarScanner for .NET documentation -->
+    <SonarQubeExclude>true</SonarQubeExclude>
   </PropertyGroup>
 </Project>

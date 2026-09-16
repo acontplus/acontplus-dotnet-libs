@@ -6,6 +6,32 @@ namespace Demo.Api.Endpoints.Demo;
     Justification = "Demo test endpoints intentionally define repeated mock error codes, parameter names, and descriptions for comprehensive API testing.")]
 public static class ExceptionTestEndpoints
 {
+    private static readonly string[] EmailValidationErrors = ["Email is required", "Email format is invalid"];
+    private static readonly string[] PasswordValidationErrors = ["Password must be at least 8 characters", "Password must contain a number"];
+    private static readonly string[] AgeValidationErrors = ["Age must be between 18 and 100"];
+
+    private static readonly string[] BasicExtensionMethods =
+    [
+        "ToActionResult() - Convert Result to IActionResult",
+        "ToActionResult(message) - With custom success message",
+        "ToActionResultAsync() - Async version"
+    ];
+
+    private static readonly string[] CrudExtensionMethods =
+    [
+        "ToGetActionResult() - 200 OK or 204 NoContent",
+        "ToCreatedActionResult(uri) - 201 Created with Location",
+        "ToPutActionResult() - 200 OK or 204 NoContent",
+        "ToDeleteActionResult() - 204 NoContent or 404 NotFound"
+    ];
+
+    private static readonly string[] ErrorExtensionMethods =
+    [
+        "Result<T, DomainError> - Single error",
+        "Result<T, DomainErrors> - Multiple errors",
+        "DomainError.Validation/NotFound/Conflict/etc. - Factory methods"
+    ];
+
     public static void MapExceptionTestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/exception-test")
@@ -517,9 +543,9 @@ public static class ExceptionTestEndpoints
 
             var errors = new Dictionary<string, string[]>
             {
-                ["email"] = new[] { "Email is required", "Email format is invalid" },
-                ["password"] = new[] { "Password must be at least 8 characters", "Password must contain a number" },
-                ["age"] = new[] { "Age must be between 18 and 100" }
+                ["email"] = EmailValidationErrors,
+                ["password"] = PasswordValidationErrors,
+                ["age"] = AgeValidationErrors
             };
 
             throw new ValidationException(errors);
@@ -834,22 +860,9 @@ public static class ExceptionTestEndpoints
                 },
                 extensionMethods = new
                 {
-                    basic = new[] {
-                        "ToActionResult() - Convert Result to IActionResult",
-                        "ToActionResult(message) - With custom success message",
-                        "ToActionResultAsync() - Async version"
-                    },
-                    crud = new[] {
-                        "ToGetActionResult() - 200 OK or 204 NoContent",
-                        "ToCreatedActionResult(uri) - 201 Created with Location",
-                        "ToPutActionResult() - 200 OK or 204 NoContent",
-                        "ToDeleteActionResult() - 204 NoContent or 404 NotFound"
-                    },
-                    errors = new[] {
-                        "Result<T, DomainError> - Single error",
-                        "Result<T, DomainErrors> - Multiple errors",
-                        "DomainError.Validation/NotFound/Conflict/etc. - Factory methods"
-                    }
+                    basic = BasicExtensionMethods,
+                    crud = CrudExtensionMethods,
+                    errors = ErrorExtensionMethods
                 }
             });
         });

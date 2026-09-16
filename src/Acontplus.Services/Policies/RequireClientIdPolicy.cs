@@ -3,45 +3,28 @@ namespace Acontplus.Services.Policies;
 /// <summary>
 /// Authorization requirement that validates the presence and validity of a Client-Id header.
 /// </summary>
-public class RequireClientIdRequirement : IAuthorizationRequirement
+/// <param name="allowedClientIds">Optional list of allowed client IDs.</param>
+/// <param name="allowAnonymous">Whether anonymous access is allowed.</param>
+public class RequireClientIdRequirement(List<string>? allowedClientIds = null, bool allowAnonymous = false) : IAuthorizationRequirement
 {
     /// <summary>
     /// Gets the list of allowed client IDs, or null if any non-empty client ID is permitted.
     /// </summary>
-    public List<string>? AllowedClientIds { get; }
+    public List<string>? AllowedClientIds { get; } = allowedClientIds;
 
     /// <summary>
     /// Gets a value indicating whether anonymous requests (missing Client-Id) are permitted.
     /// </summary>
-    public bool AllowAnonymous { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequireClientIdRequirement"/> class.
-    /// </summary>
-    /// <param name="allowedClientIds">Optional list of allowed client IDs.</param>
-    /// <param name="allowAnonymous">Whether anonymous access is allowed.</param>
-    public RequireClientIdRequirement(List<string>? allowedClientIds = null, bool allowAnonymous = false)
-    {
-        AllowedClientIds = allowedClientIds;
-        AllowAnonymous = allowAnonymous;
-    }
+    public bool AllowAnonymous { get; } = allowAnonymous;
 }
 
 /// <summary>
 /// Authorization handler for Client-Id validation.
 /// </summary>
-public class RequireClientIdHandler : AuthorizationHandler<RequireClientIdRequirement>
+/// <param name="logger">The logger instance.</param>
+public class RequireClientIdHandler(ILogger<RequireClientIdHandler> logger) : AuthorizationHandler<RequireClientIdRequirement>
 {
-    private readonly ILogger<RequireClientIdHandler> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequireClientIdHandler"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public RequireClientIdHandler(ILogger<RequireClientIdHandler> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<RequireClientIdHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     protected override Task HandleRequirementAsync(
@@ -87,7 +70,10 @@ public class RequireClientIdHandler : AuthorizationHandler<RequireClientIdRequir
             return Task.CompletedTask;
         }
 
-        _logger.LogDebug("Client-Id '{ClientId}' validation successful", clientId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Client-Id '{ClientId}' validation successful", clientId);
+        }
         context.Succeed(requirement);
         return Task.CompletedTask;
     }

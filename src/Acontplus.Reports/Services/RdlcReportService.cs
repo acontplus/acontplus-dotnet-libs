@@ -50,7 +50,7 @@ namespace Acontplus.Reports.Services
                         parameters.Tables["ReportProps"]?.Rows[0]
                         ?? throw new ArgumentException("ReportProps table is required in parameters DataSet"));
 
-                    if (_options.EnableDetailedLogging)
+                    if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
                     {
                         _logger.LogInformation("Starting report: {Path}, Format: {Format}",
                             reportProps.ReportPath, reportProps.ReportFormat);
@@ -94,8 +94,11 @@ namespace Acontplus.Reports.Services
                     var response = BuildReportResponse(reportProps, fileReport);
 
                     stopwatch.Stop();
-                    _logger.LogInformation("Report generated: {Path}, {Size} bytes, {Duration}ms",
-                        reportProps.ReportPath, fileReport.Length, stopwatch.ElapsedMilliseconds);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("Report generated: {Path}, {Size} bytes, {Duration}ms",
+                            reportProps.ReportPath, fileReport.Length, stopwatch.ElapsedMilliseconds);
+                    }
 
                     return response;
                 }
@@ -122,11 +125,8 @@ namespace Acontplus.Reports.Services
         }
 
         /// <inheritdoc />
-        [Obsolete("Use GetReportAsync for better performance and scalability")]
-        public ReportResponse GetReport(DataSet parameters, DataSet data, bool externalDirectory = false)
-        {
-            return GetReportAsync(parameters, data, externalDirectory).GetAwaiter().GetResult();
-        }
+        public ReportResponse GetReport(DataSet parameters, DataSet data, bool externalDirectory = false) =>
+            GetReportAsync(parameters, data, externalDirectory).GetAwaiter().GetResult();
 
         private string GetReportPath(ReportPropsDto reportProps, bool offline)
         {

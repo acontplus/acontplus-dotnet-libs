@@ -477,7 +477,7 @@ internal static class ExpressionBuilder
             // Factory compiles element delegates on demand via ExpressionBuilder
             Func<TypePair, Delegate> factory = elementPair =>
             {
-                var elementLambda = BuildMappingExpression(elementPair, config: null, registry, new HashSet<TypePair>());
+                var elementLambda = BuildMappingExpression(elementPair, config: null, registry, []);
                 return elementLambda.Compile();
             };
 
@@ -580,7 +580,7 @@ internal static class ExpressionBuilder
     /// Builds a <c>Convert.ChangeType</c> expression wrapped in a try/catch that returns
     /// <c>default(TDest)</c> on failure.
     /// </summary>
-    private static Expression BuildChangeTypeExpression(
+    private static TryExpression BuildChangeTypeExpression(
         Expression sourceAccess,
         Type sourceType,
         Type destType)
@@ -618,7 +618,7 @@ internal static class ExpressionBuilder
     /// Wraps a value expression with a null guard. When the source is null, produces
     /// <c>null</c> for nullable reference types or <c>default(T)</c> for non-nullable value types.
     /// </summary>
-    private static Expression BuildNullGuardedExpression(
+    private static ConditionalExpression BuildNullGuardedExpression(
         Expression sourceAccess,
         Expression valueExpression,
         Type sourceType,
@@ -651,7 +651,7 @@ internal static class ExpressionBuilder
     /// Builds an expression that invokes a boxed <c>Func&lt;object, object?&gt;</c> delegate
     /// resolver, casting the result to the destination property type.
     /// </summary>
-    private static Expression BuildDelegateResolverExpression(
+    private static UnaryExpression BuildDelegateResolverExpression(
         ParameterExpression sourceParam,
         Func<object, object?> resolver,
         Type destType)
@@ -691,10 +691,8 @@ internal static class ExpressionBuilder
     private static Expression ReplaceParameter(
         Expression body,
         ParameterExpression oldParam,
-        ParameterExpression newParam)
-    {
-        return new ParameterReplacer(oldParam, newParam).Visit(body);
-    }
+        ParameterExpression newParam) =>
+        new ParameterReplacer(oldParam, newParam).Visit(body);
 
     /// <summary>
     /// Replaces occurrences of <paramref name="oldParam"/> in <paramref name="body"/>
@@ -705,10 +703,8 @@ internal static class ExpressionBuilder
     private static Expression ReplaceParameter(
         Expression body,
         ParameterExpression oldParam,
-        Expression replacement)
-    {
-        return new ParameterExpressionReplacer(oldParam, replacement).Visit(body);
-    }
+        Expression replacement) =>
+        new ParameterExpressionReplacer(oldParam, replacement).Visit(body);
 
     /// <summary>
     /// Ensures that the expression is of the specified type, adding a conversion if necessary.
@@ -894,7 +890,7 @@ internal static class ExpressionBuilder
     /// Builds a <c>Enumerable.Select(source, elementMapper)</c> expression that projects
     /// each element through the element mapping delegate.
     /// </summary>
-    private static Expression BuildSelectExpression(
+    private static MethodCallExpression BuildSelectExpression(
         Expression sourceCollection,
         Delegate elementDelegate,
         Type srcElementType,
@@ -964,7 +960,7 @@ internal static class ExpressionBuilder
     /// Wraps the materialised collection expression with a null guard:
     /// if source is null → <c>null</c> (nullable dest) or <c>new List&lt;T&gt;()</c> / <c>new T[0]</c> (non-nullable dest).
     /// </summary>
-    private static Expression BuildCollectionNullGuard(
+    private static ConditionalExpression BuildCollectionNullGuard(
         Expression sourceAccess,
         Expression materialisedExpression,
         Type destCollectionType,
@@ -1083,7 +1079,7 @@ internal static class ExpressionBuilder
     /// delegate from the registry after all compilation completes. The expression tree captures
     /// <c>Expression.Invoke(Expression.Property(lazyConst, "Value"), sourceExpr)</c>.
     /// </summary>
-    private static Expression BuildDeferredCyclicMapping(
+    private static InvocationExpression BuildDeferredCyclicMapping(
         Expression sourceAccess,
         Type nestedSourceType,
         Type nestedTargetType,
@@ -1231,10 +1227,8 @@ internal static class ExpressionBuilder
     /// </exception>
     internal static LambdaExpression BuildProjectionExpression(
         TypePair pair,
-        MappingExpressionBase? config)
-    {
-        return BuildProjectionExpressionInternal(pair, config, new HashSet<TypePair>());
-    }
+        MappingExpressionBase? config) =>
+        BuildProjectionExpressionInternal(pair, config, []);
 
     /// <summary>
     /// Internal recursive implementation of <see cref="BuildProjectionExpression"/> with
@@ -1499,7 +1493,7 @@ internal static class ExpressionBuilder
     /// Applies the member resolution priority: Ignore → ForMember expression → convention match.
     /// Throws <see cref="NotSupportedException"/> for delegate resolvers or <c>Convert.ChangeType</c>.
     /// </summary>
-    private static MemberBinding? BuildProjectionMemberBinding(
+    private static MemberAssignment? BuildProjectionMemberBinding(
         PropertyInfo destProp,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
@@ -1668,10 +1662,8 @@ internal static class ExpressionBuilder
             _newParam = newParam;
         }
 
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            return node == _oldParam ? _newParam : base.VisitParameter(node);
-        }
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == _oldParam ? _newParam : base.VisitParameter(node);
     }
 
     /// <summary>
@@ -1690,9 +1682,7 @@ internal static class ExpressionBuilder
             _replacement = replacement;
         }
 
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            return node == _oldParam ? _replacement : base.VisitParameter(node);
-        }
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == _oldParam ? _replacement : base.VisitParameter(node);
     }
 }

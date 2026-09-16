@@ -97,32 +97,32 @@ public interface IRepository<TEntity>
     /// Gets a paged result of all entities.
     /// </summary>
     /// <param name="pagination">Pagination parameters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="orderBy">Optional ordering expression</param>
     /// <param name="orderByDescending">Whether to order descending</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Paged result</returns>
     Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
-        CancellationToken cancellationToken = default,
         Expression<Func<TEntity, object>>? orderBy = null,
-        bool orderByDescending = false);
+        bool orderByDescending = false,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged result of entities matching the predicate.
     /// </summary>
     /// <param name="pagination">Pagination parameters</param>
     /// <param name="predicate">The filter predicate</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="orderBy">Optional ordering expression</param>
     /// <param name="orderByDescending">Whether to order descending</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <param name="includeProperties">Navigation properties to include</param>
     /// <returns>Paged result</returns>
     Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
         Expression<Func<TEntity, bool>> predicate,
-        CancellationToken cancellationToken = default,
         Expression<Func<TEntity, object>>? orderBy = null,
         bool orderByDescending = false,
+        CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object>>[] includeProperties);
 
     /// <summary>

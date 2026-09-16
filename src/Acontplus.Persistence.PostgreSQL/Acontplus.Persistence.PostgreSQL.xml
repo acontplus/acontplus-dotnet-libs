@@ -39,32 +39,6 @@
             Provides methods for registering EF Core entity types with the PostgreSQL model builder.
             </summary>
         </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
-            <summary>
-            Registers auditable entities with the ModelBuilder, applying base configurations,
-            custom schema/table names, and optional specific entity configurations.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
-            <summary>
-            Registers entities with default conventions and base configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
-            <summary>
-            Registers entities, explicitly setting schemas for specified types.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntitiesWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
-            <summary>
-            Registers entities, explicitly setting schema and/or table names for specified types.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityRegistration.RegisterEntitiesWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
-            <summary>
-            Registers entities with specific custom configurations.
-            </summary>
-        </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.BaseEntityTypeConfiguration`1">
             <summary>
             Base configuration class for Entity Framework Core entity type configurations in PostgreSQL.
@@ -98,32 +72,6 @@
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration">
             <summary>
             Provides methods for registering simple (non-auditable) EF Core entity types with the PostgreSQL model builder.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
-            <summary>
-            Registers non-auditable entities with the ModelBuilder, applying base configurations,
-            custom schema/table names, and optional specific entity configurations.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
-            <summary>
-            Registers entities with default conventions and base configuration.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
-            <summary>
-            Registers entities, explicitly setting schemas for specified types.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntitiesWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
-            <summary>
-            Registers entities, explicitly setting schema and/or table names for specified types.
-            </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityRegistration.RegisterEntitiesWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
-            <summary>
-            Registers entities with specific custom configurations.
             </summary>
         </member>
         <member name="T:Acontplus.Persistence.PostgreSQL.Configurations.SimpleEntityTypeConfiguration`1">

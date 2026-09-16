@@ -25,7 +25,6 @@ public static class ApiDocumentationExtensions
         // 1. Configure API Versioning for both Controllers and Minimal APIs
         var versioningBuilder = services.AddApiVersioning(options =>
         {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
             options.AssumeDefaultVersionWhenUnspecified = true;
             options.ReportApiVersions = true;
             // Combine multiple version readers for flexibility

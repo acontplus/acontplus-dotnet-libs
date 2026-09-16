@@ -24,9 +24,7 @@ public interface IRdlcReportService
     Task<ReportResponse> GetErrorAsync();
 
     /// <summary>
-    /// Legacy synchronous method - prefer using GetReportAsync for better performance
+    /// Legacy synchronous method - prefer using GetReportAsync for better performance.
     /// </summary>
-    [Obsolete("Use GetReportAsync for better performance and scalability")]
-    [SuppressMessage("SonarQube", "S1133", Justification = "Preserved for backwards compatibility with synchronous consumers until next major release.")]
     ReportResponse GetReport(DataSet parameters, DataSet data, bool externalDirectory = false);
 }

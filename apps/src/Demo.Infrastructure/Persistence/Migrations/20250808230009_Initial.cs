@@ -7,6 +7,8 @@ namespace Demo.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     public partial class Initial : Migration
     {
+        private static readonly string[] StatusColumns = ["IsActive", "IsDeleted"];
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -107,7 +109,7 @@ namespace Demo.Infrastructure.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Usuario_Status",
                 table: "Usuarios",
-                columns: new[] { "IsActive", "IsDeleted" });
+                columns: StatusColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_WhatsAppUsage_CreatedAt",
@@ -137,7 +139,7 @@ namespace Demo.Infrastructure.Persistence.Migrations
                 name: "IX_WhatsAppUsage_Status",
                 schema: "Config",
                 table: "WhatsAppUsage",
-                columns: new[] { "IsActive", "IsDeleted" });
+                columns: StatusColumns);
 
             migrationBuilder.CreateIndex(
                 name: "UX_WhatsAppUsage_CompanyId",

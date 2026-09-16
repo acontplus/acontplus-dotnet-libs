@@ -1715,7 +1715,7 @@
         </member>
         <member name="M:Acontplus.Reports.Interfaces.IRdlcReportService.GetReport(System.Data.DataSet,System.Data.DataSet,System.Boolean)">
             <summary>
-            Legacy synchronous method - prefer using GetReportAsync for better performance
+            Legacy synchronous method - prefer using GetReportAsync for better performance.
             </summary>
         </member>
         <member name="T:Acontplus.Reports.Services.ClosedXmlReportService">
@@ -1871,14 +1871,21 @@
             Cache entry for report definitions with expiration
             </summary>
         </member>
+        <member name="M:Acontplus.Reports.Services.CachedReportDefinition.#ctor(System.IO.MemoryStream)">
+            <summary>
+            Cache entry for report definitions with expiration
+            </summary>
+        </member>
         <member name="T:Acontplus.Reports.Services.ReportDefinitionCache">
             <summary>
             Thread-safe cache for report definitions with size limits and TTL
             </summary>
+            <param name="maxSize">The maximum number of entries to retain in cache.</param>
+            <param name="ttl">The time-to-live expiration for cached entries.</param>
         </member>
         <member name="M:Acontplus.Reports.Services.ReportDefinitionCache.#ctor(System.Int32,System.TimeSpan)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Reports.Services.ReportDefinitionCache"/> class.
+            Thread-safe cache for report definitions with size limits and TTL
             </summary>
             <param name="maxSize">The maximum number of entries to retain in cache.</param>
             <param name="ttl">The time-to-live expiration for cached entries.</param>

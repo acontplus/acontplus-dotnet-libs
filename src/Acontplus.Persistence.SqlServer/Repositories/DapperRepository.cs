@@ -58,13 +58,12 @@ FETCH NEXT @PageSize ROWS ONLY";
         dynamicParams.Add("@SortDirection", pagination.SortDirection.ToString());
         dynamicParams.Add("@TotalCount", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-        var command = new CommandDefinition(
+        var command = CreateCommandDefinition(
             storedProcedureName,
             dynamicParams,
-            CurrentTransaction,
-            commandTimeout ?? DefaultTimeout,
+            commandTimeout,
             CommandType.StoredProcedure,
-            cancellationToken: cancellationToken);
+            cancellationToken);
 
         return (command, _ => dynamicParams.Get<int>("@TotalCount"));
     }
@@ -80,12 +79,11 @@ FETCH NEXT @PageSize ROWS ONLY";
         dynamicParams.Add("@SortColumn", filter.SortBy);
         dynamicParams.Add("@SortDirection", filter.SortDirection.ToString());
 
-        return new CommandDefinition(
+        return CreateCommandDefinition(
             storedProcedureName,
             dynamicParams,
-            CurrentTransaction,
-            commandTimeout ?? DefaultTimeout,
+            commandTimeout,
             CommandType.StoredProcedure,
-            cancellationToken: cancellationToken);
+            cancellationToken);
     }
 }

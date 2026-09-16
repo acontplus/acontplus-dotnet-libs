@@ -5,7 +5,7 @@ namespace Acontplus.Billing.Services.Documents;
 /// <summary>
 /// Legacy XML document parser for SRI electronic receipts.
 /// </summary>
-public class DataXmlComprobante
+public static class DataXmlComprobante
 {
     private const string TagVersion = "version";
     private const string TagDetalles = "detalles";
@@ -29,7 +29,7 @@ public class DataXmlComprobante
     /// <param name="comp">The electronic receipt reference to populate.</param>
     /// <param name="message">The output error message if parsing fails.</param>
     /// <returns><c>true</c> if successfully extracted; otherwise <c>false</c>.</returns>
-    public bool GetData(XmlDocument xmlSri, ref ComprobanteElectronico comp, ref string message)
+    public static bool GetData(XmlDocument xmlSri, ref ComprobanteElectronico comp, ref string message)
     {
         var resp = true;
         try
@@ -78,7 +78,7 @@ public class DataXmlComprobante
         return resp;
     }
 
-    private void ProcessDocumentByCode(string codDoc, XmlDocument xmlComp, ComprobanteElectronico comp)
+    private static void ProcessDocumentByCode(string codDoc, XmlDocument xmlComp, ComprobanteElectronico comp)
     {
         switch (codDoc)
         {

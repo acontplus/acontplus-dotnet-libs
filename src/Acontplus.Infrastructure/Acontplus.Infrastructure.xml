@@ -8,10 +8,12 @@
             <summary>
                 Distributed cache service implementation using Redis or other distributed cache.
             </summary>
+            <param name="cache">The distributed cache instance.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Infrastructure.Caching.DistributedCacheService.#ctor(Microsoft.Extensions.Caching.Distributed.IDistributedCache,Microsoft.Extensions.Logging.ILogger{Acontplus.Infrastructure.Caching.DistributedCacheService})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Infrastructure.Caching.DistributedCacheService"/> class.
+                Distributed cache service implementation using Redis or other distributed cache.
             </summary>
             <param name="cache">The distributed cache instance.</param>
             <param name="logger">The logger instance.</param>

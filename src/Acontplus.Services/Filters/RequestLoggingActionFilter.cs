@@ -3,18 +3,10 @@ namespace Acontplus.Services.Filters;
 /// <summary>
 /// Action filter for logging request details and performance metrics.
 /// </summary>
-public class RequestLoggingActionFilter : IAsyncActionFilter
+/// <param name="logger">The logger instance.</param>
+public class RequestLoggingActionFilter(ILogger<RequestLoggingActionFilter> logger) : IAsyncActionFilter
 {
-    private readonly ILogger<RequestLoggingActionFilter> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequestLoggingActionFilter"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public RequestLoggingActionFilter(ILogger<RequestLoggingActionFilter> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<RequestLoggingActionFilter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
@@ -24,9 +16,12 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
         var correlationId = context.HttpContext.TraceIdentifier;
 
         // Log request start
-        _logger.LogInformation(
-            "Request started: {Method} {Path} - CorrelationId: {CorrelationId}",
-            request.Method, request.Path, correlationId);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "Request started: {Method} {Path} - CorrelationId: {CorrelationId}",
+                request.Method, request.Path, correlationId);
+        }
 
         var executedContext = await next();
         stopwatch.Stop();
@@ -40,10 +35,13 @@ public class RequestLoggingActionFilter : IAsyncActionFilter
         else
         {
             // Log successful completion
-            _logger.LogInformation(
-                "Request completed: {Method} {Path} - Status: {StatusCode} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
-                request.Method, request.Path, context.HttpContext.Response.StatusCode,
-                stopwatch.ElapsedMilliseconds, correlationId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Request completed: {Method} {Path} - Status: {StatusCode} - Duration: {Duration}ms - CorrelationId: {CorrelationId}",
+                    request.Method, request.Path, context.HttpContext.Response.StatusCode,
+                    stopwatch.ElapsedMilliseconds, correlationId);
+            }
 
             // Log performance warning for slow requests
             if (stopwatch.ElapsedMilliseconds > 5000) // 5 seconds

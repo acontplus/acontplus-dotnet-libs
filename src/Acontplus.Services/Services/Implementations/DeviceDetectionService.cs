@@ -5,11 +5,12 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of device detection service for identifying device types and capabilities.
 /// </summary>
-public partial class DeviceDetectionService : IDeviceDetectionService
+/// <param name="logger">The logger instance.</param>
+public partial class DeviceDetectionService(ILogger<DeviceDetectionService> logger) : IDeviceDetectionService
 {
     private const string ChromeBrowser = "Chrome";
     private static readonly TimeSpan DefaultRegexTimeout = TimeSpan.FromSeconds(1);
-    private readonly ILogger<DeviceDetectionService> _logger;
+    private readonly ILogger<DeviceDetectionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Regex patterns for device detection
     [GeneratedRegex(@"(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
@@ -21,15 +22,6 @@ public partial class DeviceDetectionService : IDeviceDetectionService
     [GeneratedRegex(@"(Windows NT|Macintosh|Linux(?!.*Android))", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
     private static partial Regex DesktopPattern();
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DeviceDetectionService"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public DeviceDetectionService(ILogger<DeviceDetectionService> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     /// <inheritdoc />
     public DeviceType DetectDeviceType(HttpContext context)
     {
@@ -37,7 +29,10 @@ public partial class DeviceDetectionService : IDeviceDetectionService
         if (context.Request.Headers.TryGetValue("Device-Type", out var deviceTypeHeader) &&
             Enum.TryParse<DeviceType>(deviceTypeHeader.FirstOrDefault(), ignoreCase: true, out var parsedType))
         {
-            _logger.LogDebug("Device type detected from header: {DeviceType}", parsedType);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Device type detected from header: {DeviceType}", parsedType);
+            }
             return parsedType;
         }
 
@@ -46,7 +41,10 @@ public partial class DeviceDetectionService : IDeviceDetectionService
             bool.TryParse(isMobileHeader.FirstOrDefault(), out var isMobile))
         {
             var legacyType = isMobile ? DeviceType.Mobile : DeviceType.Desktop;
-            _logger.LogDebug("Device type detected from legacy header: {DeviceType}", legacyType);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Device type detected from legacy header: {DeviceType}", legacyType);
+            }
             return legacyType;
         }
 
@@ -54,7 +52,10 @@ public partial class DeviceDetectionService : IDeviceDetectionService
         var userAgent = context.Request.Headers.UserAgent.ToString();
         var detectedType = DetectFromUserAgent(userAgent);
 
-        _logger.LogDebug("Device type detected from user agent: {DeviceType}", detectedType);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Device type detected from user agent: {DeviceType}", detectedType);
+        }
         return detectedType;
     }
 
@@ -86,7 +87,10 @@ public partial class DeviceDetectionService : IDeviceDetectionService
         var capabilities = new DeviceCapabilities(
             deviceType, isMobile, isTablet, supportsTouch, os, browser, version);
 
-        _logger.LogDebug("Detected device capabilities: {Capabilities}", capabilities);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Detected device capabilities: {Capabilities}", capabilities);
+        }
         return capabilities;
     }
 

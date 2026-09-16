@@ -607,5 +607,22 @@ public abstract partial class BaseDapperRepository(
         return SanitizeIdentifier(columnName);
     }
 
+    /// <summary>
+    /// Creates a configured <see cref="CommandDefinition"/> using the current transaction and timeout.
+    /// </summary>
+    protected CommandDefinition CreateCommandDefinition(
+        string commandText,
+        DynamicParameters parameters,
+        int? commandTimeout = null,
+        CommandType commandType = CommandType.Text,
+        CancellationToken cancellationToken = default) =>
+        new(
+            commandText,
+            parameters,
+            _currentTransaction,
+            commandTimeout ?? DefaultTimeout,
+            commandType,
+            cancellationToken: cancellationToken);
+
     #endregion
 }

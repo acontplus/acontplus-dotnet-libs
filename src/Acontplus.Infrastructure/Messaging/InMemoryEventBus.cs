@@ -30,10 +30,13 @@ public sealed class InMemoryEventBus(ILogger<InMemoryEventBus> logger) : IEventB
             var channel = GetOrCreateChannel<T>();
             await channel.Writer.WriteAsync(eventData, cancellationToken);
 
-            _logger.LogDebug(
-                "Event published: {EventType} at {Timestamp}",
-                typeof(T).Name,
-                DateTime.UtcNow);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "Event published: {EventType} at {Timestamp}",
+                    typeof(T).Name,
+                    DateTime.UtcNow);
+            }
         }
         catch (ChannelClosedException ex)
         {
@@ -56,14 +59,20 @@ public sealed class InMemoryEventBus(ILogger<InMemoryEventBus> logger) : IEventB
         var channel = GetOrCreateChannel<T>();
         var reader = channel.Reader.Cast<T>();
 
-        _logger.LogDebug("Subscriber started for event type: {EventType}", typeof(T).Name);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Subscriber started for event type: {EventType}", typeof(T).Name);
+        }
 
         await foreach (var item in reader.ReadAllAsync(cancellationToken))
         {
             yield return item;
         }
 
-        _logger.LogDebug("Subscriber completed for event type: {EventType}", typeof(T).Name);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Subscriber completed for event type: {EventType}", typeof(T).Name);
+        }
     }
 
     /// <summary>
@@ -83,7 +92,10 @@ public sealed class InMemoryEventBus(ILogger<InMemoryEventBus> logger) : IEventB
                 AllowSynchronousContinuations = false  // Prevent deadlocks
             });
 
-            _logger.LogDebug("Created new channel for event type: {EventType}", typeof(T).Name);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Created new channel for event type: {EventType}", typeof(T).Name);
+            }
             return channel;
         });
     }

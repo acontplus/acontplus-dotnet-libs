@@ -5,24 +5,14 @@ namespace Acontplus.Reports.Services;
 /// <summary>
 /// Cache entry for report definitions with expiration
 /// </summary>
-internal sealed class CachedReportDefinition : IDisposable
+internal sealed class CachedReportDefinition(MemoryStream stream) : IDisposable
 {
-    public MemoryStream Stream { get; }
-    public DateTime CreatedAt { get; }
-    public DateTime LastAccessedAt { get; set; }
+    public MemoryStream Stream { get; } = stream;
+    public DateTime CreatedAt { get; } = DateTime.UtcNow;
+    public DateTime LastAccessedAt { get; set; } = DateTime.UtcNow;
     private bool _disposed;
 
-    public CachedReportDefinition(MemoryStream stream)
-    {
-        Stream = stream;
-        CreatedAt = DateTime.UtcNow;
-        LastAccessedAt = DateTime.UtcNow;
-    }
-
-    public bool IsExpired(TimeSpan ttl)
-    {
-        return DateTime.UtcNow - CreatedAt > ttl;
-    }
+    public bool IsExpired(TimeSpan ttl) => DateTime.UtcNow - CreatedAt > ttl;
 
     public void Dispose()
     {
@@ -46,24 +36,15 @@ internal sealed class CachedReportDefinition : IDisposable
 /// <summary>
 /// Thread-safe cache for report definitions with size limits and TTL
 /// </summary>
-public class ReportDefinitionCache : IDisposable
+/// <param name="maxSize">The maximum number of entries to retain in cache.</param>
+/// <param name="ttl">The time-to-live expiration for cached entries.</param>
+public class ReportDefinitionCache(int maxSize, TimeSpan ttl) : IDisposable
 {
     private readonly ConcurrentDictionary<string, CachedReportDefinition> _cache = new();
-    private readonly int _maxSize;
-    private readonly TimeSpan _ttl;
+    private readonly int _maxSize = maxSize;
+    private readonly TimeSpan _ttl = ttl;
     private readonly SemaphoreSlim _cleanupLock = new(1, 1);
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ReportDefinitionCache"/> class.
-    /// </summary>
-    /// <param name="maxSize">The maximum number of entries to retain in cache.</param>
-    /// <param name="ttl">The time-to-live expiration for cached entries.</param>
-    public ReportDefinitionCache(int maxSize, TimeSpan ttl)
-    {
-        _maxSize = maxSize;
-        _ttl = ttl;
-    }
 
     /// <summary>
     /// Gets a cached report definition stream, or creates and caches it using the specified factory.

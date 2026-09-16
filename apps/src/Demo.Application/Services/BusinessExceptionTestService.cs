@@ -18,7 +18,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
 
     public Task<Result<object, DomainErrors>> ValidateEmailAsync(string email)
     {
-        _logger.LogInformation("Validating email: {Email}", email);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Validating email: {Email}", email);
+        }
 
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -47,7 +50,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
 
     public Task<Result<CustomerModel, DomainError>> GetCustomerAsync(int id)
     {
-        _logger.LogInformation("Getting customer with ID: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting customer with ID: {Id}", id);
+        }
 
         if (!_customers.TryGetValue(id, out var customer))
         {
@@ -61,7 +67,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
 
     public Task<Result<CustomerModel, DomainError>> CreateCustomerAsync(string email)
     {
-        _logger.LogInformation("Creating customer with email: {Email}", email);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Creating customer with email: {Email}", email);
+        }
 
         if (_customers.Values.Any(c => c.Email?.Equals(email, StringComparison.OrdinalIgnoreCase) ?? false))
         {
@@ -114,7 +123,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
 
     public async Task<Result<CustomerModel, DomainError>> GetCustomerWithDeepStackAsync(int id)
     {
-        _logger.LogInformation("Getting customer with deep call stack: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting customer with deep call stack: {Id}", id);
+        }
 
         try
         {
@@ -158,7 +170,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
 
     public Task<Result<CustomerModel, DomainError>> GetValidCustomerAsync(int id)
     {
-        _logger.LogInformation("Getting valid customer: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting valid customer: {Id}", id);
+        }
 
         var customer = _customers.TryGetValue(id, out var found) ? found : _customers[1];
         return Task.FromResult(Result<CustomerModel, DomainError>.Success(customer));
@@ -171,7 +186,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
     /// </summary>
     private async Task<CustomerModel> GetFromRepositoryAsync(int id)
     {
-        _logger.LogDebug("Repository: Fetching customer {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Repository: Fetching customer {Id}", id);
+        }
 
         // Simulate repository calling database layer
         await SimulateDatabaseCallAsync(id);
@@ -189,7 +207,10 @@ public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> 
     /// </summary>
     private Task SimulateDatabaseCallAsync(int id)
     {
-        _logger.LogDebug("Database: Executing query for customer {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Database: Executing query for customer {Id}", id);
+        }
         return Task.CompletedTask;
     }
 

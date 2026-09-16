@@ -50,10 +50,13 @@ public class OrderWorkflowHandler(
     {
         await foreach (var orderEvent in _eventSubscriber.SubscribeAsync<OrderCreatedEvent>(stoppingToken))
         {
-            _logger.LogInformation(
-                "🔄 Auto-processing Order {OrderId} for {CustomerName} - triggering processing workflow",
-                orderEvent.OrderId,
-                orderEvent.CustomerName);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "🔄 Auto-processing Order {OrderId} for {CustomerName} - triggering processing workflow",
+                    orderEvent.OrderId,
+                    orderEvent.CustomerName);
+            }
 
             // Simulate order processing logic
             await Task.Delay(200, stoppingToken);
@@ -64,9 +67,12 @@ public class OrderWorkflowHandler(
                 DateTime.UtcNow,
                 "AutomatedSystem"), stoppingToken);
 
-            _logger.LogInformation(
-                "✅ Order {OrderId} processed and event published",
-                orderEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "✅ Order {OrderId} processed and event published",
+                    orderEvent.OrderId);
+            }
         }
     }
 
@@ -74,10 +80,13 @@ public class OrderWorkflowHandler(
     {
         await foreach (var processedEvent in _eventSubscriber.SubscribeAsync<OrderProcessedEvent>(stoppingToken))
         {
-            _logger.LogInformation(
-                "📦 Preparing shipment for Order {OrderId} processed by {ProcessedBy}",
-                processedEvent.OrderId,
-                processedEvent.ProcessedBy);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "📦 Preparing shipment for Order {OrderId} processed by {ProcessedBy}",
+                    processedEvent.OrderId,
+                    processedEvent.ProcessedBy);
+            }
 
             // Simulate shipping preparation
             await Task.Delay(150, stoppingToken);
@@ -88,9 +97,12 @@ public class OrderWorkflowHandler(
                 DateTime.UtcNow,
                 $"TRACK-{processedEvent.OrderId:D10}"), stoppingToken);
 
-            _logger.LogInformation(
-                "🚚 Order {OrderId} shipped successfully",
-                processedEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "🚚 Order {OrderId} shipped successfully",
+                    processedEvent.OrderId);
+            }
         }
     }
 }

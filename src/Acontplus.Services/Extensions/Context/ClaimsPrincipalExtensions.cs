@@ -10,30 +10,24 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     /// <param name="user">The claims principal.</param>
     /// <returns>The username, or null if not found.</returns>
-    public static string? GetUsername(this ClaimsPrincipal user)
-    {
-        return user.FindFirst(ClaimTypes.Name)?.Value;
-    }
+    public static string? GetUsername(this ClaimsPrincipal user) =>
+        user.FindFirst(ClaimTypes.Name)?.Value;
 
     /// <summary>
     /// Gets the email address from the <see cref="ClaimTypes.Email"/> claim.
     /// </summary>
     /// <param name="user">The claims principal.</param>
     /// <returns>The email address, or null if not found.</returns>
-    public static string? GetEmail(this ClaimsPrincipal user)
-    {
-        return user.FindFirstValue(ClaimTypes.Email);
-    }
+    public static string? GetEmail(this ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.Email);
 
     /// <summary>
     /// Gets the role name from the <see cref="ClaimTypes.Role"/> claim.
     /// </summary>
     /// <param name="user">The claims principal.</param>
     /// <returns>The role name, or null if not found.</returns>
-    public static string? GetRoleName(this ClaimsPrincipal user)
-    {
-        return user.FindFirst(ClaimTypes.Role)?.Value;
-    }
+    public static string? GetRoleName(this ClaimsPrincipal user) =>
+        user.FindFirst(ClaimTypes.Role)?.Value;
 
     /// <summary>
     /// Gets the user ID from the <see cref="ClaimTypes.NameIdentifier"/> claim as an integer.

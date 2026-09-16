@@ -116,7 +116,10 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
                 var sendRequest = await BuildSendEmailRequestAsync(email, ct).ConfigureAwait(false);
 
-                _logger.LogDebug("Sending email via SES v2 to {RecipientEmail}", email.RecipientEmail);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Sending email via SES v2 to {RecipientEmail}", email.RecipientEmail);
+                }
 
                 await _sesClient.SendEmailAsync(sendRequest, ct).ConfigureAwait(false);
 
@@ -151,8 +154,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         var successCount = 0;
         var totalCount = emailList.Count;
 
-        _logger.LogInformation("Starting bulk send of {TotalCount} emails in {BatchCount} batches",
-            totalCount, batches.Count);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Starting bulk send of {TotalCount} emails in {BatchCount} batches",
+                totalCount, batches.Count);
+        }
 
         foreach (var batch in batches)
         {
@@ -221,8 +227,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         var batches = BatchDestinations(destinationList, MaxSesBulkRecipients);
         var successCount = 0;
 
-        _logger.LogInformation("Starting templated bulk send to {TotalCount} recipients in {BatchCount} batches",
-            destinationList.Count, batches.Count);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Starting templated bulk send to {TotalCount} recipients in {BatchCount} batches",
+                destinationList.Count, batches.Count);
+        }
 
         foreach (var batch in batches)
         {
@@ -279,8 +288,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
                     await Task.Delay(_batchDelay, ct).ConfigureAwait(false);
                 }
 
-                _logger.LogDebug("Batch completed with {SuccessCount}/{BatchSize} successes",
-                    successfulMessages, batch.Count);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Batch completed with {SuccessCount}/{BatchSize} successes",
+                        successfulMessages, batch.Count);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -513,8 +525,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
                 var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
                 if (timeToWait > TimeSpan.Zero)
                 {
-                    _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}",
-                        _sendTimestamps.Count, _maxSendRate, timeToWait);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}",
+                            _sendTimestamps.Count, _maxSendRate, timeToWait);
+                    }
 
                     await Task.Delay(timeToWait, ct).ConfigureAwait(false);
                     CleanupOldTimestamps();
@@ -601,10 +616,8 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
                ex.Message.Contains("concurrent", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string FormatEmailAddress(string? name, string email)
-    {
-        return string.IsNullOrEmpty(name) ? email : $"{name} <{email}>";
-    }
+    private static string FormatEmailAddress(string? name, string email) =>
+        string.IsNullOrEmpty(name) ? email : $"{name} <{email}>";
 
     private static List<string> ParseAndValidateRecipients(string recipients, string type = "Recipient")
     {

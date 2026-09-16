@@ -30,9 +30,12 @@ public class OrderLineItemsCreationHandler(
         if (domainEvent.EntityType != nameof(Order))
             return;
 
-        _logger.LogInformation(
-            "DOMAIN EVENT: Creating line items for Order {OrderId}",
-            domainEvent.EntityId);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "DOMAIN EVENT: Creating line items for Order {OrderId}",
+                domainEvent.EntityId);
+        }
 
         try
         {
@@ -68,21 +71,27 @@ public class OrderLineItemsCreationHandler(
             foreach (var lineItem in lineItems)
             {
                 await lineItemRepository.AddAsync(lineItem, cancellationToken);
-                _logger.LogDebug(
-                    "Line item created for Order {OrderId}: {ProductName} x {Quantity}",
-                    order.Id,
-                    lineItem.ProductName,
-                    lineItem.Quantity);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "Line item created for Order {OrderId}: {ProductName} x {Quantity}",
+                        order.Id,
+                        lineItem.ProductName,
+                        lineItem.Quantity);
+                }
             }
 
             // NOTE: Don't call SaveChangesAsync here!
             // The UnitOfWork/DbContext will commit both inserts together
             // If this handler throws an exception, BOTH inserts will be rolled back
 
-            _logger.LogInformation(
-                "Successfully created {Count} line item(s) for Order {OrderId}",
-                lineItems.Count,
-                order.Id);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Successfully created {Count} line item(s) for Order {OrderId}",
+                    lineItems.Count,
+                    order.Id);
+            }
         }
         catch (Exception ex)
         {

@@ -42,13 +42,13 @@ public partial class DapperRepository(
     /// <inheritdoc />
     protected override string BuildPagedSql(string sql, string orderByClause, PaginationRequest pagination, DynamicParameters parameters)
     {
-        var offset = pagination.PageIndex * pagination.PageSize;
-        parameters.Add("@Offset", offset);
-        parameters.Add("@Limit", pagination.PageSize);
+        parameters.AddDynamicParams(new
+        {
+            Limit = pagination.PageSize,
+            Offset = pagination.PageIndex * pagination.PageSize
+        });
 
-        return $@"{sql}
-{orderByClause}
-LIMIT @Limit OFFSET @Offset";
+        return $"{sql}\n{orderByClause}\nLIMIT @Limit OFFSET @Offset";
     }
 
     /// <inheritdoc />
@@ -58,22 +58,17 @@ LIMIT @Limit OFFSET @Offset";
         int? commandTimeout,
         CancellationToken cancellationToken)
     {
-        var dynamicParams = BuildDynamicParameters(pagination);
-        dynamicParams.Add("@p_page_index", pagination.PageIndex);
-        dynamicParams.Add("@p_page_size", pagination.PageSize);
-        dynamicParams.Add("@p_sort_column", pagination.SortBy);
-        dynamicParams.Add("@p_sort_direction", pagination.SortDirection.ToString().ToLowerInvariant());
+        var parameters = BuildDynamicParameters(pagination);
+        parameters.AddDynamicParams(new
+        {
+            p_page_index = pagination.PageIndex,
+            p_page_size = pagination.PageSize,
+            p_sort_column = pagination.SortBy,
+            p_sort_direction = pagination.SortDirection.ToString().ToLowerInvariant()
+        });
 
-        var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_page_index, @p_page_size, @p_sort_column, @p_sort_direction)";
-
-        var command = new CommandDefinition(
-            sql,
-            dynamicParams,
-            CurrentTransaction,
-            commandTimeout ?? DefaultTimeout,
-            cancellationToken: cancellationToken);
-
-        return (command, items => items.Count);
+        var call = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_page_index, @p_page_size, @p_sort_column, @p_sort_direction)";
+        return (CreateCommandDefinition(call, parameters, commandTimeout, cancellationToken: cancellationToken), items => items.Count);
     }
 
     /// <inheritdoc />
@@ -83,18 +78,15 @@ LIMIT @Limit OFFSET @Offset";
         int? commandTimeout,
         CancellationToken cancellationToken)
     {
-        var dynamicParams = BuildDynamicParameters(filter);
-        dynamicParams.Add("@p_sort_column", filter.SortBy);
-        dynamicParams.Add("@p_sort_direction", filter.SortDirection.ToString().ToLowerInvariant());
+        var parameters = BuildDynamicParameters(filter);
+        parameters.AddDynamicParams(new
+        {
+            p_sort_column = filter.SortBy,
+            p_sort_direction = filter.SortDirection.ToString().ToLowerInvariant()
+        });
 
-        var sql = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_sort_column, @p_sort_direction)";
-
-        return new CommandDefinition(
-            sql,
-            dynamicParams,
-            CurrentTransaction,
-            commandTimeout ?? DefaultTimeout,
-            cancellationToken: cancellationToken);
+        var call = $"SELECT * FROM {SanitizeFunctionName(storedProcedureName)}(@p_sort_column, @p_sort_direction)";
+        return CreateCommandDefinition(call, parameters, commandTimeout, cancellationToken: cancellationToken);
     }
 
     [GeneratedRegex(@"^[a-zA-Z_][a-zA-Z0-9_.]*$")]

@@ -198,6 +198,54 @@
             </summary>
             <param name="builder">The entity type builder.</param>
         </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationRegistry">
+            <summary>
+            Non-generic registry storing <see cref="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider"/> instances to avoid S2743 static fields in generic types.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1">
+            <summary>
+            Reusable base dispatcher that provides static registration methods for EF Core entity types across database providers.
+            </summary>
+            <typeparam name="TDerived">The provider-specific registration marker type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.InitializeProvider(Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider)">
+            <summary>
+            Initializes the underlying <see cref="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider"/> for this derived registration type.
+            </summary>
+            <param name="provider">The registration provider instance.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.Provider">
+            <summary>
+            Gets the registration provider, ensuring the derived class static constructor has executed.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with the ModelBuilder, applying base configurations,
+            custom schema/table names, and optional specific entity configurations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
+            <summary>
+            Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schemas for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schema and/or table names for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with specific custom configurations.
+            </summary>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions">
             <summary>
             Options and delegates for registering entities with the ModelBuilder.
@@ -1037,11 +1085,26 @@
             Sanitizes the specified column name against injection.
             </summary>
         </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreateCommandDefinition(System.String,Dapper.DynamicParameters,System.Nullable{System.Int32},System.Data.CommandType,System.Threading.CancellationToken)">
+            <summary>
+            Creates a configured <see cref="T:Dapper.CommandDefinition"/> using the current transaction and timeout.
+            </summary>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Repositories.BaseRepository`1">
             <summary>
             A generic repository implementation for Entity Framework Core.
             </summary>
             <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
+            <param name="context">The database context instance.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.#ctor(Microsoft.EntityFrameworkCore.DbContext,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.Common.Repositories.BaseRepository{`0}})">
+            <summary>
+            A generic repository implementation for Entity Framework Core.
+            </summary>
+            <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
+            <param name="context">The database context instance.</param>
+            <param name="logger">Optional logger instance.</param>
         </member>
         <member name="F:Acontplus.Persistence.Common.Repositories.BaseRepository`1._context">
             <summary>
@@ -1057,13 +1120,6 @@
             <summary>
             The optional logger instance.
             </summary>
-        </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.#ctor(Microsoft.EntityFrameworkCore.DbContext,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.Common.Repositories.BaseRepository{`0}})">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Repositories.BaseRepository`1"/> class.
-            </summary>
-            <param name="context">The database context instance.</param>
-            <param name="logger">Optional logger instance.</param>
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetByIdAsync(System.Int32,System.Threading.CancellationToken)">
             <inheritdoc />
@@ -1092,10 +1148,10 @@
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindAsyncEnumerable(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean)">
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
             <inheritdoc />
         </member>
         <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedProjectionAsync``1(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">

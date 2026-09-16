@@ -7,6 +7,8 @@ namespace Demo.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     public partial class PendingDomainChanges : Migration
     {
+        private static readonly string[] StatusColumns = ["IsActive", "IsDeleted"];
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -128,7 +130,7 @@ namespace Demo.Infrastructure.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_OrderLineItem_Status",
                 table: "OrderLineItems",
-                columns: new[] { "IsActive", "IsDeleted" });
+                columns: StatusColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Order_CreatedAt",
@@ -153,7 +155,7 @@ namespace Demo.Infrastructure.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Order_Status",
                 table: "Orders",
-                columns: new[] { "IsActive", "IsDeleted" });
+                columns: StatusColumns);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sale_CreatedAt",
@@ -178,7 +180,7 @@ namespace Demo.Infrastructure.Persistence.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Sale_Status",
                 table: "Sales",
-                columns: new[] { "IsActive", "IsDeleted" });
+                columns: StatusColumns);
         }
 
         /// <inheritdoc />

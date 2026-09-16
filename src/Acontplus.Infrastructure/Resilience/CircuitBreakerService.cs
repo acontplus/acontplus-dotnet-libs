@@ -43,8 +43,8 @@ public class CircuitBreakerService : ICircuitBreakerService
                 typeof(CircuitBreakerService).Namespace);
         }
         _config = config.Value;
-        _policies = new Dictionary<string, IAsyncPolicy>();
-        _circuitStates = new Dictionary<string, CircuitBreakerState>();
+        _policies = [];
+        _circuitStates = [];
 
         InitializePolicies();
     }
@@ -100,7 +100,10 @@ public class CircuitBreakerService : ICircuitBreakerService
     public void CloseCircuit(string policyName = DefaultPolicyName)
     {
         _circuitStates[policyName] = CircuitBreakerState.Closed;
-        _logger.LogInformation("Circuit breaker manually closed for policy: {PolicyName}", policyName);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Circuit breaker manually closed for policy: {PolicyName}", policyName);
+        }
     }
 
     private void InitializePolicies()
@@ -167,7 +170,7 @@ public class CircuitBreakerService : ICircuitBreakerService
             TimeoutSeconds = Math.Max(10, _config.Timeout.DefaultTimeoutSeconds + timeoutOffset)
         };
 
-    private IAsyncPolicy CreatePolicy(string policyName, PolicyConfig config)
+    private Polly.Wrap.AsyncPolicyWrap CreatePolicy(string policyName, PolicyConfig config)
     {
         var circuitBreakerPolicy = Policy
             .Handle<Exception>()
@@ -183,12 +186,18 @@ public class CircuitBreakerService : ICircuitBreakerService
                 () =>
                 {
                     _circuitStates[policyName] = CircuitBreakerState.Closed;
-                    _logger.LogInformation("Circuit breaker reset for {PolicyName} policy", policyName);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("Circuit breaker reset for {PolicyName} policy", policyName);
+                    }
                 },
                 () =>
                 {
                     _circuitStates[policyName] = CircuitBreakerState.HalfOpen;
-                    _logger.LogInformation("Circuit breaker half-open for {PolicyName} policy", policyName);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("Circuit breaker half-open for {PolicyName} policy", policyName);
+                    }
                 });
 
         var retryPolicy = Policy

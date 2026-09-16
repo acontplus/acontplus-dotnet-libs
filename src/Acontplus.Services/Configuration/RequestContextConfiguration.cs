@@ -44,45 +44,45 @@ public class CspConfiguration
     /// <summary>
     /// List of allowed image sources (domains) for img-src directive.
     /// </summary>
-    public List<string> AllowedImageSources { get; set; } = new() { "https://i.ytimg.com" };
+    public List<string> AllowedImageSources { get; set; } = ["https://i.ytimg.com"];
 
     /// <summary>
     /// List of allowed style sources (domains) for style-src directive.
     /// </summary>
-    public List<string> AllowedStyleSources { get; set; } = new() { "https://fonts.googleapis.com" };
+    public List<string> AllowedStyleSources { get; set; } = ["https://fonts.googleapis.com"];
 
     /// <summary>
     /// List of allowed font sources (domains) for font-src directive.
     /// </summary>
-    public List<string> AllowedFontSources { get; set; } = new() { "https://fonts.gstatic.com" };
+    public List<string> AllowedFontSources { get; set; } = ["https://fonts.gstatic.com"];
 
     /// <summary>
     /// List of allowed script sources (domains) for script-src directive.
     /// </summary>
-    public List<string> AllowedScriptSources { get; set; } = new();
+    public List<string> AllowedScriptSources { get; set; } = [];
 
     /// <summary>
     /// List of allowed connect sources (domains) for connect-src directive.
     /// </summary>
-    public List<string> AllowedConnectSources { get; set; } = new();
+    public List<string> AllowedConnectSources { get; set; } = [];
 
     /// <summary>
     /// List of allowed frame sources (domains) for frame-src directive.
     /// </summary>
-    public List<string> AllowedFrameSources { get; set; } = new() { "https://www.youtube-nocookie.com" };
+    public List<string> AllowedFrameSources { get; set; } = ["https://www.youtube-nocookie.com"];
 
     /// <summary>
     /// List of allowed media sources (domains) for media-src directive.
     /// </summary>
-    public List<string> AllowedMediaSources { get; set; } = new();
+    public List<string> AllowedMediaSources { get; set; } = [];
 
     /// <summary>
     /// List of allowed base URI sources (domains) for base-uri directive.
     /// </summary>
-    public List<string> AllowedBaseUriSources { get; set; } = new();
+    public List<string> AllowedBaseUriSources { get; set; } = [];
 
     /// <summary>
     /// List of allowed form action sources (domains) for form-action directive.
     /// </summary>
-    public List<string> AllowedFormActionSources { get; set; } = new();
+    public List<string> AllowedFormActionSources { get; set; } = [];
 }

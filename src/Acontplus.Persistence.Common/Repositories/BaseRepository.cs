@@ -9,38 +9,27 @@ namespace Acontplus.Persistence.Common.Repositories;
 /// A generic repository implementation for Entity Framework Core.
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
-public class BaseRepository<TEntity> : IRepository<TEntity>
+/// <param name="context">The database context instance.</param>
+/// <param name="logger">Optional logger instance.</param>
+public class BaseRepository<TEntity>(DbContext context, ILogger<BaseRepository<TEntity>>? logger = null) : IRepository<TEntity>
     where TEntity : class
 {
     /// <summary>
     /// The underlying Entity Framework <see cref="DbContext"/>.
     /// </summary>
-    protected readonly DbContext _context;
+    protected readonly DbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
     /// <summary>
     /// The <see cref="DbSet{TEntity}"/> for the entity type.
     /// </summary>
-    protected readonly DbSet<TEntity> _dbSet;
+    protected readonly DbSet<TEntity> _dbSet = (context ?? throw new ArgumentNullException(nameof(context))).Set<TEntity>();
 
-    private readonly string? _idPropertyName;
+    private readonly string? _idPropertyName = GetIdPropertyName();
 
     /// <summary>
     /// The optional logger instance.
     /// </summary>
-    protected readonly ILogger<BaseRepository<TEntity>>? _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BaseRepository{TEntity}"/> class.
-    /// </summary>
-    /// <param name="context">The database context instance.</param>
-    /// <param name="logger">Optional logger instance.</param>
-    public BaseRepository(DbContext context, ILogger<BaseRepository<TEntity>>? logger = null)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _dbSet = context.Set<TEntity>();
-        _logger = logger;
-        _idPropertyName = GetIdPropertyName();
-    }
+    protected readonly ILogger<BaseRepository<TEntity>>? _logger = logger;
 
     private static string? GetIdPropertyName()
     {
@@ -239,18 +228,18 @@ public class BaseRepository<TEntity> : IRepository<TEntity>
     /// <inheritdoc />
     public virtual Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
-        CancellationToken cancellationToken = default,
         Expression<Func<TEntity, object>>? orderBy = null,
-        bool orderByDescending = false) =>
-        GetPagedAsync(pagination, null!, cancellationToken, orderBy, orderByDescending);
+        bool orderByDescending = false,
+        CancellationToken cancellationToken = default) =>
+        GetPagedAsync(pagination, null!, orderBy, orderByDescending, cancellationToken);
 
     /// <inheritdoc />
     public virtual async Task<PagedResult<TEntity>> GetPagedAsync(
         PaginationRequest pagination,
         Expression<Func<TEntity, bool>> predicate,
-        CancellationToken cancellationToken = default,
         Expression<Func<TEntity, object>>? orderBy = null,
         bool orderByDescending = false,
+        CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object>>[] includeProperties)
     {
         using var activity = DiagnosticConfig.ActivitySource.StartActivity($"{nameof(GetPagedAsync)}");

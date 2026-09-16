@@ -5,14 +5,14 @@ namespace Acontplus.Billing.Services.Documents.Mapping;
 /// <summary>
 /// Mapper that transforms ADO.NET <see cref="DataSet"/> tables into strongly-typed <see cref="AtsData"/> structures.
 /// </summary>
-public class AtsDataSetMapper
+public static class AtsDataSetMapper
 {
     /// <summary>
     /// Maps a <see cref="DataSet"/> containing ATS tables (header, purchases, sales, etc.) into an <see cref="AtsData"/> model.
     /// </summary>
     /// <param name="ds">The source data set.</param>
     /// <returns>The mapped <see cref="AtsData"/> model.</returns>
-    public AtsData MapDataSetToAtsData(DataSet ds)
+    public static AtsData MapDataSetToAtsData(DataSet ds)
     {
         if (ds == null)
         {

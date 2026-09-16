@@ -236,10 +236,11 @@
             <summary>
             Health check that verifies the availability and operation of the request context service.
             </summary>
+            <param name="requestContextService">The request context service.</param>
         </member>
         <member name="M:Acontplus.Services.Extensions.RequestContextHealthCheck.#ctor(Acontplus.Core.Abstractions.Services.IRequestContextService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.RequestContextHealthCheck"/> class.
+            Health check that verifies the availability and operation of the request context service.
             </summary>
             <param name="requestContextService">The request context service.</param>
         </member>
@@ -250,10 +251,11 @@
             <summary>
             Health check that verifies the availability of the security header service.
             </summary>
+            <param name="securityHeaderService">The security header service.</param>
         </member>
         <member name="M:Acontplus.Services.Extensions.SecurityHeaderHealthCheck.#ctor(Acontplus.Services.Services.Abstractions.ISecurityHeaderService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.SecurityHeaderHealthCheck"/> class.
+            Health check that verifies the availability of the security header service.
             </summary>
             <param name="securityHeaderService">The security header service.</param>
         </member>
@@ -264,10 +266,11 @@
             <summary>
             Health check that verifies the functionality and accuracy of the device detection service.
             </summary>
+            <param name="deviceDetectionService">The device detection service.</param>
         </member>
         <member name="M:Acontplus.Services.Extensions.DeviceDetectionHealthCheck.#ctor(Acontplus.Services.Services.Abstractions.IDeviceDetectionService)">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Extensions.DeviceDetectionHealthCheck"/> class.
+            Health check that verifies the functionality and accuracy of the device detection service.
             </summary>
             <param name="deviceDetectionService">The device detection service.</param>
         </member>
@@ -638,10 +641,11 @@
             <summary>
             Action filter for logging request details and performance metrics.
             </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Filters.RequestLoggingActionFilter.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Filters.RequestLoggingActionFilter})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Filters.RequestLoggingActionFilter"/> class.
+            Action filter for logging request details and performance metrics.
             </summary>
             <param name="logger">The logger instance.</param>
         </member>
@@ -790,6 +794,15 @@
             <summary>
             Authorization requirement for device type validation and restrictions.
             </summary>
+            <param name="allowedDeviceTypes">The list of allowed device types.</param>
+            <param name="requireDeviceValidation">Whether device header validation is required.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.DeviceTypeRequirement.#ctor(System.Collections.Generic.List{Acontplus.Core.Domain.Enums.DeviceType},System.Boolean)">
+            <summary>
+            Authorization requirement for device type validation and restrictions.
+            </summary>
+            <param name="allowedDeviceTypes">The list of allowed device types.</param>
+            <param name="requireDeviceValidation">Whether device header validation is required.</param>
         </member>
         <member name="P:Acontplus.Services.Policies.DeviceTypeRequirement.AllowedDeviceTypes">
             <summary>
@@ -801,21 +814,16 @@
             Gets a value indicating whether device headers must be validated.
             </summary>
         </member>
-        <member name="M:Acontplus.Services.Policies.DeviceTypeRequirement.#ctor(System.Collections.Generic.List{Acontplus.Core.Domain.Enums.DeviceType},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.DeviceTypeRequirement"/> class.
-            </summary>
-            <param name="allowedDeviceTypes">The list of allowed device types.</param>
-            <param name="requireDeviceValidation">Whether device header validation is required.</param>
-        </member>
         <member name="T:Acontplus.Services.Policies.DeviceTypeHandler">
             <summary>
             Authorization handler for device type validation.
             </summary>
+            <param name="deviceDetectionService">The device detection service.</param>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Policies.DeviceTypeHandler.#ctor(Acontplus.Services.Services.Abstractions.IDeviceDetectionService,Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.DeviceTypeHandler})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.DeviceTypeHandler"/> class.
+            Authorization handler for device type validation.
             </summary>
             <param name="deviceDetectionService">The device detection service.</param>
             <param name="logger">The logger instance.</param>
@@ -846,6 +854,15 @@
             <summary>
             Authorization requirement that validates the presence and validity of a Client-Id header.
             </summary>
+            <param name="allowedClientIds">Optional list of allowed client IDs.</param>
+            <param name="allowAnonymous">Whether anonymous access is allowed.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.RequireClientIdRequirement.#ctor(System.Collections.Generic.List{System.String},System.Boolean)">
+            <summary>
+            Authorization requirement that validates the presence and validity of a Client-Id header.
+            </summary>
+            <param name="allowedClientIds">Optional list of allowed client IDs.</param>
+            <param name="allowAnonymous">Whether anonymous access is allowed.</param>
         </member>
         <member name="P:Acontplus.Services.Policies.RequireClientIdRequirement.AllowedClientIds">
             <summary>
@@ -857,21 +874,15 @@
             Gets a value indicating whether anonymous requests (missing Client-Id) are permitted.
             </summary>
         </member>
-        <member name="M:Acontplus.Services.Policies.RequireClientIdRequirement.#ctor(System.Collections.Generic.List{System.String},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.RequireClientIdRequirement"/> class.
-            </summary>
-            <param name="allowedClientIds">Optional list of allowed client IDs.</param>
-            <param name="allowAnonymous">Whether anonymous access is allowed.</param>
-        </member>
         <member name="T:Acontplus.Services.Policies.RequireClientIdHandler">
             <summary>
             Authorization handler for Client-Id validation.
             </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Policies.RequireClientIdHandler.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.RequireClientIdHandler})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.RequireClientIdHandler"/> class.
+            Authorization handler for Client-Id validation.
             </summary>
             <param name="logger">The logger instance.</param>
         </member>
@@ -903,6 +914,15 @@
             <summary>
             Authorization requirement for tenant isolation and validation.
             </summary>
+            <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+            <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
+        </member>
+        <member name="M:Acontplus.Services.Policies.TenantIsolationRequirement.#ctor(System.Boolean,System.Boolean)">
+            <summary>
+            Authorization requirement for tenant isolation and validation.
+            </summary>
+            <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+            <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
         </member>
         <member name="P:Acontplus.Services.Policies.TenantIsolationRequirement.RequireTenantHeader">
             <summary>
@@ -914,21 +934,15 @@
             Gets a value indicating whether the user's tenant claim must match the header tenant ID.
             </summary>
         </member>
-        <member name="M:Acontplus.Services.Policies.TenantIsolationRequirement.#ctor(System.Boolean,System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.TenantIsolationRequirement"/> class.
-            </summary>
-            <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
-            <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
-        </member>
         <member name="T:Acontplus.Services.Policies.TenantIsolationHandler">
             <summary>
             Authorization handler for tenant isolation validation.
             </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Policies.TenantIsolationHandler.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Policies.TenantIsolationHandler})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Policies.TenantIsolationHandler"/> class.
+            Authorization handler for tenant isolation validation.
             </summary>
             <param name="logger">The logger instance.</param>
         </member>
@@ -1057,6 +1071,13 @@
             <summary>
             Implementation of device detection service for identifying device types and capabilities.
             </summary>
+            <param name="logger">The logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.DeviceDetectionService})">
+            <summary>
+            Implementation of device detection service for identifying device types and capabilities.
+            </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.MobilePattern">
             <remarks>
@@ -1226,12 +1247,6 @@
             </code>
             </remarks>
         </member>
-        <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.DeviceDetectionService})">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.DeviceDetectionService"/> class.
-            </summary>
-            <param name="logger">The logger instance.</param>
-        </member>
         <member name="M:Acontplus.Services.Services.Implementations.DeviceDetectionService.DetectDeviceType(Microsoft.AspNetCore.Http.HttpContext)">
             <inheritdoc />
         </member>
@@ -1310,10 +1325,11 @@
             <summary>
             Implementation of security header service for managing HTTP security headers.
             </summary>
+            <param name="logger">The logger instance.</param>
         </member>
         <member name="M:Acontplus.Services.Services.Implementations.SecurityHeaderService.#ctor(Microsoft.Extensions.Logging.ILogger{Acontplus.Services.Services.Implementations.SecurityHeaderService})">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Services.Services.Implementations.SecurityHeaderService"/> class.
+            Implementation of security header service for managing HTTP security headers.
             </summary>
             <param name="logger">The logger instance.</param>
         </member>

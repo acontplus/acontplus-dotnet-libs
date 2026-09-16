@@ -3,45 +3,28 @@ namespace Acontplus.Services.Policies;
 /// <summary>
 /// Authorization requirement for tenant isolation and validation.
 /// </summary>
-public class TenantIsolationRequirement : IAuthorizationRequirement
+/// <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+/// <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
+public class TenantIsolationRequirement(bool requireTenantHeader = true, bool validateUserTenantAccess = true) : IAuthorizationRequirement
 {
     /// <summary>
     /// Gets a value indicating whether the Tenant-Id header is strictly required.
     /// </summary>
-    public bool RequireTenantHeader { get; }
+    public bool RequireTenantHeader { get; } = requireTenantHeader;
 
     /// <summary>
     /// Gets a value indicating whether the user's tenant claim must match the header tenant ID.
     /// </summary>
-    public bool ValidateUserTenantAccess { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TenantIsolationRequirement"/> class.
-    /// </summary>
-    /// <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
-    /// <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
-    public TenantIsolationRequirement(bool requireTenantHeader = true, bool validateUserTenantAccess = true)
-    {
-        RequireTenantHeader = requireTenantHeader;
-        ValidateUserTenantAccess = validateUserTenantAccess;
-    }
+    public bool ValidateUserTenantAccess { get; } = validateUserTenantAccess;
 }
 
 /// <summary>
 /// Authorization handler for tenant isolation validation.
 /// </summary>
-public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequirement>
+/// <param name="logger">The logger instance.</param>
+public class TenantIsolationHandler(ILogger<TenantIsolationHandler> logger) : AuthorizationHandler<TenantIsolationRequirement>
 {
-    private readonly ILogger<TenantIsolationHandler> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TenantIsolationHandler"/> class.
-    /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    public TenantIsolationHandler(ILogger<TenantIsolationHandler> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<TenantIsolationHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
     protected override Task HandleRequirementAsync(
@@ -93,7 +76,10 @@ public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequir
             }
         }
 
-        _logger.LogDebug("Tenant isolation validation successful for tenant '{TenantId}'", tenantId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Tenant isolation validation successful for tenant '{TenantId}'", tenantId);
+        }
         context.Succeed(requirement);
         return Task.CompletedTask;
     }

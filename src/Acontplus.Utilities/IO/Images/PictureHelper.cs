@@ -6,12 +6,12 @@ namespace Acontplus.Utilities.IO.Images;
 public static class PictureHelper
 {
     // some magic bytes for the most important image formats, see Wikipedia for more
-    private static readonly List<byte> Jpg = new() { 0xFF, 0xD8 };
-    private static readonly List<byte> Bmp = new() { 0x42, 0x4D };
-    private static readonly List<byte> Gif = new() { 0x47, 0x49, 0x46 };
+    private static readonly List<byte> Jpg = [0xFF, 0xD8];
+    private static readonly List<byte> Bmp = [0x42, 0x4D];
+    private static readonly List<byte> Gif = [0x47, 0x49, 0x46];
 
-    private static readonly List<byte> Png = new()
-    {
+    private static readonly List<byte> Png =
+    [
         0x89,
         0x50,
         0x4E,
@@ -20,33 +20,33 @@ public static class PictureHelper
         0x0A,
         0x1A,
         0x0A
-    };
+    ];
 
-    private static readonly List<byte> Svg_xml_small = new()
-    {
+    private static readonly List<byte> Svg_xml_small =
+    [
         0x3C,
         0x3F,
         0x78,
         0x6D,
         0x6C
-    }; // "<?xml"
+    ]; // "<?xml"
 
-    private static readonly List<byte> Svg_xml_capital = new()
-    {
+    private static readonly List<byte> Svg_xml_capital =
+    [
         0x3C,
         0x3F,
         0x58,
         0x4D,
         0x4C
-    }; // "<?XML"
+    ]; // "<?XML"
 
-    private static readonly List<byte> Svg_small = new() { 0x3C, 0x73, 0x76, 0x67 }; // "<svg"
-    private static readonly List<byte> Svg_capital = new() { 0x3C, 0x53, 0x56, 0x47 }; // "<SVG"
-    private static readonly List<byte> Intel_tiff = new() { 0x49, 0x49, 0x2A, 0x00 };
-    private static readonly List<byte> Motorola_tiff = new() { 0x4D, 0x4D, 0x00, 0x2A };
+    private static readonly List<byte> Svg_small = [0x3C, 0x73, 0x76, 0x67]; // "<svg"
+    private static readonly List<byte> Svg_capital = [0x3C, 0x53, 0x56, 0x47]; // "<SVG"
+    private static readonly List<byte> Intel_tiff = [0x49, 0x49, 0x2A, 0x00];
+    private static readonly List<byte> Motorola_tiff = [0x4D, 0x4D, 0x00, 0x2A];
 
-    private static readonly List<(List<byte> magic, string extension)> ImageFormats = new()
-    {
+    private static readonly List<(List<byte> magic, string extension)> ImageFormats =
+    [
         (Jpg, "jpg"),
         (Bmp, "bmp"),
         (Gif, "gif"),
@@ -57,7 +57,7 @@ public static class PictureHelper
         (Motorola_tiff, "tif"),
         (Svg_xml_small, "svg"),
         (Svg_xml_capital, "svg")
-    };
+    ];
 
     /// <summary>
     /// Attempts to determine the file extension of an image from its binary header (magic bytes).

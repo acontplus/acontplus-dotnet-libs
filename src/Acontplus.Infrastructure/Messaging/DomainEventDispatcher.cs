@@ -18,16 +18,15 @@ public sealed class DomainEventDispatcher(
     /// Dispatches a domain event to all registered handlers synchronously.
     /// Runs in the same transaction as the caller - if any handler fails, the transaction can be rolled back.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
-        Justification = "Exception is logged with event type and handler details before rethrowing to allow transaction rollback.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
-        Justification = "Exception is logged with event type and handler details before rethrowing to allow transaction rollback.")]
     public async Task Dispatch(IDomainEvent domainEvent)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
 
         var eventType = domainEvent.GetType();
-        _logger.LogDebug("Dispatching domain event: {EventType}", eventType.Name);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Dispatching domain event: {EventType}", eventType.Name);
+        }
 
         // Get the generic handler type
         var handlerType = typeof(IDomainEventHandler<>).MakeGenericType(eventType);
@@ -36,56 +35,66 @@ public sealed class DomainEventDispatcher(
         using var scope = _serviceProvider.CreateScope();
         var handlers = scope.ServiceProvider.GetServices(handlerType);
 
-        var handlersList = handlers.ToList();
+        var handlersList = handlers.Where(h => h != null).ToList();
         if (handlersList.Count == 0)
         {
-            _logger.LogDebug("No handlers registered for domain event: {EventType}", eventType.Name);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("No handlers registered for domain event: {EventType}", eventType.Name);
+            }
             return;
         }
 
-        _logger.LogInformation(
-            "Dispatching domain event {EventType} to {HandlerCount} handler(s)",
-            eventType.Name,
-            handlersList.Count);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "Dispatching domain event {EventType} to {HandlerCount} handler(s)",
+                eventType.Name,
+                handlersList.Count);
+        }
 
         // Execute all handlers synchronously (in same transaction)
         foreach (var handler in handlersList)
         {
-            if (handler == null) continue;
+            await InvokeHandlerAsync(handler!, handlerType, domainEvent, eventType);
+        }
 
-            try
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "Domain event {EventType} successfully dispatched to all handlers",
+                eventType.Name);
+        }
+    }
+
+    private async Task InvokeHandlerAsync(object handler, Type handlerType, IDomainEvent domainEvent, Type eventType)
+    {
+        try
+        {
+            // Call HandleAsync method via reflection
+            var handleMethod = handlerType.GetMethod(nameof(IDomainEventHandler<>.HandleAsync));
+            if (handleMethod != null)
             {
-                // Call HandleAsync method via reflection
-                var handleMethod = handlerType.GetMethod(nameof(IDomainEventHandler<>.HandleAsync));
-                if (handleMethod != null)
+                var task = (Task?)handleMethod.Invoke(handler, [domainEvent, CancellationToken.None]);
+                if (task != null)
                 {
-                    var task = (Task?)handleMethod.Invoke(handler, [domainEvent, CancellationToken.None]);
-                    if (task != null)
-                    {
-                        await task;
-                    }
+                    await task;
                 }
+            }
 
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
                 _logger.LogDebug(
                     "Domain event {EventType} handled by {HandlerType}",
                     eventType.Name,
                     handler.GetType().Name);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error handling domain event {EventType} in handler {HandlerType}",
-                    eventType.Name,
-                    handler.GetType().Name);
-
-                // Rethrow to allow transaction rollback
-                throw;
-            }
         }
-
-        _logger.LogInformation(
-            "Domain event {EventType} successfully dispatched to all handlers",
-            eventType.Name);
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Error handling domain event {eventType.Name} in handler {handler.GetType().Name}: {ex.Message}",
+                ex);
+        }
     }
 }

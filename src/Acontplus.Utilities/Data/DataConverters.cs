@@ -8,11 +8,9 @@ public static class DataConverters
     /// <summary>
     /// Get default JSON serialization options with camelCase naming
     /// </summary>
-    private static JsonSerializerOptions GetDefaultOptions()
-    {
+    private static JsonSerializerOptions GetDefaultOptions() =>
         // Use the new DefaultOptions from JsonExtensions
-        return JsonExtensions.DefaultOptions;
-    }
+        JsonExtensions.DefaultOptions;
 
     /// <summary>
     /// Converts a DataTable to JSON string
@@ -223,10 +221,8 @@ public static class DataConverters
     /// <summary>
     /// Convert dictionary to string representation
     /// </summary>
-    public static string DictionaryToString<TKey, TValue>(IDictionary<TKey, TValue> dictionary)
-    {
-        return dictionary == null ? "{}" : "{" + string.Join(", ", dictionary.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray()) + "}";
-    }
+    public static string DictionaryToString<TKey, TValue>(IDictionary<TKey, TValue> dictionary) =>
+        dictionary == null ? "{}" : "{" + string.Join(", ", dictionary.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray()) + "}";
 
     /// <summary>
     /// Generic method to serialize any object to JSON.
@@ -265,10 +261,8 @@ public static class DataConverters
     /// <param name="data">The object to serialize.</param>
     /// <param name="options">Optional JSON serializer options.</param>
     /// <returns>The serialized JSON string.</returns>
-    public static string SerializeWithOptions(object data, JsonSerializerOptions? options = null)
-    {
-        return data.SerializeOptimized(options == JsonExtensions.PrettyOptions);
-    }
+    public static string SerializeWithOptions(object data, JsonSerializerOptions? options = null) =>
+        data.SerializeOptimized(options == JsonExtensions.PrettyOptions);
 
     /// <summary>
     /// Serializes an object after sanitizing complex or database values.

@@ -26,18 +26,24 @@ public class OrderNotificationHandler(
         {
             await foreach (var orderEvent in _eventSubscriber.SubscribeAsync<OrderCreatedEvent>(stoppingToken))
             {
-                _logger.LogInformation(
-                    "📧 Sending email notification for Order {OrderId} - Customer: {CustomerName}, Total: ${TotalAmount}",
-                    orderEvent.OrderId,
-                    orderEvent.CustomerName,
-                    orderEvent.TotalAmount);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "📧 Sending email notification for Order {OrderId} - Customer: {CustomerName}, Total: ${TotalAmount}",
+                        orderEvent.OrderId,
+                        orderEvent.CustomerName,
+                        orderEvent.TotalAmount);
+                }
 
                 // Simulate email sending (replace with actual email service)
                 await Task.Delay(100, stoppingToken);
 
-                _logger.LogInformation(
-                    "✅ Email notification sent successfully for Order {OrderId}",
-                    orderEvent.OrderId);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "✅ Email notification sent successfully for Order {OrderId}",
+                        orderEvent.OrderId);
+                }
             }
         }
         catch (OperationCanceledException ex)
