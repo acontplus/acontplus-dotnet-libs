@@ -22,6 +22,7 @@ Internal package dependencies are declared as `PackageReference`s. Their version
 - Preserve the existing folder-oriented namespaces and `GlobalUsings.cs` pattern. Prefer focused public contracts and DI registration extensions (`AddXxx`) for services.
 - Public libraries generate XML documentation. Add meaningful XML docs for new public APIs; do not add blanket warning suppressions to avoid documenting an API.
 - Use async APIs end-to-end, accept and pass through `CancellationToken` when the surrounding API does, and avoid blocking async work.
+- Avoid Cognitive Complexity violations (SonarQube `csharpsquid:S3776` > 15): keep methods focused and decompose branching, nested conditionals, or configuration resolution into dedicated private static helper methods. Avoid duplicate literals (`S1192`), guard logging evaluation (`CA1873`), and always forward `CancellationToken` (`S8949`/`CA2016`).
 - Do not add a `FrameworkReference` or third-party dependency without checking its effect on NuGet consumers. A framework reference makes ASP.NET Core a consumer requirement.
 - Keep compatibility in mind: preserve public signatures and serialized/XML contracts unless the requested change explicitly permits a breaking release.
 

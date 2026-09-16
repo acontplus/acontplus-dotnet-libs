@@ -409,6 +409,8 @@
         <member name="M:Acontplus.Infrastructure.Extensions.HealthCheckEndpointExtensions.MapHealthCheckEndpoints(Microsoft.AspNetCore.Builder.WebApplication,System.String)">
             <summary>
                 Maps health check endpoints with standardized JSON response formatting including application name.
+                Maps standard endpoints (<c>/health</c>, <c>/health/ready</c>, <c>/health/live</c>, <c>/health/cache</c>, <c>/health/resilience</c>)
+                and registers <c>/alive</c> as an alias for liveness probes in .NET Aspire and Kubernetes.
             </summary>
             <param name="app">The web application builder.</param>
             <param name="basePath">The base path for health check endpoints (default: "/health").</param>

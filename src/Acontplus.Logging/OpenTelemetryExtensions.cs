@@ -26,24 +26,10 @@ public static class OpenTelemetryExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var options = new OpenTelemetryOptions();
-        configuration.GetSection("OpenTelemetry").Bind(options);
-
+        var options = BuildOpenTelemetryOptions(configuration);
         if (!options.Enabled)
         {
             return services;
-        }
-
-        // Auto-detect service name from assembly if not configured
-        if (string.IsNullOrWhiteSpace(options.ServiceName) || options.ServiceName == "MyService")
-        {
-            options.ServiceName = GetServiceNameFromAssembly();
-        }
-
-        // Auto-detect service version from assembly if not configured
-        if (string.IsNullOrWhiteSpace(options.ServiceVersion))
-        {
-            options.ServiceVersion = GetServiceVersionFromAssembly();
         }
 
         // Register options for DI
@@ -56,39 +42,113 @@ public static class OpenTelemetryExtensions
                 serviceVersion: options.ServiceVersion ?? "1.0.0",
                 serviceNamespace: options.ServiceNamespace);
 
-        // Detect if any Dynatrace exporter is active.
-        // UseOtlpExporter cannot coexist with per-signal AddOtlpExporter, so we choose one strategy.
-        var hasDynatrace = options.Tracing.EnableDynatraceExporter
-            || options.Metrics.EnableDynatraceExporter
-            || options.Logging.EnableDynatraceExporter;
+        var hasDynatrace = HasDynatraceExporter(options);
 
         var otelBuilder = services.AddOpenTelemetry()
             .ConfigureResource(r => r.AddAttributes(resourceBuilder.Build().Attributes))
             .WithTracing(builder => ConfigureTracing(builder, options, resourceBuilder, hasDynatrace))
             .WithMetrics(builder => ConfigureMetrics(builder, options, resourceBuilder, hasDynatrace));
 
-        if (options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
-        {
-            if (hasDynatrace)
-            {
-                // Cannot use UseOtlpExporter alongside per-signal AddOtlpExporter (used by Dynatrace).
-                // OTLP was already added inside ConfigureTracing/ConfigureMetrics.
-                // Handle logging OTLP + Dynatrace via WithLogging.
-                otelBuilder.WithLogging(builder => ConfigureLogging(builder, options));
-            }
-            else
-            {
-                // UseOtlpExporter registers OTLP for all three signals (traces, metrics, logs) in one call.
-                var protocol = ResolveOtlpProtocol(options.OtlpProtocol);
-                otelBuilder.UseOtlpExporter(protocol, new Uri(options.OtlpEndpoint));
-            }
-        }
-        else if (options.Logging.EnableDynatraceExporter)
-        {
-            otelBuilder.WithLogging(builder => ConfigureLogging(builder, options));
-        }
+        RegisterOtlpExporters(otelBuilder, options, hasDynatrace);
 
         return services;
+    }
+
+    private static OpenTelemetryOptions BuildOpenTelemetryOptions(IConfiguration configuration)
+    {
+        var options = new OpenTelemetryOptions();
+        configuration.GetSection("OpenTelemetry").Bind(options);
+
+        ResolveEnvironmentOverrides(options, configuration);
+        ResolveServiceIdentity(options, configuration);
+
+        return options;
+    }
+
+    private static void ResolveEnvironmentOverrides(OpenTelemetryOptions options, IConfiguration configuration)
+    {
+        var otelEnvEndpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]
+                              ?? Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+
+        if (!string.IsNullOrWhiteSpace(otelEnvEndpoint))
+        {
+            options.OtlpEndpoint ??= otelEnvEndpoint;
+
+            if (!configuration.GetSection("OpenTelemetry:Enabled").Exists())
+            {
+                options.Enabled = true;
+            }
+
+            if (!configuration.GetSection("OpenTelemetry:EnableOtlpExporter").Exists())
+            {
+                options.EnableOtlpExporter = true;
+            }
+        }
+
+        var otelEnvProtocol = configuration["OTEL_EXPORTER_OTLP_PROTOCOL"]
+                              ?? Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_PROTOCOL");
+        if (!string.IsNullOrWhiteSpace(otelEnvProtocol) && !configuration.GetSection("OpenTelemetry:OtlpProtocol").Exists())
+        {
+            options.OtlpProtocol = otelEnvProtocol;
+        }
+    }
+
+    private static void ResolveServiceIdentity(OpenTelemetryOptions options, IConfiguration configuration)
+    {
+        var otelServiceName = configuration["OTEL_SERVICE_NAME"]
+                              ?? Environment.GetEnvironmentVariable("OTEL_SERVICE_NAME");
+
+        var isDefaultOrEmptyName = string.IsNullOrWhiteSpace(options.ServiceName) || options.ServiceName == "MyService";
+
+        if (!string.IsNullOrWhiteSpace(otelServiceName) && isDefaultOrEmptyName)
+        {
+            options.ServiceName = otelServiceName;
+        }
+        else if (isDefaultOrEmptyName)
+        {
+            options.ServiceName = GetServiceNameFromAssembly();
+        }
+
+        if (string.IsNullOrWhiteSpace(options.ServiceVersion))
+        {
+            options.ServiceVersion = GetServiceVersionFromAssembly();
+        }
+    }
+
+    private static bool HasDynatraceExporter(OpenTelemetryOptions options) =>
+        options.Tracing.EnableDynatraceExporter
+        || options.Metrics.EnableDynatraceExporter
+        || options.Logging.EnableDynatraceExporter;
+
+    private static void RegisterOtlpExporters(
+        OpenTelemetryBuilder otelBuilder,
+        OpenTelemetryOptions options,
+        bool hasDynatrace)
+    {
+        if (!options.EnableOtlpExporter)
+        {
+            if (options.Logging.EnableDynatraceExporter)
+            {
+                otelBuilder.WithLogging(builder => ConfigureLogging(builder, options));
+            }
+            return;
+        }
+
+        if (hasDynatrace)
+        {
+            otelBuilder.WithLogging(builder => ConfigureLogging(builder, options));
+            return;
+        }
+
+        var protocol = ResolveOtlpProtocol(options.OtlpProtocol);
+        if (!string.IsNullOrEmpty(options.OtlpEndpoint) && Uri.TryCreate(options.OtlpEndpoint, UriKind.Absolute, out var endpointUri))
+        {
+            otelBuilder.UseOtlpExporter(protocol, endpointUri);
+        }
+        else
+        {
+            otelBuilder.UseOtlpExporter();
+        }
     }
 
     /// <summary>
@@ -179,13 +239,9 @@ public static class OpenTelemetryExtensions
             builder.AddConsoleExporter();
         }
 
-        if (hasDynatrace && options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
+        if (hasDynatrace && options.EnableOtlpExporter)
         {
-            builder.AddOtlpExporter(otlpOptions =>
-            {
-                otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
-            });
+            builder.AddOtlpExporter(otlpOptions => ConfigureOtlpOptions(otlpOptions, options));
         }
 
         if (options.Tracing.EnableDynatraceExporter && !string.IsNullOrEmpty(options.Tracing.DynatraceEndpoint))
@@ -247,13 +303,9 @@ public static class OpenTelemetryExtensions
 
         // When Dynatrace is also configured, UseOtlpExporter cannot be used globally.
         // Add OTLP per-signal here so both OTLP and Dynatrace exporters are active.
-        if (hasDynatrace && options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
+        if (hasDynatrace && options.EnableOtlpExporter)
         {
-            builder.AddOtlpExporter(otlpOptions =>
-            {
-                otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
-            });
+            builder.AddOtlpExporter(otlpOptions => ConfigureOtlpOptions(otlpOptions, options));
         }
 
         // Dynatrace: Uses OTLP protocol with specific headers
@@ -281,13 +333,9 @@ public static class OpenTelemetryExtensions
         OpenTelemetryOptions options)
     {
         // OTLP logging: only used when hasDynatrace forces per-signal mode (UseOtlpExporter not available).
-        if (options.EnableOtlpExporter && !string.IsNullOrEmpty(options.OtlpEndpoint))
+        if (options.EnableOtlpExporter)
         {
-            builder.AddOtlpExporter(otlpOptions =>
-            {
-                otlpOptions.Endpoint = new Uri(options.OtlpEndpoint);
-                otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
-            });
+            builder.AddOtlpExporter(otlpOptions => ConfigureOtlpOptions(otlpOptions, options));
         }
 
         if (options.Logging.EnableDynatraceExporter && !string.IsNullOrEmpty(options.Logging.DynatraceEndpoint))
@@ -379,8 +427,19 @@ public static class OpenTelemetryExtensions
         return services;
     }
 
+    private static void ConfigureOtlpOptions(OtlpExporterOptions otlpOptions, OpenTelemetryOptions options)
+    {
+        if (!string.IsNullOrEmpty(options.OtlpEndpoint) && Uri.TryCreate(options.OtlpEndpoint, UriKind.Absolute, out var endpointUri))
+        {
+            otlpOptions.Endpoint = endpointUri;
+        }
+
+        otlpOptions.Protocol = ResolveOtlpProtocol(options.OtlpProtocol);
+    }
+
     private static OtlpExportProtocol ResolveOtlpProtocol(string protocol) =>
         string.Equals(protocol, "http", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(protocol, "http/protobuf", StringComparison.OrdinalIgnoreCase)
             ? OtlpExportProtocol.HttpProtobuf
             : OtlpExportProtocol.Grpc;
 }

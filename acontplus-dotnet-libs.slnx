@@ -35,6 +35,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Acontplus.Core.Tests.Unit/Acontplus.Core.Tests.Unit.csproj" />
+    <Project Path="tests/Acontplus.Infrastructure.Tests.Unit/Acontplus.Infrastructure.Tests.Unit.csproj" />
+    <Project Path="tests/Acontplus.Logging.Tests.Unit/Acontplus.Logging.Tests.Unit.csproj" />
     <Project Path="tests/Acontplus.Persistence.Common.Tests.Unit/Acontplus.Persistence.Common.Tests.Unit.csproj" />
     <Project Path="tests/Acontplus.Services.Tests.Unit/Acontplus.Services.Tests.Unit.csproj" />
     <Project Path="tests/Acontplus.Reports.Tests.Unit/Acontplus.Reports.Tests.Unit.csproj" />

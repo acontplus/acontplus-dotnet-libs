@@ -7,6 +7,8 @@ public static class HealthCheckEndpointExtensions
 {
     /// <summary>
     ///     Maps health check endpoints with standardized JSON response formatting including application name.
+    ///     Maps standard endpoints (<c>/health</c>, <c>/health/ready</c>, <c>/health/live</c>, <c>/health/cache</c>, <c>/health/resilience</c>)
+    ///     and registers <c>/alive</c> as an alias for liveness probes in .NET Aspire and Kubernetes.
     /// </summary>
     /// <param name="app">The web application builder.</param>
     /// <param name="basePath">The base path for health check endpoints (default: "/health").</param>
@@ -19,6 +21,12 @@ public static class HealthCheckEndpointExtensions
         MapTaggedHealthCheck(app, $"{basePath}/live", "live", appName);
         MapTaggedHealthCheck(app, $"{basePath}/cache", "cache", appName);
         MapTaggedHealthCheck(app, $"{basePath}/resilience", "resilience", appName);
+
+        // .NET Aspire and Kubernetes standard liveness probe alias
+        if (basePath.Equals("/health", StringComparison.OrdinalIgnoreCase))
+        {
+            MapTaggedHealthCheck(app, "/alive", "live", appName);
+        }
     }
 
     private static void MapTaggedHealthCheck(WebApplication app, string path, string? tag, string appName)
