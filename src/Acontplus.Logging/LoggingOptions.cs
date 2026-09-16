@@ -128,7 +128,7 @@ public class OpenTelemetryOptions
 
     /// <summary>
     /// Gets or sets the OTLP transport protocol for all signals.
-    /// Accepted values: <c>grpc</c> (default) or <c>http</c>.
+    /// Accepted values: <c>grpc</c> (default), <c>http</c>, or <c>http/protobuf</c>.
     /// </summary>
     public string OtlpProtocol { get; set; } = "grpc";
 

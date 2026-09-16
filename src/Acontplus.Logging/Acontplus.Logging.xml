@@ -150,7 +150,7 @@
         <member name="P:Acontplus.Logging.OpenTelemetryOptions.OtlpProtocol">
             <summary>
             Gets or sets the OTLP transport protocol for all signals.
-            Accepted values: <c>grpc</c> (default) or <c>http</c>.
+            Accepted values: <c>grpc</c> (default), <c>http</c>, or <c>http/protobuf</c>.
             </summary>
         </member>
         <member name="P:Acontplus.Logging.OpenTelemetryOptions.EnableOtlpExporter">

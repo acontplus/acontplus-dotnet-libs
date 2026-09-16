@@ -67,12 +67,22 @@ public static class InfrastructureServiceExtensions
 
         services.Configure<CacheConfiguration>(configuration.GetSection("Caching"));
 
-        if (cacheConfig.UseDistributedCache && !string.IsNullOrEmpty(cacheConfig.RedisConnectionString))
+        var redisConnectionString = cacheConfig.RedisConnectionString;
+        if (string.IsNullOrEmpty(redisConnectionString))
+        {
+            redisConnectionString = configuration.GetConnectionString("cache")
+                                    ?? configuration.GetConnectionString("redis");
+        }
+
+        var isExplicitlyDisabled = string.Equals(configuration.GetSection("Caching:UseDistributedCache").Value, "false", StringComparison.OrdinalIgnoreCase);
+        var useDistributed = cacheConfig.UseDistributedCache || (!string.IsNullOrEmpty(redisConnectionString) && !isExplicitlyDisabled);
+
+        if (useDistributed && !string.IsNullOrEmpty(redisConnectionString))
         {
             // Register distributed cache (Redis)
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = cacheConfig.RedisConnectionString;
+                options.Configuration = redisConnectionString;
                 options.InstanceName = cacheConfig.RedisInstanceName ?? "acontplus:";
             });
 

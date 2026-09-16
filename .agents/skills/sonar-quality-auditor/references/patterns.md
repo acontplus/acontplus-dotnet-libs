@@ -42,6 +42,16 @@ private static IQueryable<TEntity> ApplySearchFilter(
 }
 ```
 
+### Pattern: Configuration Builders & DI Registration Extensions (`AddXxx`)
+Methods configuring DI, reading options, or resolving environment overrides (e.g. OpenTelemetry, Serilog, persistence) can easily accumulate nested `if` statements and boolean operators, exceeding Cognitive Complexity 15.
+
+**Solution:** Always decompose configuration and setup methods into focused private static helpers:
+1. `BuildXxxOptions(configuration)` — binds options and delegates to:
+   - `ResolveEnvironmentOverrides(options, configuration)` — handles environment variable fallbacks.
+   - `ResolveServiceIdentity(options, configuration)` — handles service name / version metadata.
+2. `RegisterXxx(builder, options, ...)` — handles backend / exporter registrations.
+This guarantees the public extension method's Cognitive Complexity <= 2 and all helpers <= 7.
+
 ---
 
 ## 2. String Duplicate Literals (csharpsquid:S1192)

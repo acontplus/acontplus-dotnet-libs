@@ -96,6 +96,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## Acontplus.Infrastructure
 
+### [1.4.1]
+
+- **Added** Auto-detection of Redis connection strings from standard connection strings (`ConnectionStrings:cache` and `ConnectionStrings:redis`) for seamless .NET Aspire and cloud orchestration.
+- **Added** `/alive` health check endpoint mapping as default liveness probe alias compliant with .NET Aspire and Kubernetes conventions.
+
 ### [1.4.0]
 
 - **Added** Unified `ICacheService` supporting both in-memory cache and distributed Redis cache with automatic fallback.
@@ -107,6 +112,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ---
 
 ## Acontplus.Logging
+
+### [2.1.1]
+
+- **Added** Out-of-the-box compatibility with .NET Aspire and standard OpenTelemetry orchestrators via `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME`, and `OTEL_EXPORTER_OTLP_PROTOCOL` environment variables.
+- **Added** Support for `http/protobuf` protocol in OTLP exporter resolution.
+- **Added** Automatic enablement and fallback to parameterless `UseOtlpExporter()` when an OTLP endpoint is injected by the host environment.
 
 ### [2.1.0]
 

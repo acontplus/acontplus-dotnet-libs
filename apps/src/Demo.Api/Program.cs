@@ -23,7 +23,7 @@ try
         // and resolve any services (e.g., custom enrichers requiring DI)
         loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration);
         loggerConfiguration.ReadFrom.Services(services);
-    });
+    }, writeToProviders: true);
 
     // 3. Register your LoggingOptions class into the DI container
     //    This is where builder.Services (an IServiceCollection) is available.
