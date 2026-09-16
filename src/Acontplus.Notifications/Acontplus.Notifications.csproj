@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Notifications</PackageId>
-    <Version>1.6.11</Version>
+    <Version>1.7.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -25,7 +25,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v1.6.11: Minor bug fixes and performance improvements.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.7.0: New notification features and improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
@@ -47,7 +47,7 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Polly" />
     <PackageReference Include="Scriban" />
-    <ProjectReference Include="../Acontplus.Utilities/Acontplus.Utilities.csproj" />
+    <PackageReference Include="Acontplus.Utilities" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="README.md" />

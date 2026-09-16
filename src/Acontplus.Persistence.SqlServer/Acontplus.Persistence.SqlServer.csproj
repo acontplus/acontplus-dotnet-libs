@@ -4,7 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Acontplus.Persistence.SqlServer</PackageId>
-    <Version>2.2.7</Version>
+    <Version>2.3.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -20,7 +20,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v2.2.7: Minor bug fixes and performance improvements.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.3.0: New SQL Server persistence features and improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
@@ -40,7 +40,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Polly" />
-    <ProjectReference Include="../Acontplus.Persistence.Common/Acontplus.Persistence.Common.csproj" />
+    <PackageReference Include="Acontplus.Persistence.Common" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Images\icon.png" Pack="true" PackagePath="\" />
