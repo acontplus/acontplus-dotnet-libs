@@ -6,7 +6,7 @@
 
 A cutting-edge .NET foundational library leveraging the latest C# language features and business patterns. Built with performance, type safety, and developer experience in mind. Focuses on pure domain logic with clean separation from API concerns.
 
-> **Changelog:** see [`CHANGELOG.md`](../../CHANGELOG.md) at the repository root for the full version history.
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
 ## 🚀 Features
 

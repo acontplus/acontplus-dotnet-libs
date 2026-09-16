@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Acontplus.Barcode" Version="1.2.11" />
-    <PackageVersion Include="Acontplus.Core" Version="2.3.3" />
+    <PackageVersion Include="Acontplus.Core" Version="2.4.0" />
     <PackageVersion Include="Acontplus.Services" Version="2.4.0" />
     <PackageVersion Include="Acontplus.Persistence.Common" Version="2.1.6" />
     <PackageVersion Include="Acontplus.Utilities" Version="2.2.3" />
@@ -17,7 +17,7 @@
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="AWSSDK.Core" Version="4.0.102.6" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.103.3" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.104.2" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.104.3" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="Dapper" Version="2.1.86" />

@@ -6,6 +6,8 @@
 
 **Production-ready multi-channel notification library** for .NET 10. Covers email (MailKit SMTP + Amazon SES) and **WhatsApp Cloud API** (Meta Graph API v23.0) in a single package — templating, media, interactive messages, multi-tenant credentials, resilience, and webhook validation included.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ## 🚀 Features
 
 ### WhatsApp Cloud API (Meta Graph API v23.0)
@@ -43,7 +45,7 @@ dotnet add package Acontplus.Notifications
 
 ---
 
-## ⚡ WhatsApp Cloud API (v1.6.0)
+## ⚡ WhatsApp Cloud API
 
 ### 1. Register the service
 
@@ -308,7 +310,7 @@ await emailService.SendBulkAsync(emails, ct); // auto-batched, rate-limited
 
 ## 🚀 Performance
 
-### WhatsApp resilience (v1.6.0)
+### WhatsApp resilience
 
 | Layer | Configuration |
 |-------|--------------|
@@ -317,7 +319,7 @@ await emailService.SendBulkAsync(emails, ct); // auto-batched, rate-limited
 | Total timeout | 90 s (all retries included) |
 | Circuit breaker | Included via `AddStandardResilienceHandler` |
 
-### Email template caching (v1.5.0+)
+### Email template caching
 
 | Metric | Without cache | With cache | Improvement |
 |--------|--------------|------------|-------------|

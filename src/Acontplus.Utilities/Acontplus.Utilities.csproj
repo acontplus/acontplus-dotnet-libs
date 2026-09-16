@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Utilities</PackageId>
-    <Version>2.2.3</Version>
+    <Version>2.3.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -21,7 +21,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v2.2.3: Bug fixes</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.3.0: New features and improvements</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
@@ -39,7 +39,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="BCrypt.Net-Next" />
-    <ProjectReference Include="../Acontplus.Core/Acontplus.Core.csproj" />
+    <PackageReference Include="Acontplus.Core" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Images\icon.png" Pack="true" PackagePath="\" />

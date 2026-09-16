@@ -6,6 +6,8 @@
 
 PostgreSQL implementation of the Acontplus persistence layer. Provides optimized Entity Framework Core integration, ADO.NET repositories, and PostgreSQL-specific features for high-performance data access.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 > **Note:** This package implements the abstractions defined in [**Acontplus.Persistence.Common**](https://www.nuget.org/packages/Acontplus.Persistence.Common). For general persistence patterns and repository interfaces, see the common package.
 
 ## 🚀 PostgreSQL-Specific Features

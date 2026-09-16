@@ -6,6 +6,8 @@
 
 Standardized API versioning and Swagger/OpenAPI documentation for ASP.NET Core. Works with **controller-based APIs**, **Minimal APIs**, and **mixed projects** — including correct multi-version Swagger UI dropdown support.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ---
 
 ## 🚀 Features

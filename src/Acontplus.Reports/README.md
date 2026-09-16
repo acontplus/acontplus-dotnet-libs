@@ -772,16 +772,16 @@ var receipt = await _pdf.GenerateAsync(request, ct);
 | `ShowTimestamp`     | `false`                                  | Show UTC timestamp in footer                          |
 | `ShowWatermark`     | `false`                                  | Enable diagonal watermark overlay                     |
 | `WatermarkText`     | `null`                                   | Watermark text (requires `ShowWatermark = true`)      |
-| `WatermarkFontSize` | `80f`                                    | **New v1.8.0.** Watermark font size in points         |
-| `WatermarkColor`    | `"#EEEEEE"`                              | **New v1.8.0.** Watermark text colour (HTML hex)      |
+| `WatermarkFontSize` | `80f`                                    | Watermark font size in points                         |
+| `WatermarkColor`    | `"#EEEEEE"`                              | Watermark text colour (HTML hex)                      |
 | `LicenseType`       | `Community`                              | QuestPDF license tier                                 |
 | `ColorTheme`        | `QuestPdfColorThemes.AcontplusDefault()` | Full visual theme — see [Color Themes](#color-themes) |
 
-#### `QuestPdfHeaderFooterOptions` — new v1.8.0 logo properties
+#### `QuestPdfHeaderFooterOptions` — logo properties
 
-| Property       | Default | Description                                                                                                                                        |
-| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LogoBytes`    | `null`  | **New v1.8.0.** Logo image bytes — bypasses the file system entirely. Takes priority over `LogoPath`. Ideal when the logo is stored in a database. |
+| Property       | Default | Description                                                                                                                         |
+| -------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `LogoBytes`    | `null`  | Logo image bytes — bypasses the file system entirely. Takes priority over `LogoPath`. Ideal when the logo is stored in a database. |
 | `LogoMimeType` | `null`  | MIME type hint for `LogoBytes` (e.g. `"image/png"`).                                                                                               |
 
 #### Color Themes
@@ -855,26 +855,26 @@ ColorTheme = new QuestPdfColorTheme
 | `AggregateType` | `None`   | Totals row: `Sum`, `Count`, `Average`                                                                       |
 | `IsBold`        | `false`  | Bold cell text                                                                                              |
 | `IsHidden`      | `false`  | Exclude from output                                                                                         |
-| `IsGroupHeader` | `false`  | **New v1.8.0.** Renders as a band/group header row spanning `ColumnSpan` columns. No `ColumnName` required. |
-| `ColumnSpan`    | `1`      | **New v1.8.0.** Number of data columns this band header spans (used only when `IsGroupHeader = true`).      |
+| `IsGroupHeader` | `false`  | Renders as a band/group header row spanning `ColumnSpan` columns. No `ColumnName` required. |
+| `ColumnSpan`    | `1`      | Number of data columns this band header spans (used only when `IsGroupHeader = true`).      |
 
 > **Grouped-header layout (Kardex-style):** Mix normal `QuestPdfTableColumn` entries with group-header descriptors (`IsGroupHeader = true, ColumnSpan = N`). Group descriptors appear as a coloured band row _above_ the normal header row, spanning the stated number of data columns left-to-right in the order they are declared.
 
 #### `QuestPdfSection` types
 
-| `Type`            | Required properties                                        | Description                                                                                                                                 |
-| ----------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DataTable`       | `Data`                                                     | Renders a `DataTable` as a themed grid                                                                                                      |
-| `Text`            | `TextBlocks`                                               | Renders a list of formatted text blocks                                                                                                     |
-| `KeyValueSummary` | `KeyValues`                                                | Renders a two-column label/value panel                                                                                                      |
-| `Custom`          | `CustomComposer`                                           | Full control via `Action<IContainer>` delegate                                                                                              |
-| `Image`           | `ImageBytes`                                               | **New v1.8.0.** Renders a raw image (`byte[]`) with optional max width/height and alignment.                                                |
-| `Barcode`         | `BarcodeText` or `BarcodeBytes`                            | **New v1.8.0.** Generates a Code-128 or QR code image via `Acontplus.Barcode`.                                                              |
-| `MasterDetail`    | `Data`, `DetailData`, `MasterKeyColumn`, `DetailKeyColumn` | **New v1.8.0.** Master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern).                                |
-| `TwoColumn`       | `LeftContentType`, `RightSection`                          | **New v1.8.0.** Side-by-side columns; left renders the parent section using `LeftContentType`, right renders an independent `RightSection`. |
-| `InvoiceHeader`   | `InvoiceHeader`                                            | **New v1.8.0.** SRI Ecuador–style invoice header: company block (left) + SRI auth box (right) + buyer band (bottom).                        |
+| `Type`            | Required properties                                        | Description                                                                                                                   |
+| ----------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `DataTable`       | `Data`                                                     | Renders a `DataTable` as a themed grid                                                                                       |
+| `Text`            | `TextBlocks`                                               | Renders a list of formatted text blocks                                                                                       |
+| `KeyValueSummary` | `KeyValues`                                                | Renders a two-column label/value panel                                                                                        |
+| `Custom`          | `CustomComposer`                                           | Full control via `Action<IContainer>` delegate                                                                                |
+| `Image`           | `ImageBytes`                                               | Renders a raw image (`byte[]`) with optional max width/height and alignment.                                                  |
+| `Barcode`         | `BarcodeText` or `BarcodeBytes`                            | Generates a Code-128 or QR code image via `Acontplus.Barcode`.                                                                |
+| `MasterDetail`    | `Data`, `DetailData`, `MasterKeyColumn`, `DetailKeyColumn` | Master rows each followed by a filtered detail sub-table (EstadoCuenta / Statement pattern).                                  |
+| `TwoColumn`       | `LeftContentType`, `RightSection`                          | Side-by-side columns; left renders the parent section using `LeftContentType`, right renders an independent `RightSection`.   |
+| `InvoiceHeader`   | `InvoiceHeader`                                            | SRI Ecuador–style invoice header: company block (left) + SRI auth box (right) + buyer band (bottom).                          |
 
-##### `QuestPdfSection` — new v1.8.0 property groups
+##### `QuestPdfSection` property groups
 
 **Image properties** (`Type = Image`)
 
@@ -918,7 +918,7 @@ ColorTheme = new QuestPdfColorTheme
 | `RightColumnRatio` | `1`         | Proportional width of the right column                                                          |
 | `TwoColumnGap`     | `8f`        | Gap in points between the two columns                                                           |
 
-#### `QuestPdfInvoiceHeader` (new v1.8.0)
+#### `QuestPdfInvoiceHeader`
 
 Used by `Type = InvoiceHeader` — models the standard SRI Ecuador electronic invoice header layout.
 
@@ -1225,8 +1225,8 @@ AdvancedExcelHeaderStyle.CorporateBlue()  // default — dark blue bg, white tex
 AdvancedExcelHeaderStyle.DarkGreen()      // forest green bg, white text
 AdvancedExcelHeaderStyle.DarkGrey()       // charcoal bg, white text
 AdvancedExcelHeaderStyle.LightBlue()      // pastel blue bg, navy text
-AdvancedExcelHeaderStyle.Title()          // NEW v1.8.0 — white bg, dark-navy text, 14pt; used for ReportTitle / ReportSubTitle rows
-AdvancedExcelHeaderStyle.GroupHeader()    // NEW v1.8.0 — mid-blue bg, white text, 10pt; used for GroupHeaders band row
+AdvancedExcelHeaderStyle.Title()          // White bg, dark-navy text, 14pt; used for ReportTitle / ReportSubTitle rows
+AdvancedExcelHeaderStyle.GroupHeader()    // Mid-blue bg, white text, 10pt; used for GroupHeaders band row
 
 // Or full customisation
 new AdvancedExcelHeaderStyle
@@ -1239,7 +1239,7 @@ new AdvancedExcelHeaderStyle
 };
 ```
 
-#### `AdvancedExcelWorksheetDefinition` — new v1.8.0 properties
+#### `AdvancedExcelWorksheetDefinition` properties
 
 | Property           | Type                              | Default                | Description                                                                |
 | ------------------ | --------------------------------- | ---------------------- | -------------------------------------------------------------------------- |
@@ -1249,7 +1249,7 @@ new AdvancedExcelHeaderStyle
 | `GroupHeaders`     | `List<AdvancedExcelGroupHeader>?` | `null`                 | Band-header descriptors that span one or more data columns (Kardex-style). |
 | `GroupHeaderStyle` | `AdvancedExcelHeaderStyle?`       | `null → GroupHeader()` | Style applied to the group-header band row.                                |
 
-#### `AdvancedExcelGroupHeader` (new v1.8.0)
+#### `AdvancedExcelGroupHeader`
 
 | Property           | Type              | Description                                        |
 | ------------------ | ----------------- | -------------------------------------------------- |

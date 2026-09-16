@@ -7,9 +7,9 @@
 SQL Server implementation of the Acontplus persistence layer. Provides optimized Entity Framework Core integration,
 ADO.NET repositories, and SQL Server-specific features for high-performance data access.
 
-> **Note:** This package implements the abstractions defined in [**Acontplus.Persistence.Common
-> **](https://www.nuget.org/packages/Acontplus.Persistence.Common). For general persistence patterns and repository
-> interfaces, see the common package.
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
+> **Note:** This package implements the abstractions defined in [**Acontplus.Persistence.Common**](https://www.nuget.org/packages/Acontplus.Persistence.Common). For general persistence patterns and repository interfaces, see the common package.
 
 ## 🚀 SQL Server-Specific Features
 

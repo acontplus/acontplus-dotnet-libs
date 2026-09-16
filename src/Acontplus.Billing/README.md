@@ -6,6 +6,8 @@
 
 A comprehensive .NET library for electronic invoicing and digital document handling in Ecuador, fully compliant with SRI (Servicio de Rentas Internas) normatives v2.32. Provides complete support for all electronic document types, XML generation, validation, parsing, and web service integration.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ## 🚀 Features
 
 ### 📋 Complete SRI Document Type Support
