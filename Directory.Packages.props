@@ -6,9 +6,8 @@
   <ItemGroup>
     <PackageVersion Include="Acontplus.Barcode" Version="1.2.11" />
     <PackageVersion Include="Acontplus.Core" Version="2.4.0" />
-    <PackageVersion Include="Acontplus.Services" Version="2.4.0" />
-    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.1.6" />
-    <PackageVersion Include="Acontplus.Utilities" Version="2.2.3" />
+    <PackageVersion Include="Acontplus.Persistence.Common" Version="2.2.0" />
+    <PackageVersion Include="Acontplus.Utilities" Version="2.3.0" />
     <PackageVersion Include="Asp.Versioning.Http" Version="10.2.3" />
     <PackageVersion Include="Asp.Versioning.Mvc" Version="10.2.1" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.2.1" />

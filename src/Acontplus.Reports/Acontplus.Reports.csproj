@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Acontplus.Reports</PackageId>
-    <Version>1.8.1</Version>
+    <Version>1.9.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -24,7 +24,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageReleaseNotes>v1.8.1: Minor bug fixes and performance improvements.</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.9.0: New report generation features and improvements.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
@@ -56,8 +56,8 @@
     <PackageReference Include="MiniExcel" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="ReportViewerCore.NETCore" />
-    <ProjectReference Include="../Acontplus.Barcode/Acontplus.Barcode.csproj" />
-    <ProjectReference Include="../Acontplus.Utilities/Acontplus.Utilities.csproj" />
+    <PackageReference Include="Acontplus.Barcode" />
+    <PackageReference Include="Acontplus.Utilities" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\NotFound.pdf">

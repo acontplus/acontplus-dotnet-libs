@@ -7,7 +7,7 @@
     <Description>Analytics and statistics library for AcontPlus applications providing comprehensive
       metrics, trends, and business intelligence capabilities across multiple domains.</Description>
     <PackageId>Acontplus.Analytics</PackageId>
-    <Version>1.0.14</Version>
+    <Version>1.1.0</Version>
     <Authors>Ivan Paz</Authors>
     <Company>Acontplus</Company>
     <Product>Acontplus .NET Libraries</Product>
@@ -20,6 +20,7 @@
       analytics;statistics;metrics;business-intelligence;dashboard;trends;kpi;reporting;acontplus</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageReleaseNotes>v1.1.0: New analytics features and improvements.</PackageReleaseNotes>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
@@ -45,6 +46,6 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Acontplus.Utilities/Acontplus.Utilities.csproj" />
+    <PackageReference Include="Acontplus.Utilities" />
   </ItemGroup>
 </Project>
