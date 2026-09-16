@@ -91,10 +91,8 @@ public sealed class MapperRegistry
     /// <param name="config">
     /// The configuration to store, or <c>null</c> for convention-only mappings.
     /// </param>
-    internal void RegisterConfiguration(TypePair pair, MappingExpressionBase? config)
-    {
+    internal void RegisterConfiguration(TypePair pair, MappingExpressionBase? config) =>
         _configurations[pair] = config;
-    }
 
     /// <summary>
     /// Attempts to retrieve the <see cref="MappingExpressionBase"/> configuration for the
@@ -109,8 +107,6 @@ public sealed class MapperRegistry
     /// <c>true</c> if a configuration exists for the specified <paramref name="pair"/>;
     /// otherwise, <c>false</c>.
     /// </returns>
-    internal bool TryGetConfiguration(TypePair pair, out MappingExpressionBase? config)
-    {
-        return _configurations.TryGetValue(pair, out config);
-    }
+    internal bool TryGetConfiguration(TypePair pair, out MappingExpressionBase? config) =>
+        _configurations.TryGetValue(pair, out config);
 }

@@ -5,35 +5,34 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of device detection service for identifying device types and capabilities.
 /// </summary>
-public class DeviceDetectionService : IDeviceDetectionService
+/// <param name="logger">The logger instance.</param>
+public partial class DeviceDetectionService(ILogger<DeviceDetectionService> logger) : IDeviceDetectionService
 {
-    private readonly ILogger<DeviceDetectionService> _logger;
+    private const string ChromeBrowser = "Chrome";
+    private static readonly TimeSpan DefaultRegexTimeout = TimeSpan.FromSeconds(1);
+    private readonly ILogger<DeviceDetectionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     // Regex patterns for device detection
-    private static readonly Regex MobilePattern = new(
-        @"(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Opera Mini)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex MobilePattern();
 
-    private static readonly Regex TabletPattern = new(
-        @"(iPad|Android(?!.*Mobile)|Tablet)",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(iPad|Android(?!.*Mobile)|Tablet)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TabletPattern();
 
-    private static readonly Regex DesktopPattern = new(
-        @"(Windows NT|Macintosh|Linux(?!.*Android))",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    [GeneratedRegex(@"(Windows NT|Macintosh|Linux(?!.*Android))", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex DesktopPattern();
 
-    public DeviceDetectionService(ILogger<DeviceDetectionService> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    /// <inheritdoc />
     public DeviceType DetectDeviceType(HttpContext context)
     {
         // Try Device-Type header first (preferred method)
         if (context.Request.Headers.TryGetValue("Device-Type", out var deviceTypeHeader) &&
             Enum.TryParse<DeviceType>(deviceTypeHeader.FirstOrDefault(), ignoreCase: true, out var parsedType))
         {
-            _logger.LogDebug("Device type detected from header: {DeviceType}", parsedType);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Device type detected from header: {DeviceType}", parsedType);
+            }
             return parsedType;
         }
 
@@ -42,7 +41,10 @@ public class DeviceDetectionService : IDeviceDetectionService
             bool.TryParse(isMobileHeader.FirstOrDefault(), out var isMobile))
         {
             var legacyType = isMobile ? DeviceType.Mobile : DeviceType.Desktop;
-            _logger.LogDebug("Device type detected from legacy header: {DeviceType}", legacyType);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Device type detected from legacy header: {DeviceType}", legacyType);
+            }
             return legacyType;
         }
 
@@ -50,16 +52,21 @@ public class DeviceDetectionService : IDeviceDetectionService
         var userAgent = context.Request.Headers.UserAgent.ToString();
         var detectedType = DetectFromUserAgent(userAgent);
 
-        _logger.LogDebug("Device type detected from user agent: {DeviceType}", detectedType);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Device type detected from user agent: {DeviceType}", detectedType);
+        }
         return detectedType;
     }
 
+    /// <inheritdoc />
     public bool IsMobileDevice(HttpContext context)
     {
         var deviceType = DetectDeviceType(context);
         return deviceType is DeviceType.Mobile or DeviceType.Tablet;
     }
 
+    /// <inheritdoc />
     public DeviceCapabilities GetDeviceCapabilities(string userAgent)
     {
         if (string.IsNullOrWhiteSpace(userAgent))
@@ -80,10 +87,14 @@ public class DeviceDetectionService : IDeviceDetectionService
         var capabilities = new DeviceCapabilities(
             deviceType, isMobile, isTablet, supportsTouch, os, browser, version);
 
-        _logger.LogDebug("Detected device capabilities: {Capabilities}", capabilities);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Detected device capabilities: {Capabilities}", capabilities);
+        }
         return capabilities;
     }
 
+    /// <inheritdoc />
     public bool ValidateDeviceHeaders(HttpContext context)
     {
         var headers = context.Request.Headers;
@@ -114,21 +125,21 @@ public class DeviceDetectionService : IDeviceDetectionService
         return true;
     }
 
-    private DeviceType DetectFromUserAgent(string userAgent)
+    private static DeviceType DetectFromUserAgent(string userAgent)
     {
         if (string.IsNullOrWhiteSpace(userAgent))
             return DeviceType.Unknown;
 
         // Check for tablet first (more specific)
-        if (TabletPattern.IsMatch(userAgent))
+        if (TabletPattern().IsMatch(userAgent))
             return DeviceType.Tablet;
 
         // Check for mobile
-        if (MobilePattern.IsMatch(userAgent))
+        if (MobilePattern().IsMatch(userAgent))
             return DeviceType.Mobile;
 
         // Check for desktop
-        if (DesktopPattern.IsMatch(userAgent))
+        if (DesktopPattern().IsMatch(userAgent))
             return DeviceType.Desktop;
 
         // Default to web for unknown patterns
@@ -153,11 +164,11 @@ public class DeviceDetectionService : IDeviceDetectionService
     {
         return userAgent switch
         {
-            var ua when ua.Contains("Chrome", StringComparison.OrdinalIgnoreCase) &&
-                       !ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => "Chrome",
+            var ua when ua.Contains(ChromeBrowser, StringComparison.OrdinalIgnoreCase) &&
+                       !ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => ChromeBrowser,
             var ua when ua.Contains("Firefox", StringComparison.OrdinalIgnoreCase) => "Firefox",
             var ua when ua.Contains("Safari", StringComparison.OrdinalIgnoreCase) &&
-                       !ua.Contains("Chrome", StringComparison.OrdinalIgnoreCase) => "Safari",
+                       !ua.Contains(ChromeBrowser, StringComparison.OrdinalIgnoreCase) => "Safari",
             var ua when ua.Contains("Edge", StringComparison.OrdinalIgnoreCase) => "Edge",
             var ua when ua.Contains("Opera", StringComparison.OrdinalIgnoreCase) => "Opera",
             _ => null
@@ -173,7 +184,7 @@ public class DeviceDetectionService : IDeviceDetectionService
         {
             var pattern = browser switch
             {
-                "Chrome" => @"Chrome/(\d+\.\d+)",
+                ChromeBrowser => @"Chrome/(\d+\.\d+)",
                 "Firefox" => @"Firefox/(\d+\.\d+)",
                 "Safari" => @"Version/(\d+\.\d+)",
                 "Edge" => @"Edge/(\d+\.\d+)",
@@ -183,7 +194,7 @@ public class DeviceDetectionService : IDeviceDetectionService
 
             if (pattern != null)
             {
-                var match = Regex.Match(userAgent, pattern, RegexOptions.IgnoreCase);
+                var match = Regex.Match(userAgent, pattern, RegexOptions.IgnoreCase, DefaultRegexTimeout);
                 if (match.Success)
                     return match.Groups[1].Value;
             }

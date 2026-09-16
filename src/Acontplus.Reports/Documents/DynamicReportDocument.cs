@@ -11,15 +11,10 @@ namespace Acontplus.Reports.Documents;
 /// QuestPDF <see cref="IDocument"/> implementation that composes a fully dynamic,
 /// data-driven PDF from a <see cref="QuestPdfReportRequest"/>.
 /// </summary>
-internal sealed class DynamicReportDocument : IDocument
+internal sealed class DynamicReportDocument(QuestPdfReportRequest request) : IDocument
 {
     private const string ColorWhite = "#FFFFFF";
-    private readonly QuestPdfReportRequest _request;
-
-    public DynamicReportDocument(QuestPdfReportRequest request)
-    {
-        _request = request ?? throw new ArgumentNullException(nameof(request));
-    }
+    private readonly QuestPdfReportRequest _request = request ?? throw new ArgumentNullException(nameof(request));
 
     // ── IDocument ────────────────────────────────────────────────────────────
 
@@ -111,11 +106,19 @@ internal sealed class DynamicReportDocument : IDocument
         var hasBg = bg != "transparent";
         var textColor = hasBg ? ColorWhite : theme.TextColor;
 
-        var wrapper = hasBg
-            ? container.Background(bg).Padding(8)
-            : header.ShowBorderBottom
-                ? container.BorderBottom(1).BorderColor(theme.BorderColor).PaddingBottom(6)
-                : container.PaddingBottom(6);
+        IContainer wrapper;
+        if (hasBg)
+        {
+            wrapper = container.Background(bg).Padding(8);
+        }
+        else if (header.ShowBorderBottom)
+        {
+            wrapper = container.BorderBottom(1).BorderColor(theme.BorderColor).PaddingBottom(6);
+        }
+        else
+        {
+            wrapper = container.PaddingBottom(6);
+        }
 
         wrapper.Row(row =>
         {
@@ -804,59 +807,26 @@ internal sealed class DynamicReportDocument : IDocument
             {
                 col.Item().Row(row =>
                 {
-                    if (!string.IsNullOrWhiteSpace(inv.BuyerName))
-                        row.RelativeItem(3).Column(c2 =>
-                        {
-                            c2.Item().Text("Raz\u00f3n Social / Nombres:")
-                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
-                            c2.Item().Text(inv.BuyerName)
-                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
-                        });
-
-                    if (!string.IsNullOrWhiteSpace(inv.EmissionDate))
-                        row.RelativeItem(1).Column(c2 =>
-                        {
-                            c2.Item().Text("Fecha de Emisi\u00f3n:")
-                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
-                            c2.Item().Text(inv.EmissionDate)
-                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
-                        });
+                    AddBuyerCell(row, "Raz\u00f3n Social / Nombres:", inv.BuyerName, 3, inv.FontSize, theme);
+                    AddBuyerCell(row, "Fecha de Emisi\u00f3n:", inv.EmissionDate, 1, inv.FontSize, theme);
                 });
 
                 col.Item().Row(row =>
                 {
-                    if (!string.IsNullOrWhiteSpace(inv.BuyerIdentification))
-                        row.RelativeItem().Column(c2 =>
-                        {
-                            c2.Item().Text("Identificaci\u00f3n:")
-                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
-                            c2.Item().Text(inv.BuyerIdentification)
-                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
-                        });
-
-                    if (!string.IsNullOrWhiteSpace(inv.DeliveryReference))
-                        row.RelativeItem().Column(c2 =>
-                        {
-                            c2.Item().Text("Gu\u00eda de Remisi\u00f3n:")
-                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
-                            c2.Item().Text(inv.DeliveryReference)
-                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
-                        });
+                    AddBuyerCell(row, "Identificaci\u00f3n:", inv.BuyerIdentification, 1, inv.FontSize, theme);
+                    AddBuyerCell(row, "Gu\u00eda de Remisi\u00f3n:", inv.DeliveryReference, 1, inv.FontSize, theme);
                 });
 
                 if (!string.IsNullOrWhiteSpace(inv.BuyerAddress))
+                {
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem().Column(c2 =>
-                        {
-                            c2.Item().Text("Direcci\u00f3n:")
-                               .FontSize(inv.FontSize - 1).Bold().FontColor(theme.TextColor);
-                            c2.Item().Text(inv.BuyerAddress)
-                               .FontSize(inv.FontSize).FontColor(theme.TextColor);
-                        });
+                        AddBuyerCell(row, "Direcci\u00f3n:", inv.BuyerAddress, 1, inv.FontSize, theme);
                     });
+                }
 
                 foreach (var kv in inv.ExtraFields)
+                {
                     col.Item().Row(row =>
                     {
                         row.RelativeItem().Text(kv.Key)
@@ -864,7 +834,30 @@ internal sealed class DynamicReportDocument : IDocument
                         row.RelativeItem(3).Text(kv.Value)
                            .FontSize(inv.FontSize).FontColor(theme.TextColor);
                     });
+                }
             });
+    }
+
+    private static void AddBuyerCell(
+        RowDescriptor row,
+        string label,
+        string? value,
+        float relativeItem,
+        float fontSize,
+        QuestPdfColorTheme theme)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        row.RelativeItem(relativeItem).Column(c2 =>
+        {
+            c2.Item().Text(label)
+               .FontSize(fontSize - 1).Bold().FontColor(theme.TextColor);
+            c2.Item().Text(value)
+               .FontSize(fontSize).FontColor(theme.TextColor);
+        });
     }
 
     // ── Page Footer ──────────────────────────────────────────────────────────
@@ -921,7 +914,7 @@ internal sealed class DynamicReportDocument : IDocument
         var hasBg = !string.IsNullOrWhiteSpace(footer.BackgroundColor);
         var wrapper = hasBg
             ? container.Background(footer.BackgroundColor!).Padding(6)
-            : (IContainer)container.BorderTop(1).BorderColor(theme.BorderColor).PaddingTop(4);
+            : container.BorderTop(1).BorderColor(theme.BorderColor).PaddingTop(4);
 
         wrapper.Row(row =>
         {

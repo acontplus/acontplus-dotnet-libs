@@ -8,27 +8,15 @@ namespace Acontplus.Utilities.Mapping;
 /// <c>Expression</c>-tree delegates. Register as a singleton via
 /// <c>services.AddObjectMapper(...)</c>.
 /// </summary>
-public sealed class CompiledObjectMapper : IObjectMapper
+public sealed class CompiledObjectMapper(MapperRegistry registry) : IObjectMapper
 {
-    private readonly MapperRegistry _registry;
+    private readonly MapperRegistry _registry = registry ?? throw new ArgumentNullException(nameof(registry));
 
     // Separate cache for compiled copy-delegates used by the into-existing Map overload.
     // Key: TypePair(T, T) — source and target are the same type.
     // Value: Action<T, T> compiled once from an expression tree.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, Delegate>
         _copyDelegateCache = new();
-
-    /// <summary>Initialises the mapper with a fully built <see cref="MapperRegistry"/>.</summary>
-    /// <param name="registry">
-    /// A fully initialised registry containing compiled delegates for all registered type pairs.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when <paramref name="registry"/> is <c>null</c>.
-    /// </exception>
-    public CompiledObjectMapper(MapperRegistry registry)
-    {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
-    }
 
     /// <inheritdoc />
     public TTarget Map<TSource, TTarget>(TSource source)

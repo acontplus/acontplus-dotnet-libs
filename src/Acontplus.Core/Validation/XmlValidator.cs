@@ -25,6 +25,9 @@ public class ValidationError
 /// </summary>
 public static class XmlValidator
 {
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(500);
+    private static readonly JsonSerializerOptions IndentedJsonOptions = new() { WriteIndented = true };
+
     /// <summary>
     ///     Validates the provided XmlDocument against an XSD schema file.
     /// </summary>
@@ -35,15 +38,8 @@ public static class XmlValidator
     {
         var validationErrors = new List<ValidationError>();
 
-        if (xmlDocument == null)
-        {
-            throw new ArgumentNullException(nameof(xmlDocument));
-        }
-
-        if (xsdStream == null)
-        {
-            throw new ArgumentNullException(nameof(xsdStream));
-        }
+        ArgumentNullException.ThrowIfNull(xmlDocument);
+        ArgumentNullException.ThrowIfNull(xsdStream);
 
         try
         {
@@ -100,10 +96,11 @@ public static class XmlValidator
             };
 
             // Validate XmlDocument
-            using (var stringReader = new StringReader(xmlDocument.OuterXml))
-            using (var reader = XmlReader.Create(stringReader, settings))
+            using var stringReader = new StringReader(xmlDocument.OuterXml);
+            using var reader = XmlReader.Create(stringReader, settings);
+            while (reader.Read())
             {
-                while (reader.Read()) { } // Read and validate the entire XML
+                // Reading through the stream triggers schema validation callbacks.
             }
         }
         catch (XmlException ex)
@@ -138,7 +135,7 @@ public static class XmlValidator
             return;
         }
 
-        var json = JsonSerializer.Serialize(errors, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(errors, IndentedJsonOptions);
 
         File.WriteAllText(outputFilePath, json);
     }
@@ -153,7 +150,7 @@ public static class XmlValidator
         try
         {
             // 1. Eliminar la declaración XML (<?xml version="1.0" encoding="UTF-8"?>)
-            xml = Regex.Replace(xml, @"<\?xml.*?\?>", "", RegexOptions.Singleline).TrimStart();
+            xml = Regex.Replace(xml, @"<\?xml.*?\?>", "", RegexOptions.Singleline, RegexTimeout).TrimStart();
 
             // 2. Eliminar caracteres BOM (Byte Order Mark) si existen
             xml = RemoveBomChars(xml);
@@ -177,7 +174,6 @@ public static class XmlValidator
         }
         catch (Exception)
         {
-            //Log.Error(ex, "Error limpiando XML");
             // En caso de error, al menos eliminar la declaración XML
             return RemoveXmlDeclaration(xml);
         }
@@ -269,17 +265,17 @@ public static class XmlValidator
         foreach (var tag in tagsToRemove)
         {
             // Etiquetas auto-cerradas: <br/>, <hr/>, <img.../>, etc.
-            xml = Regex.Replace(xml, $@"<{tag}[^>]*?/>", "", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, $@"<{tag}[^>]*?/>", "", RegexOptions.IgnoreCase, RegexTimeout);
             // Etiquetas simples: <br>, <hr>, etc.
-            xml = Regex.Replace(xml, $@"<{tag}[^>]*?>", "", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, $@"<{tag}[^>]*?>", "", RegexOptions.IgnoreCase, RegexTimeout);
         }
 
         // Eliminar contenido completo de etiquetas script y style
-        xml = Regex.Replace(xml, @"<script[^>]*?>.*?</script>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        xml = Regex.Replace(xml, @"<style[^>]*?>.*?</style>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        xml = Regex.Replace(xml, @"<script[^>]*?>.*?</script>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline, RegexTimeout);
+        xml = Regex.Replace(xml, @"<style[^>]*?>.*?</style>", "", RegexOptions.IgnoreCase | RegexOptions.Singleline, RegexTimeout);
 
         // Convertir <br> y </br> a saltos de línea si están dentro de contenido XML
-        xml = Regex.Replace(xml, @"</?br[^>]*?>", "\n", RegexOptions.IgnoreCase);
+        xml = Regex.Replace(xml, @"</?br[^>]*?>", "\n", RegexOptions.IgnoreCase, RegexTimeout);
 
         return xml;
     }
@@ -299,8 +295,8 @@ public static class XmlValidator
         foreach (var attr in problematicAttributes)
         {
             // Eliminar atributos problemáticos de cualquier etiqueta
-            xml = Regex.Replace(xml, $@"\s+{attr}\s*=\s*[""'][^""']*[""']", "", RegexOptions.IgnoreCase);
-            xml = Regex.Replace(xml, $@"\s+{attr}\s*=\s*[^>\s]+", "", RegexOptions.IgnoreCase);
+            xml = Regex.Replace(xml, $@"\s+{attr}\s*=\s*[""'][^""']*[""']", "", RegexOptions.IgnoreCase, RegexTimeout);
+            xml = Regex.Replace(xml, $@"\s+{attr}\s*=\s*[^>\s]+", "", RegexOptions.IgnoreCase, RegexTimeout);
         }
 
         return xml;
@@ -313,14 +309,15 @@ public static class XmlValidator
     {
         // Patrón para encontrar ampersands no escapados
         // Un ampersand es considerado no escapado si no es seguido por:
-        // 1. Una entidad XML predefinida (amp;, lt;, gt;, quot;, apos;)
-        // 2. Una referencia numérica (&#123; o &#xABC;)
-        // 3. El inicio de una referencia de entidad que termina con ;
+        // 1. Una entidad XML predefinida (amp, lt, gt, quot, apos)
+        // 2. Una referencia numérica
+        // 3. El inicio de una referencia de entidad que finaliza con punto y coma
         return Regex.Replace(
             xml,
             @"&(?!(amp;|lt;|gt;|quot;|apos;|#[0-9]+;|#x[0-9a-fA-F]+;|\w+;))",
             "&amp;",
-            RegexOptions.IgnoreCase
+            RegexOptions.IgnoreCase,
+            RegexTimeout
         );
     }
 
@@ -343,20 +340,14 @@ public static class XmlValidator
     /// <summary>
     /// Normaliza los saltos de línea para evitar problemas con diferentes sistemas operativos
     /// </summary>
-    private static string NormalizeLineBreaks(string xml)
-    {
-        // Convertir todos los tipos de saltos de línea a \n
-        return Regex.Replace(xml, @"\r\n?|\n", "\n");
-    }
+    private static string NormalizeLineBreaks(string xml) =>
+        Regex.Replace(xml, @"\r\n?|\n", "\n", RegexOptions.None, RegexTimeout);
 
     /// <summary>
     /// Elimina caracteres que no son válidos en XML según la especificación
     /// </summary>
-    private static string RemoveInvalidXmlChars(string xml)
-    {
-        // Según la especificación XML, estos caracteres no son válidos
-        return Regex.Replace(xml, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", "");
-    }
+    private static string RemoveInvalidXmlChars(string xml) =>
+        Regex.Replace(xml, @"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", RegexOptions.None, RegexTimeout);
 
     /// <summary>
     /// Método original para eliminar declaración XML
@@ -365,22 +356,7 @@ public static class XmlValidator
     {
         if (string.IsNullOrWhiteSpace(xml)) return xml;
         // Elimina cualquier declaración como <?xml version="1.0" encoding="UTF-8"?>
-        return Regex.Replace(xml, @"<\?xml.*?\?>", "", RegexOptions.Singleline).TrimStart();
-    }
-
-    /// <summary>
-    /// Método alternativo más agresivo para casos extremos donde hay mucho HTML mezclado
-    /// </summary>
-    private static string AggressiveHtmlClean(string xml)
-    {
-        if (string.IsNullOrWhiteSpace(xml))
-            return xml;
-
-        // Eliminar TODOS los tags HTML conocidos manteniendo solo el contenido
-        xml = Regex.Replace(xml, @"</?(?:div|span|p|h[1-6]|ul|ol|li|table|tr|td|th|thead|tbody|tfoot|strong|b|em|i|u|small|big)[^>]*?>", "", RegexOptions.IgnoreCase);
-
-        // Si después de limpiar queda muy poco contenido, es probable que fuera principalmente HTML
-        return xml.Trim().Length < 10 ? string.Empty : xml;
+        return Regex.Replace(xml, @"<\?xml.*?\?>", "", RegexOptions.Singleline, RegexTimeout).TrimStart();
     }
 
     /// <summary>
@@ -402,25 +378,22 @@ public static class XmlValidator
             // Una etiqueta XML válida empieza con letra, /, ! o ?
             // Entonces <BORNE es inválido porque después de > hay <B que no es </
 
-            var regexTimeout = TimeSpan.FromMilliseconds(500);
-
             // Patrón más específico: Busca <PALABRA> donde PALABRA no tiene espacios y está en mayúsculas
             // Esto captura <BORNE NORMAL> pero no <descripcion> ni </descripcion>
-            xml = Regex.Replace(xml, @"<([A-Z\s]+)>", "$1", RegexOptions.None, regexTimeout);
+            xml = Regex.Replace(xml, @"<([A-Z\s]+)>", "$1", RegexOptions.None, RegexTimeout);
 
             // También remover < y > sueltos que puedan quedar
             // Pero solo si NO están formando una etiqueta válida
             // Patrón: < que NO está seguido de / o letra minúscula o ! o ?
-            xml = Regex.Replace(xml, @"<(?![/a-z!?])", "&lt;", RegexOptions.IgnoreCase, regexTimeout);
+            xml = Regex.Replace(xml, @"<(?![/a-z!?])", "&lt;", RegexOptions.IgnoreCase, RegexTimeout);
 
             // Remover > que NO está precedido por / o letra o "
-            xml = Regex.Replace(xml, @"(?<![/a-zA-Z""])>(?!<)", "&gt;", RegexOptions.None, regexTimeout);
+            xml = Regex.Replace(xml, @"(?<![/a-zA-Z""])>(?!<)", "&gt;", RegexOptions.None, RegexTimeout);
 
             return xml;
         }
         catch (Exception)
         {
-            //Log.Error(ex, "Error limpiando contenido XML");
             return xml;
         }
     }

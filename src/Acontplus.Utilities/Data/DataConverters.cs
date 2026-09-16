@@ -8,11 +8,9 @@ public static class DataConverters
     /// <summary>
     /// Get default JSON serialization options with camelCase naming
     /// </summary>
-    private static JsonSerializerOptions GetDefaultOptions()
-    {
+    private static JsonSerializerOptions GetDefaultOptions() =>
         // Use the new DefaultOptions from JsonExtensions
-        return JsonExtensions.DefaultOptions;
-    }
+        JsonExtensions.DefaultOptions;
 
     /// <summary>
     /// Converts a DataTable to JSON string
@@ -54,7 +52,7 @@ public static class DataConverters
         return dataSetDict.SerializeOptimized();
     }
     /// <summary>
-    /// Converts a JSON string to DataTable
+    /// Converts a JSON string to DataTable.
     /// </summary>
     public static DataTable JsonToDataTable(string json)
     {
@@ -63,79 +61,13 @@ public static class DataConverters
 
         try
         {
-            // Deserialize JSON to a list of dictionaries
             var rows = json.DeserializeOptimized<List<Dictionary<string, object>>>();
-
             if (rows == null || rows.Count == 0)
                 return new DataTable();
 
             var dt = new DataTable();
-
-            // Create columns based on the first row
-            var firstRow = rows[0];
-            foreach (var kvp in firstRow)
-            {
-                // Try to infer the column type from the value
-                Type columnType = typeof(string); // Default to string
-                if (kvp.Value != null)
-                {
-                    var valueType = kvp.Value.GetType();
-
-                    // Handle JsonElement from System.Text.Json
-                    if (valueType.Name == "JsonElement")
-                    {
-                        var jsonElement = (System.Text.Json.JsonElement)kvp.Value;
-                        columnType = jsonElement.ValueKind switch
-                        {
-                            System.Text.Json.JsonValueKind.Number => typeof(decimal),
-                            System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False => typeof(bool),
-                            _ => typeof(string)
-                        };
-                    }
-                    else
-                    {
-                        columnType = valueType;
-                    }
-                }
-
-                dt.Columns.Add(kvp.Key, columnType);
-            }
-
-            // Add rows
-            foreach (var row in rows)
-            {
-                var dataRow = dt.NewRow();
-                foreach (var kvp in row)
-                {
-                    if (kvp.Value != null)
-                    {
-                        // Handle JsonElement conversion
-                        if (kvp.Value.GetType().Name == "JsonElement")
-                        {
-                            var jsonElement = (System.Text.Json.JsonElement)kvp.Value;
-                            dataRow[kvp.Key] = jsonElement.ValueKind switch
-                            {
-                                System.Text.Json.JsonValueKind.String => jsonElement.GetString(),
-                                System.Text.Json.JsonValueKind.Number => jsonElement.TryGetDecimal(out var d) ? d : jsonElement.GetDouble(),
-                                System.Text.Json.JsonValueKind.True => true,
-                                System.Text.Json.JsonValueKind.False => false,
-                                System.Text.Json.JsonValueKind.Null => DBNull.Value,
-                                _ => jsonElement.ToString()
-                            };
-                        }
-                        else
-                        {
-                            dataRow[kvp.Key] = kvp.Value;
-                        }
-                    }
-                    else
-                    {
-                        dataRow[kvp.Key] = DBNull.Value;
-                    }
-                }
-                dt.Rows.Add(dataRow);
-            }
-
+            PopulateColumns(dt, rows[0]);
+            PopulateRows(dt, rows);
             return dt;
         }
         catch (JsonException ex)
@@ -144,11 +76,73 @@ public static class DataConverters
         }
     }
 
-    public static string SerializeDictionary(Dictionary<string, object> data
-    )
+    private static void PopulateColumns(DataTable dt, Dictionary<string, object> firstRow)
     {
-        return data.SerializeOptimized();
+        foreach (var (key, value) in firstRow)
+        {
+            dt.Columns.Add(key, InferColumnType(value));
+        }
     }
+
+    private static void PopulateRows(DataTable dt, List<Dictionary<string, object>> rows)
+    {
+        foreach (var row in rows)
+        {
+            var dataRow = dt.NewRow();
+            foreach (var (key, value) in row)
+            {
+                dataRow[key] = ConvertCellValue(value);
+            }
+            dt.Rows.Add(dataRow);
+        }
+    }
+
+    private static Type InferColumnType(object? value)
+    {
+        if (value is null)
+            return typeof(string);
+
+        if (value is System.Text.Json.JsonElement jsonElement)
+        {
+            return jsonElement.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.Number => typeof(decimal),
+                System.Text.Json.JsonValueKind.True or System.Text.Json.JsonValueKind.False => typeof(bool),
+                _ => typeof(string)
+            };
+        }
+
+        return value.GetType();
+    }
+
+    private static object ConvertCellValue(object? value)
+    {
+        if (value is null)
+            return DBNull.Value;
+
+        if (value is System.Text.Json.JsonElement jsonElement)
+        {
+            return jsonElement.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.String => jsonElement.GetString() ?? (object)DBNull.Value,
+                System.Text.Json.JsonValueKind.Number => jsonElement.TryGetDecimal(out var d) ? d : jsonElement.GetDouble(),
+                System.Text.Json.JsonValueKind.True => true,
+                System.Text.Json.JsonValueKind.False => false,
+                System.Text.Json.JsonValueKind.Null => DBNull.Value,
+                _ => jsonElement.ToString()
+            };
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// Serializes a dictionary to an optimized JSON string.
+    /// </summary>
+    /// <param name="data">The dictionary data to serialize.</param>
+    /// <returns>A JSON string representation of the dictionary.</returns>
+    public static string SerializeDictionary(Dictionary<string, object> data) => data.SerializeOptimized();
+
     /// <summary>
     /// Helper method to sanitize values for serialization
     /// </summary>
@@ -188,7 +182,7 @@ public static class DataConverters
         }
 
         // Handle generic collections but preserve their actual values
-        if (value is IEnumerable collection && value is not string)
+        if (value is IEnumerable collection and not string)
         {
             var result = new List<object?>();
             foreach (var item in collection)
@@ -227,17 +221,18 @@ public static class DataConverters
     /// <summary>
     /// Convert dictionary to string representation
     /// </summary>
-    public static string DictionaryToString<TKey, TValue>(IDictionary<TKey, TValue> dictionary)
-    {
-        return dictionary == null ? "{}" : "{" + string.Join(", ", dictionary.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray()) + "}";
-    }
+    public static string DictionaryToString<TKey, TValue>(IDictionary<TKey, TValue> dictionary) =>
+        dictionary == null ? "{}" : "{" + string.Join(", ", dictionary.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray()) + "}";
 
     /// <summary>
-    /// Generic method to serialize any object to JSON
+    /// Generic method to serialize any object to JSON.
     /// </summary>
-    public static string SerializeObjectCustom<T>(object data)
+    /// <typeparam name="T">The type of the object to serialize.</typeparam>
+    /// <param name="data">The object to serialize.</param>
+    /// <returns>The serialized JSON string.</returns>
+    public static string SerializeObjectCustom<T>(T? data)
     {
-        if (data == null)
+        if (data is null)
             return "null";
 
         // If it's a DataTable or DataSet, use our specialized methods
@@ -260,11 +255,20 @@ public static class DataConverters
         }
     }
 
-    public static string SerializeWithOptions(object data, JsonSerializerOptions? options = null)
-    {
-        return data.SerializeOptimized(options == JsonExtensions.PrettyOptions);
-    }
+    /// <summary>
+    /// Serializes an object to JSON with optional formatting configurations.
+    /// </summary>
+    /// <param name="data">The object to serialize.</param>
+    /// <param name="options">Optional JSON serializer options.</param>
+    /// <returns>The serialized JSON string.</returns>
+    public static string SerializeWithOptions(object data, JsonSerializerOptions? options = null) =>
+        data.SerializeOptimized(options == JsonExtensions.PrettyOptions);
 
+    /// <summary>
+    /// Serializes an object after sanitizing complex or database values.
+    /// </summary>
+    /// <param name="data">The object to sanitize and serialize.</param>
+    /// <returns>The sanitized JSON string.</returns>
     public static string SerializeSanitizedData(object data)
     {
         var sanitizedData = SanitizeValueForSerialization(data);

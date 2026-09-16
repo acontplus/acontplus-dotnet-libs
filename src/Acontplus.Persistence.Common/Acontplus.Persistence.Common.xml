@@ -137,6 +137,401 @@
                 Default implementation of IConnectionStringProvider using IConfiguration.
                 Supports hierarchical, environment-based, and secure connection string resolution.
             </summary>
+            <param name="configuration">The application configuration root.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider.#ctor(Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+                Default implementation of IConnectionStringProvider using IConfiguration.
+                Supports hierarchical, environment-based, and secure connection string resolution.
+            </summary>
+            <param name="configuration">The application configuration root.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.ConfigurationConnectionStringProvider.GetConnectionString(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1">
+            <summary>
+            Provider-agnostic base EF Core entity type configuration for auditable entities.
+            Provides common status fields, soft-delete query filters, and tracking column configuration.
+            </summary>
+            <typeparam name="TEntity">The entity type being configured.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Applies base configuration including keys, timestamps, status fields, user tracking, and indexes.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigurePrimaryKey(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures the primary key and value generation strategy.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigureTimestamps(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures timestamp columns for creation, update, and deletion tracking.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigureStatusFields(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures status-related boolean fields (IsActive, IsDeleted, IsMobileRequest).
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigureExternalUserTracking(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures external user-tracking columns (CreatedBy, UpdatedBy, DeletedBy).
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigureSoftDeleteAndIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Applies the global soft-delete query filter and configures database indexes.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.BaseEntityTypeConfiguration`1.ConfigureIndexes(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Configures database indexes for common query patterns.
+            </summary>
+            <param name="builder">The entity type builder.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationRegistry">
+            <summary>
+            Non-generic registry storing <see cref="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider"/> instances to avoid S2743 static fields in generic types.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1">
+            <summary>
+            Reusable base dispatcher that provides static registration methods for EF Core entity types across database providers.
+            </summary>
+            <typeparam name="TDerived">The provider-specific registration marker type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.InitializeProvider(Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider)">
+            <summary>
+            Initializes the underlying <see cref="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider"/> for this derived registration type.
+            </summary>
+            <param name="provider">The registration provider instance.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.Provider">
+            <summary>
+            Gets the registration provider, ensuring the derived class static constructor has executed.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with the ModelBuilder, applying base configurations,
+            custom schema/table names, and optional specific entity configurations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
+            <summary>
+            Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schemas for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schema and/or table names for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationDispatcher`1.RegisterEntitiesWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with specific custom configurations.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions">
+            <summary>
+            Options and delegates for registering entities with the ModelBuilder.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions.#ctor(System.Type,System.Type,System.Func{System.Type,System.Boolean},System.String,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type})">
+            <summary>
+            Options and delegates for registering entities with the ModelBuilder.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper">
+            <summary>
+            Provides unified helper methods for registering EF Core entity types with a model builder.
+            Handles table naming, schema resolution, base configurations, and custom entity configurations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntities(Microsoft.EntityFrameworkCore.ModelBuilder,Acontplus.Persistence.Common.Configurations.EntityRegistrationOptions,System.Type[])">
+            <summary>
+            Registers entities with the ModelBuilder using the provided registration options.
+            </summary>
+            <param name="modelBuilder">The EF Core ModelBuilder instance.</param>
+            <param name="options">The registration options and delegates.</param>
+            <param name="entityTypes">The entity types to register.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntitiesWithSchemas(System.Action{Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[]},Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Helper to register entities with explicitly mapped schemas.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.RegisterEntitiesWithNames(System.Action{Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[]},Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Helper to register entities with explicitly mapped schemas and table names.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.IsValidAuditableEntity(System.Type)">
+            <summary>
+            Determines whether a type is a valid auditable entity (concrete class inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>).
+            </summary>
+            <param name="entityType">The type to check.</param>
+            <returns><c>true</c> if valid; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.IsValidSimpleEntity(System.Type)">
+            <summary>
+            Determines whether a type is a valid simple entity (concrete class not inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> with a readable/writable Id property).
+            </summary>
+            <param name="entityType">The type to check.</param>
+            <returns><c>true</c> if valid; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.CreateSchemaMap(System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Creates a dictionary mapping entity types to schema names.
+            </summary>
+            <param name="entitySchemas">Array of entity type and schema tuples.</param>
+            <returns>A dictionary of entity type to schema/table tuples.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationHelper.CreateNameMap(System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Creates a dictionary mapping entity types to schema and table names.
+            </summary>
+            <param name="nameConfigs">Array of entity type, schema, and table name tuples.</param>
+            <returns>A dictionary of entity type to schema/table tuples.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider">
+            <summary>
+            Provides reusable registration logic for EF Core entity types across database providers.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.#ctor(System.Type,System.Func{System.Type,System.Boolean},System.String)">
+            <summary>
+            Provides reusable registration logic for EF Core entity types across database providers.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.Register(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.ValueTuple{System.String,System.String}},System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with the ModelBuilder applying base and custom configurations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.Register(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Type[])">
+            <summary>
+            Registers entities with default conventions and base configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithSchemas(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schemas for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithNames(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.ValueTuple{System.Type,System.String,System.String}[])">
+            <summary>
+            Registers entities, explicitly setting schema and/or table names for specified types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.EntityRegistrationProvider.RegisterWithCustomConfigurations(Microsoft.EntityFrameworkCore.ModelBuilder,System.Type,System.Collections.Generic.Dictionary{System.Type,System.Type},System.Type[])">
+            <summary>
+            Registers entities with specific custom configurations.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.AuditableEntityRegistrationProvider">
+            <summary>
+            Entity registration provider for auditable entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.AuditableEntityRegistrationProvider.#ctor(System.Type,System.String)">
+            <summary>
+            Entity registration provider for auditable entities inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Configurations.SimpleEntityRegistrationProvider">
+            <summary>
+            Entity registration provider for simple entities not inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Configurations.SimpleEntityRegistrationProvider.#ctor(System.Type,System.String)">
+            <summary>
+            Entity registration provider for simple entities not inheriting from <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/>.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Context.BaseContext">
+            <summary>
+            Base EF Core database context with support for domain events, timestamp auditing, and soft deletes.
+            </summary>
+            <remarks>
+            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
+            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
+            an audit interceptor registered as a singleton.
+            This context manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>), domain events,
+            UTC datetime conversion, and the hard-delete → soft-delete conversion.
+            </remarks>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions)">
+            <summary>
+            Base EF Core database context with support for domain events, timestamp auditing, and soft deletes.
+            </summary>
+            <remarks>
+            Audit identity fields (<c>CreatedBy</c>, <c>CreatedByUserId</c>, <c>UpdatedBy</c>, <c>UpdatedByUserId</c>,
+            <c>DeletedBy</c>, <c>DeletedByUserId</c>, <c>IsMobileRequest</c>) are populated automatically by
+            an audit interceptor registered as a singleton.
+            This context manages timestamps (<c>CreatedAt</c>, <c>UpdatedAt</c>, <c>DeletedAt</c>), domain events,
+            UTC datetime conversion, and the hard-delete → soft-delete conversion.
+            </remarks>
+            <param name="options">The options to be used by the DbContext.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions,Acontplus.Core.Domain.Common.Events.IDomainEventDispatcher)">
+            <summary>
+            Initializes a new instance with a domain event dispatcher.
+            </summary>
+            <param name="options">The options to be used by the DbContext.</param>
+            <param name="eventDispatcher">The domain event dispatcher.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.SaveChangesAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.SaveChanges">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.UpdateTimestamps">
+            <summary>
+            Stamps <c>CreatedAt</c> on added entities and <c>UpdatedAt</c> on modified entities.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.HandleSoftDeletes">
+            <summary>
+            Converts hard-deletes into soft-deletes and handles restore logic.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Context.BaseContext.ConfigureDateTimeProperties(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            Applies UTC-aware value converters to all <see cref="T:System.DateTime"/> and nullable DateTime properties.
+            </summary>
+            <param name="builder">The ModelBuilder instance.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.DbContextFactory`1">
+            <summary>
+            Default implementation of <see cref="T:Acontplus.Persistence.Common.IDbContextFactory`1"/> storing contexts in a concurrent dictionary.
+            </summary>
+            <typeparam name="TContext">The database context type.</typeparam>
+            <param name="contexts">The named dictionary of context instances.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.DbContextFactory`1.#ctor(System.Collections.Generic.IDictionary{System.String,`0})">
+            <summary>
+            Default implementation of <see cref="T:Acontplus.Persistence.Common.IDbContextFactory`1"/> storing contexts in a concurrent dictionary.
+            </summary>
+            <typeparam name="TContext">The database context type.</typeparam>
+            <param name="contexts">The named dictionary of context instances.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.DbContextFactory`1.GetContext(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Persistence.Common.DependencyInjection.PersistenceRegistrationExtensions">
+            <summary>
+            Provides extension methods for registering common persistence services, such as IAdoRepository and IUnitOfWork.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.DependencyInjection.PersistenceRegistrationExtensions.RegisterPersistenceCore``2(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Object)">
+            <summary>
+            Registers the ADO repository, UnitOfWork, and DbContext in the service collection.
+            Supports both keyed and standard scoped registrations.
+            </summary>
+            <typeparam name="TContext">The DbContext implementation type.</typeparam>
+            <typeparam name="TAdoRepository">The IAdoRepository implementation type.</typeparam>
+            <param name="services">The service collection.</param>
+            <param name="serviceKey">Optional service key for keyed registrations.</param>
+            <returns>The service collection for chaining.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Exceptions.RepositoryException">
+            <summary>
+            Represents an exception that occurred within a repository operation.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.RepositoryException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.RepositoryException"/> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.RepositoryException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.RepositoryException"/> class with a specified error message and inner exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="exception">The inner exception that caused this exception.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Exceptions.SqlDomainException">
+            <summary>
+            Represents a domain exception translated from a SQL error.
+            </summary>
+            <param name="sqlErrorInfo">The SQL error info containing error type, code, message, and inner exception.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.SqlDomainException.#ctor(Acontplus.Persistence.Common.Exceptions.SqlErrorInfo)">
+            <summary>
+            Represents a domain exception translated from a SQL error.
+            </summary>
+            <param name="sqlErrorInfo">The SQL error info containing error type, code, message, and inner exception.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo">
+            <summary>
+            Encapsulates details about a SQL error for conversion to domain exceptions.
+            </summary>
+            <param name="ErrorType">The mapped domain error type.</param>
+            <param name="Code">The SQL error code.</param>
+            <param name="Message">The human-readable error message.</param>
+            <param name="Exception">Optional underlying SQL exception.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+            <summary>
+            Encapsulates details about a SQL error for conversion to domain exceptions.
+            </summary>
+            <param name="ErrorType">The mapped domain error type.</param>
+            <param name="Code">The SQL error code.</param>
+            <param name="Message">The human-readable error message.</param>
+            <param name="Exception">Optional underlying SQL exception.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.ErrorType">
+            <summary>The mapped domain error type.</summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.Code">
+            <summary>The SQL error code.</summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.Message">
+            <summary>The human-readable error message.</summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.Exception">
+            <summary>Optional underlying SQL exception.</summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Exceptions.SqlErrorInfo.StackTrace">
+            <summary>
+            Gets the stack trace from the underlying exception, if available.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Exceptions.SqlExceptionExtensions">
+            <summary>
+            Provides extension methods for converting SQL domain exceptions to domain error structures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.SqlExceptionExtensions.ToDomainError(Acontplus.Persistence.Common.Exceptions.SqlDomainException,System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Converts a <see cref="T:Acontplus.Persistence.Common.Exceptions.SqlDomainException"/> into a strongly typed <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/>.
+            </summary>
+            <param name="sqlDomainException">The SQL domain exception to convert.</param>
+            <param name="target">Optional target property or field associated with the error.</param>
+            <param name="details">Optional additional error metadata dictionary.</param>
+            <returns>A mapped <see cref="T:Acontplus.Core.Domain.Common.Results.DomainError"/> instance.</returns>
         </member>
         <member name="M:Acontplus.Persistence.Common.Exceptions.SqlExceptionExtensions.ToDomainErrors(System.Collections.Generic.IEnumerable{Acontplus.Persistence.Common.Exceptions.SqlDomainException},System.String,System.Collections.Generic.Dictionary{System.String,System.Object})">
             <summary>
@@ -147,12 +542,892 @@
             <param name="commonDetails">Optional common details for all errors</param>
             <returns>DomainErrors containing all converted exceptions</returns>
         </member>
+        <member name="T:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException">
+            <summary>
+            Exception thrown when an error occurs within UnitOfWork operations.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException" /> class.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException" /> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Acontplus.Persistence.Common.Exceptions.UnitOfWorkException" /> class with a specified error message
+            and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.IDbContextFactory`1">
+            <summary>
+            Defines a factory for retrieving named <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/> instances.
+            </summary>
+            <typeparam name="TContext">The database context type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.IDbContextFactory`1.GetContext(System.String)">
+            <summary>
+            Retrieves a database context instance registered under the given name.
+            </summary>
+            <param name="contextName">The unique name of the database context.</param>
+            <returns>The resolved <typeparamref name="TContext"/> instance.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Interceptors.AuditSaveChangesInterceptor">
+            <summary>
+            A singleton EF Core interceptor that populates audit fields (<c>CreatedBy</c>,
+            <c>UpdatedBy</c>, <c>DeletedBy</c> and their UserId counterparts) on every
+            <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
+            </summary>
+            <remarks>
+            Resolves <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
+            safe to use with <c>AddDbContextPool</c> (singleton-compatible).
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Interceptors.AuditSaveChangesInterceptor.#ctor(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory)">
+            <summary>
+            A singleton EF Core interceptor that populates audit fields (<c>CreatedBy</c>,
+            <c>UpdatedBy</c>, <c>DeletedBy</c> and their UserId counterparts) on every
+            <see cref="T:Acontplus.Core.Domain.Common.Entities.BaseEntity"/> before changes are persisted.
+            </summary>
+            <remarks>
+            Resolves <see cref="T:Acontplus.Core.Abstractions.Context.IAuditContext"/> from a fresh DI scope on each save, so it is
+            safe to use with <c>AddDbContextPool</c> (singleton-compatible).
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Interceptors.AuditSaveChangesInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Interceptors.AuditSaveChangesInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Mapping.DataTableNameMapper">
+            <summary>
+            Provides utilities for assigning table names in a <see cref="T:System.Data.DataSet"/> from a stored procedure output parameter.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Mapping.DataTableNameMapper.ProcessTableNames(System.Data.Common.DbCommand,System.Data.DataSet,System.Threading.CancellationToken)">
+            <summary>
+            Assigns table names from the <c>@tableNames</c> or <c>tableNames</c> command parameter to the corresponding tables in the <see cref="T:System.Data.DataSet"/>.
+            </summary>
+            <param name="cmd">The database command containing the table names parameter.</param>
+            <param name="ds">The data set whose tables will be renamed.</param>
+            <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Mapping.DbDataReaderMapper">
+            <summary>
+            Provides extension methods for mapping <see cref="T:System.Data.Common.DbDataReader"/> results to strongly-typed objects.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Mapping.DbDataReaderMapper.ToListAsync``1(System.Data.Common.DbDataReader,System.Threading.CancellationToken)">
+            <summary>
+            Maps a DbDataReader to a List of entities of type T with support for records and init-only properties.
+            </summary>
+            <typeparam name="T">The entity type to map to.</typeparam>
+            <param name="reader">The data reader.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>A list of mapped entities.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Mapping.DbDataReaderMapper.ToList``1(System.Data.Common.DbDataReader)">
+            <summary>
+            Synchronously maps all rows from the data reader to a list of <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The target type to map each row to.</typeparam>
+            <param name="reader">The data reader positioned before the first row.</param>
+            <returns>A list of mapped <typeparamref name="T"/> instances.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Mapping.DbDataReaderMapper.MapToObject``1(System.Data.Common.DbDataReader)">
+            <summary>
+            Maps a single row from a DbDataReader to an object of type T using reflection.
+            </summary>
+            <typeparam name="T">The target class type.</typeparam>
+            <param name="reader">The data reader.</param>
+            <returns>A task that resolves to the mapped object or null.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Repositories.BaseAdoRepository">
+            <summary>
+            Provides provider-agnostic ADO.NET data access operations with retry policy,
+            connection management, and transaction sharing.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger,Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Provides provider-agnostic ADO.NET data access operations with retry policy,
+            connection management, and transaction sharing.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CurrentTransaction">
+            <summary>
+            Gets the current active transaction, if any.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CurrentConnection">
+            <summary>
+            Gets the current active connection, if any.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.Logger">
+            <summary>
+            Gets the logger instance.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ProviderName">
+            <summary>
+            Gets the provider-specific database name for diagnostic logging.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateConnection(System.String)">
+            <summary>
+            Creates a provider-specific <see cref="T:System.Data.Common.DbConnection"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.IsTransientException(System.Exception)">
+            <summary>
+            Determines whether the specified exception represents a transient database error.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.IsProviderException(System.Exception)">
+            <summary>
+            Determines whether the specified exception is a provider-specific database error.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.HandleProviderException(System.Exception,System.String)">
+            <summary>
+            Handles provider-specific database exceptions (maps and rethrows domain exceptions).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateDataAdapter(System.Data.Common.DbCommand)">
+            <summary>
+            Creates a provider-specific <see cref="T:System.Data.Common.DbDataAdapter"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.SanitizeIdentifier(System.String)">
+            <summary>
+            Quotes or escapes an identifier for the specific database engine.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildPagedSql(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Builds the provider-specific paginated SQL query (OFFSET/FETCH or LIMIT/OFFSET).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AddTableNamesOutputParameter(System.Data.Common.DbCommand,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Adds output parameter for table names if requested.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AppendOrderByIfMissing(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Appends the ORDER BY clause to the SQL query if not already present.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.AddTotalCountParameter(System.Data.Common.DbCommand)">
+            <summary>
+            Adds provider-specific output parameter for total count in stored procedures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ReadTotalCountParameter(System.Data.Common.DbCommand)">
+            <summary>
+            Reads provider-specific output parameter value for total count in stored procedures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateStoredProcedureParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds provider-specific stored procedure parameters for pagination.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateStoredProcedureParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds provider-specific stored procedure parameters for filtering.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.RetryPolicy">
+            <summary>
+            Lazy-loaded retry policy based on configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.SetTransaction(System.Data.Common.DbTransaction)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.SetConnection(System.Data.Common.DbConnection)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ClearTransaction">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.QueryAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetDataSetAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExecuteNonQueryAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.QuerySingleOrDefaultAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.QueryFirstOrDefaultAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.QueryAsyncEnumerable``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExecuteScalarAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExistsAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CountAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.LongCountAsync(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetFilteredDataSetAsync(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.QueryMultipleAsync``1(System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExecuteBatchNonQueryAsync(System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExecuteBatchNonQueryAsync(System.Collections.Generic.IEnumerable{System.ValueTuple{System.String,System.Collections.Generic.Dictionary{System.String,System.Object}}},Acontplus.Core.Dtos.Requests.CommandOptionsDto,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BulkInsertAsync``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BulkInsertAsync(System.Data.DataTable,System.String,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ExecuteWithConnectionAsync``1(System.Func{System.Data.Common.DbConnection,System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation using a database connection, handling connection lifecycle and provider exceptions.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetOpenConnectionAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Creates and opens a connection, reusing the current connection if available.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CreateCommand(System.Data.Common.DbConnection,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Creates and configures a <see cref="T:System.Data.Common.DbCommand"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.CloseConnectionSafelyAsync(System.Data.Common.DbConnection)">
+            <summary>
+            Safely closes and disposes the connection if not null.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GetConnectionString(System.String)">
+            <summary>
+            Retrieves the connection string from configuration by name.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildFilterParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds query parameters from FilterRequest using flexible strategy.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildFilterParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds query parameters from PaginationRequest using flexible strategy.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildStoredProcedureParameters(Acontplus.Core.Dtos.Requests.FilterRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds stored procedure parameters from FilterRequest.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildStoredProcedureParameters(Acontplus.Core.Dtos.Requests.PaginationRequest,Acontplus.Core.Dtos.Requests.CommandOptionsDto)">
+            <summary>
+            Builds stored procedure parameters from PaginationRequest.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.PopulateFilters(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.Boolean)">
+            <summary>
+            Populates filter parameters based on dictionary or JSON strategy.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildPaginationMetadata(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Builds pagination metadata for PagedResult.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.BuildFilteredSql(System.String,Acontplus.Core.Dtos.Requests.FilterRequest)">
+            <summary>
+            Builds filtered SQL with ORDER BY clause based on FilterRequest.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.GenerateCountSql(System.String)">
+            <summary>
+            Generates a count query wrapping the original SQL query.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ConvertToDataTable``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Converts an enumerable to a DataTable.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ValidatePagination(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Validates pagination parameters.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseAdoRepository.ValidateAndSanitizeSortColumn(System.String)">
+            <summary>
+            Validates and sanitizes sort column names to prevent SQL injection.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Repositories.BaseDapperRepository">
+            <summary>
+            Base Dapper repository implementation providing common query execution,
+            connection lifecycle management, transaction support, and resilience policies.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger,Microsoft.Extensions.Options.IOptions{Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions})">
+            <summary>
+            Base Dapper repository implementation providing common query execution,
+            connection lifecycle management, transaction support, and resilience policies.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CurrentTransaction">
+            <summary>
+            Gets the active transaction, if any.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.ProviderName">
+            <summary>
+            Gets the provider-specific database name for logging diagnostics.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreateConnection(System.String)">
+            <summary>
+            Creates a provider-specific <see cref="T:System.Data.Common.DbConnection"/>.
+            </summary>
+            <param name="connectionString">The connection string.</param>
+            <returns>A new <see cref="T:System.Data.Common.DbConnection"/> instance.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.IsTransientException(System.Exception)">
+            <summary>
+            Determines whether the specified exception represents a transient database error.
+            </summary>
+            <param name="exception">The caught exception.</param>
+            <returns><c>true</c> if transient; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.SanitizeIdentifier(System.String)">
+            <summary>
+            Sanitizes an identifier with provider-specific quotes or brackets.
+            </summary>
+            <param name="identifier">The identifier name.</param>
+            <returns>The quoted identifier.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.BuildPagedSql(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,Dapper.DynamicParameters)">
+            <summary>
+            Builds the provider-specific paginated SQL query.
+            </summary>
+            <param name="sql">The base SQL query.</param>
+            <param name="orderByClause">The resolved ORDER BY clause.</param>
+            <param name="pagination">The pagination request.</param>
+            <param name="parameters">Dynamic parameters collection to add pagination arguments to.</param>
+            <returns>The combined paginated SQL string.</returns>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.DefaultOrderByClause">
+            <summary>
+            Default ORDER BY clause when none is explicitly requested.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.RetryPolicy">
+            <summary>
+            Lazy-loaded retry policy based on configuration.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.DefaultTimeout">
+            <summary>
+            Gets the default command timeout in seconds from configuration.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.QueryAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.QueryFirstOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.QuerySingleOrDefaultAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.ExecuteAsync(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.ExecuteScalarAsync``1(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.QueryMultipleAsync``2(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.QueryMultipleAsync``3(System.String,System.Object,System.Nullable{System.Int32},System.Nullable{System.Data.CommandType},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetPagedAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetPagedAsync``1(System.String,System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreatePagedStoredProcedureCommand``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Creates provider-specific command definition and total count extractor for stored procedure paging.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetPagedFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.PaginationRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetFilteredAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreateFilteredStoredProcedureCommand(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Creates provider-specific command definition for filtered stored procedure execution.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetFilteredFromStoredProcedureAsync``1(System.String,Acontplus.Core.Dtos.Requests.FilterRequest,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.SetTransaction(System.Data.Common.DbTransaction)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.SetConnection(System.Data.Common.DbConnection)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.ClearTransaction">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetConnectionAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets a connection for the operation. Returns a tuple with the connection and whether it should be disposed.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.ExecuteWithConnectionAsync``1(System.Func{System.Data.Common.DbConnection,System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <summary>
+            Executes an operation with proper connection lifecycle management.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GetConnectionString(System.String)">
+            <summary>
+            Retrieves the connection string from configuration by name.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.BuildDynamicParameters(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Builds dynamic parameters from pagination filter dictionary and search term.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.BuildDynamicParameters(Acontplus.Core.Dtos.Requests.FilterRequest)">
+            <summary>
+            Builds dynamic parameters from filter request dictionary and search term.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.BuildOrderByClause(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Builds the ORDER BY clause for pagination requests.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.BuildOrderByClause(Acontplus.Core.Dtos.Requests.FilterRequest)">
+            <summary>
+            Builds the ORDER BY clause for filter requests.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.GenerateCountQuery(System.String)">
+            <summary>
+            Generates a count query wrapping the original SQL query.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.SafeColumnNameRegex">
+            <remarks>
+            Pattern:<br/>
+            <code>^[a-zA-Z_][a-zA-Z0-9_]*$</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ Match if at the beginning of the string.<br/>
+            ○ Match a character in the set [A-Z_a-z].<br/>
+            ○ Match a character in the set [0-9A-Z_a-z] atomically any number of times.<br/>
+            ○ Match if at the end of the string or if before an ending newline.<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.SanitizeColumnName(System.String)">
+            <summary>
+            Sanitizes the specified column name against injection.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseDapperRepository.CreateCommandDefinition(System.String,Dapper.DynamicParameters,System.Nullable{System.Int32},System.Data.CommandType,System.Threading.CancellationToken)">
+            <summary>
+            Creates a configured <see cref="T:Dapper.CommandDefinition"/> using the current transaction and timeout.
+            </summary>
+        </member>
         <member name="T:Acontplus.Persistence.Common.Repositories.BaseRepository`1">
             <summary>
-                A generic repository implementation for Entity Framework Core, targeting .NET 9+.
+            A generic repository implementation for Entity Framework Core.
             </summary>
-            TEntity: The type of the entity.
-            int: The type of the entity's primary key, must be not null.
+            <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
+            <param name="context">The database context instance.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.#ctor(Microsoft.EntityFrameworkCore.DbContext,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.Common.Repositories.BaseRepository{`0}})">
+            <summary>
+            A generic repository implementation for Entity Framework Core.
+            </summary>
+            <typeparam name="TEntity">The type of the entity, must be a reference type.</typeparam>
+            <param name="context">The database context instance.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="F:Acontplus.Persistence.Common.Repositories.BaseRepository`1._context">
+            <summary>
+            The underlying Entity Framework <see cref="T:Microsoft.EntityFrameworkCore.DbContext"/>.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.Common.Repositories.BaseRepository`1._dbSet">
+            <summary>
+            The <see cref="T:Microsoft.EntityFrameworkCore.DbSet`1"/> for the entity type.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.Common.Repositories.BaseRepository`1._logger">
+            <summary>
+            The optional logger instance.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetByIdOrDefaultAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetByIdsAsync(System.Collections.Generic.IEnumerable{System.Int32},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindSingleOrDefaultAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindSingleAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetFirstOrDefaultAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetAllAsync(System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindAsyncEnumerable(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedProjectionAsync``1(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExistsAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.CountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.LongCountAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetMaxAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetMinAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetSumAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Decimal}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetAverageAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Decimal}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.AddAsync(`0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.AddRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.UpdateAsync(`0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.UpdateRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.UpdatePropertiesAsync(`0,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteAsync(`0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteByIdAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.DeleteRangeAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkDeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BulkUpdateAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,`0}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetFirstOrDefaultWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetPagedWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.FindProjectionWithSpecificationAsync``1(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.CountWithSpecificationAsync(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetQueryable(System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecuteQueryAsync``1(System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{`0},``0}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecuteQueryToListAsync``1(System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{`0},System.Linq.IQueryable{``0}}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecutePagedQueryAsync``1(System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{`0},System.Linq.IQueryable{``0}}},Acontplus.Core.Dtos.Requests.PaginationRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetOrderedAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.ValueTuple{System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.AggregateAsync``1(System.Linq.Expressions.Expression{System.Func{System.Linq.IQueryable{`0},``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetDistinctAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetProjectionAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.GetFirstProjectionOrDefaultAsync``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BuildQuery(System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+            <summary>
+            Builds an entity query with optional tracking and eager loading inclusions.
+            </summary>
+            <param name="tracking">Whether to enable change tracking. Defaults to <see langword="true"/>.</param>
+            <param name="includeProperties">Navigation properties to eagerly load.</param>
+            <returns>An <see cref="T:System.Linq.IQueryable`1"/> query configured with the specified options.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.BuildSpecificationQuery(Acontplus.Core.Abstractions.Persistence.ISpecification{`0},System.Boolean,System.Boolean)">
+            <summary>
+            Builds an entity query based on a domain specification.
+            </summary>
+            <param name="spec">The specification to apply.</param>
+            <param name="ignorePaging">Whether to ignore pagination rules defined in the specification.</param>
+            <param name="ignoreOrdering">Whether to ignore ordering rules defined in the specification.</param>
+            <returns>An <see cref="T:System.Linq.IQueryable`1"/> query filtered by the specification.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ApplyPaging(System.Linq.IQueryable{`0},Acontplus.Core.Abstractions.Persistence.ISpecification{`0})">
+            <summary>
+            Applies pagination parameters from a specification to the query.
+            </summary>
+            <param name="query">The base query.</param>
+            <param name="spec">The specification with paging parameters.</param>
+            <returns>The paginated query.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ApplyOrdering(System.Linq.IQueryable{`0},System.ValueTuple{System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean}[])">
+            <summary>
+            Applies ordering expressions from a specification to the query.
+            </summary>
+            <param name="query">The base query.</param>
+            <param name="orderExpressions">Ordering expressions specifying key selector and direction.</param>
+            <returns>The ordered query.</returns>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ValidatePagination(Acontplus.Core.Dtos.Requests.PaginationRequest)">
+            <summary>
+            Validates pagination parameters to ensure valid page number and page size.
+            </summary>
+            <param name="pagination">The pagination request to validate.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="pagination"/> is null.</exception>
+            <exception cref="T:System.ArgumentException">Thrown when page number or page size is invalid.</exception>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecuteInTransactionAsync``1(System.Func{System.Threading.Tasks.Task{``0}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Repositories.BaseRepository`1.ExecuteInTransactionAsync(System.Func{System.Threading.Tasks.Task},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Resilience.PersistenceResilienceHelper">
+            <summary>
+            Provides factory methods for creating shared resilience policies across persistence repositories.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.Resilience.PersistenceResilienceHelper.CreateRetryPolicy(Acontplus.Persistence.Common.Configuration.PersistenceResilienceOptions,System.Func{System.Exception,System.Boolean},Microsoft.Extensions.Logging.ILogger,System.String,System.String)">
+            <summary>
+            Creates an asynchronous retry policy based on persistence resilience options.
+            </summary>
+            <param name="resilienceOptions">The configured resilience options.</param>
+            <param name="isTransientException">Predicate function to determine if an exception is transient.</param>
+            <param name="logger">Logger for emitting warning logs during retries.</param>
+            <param name="providerName">The database provider name.</param>
+            <param name="repositoryKind">Label for the repository kind, e.g. "ADO" or "Dapper".</param>
+            <returns>An <see cref="T:Polly.Retry.AsyncRetryPolicy"/> configured according to the resilience options.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1">
+            <summary>
+            Coordinates EF Core and ADO.NET operations within a single transactional unit of work.
+            </summary>
+            <typeparam name="TContext">The EF Core database context type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.#ctor(`0,Acontplus.Core.Abstractions.Persistence.IAdoRepository,Microsoft.Extensions.Logging.ILogger{Acontplus.Persistence.Common.UnitOfWork.UnitOfWork{`0}})">
+            <summary>
+            Initializes a new <see cref="T:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1"/>.
+            </summary>
+            <param name="context">The EF Core database context.</param>
+            <param name="adoRepository">The ADO.NET repository for raw database operations.</param>
+            <param name="logger">Optional logger instance.</param>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.CurrentDbTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.CurrentDbConnection">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.AdoRepository">
+            <inheritdoc/>
+        </member>
+        <member name="P:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.HasActiveTransaction">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.GetRepository``1">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.SaveChangesAsync(System.Threading.CancellationToken)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.Dispose(System.Boolean)">
+            <summary>
+            Releases managed and unmanaged resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources.</param>
+        </member>
+        <member name="M:Acontplus.Persistence.Common.UnitOfWork.UnitOfWork`1.DisposeAsyncCore">
+            <summary>
+            Asynchronously releases unmanaged resources.
+            </summary>
+            <returns>A task representing the asynchronous dispose operation.</returns>
+        </member>
+        <member name="T:Acontplus.Persistence.Common.Utilities.DiagnosticConfig">
+            <summary>
+            Provides OpenTelemetry / Activity diagnostic tracing sources for persistence repositories.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Persistence.Common.Utilities.DiagnosticConfig.ActivitySource">
+            <summary>
+            Gets the repository activity source for tracing database operations.
+            </summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the SafeColumnNameRegex method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.SafeColumnNameRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout">
+            <summary>Default timeout value set in <see cref="T:System.AppContext"/>, or <see cref="F:System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> if none was set.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_hasTimeout">
+            <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_asciiWordChars">
+            <summary>Supports searching for characters in or not in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".</summary>
         </member>
     </members>
 </doc>

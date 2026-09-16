@@ -109,7 +109,7 @@ public static class JsonExtensions
     /// <returns>The JSON string representation of the object.</returns>
     public static string SerializeOptimized<T>(this T obj, bool pretty = false)
     {
-        if (obj == null)
+        if (obj is null)
             return "null";
 
         var options = pretty ? PrettyOptions : DefaultOptions;
@@ -143,7 +143,7 @@ public static class JsonExtensions
     /// <returns>A deep clone of the object.</returns>
     public static T CloneDeep<T>(this T obj)
     {
-        if (obj == null)
+        if (obj is null)
             return default!;
 
         var json = JsonSerializer.Serialize(obj, DefaultOptions);

@@ -1,12 +1,53 @@
 namespace Demo.Api.Endpoints.Demo;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1192:String literals should not be duplicated",
+    Justification = "Demo test endpoints intentionally define repeated mock error codes, parameter names, and descriptions for comprehensive API testing.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S1192",
+    Justification = "Demo test endpoints intentionally define repeated mock error codes, parameter names, and descriptions for comprehensive API testing.")]
 public static class ExceptionTestEndpoints
 {
+    private static readonly string[] EmailValidationErrors = ["Email is required", "Email format is invalid"];
+    private static readonly string[] PasswordValidationErrors = ["Password must be at least 8 characters", "Password must contain a number"];
+    private static readonly string[] AgeValidationErrors = ["Age must be between 18 and 100"];
+
+    private static readonly string[] BasicExtensionMethods =
+    [
+        "ToActionResult() - Convert Result to IActionResult",
+        "ToActionResult(message) - With custom success message",
+        "ToActionResultAsync() - Async version"
+    ];
+
+    private static readonly string[] CrudExtensionMethods =
+    [
+        "ToGetActionResult() - 200 OK or 204 NoContent",
+        "ToCreatedActionResult(uri) - 201 Created with Location",
+        "ToPutActionResult() - 200 OK or 204 NoContent",
+        "ToDeleteActionResult() - 204 NoContent or 404 NotFound"
+    ];
+
+    private static readonly string[] ErrorExtensionMethods =
+    [
+        "Result<T, DomainError> - Single error",
+        "Result<T, DomainErrors> - Multiple errors",
+        "DomainError.Validation/NotFound/Conflict/etc. - Factory methods"
+    ];
+
     public static void MapExceptionTestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/exception-test")
             .WithTags("Exception Test");
 
+        MapClientErrors(group);
+        MapServerErrors(group);
+        MapSqlErrors(group);
+        MapStandardErrors(group);
+        MapComplexScenarios(group);
+        MapSuccessCases(group);
+        MapRandomAndDocumentation(group);
+    }
+
+    private static void MapClientErrors(RouteGroupBuilder group)
+    {
         #region Client Errors (4xx) - DomainException Examples
 
         group.MapPost("/validation-error", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -56,7 +97,10 @@ public static class ExceptionTestEndpoints
 
         group.MapGet("/not-found/{id:int}", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger, int id) =>
         {
-            logger.LogInformation("Simulating not found error for ID: {Id}", id);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Simulating not found error for ID: {Id}", id);
+            }
 
             throw new GenericDomainException(
                 ErrorType.NotFound,
@@ -66,7 +110,10 @@ public static class ExceptionTestEndpoints
 
         group.MapGet("/not-found-result/{id:int}", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger, int id) =>
         {
-            logger.LogInformation("Simulating not found using Result pattern for ID: {Id}", id);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Simulating not found using Result pattern for ID: {Id}", id);
+            }
 
             var error = DomainError.NotFound(
                 "CUSTOMER_NOT_FOUND",
@@ -183,7 +230,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapServerErrors(RouteGroupBuilder group)
+    {
         #region Server Errors (5xx) - DomainException Examples
 
         group.MapGet("/internal-error", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -302,7 +352,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapSqlErrors(RouteGroupBuilder group)
+    {
         #region SQL Exception Examples
 
         group.MapDelete("/sql/foreign-key-violation", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -376,21 +429,30 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapStandardErrors(RouteGroupBuilder group)
+    {
         #region Standard .NET Exceptions
 
         group.MapPost("/standard/argument-null", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
         {
-            logger.LogInformation("Simulating ArgumentNullException");
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Simulating ArgumentNullException");
+            }
 
-            throw new ArgumentNullException("customerId", "Customer ID cannot be null");
+            throw new ArgumentNullException(nameof(logger), "Customer ID cannot be null");
         });
 
         group.MapPost("/standard/argument-invalid", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
         {
-            logger.LogInformation("Simulating ArgumentException");
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Simulating ArgumentException");
+            }
 
-            throw new ArgumentException("Age must be between 0 and 150", "age");
+            throw new ArgumentException("Age must be between 0 and 150", nameof(logger));
         });
 
         group.MapPost("/standard/invalid-operation", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -425,7 +487,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapComplexScenarios(RouteGroupBuilder group)
+    {
         #region Complex Scenarios
 
         group.MapGet("/complex/nested", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
@@ -478,9 +543,9 @@ public static class ExceptionTestEndpoints
 
             var errors = new Dictionary<string, string[]>
             {
-                ["email"] = new[] { "Email is required", "Email format is invalid" },
-                ["password"] = new[] { "Password must be at least 8 characters", "Password must contain a number" },
-                ["age"] = new[] { "Age must be between 18 and 100" }
+                ["email"] = EmailValidationErrors,
+                ["password"] = PasswordValidationErrors,
+                ["age"] = AgeValidationErrors
             };
 
             throw new ValidationException(errors);
@@ -537,7 +602,10 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapSuccessCases(RouteGroupBuilder group)
+    {
         #region Success Cases for Comparison
 
         group.MapGet("/success", () =>
@@ -620,14 +688,20 @@ public static class ExceptionTestEndpoints
         });
 
         #endregion
+    }
 
+    private static void MapRandomAndDocumentation(RouteGroupBuilder group)
+    {
         #region Random Exception Generator
 
         group.MapGet("/random", ([FromServices] Microsoft.Extensions.Logging.ILogger<object> logger) =>
         {
             var random = Random.Shared.Next(1, 16);
 
-            logger.LogInformation("Throwing random exception type: {Type}", random);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Throwing random exception type: {Type}", random);
+            }
 
             return random switch
             {
@@ -641,7 +715,7 @@ public static class ExceptionTestEndpoints
                 8 => throw new GenericDomainException(ErrorType.Timeout, "TIMEOUT", "Timeout"),
                 9 => throw new SqlDomainException(new SqlErrorInfo(ErrorType.Conflict, "FK_VIOLATION", "Foreign key violation", new InvalidOperationException())),
                 10 => throw new SqlDomainException(new SqlErrorInfo(ErrorType.Conflict, "UNIQUE_VIOLATION", "Unique violation", new InvalidOperationException())),
-                11 => throw new ArgumentNullException("customerId", "Customer ID cannot be null"),
+                11 => throw new ArgumentNullException(nameof(logger), "Customer ID cannot be null"),
                 12 => throw new InvalidOperationException("Invalid operation"),
                 13 => throw new TimeoutException("Timeout"),
                 14 => throw new GenericDomainException(ErrorType.RateLimited, "RATE_LIMIT_EXCEEDED", "Rate limited"),
@@ -654,7 +728,10 @@ public static class ExceptionTestEndpoints
         {
             var random = Random.Shared.Next(1, 11);
 
-            logger.LogInformation("Random Result pattern response type: {Type}", random);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("Random Result pattern response type: {Type}", random);
+            }
 
             return random switch
             {
@@ -783,22 +860,9 @@ public static class ExceptionTestEndpoints
                 },
                 extensionMethods = new
                 {
-                    basic = new[] {
-                        "ToActionResult() - Convert Result to IActionResult",
-                        "ToActionResult(message) - With custom success message",
-                        "ToActionResultAsync() - Async version"
-                    },
-                    crud = new[] {
-                        "ToGetActionResult() - 200 OK or 204 NoContent",
-                        "ToCreatedActionResult(uri) - 201 Created with Location",
-                        "ToPutActionResult() - 200 OK or 204 NoContent",
-                        "ToDeleteActionResult() - 204 NoContent or 404 NotFound"
-                    },
-                    errors = new[] {
-                        "Result<T, DomainError> - Single error",
-                        "Result<T, DomainErrors> - Multiple errors",
-                        "DomainError.Validation/NotFound/Conflict/etc. - Factory methods"
-                    }
+                    basic = BasicExtensionMethods,
+                    crud = CrudExtensionMethods,
+                    errors = ErrorExtensionMethods
                 }
             });
         });

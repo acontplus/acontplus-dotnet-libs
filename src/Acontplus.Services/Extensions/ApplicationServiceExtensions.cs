@@ -139,15 +139,16 @@ public static class ApplicationServiceExtensions
 }
 
 // Health check implementations for application services
-public class RequestContextHealthCheck : IHealthCheck
+
+/// <summary>
+/// Health check that verifies the availability and operation of the request context service.
+/// </summary>
+/// <param name="requestContextService">The request context service.</param>
+public class RequestContextHealthCheck(IRequestContextService requestContextService) : IHealthCheck
 {
-    private readonly IRequestContextService _requestContextService;
+    private readonly IRequestContextService _requestContextService = requestContextService;
 
-    public RequestContextHealthCheck(IRequestContextService requestContextService)
-    {
-        _requestContextService = requestContextService;
-    }
-
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -189,15 +190,15 @@ public class RequestContextHealthCheck : IHealthCheck
     }
 }
 
-public class SecurityHeaderHealthCheck : IHealthCheck
+/// <summary>
+/// Health check that verifies the availability of the security header service.
+/// </summary>
+/// <param name="securityHeaderService">The security header service.</param>
+public class SecurityHeaderHealthCheck(ISecurityHeaderService securityHeaderService) : IHealthCheck
 {
-    private readonly ISecurityHeaderService _securityHeaderService;
+    private readonly ISecurityHeaderService _securityHeaderService = securityHeaderService;
 
-    public SecurityHeaderHealthCheck(ISecurityHeaderService securityHeaderService)
-    {
-        _securityHeaderService = securityHeaderService;
-    }
-
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -213,15 +214,15 @@ public class SecurityHeaderHealthCheck : IHealthCheck
     }
 }
 
-public class DeviceDetectionHealthCheck : IHealthCheck
+/// <summary>
+/// Health check that verifies the functionality and accuracy of the device detection service.
+/// </summary>
+/// <param name="deviceDetectionService">The device detection service.</param>
+public class DeviceDetectionHealthCheck(IDeviceDetectionService deviceDetectionService) : IHealthCheck
 {
-    private readonly IDeviceDetectionService _deviceDetectionService;
+    private readonly IDeviceDetectionService _deviceDetectionService = deviceDetectionService;
 
-    public DeviceDetectionHealthCheck(IDeviceDetectionService deviceDetectionService)
-    {
-        _deviceDetectionService = deviceDetectionService;
-    }
-
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
@@ -248,7 +249,7 @@ public class DeviceDetectionHealthCheck : IHealthCheck
                     Expected = expectedType.ToString(),
                     Actual = capabilities.Type.ToString(),
                     Passed = testPassed,
-                    Browser = capabilities.Browser,
+                    capabilities.Browser,
                     OS = capabilities.OperatingSystem
                 };
             }

@@ -17,8 +17,19 @@ namespace Acontplus.Billing.Services.Signing;
     Justification = "W3C and ETSI XMLDSIG namespace URIs are protocol specifications mandated by SRI Ecuador XAdES-BES.")]
 [SuppressMessage("SonarQube", "csharpsquid:S4790",
     Justification = "SHA-1 hashing algorithm is strictly required by the SRI Ecuador electronic invoicing XAdES-BES specification.")]
+[SuppressMessage("Security", "S4790:WeakHashingAlgorithms",
+    Justification = "SHA-1 hashing algorithm is strictly required by the SRI Ecuador electronic invoicing XAdES-BES specification.")]
+[SuppressMessage("Security", "S5332:HttpsUrlsShouldBeUsed",
+    Justification = "W3C and ETSI XMLDSIG namespace URIs are protocol specifications mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("Minor Code Smell", "S1075:URIs should not be hardcoded",
+    Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("SonarQube", "S1075",
+    Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
+[SuppressMessage("SonarQube", "csharpsquid:S1075",
+    Justification = "Standard W3C and ETSI XMLDSIG protocol namespaces are mandated by SRI Ecuador XAdES-BES.")]
 public sealed class SriSigner : ISriSigner
 {
+    private const string AlgorithmAttr = "Algorithm";
     private const string DsNs = "http://www.w3.org/2000/09/xmldsig#";
     private const string EtsiNs = "http://uri.etsi.org/01903/v1.3.2#";
     private const string C14N = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315";
@@ -47,11 +58,9 @@ public sealed class SriSigner : ISriSigner
     /// <summary>Performs the synchronous XAdES-BES signing work.</summary>
     private static string SignCore(string xmlUnsigned, string pfxPassword, byte[] pfxBytes)
     {
-        // EphemeralKeySet: key stays in memory, never persisted to disk or Windows key store.
-        // The Exportable flag is intentionally omitted — we only sign and read the public key;
-        // we never export the RSA private key. Omitting it also prevents PBES2/AES-256
-        // PKCS#12 files (used by Huanataca and other modern CAs) from triggering a
-        // key re-wrap operation that can fail on Linux/OpenSSL.
+        // EphemeralKeySet: la clave permanece en memoria sin persistirse en almacenamiento.
+        // No se requiere exportabilidad privada ya que únicamente se firma con la clave pública;
+        // esto evita fallos de re-wrap en entornos Linux y OpenSSL con archivos PBES2/AES-256.
         using var cert = X509CertificateLoader.LoadPkcs12(pfxBytes, pfxPassword,
             X509KeyStorageFlags.EphemeralKeySet);
 
@@ -107,8 +116,8 @@ public sealed class SriSigner : ISriSigner
         // ds:SignedInfo
         var siEl = sigDoc.CreateElement("ds", "SignedInfo", DsNs);
         siEl.SetAttribute("Id", siId);
-        siEl.AppendChild(Elem(sigDoc, "ds", "CanonicalizationMethod", DsNs, "Algorithm", C14N));
-        siEl.AppendChild(Elem(sigDoc, "ds", "SignatureMethod", DsNs, "Algorithm", RsaSha1));
+        siEl.AppendChild(Elem(sigDoc, "ds", "CanonicalizationMethod", DsNs, AlgorithmAttr, C14N));
+        siEl.AppendChild(Elem(sigDoc, "ds", "SignatureMethod", DsNs, AlgorithmAttr, RsaSha1));
 
         // Reference 1: etsi:SignedProperties
         siEl.AppendChild(BuildReference(sigDoc, spRefId, $"#{spId}",
@@ -120,7 +129,7 @@ public sealed class SriSigner : ISriSigner
         // Reference 3: comprobante (enveloped transform)
         var r3 = BuildReference(sigDoc, refId, "#comprobante", null, compDigest);
         var transforms = sigDoc.CreateElement("ds", "Transforms", DsNs);
-        transforms.AppendChild(Elem(sigDoc, "ds", "Transform", DsNs, "Algorithm",
+        transforms.AppendChild(Elem(sigDoc, "ds", "Transform", DsNs, AlgorithmAttr,
             "http://www.w3.org/2000/09/xmldsig#enveloped-signature"));
         r3.InsertBefore(transforms, r3.FirstChild);
         siEl.AppendChild(r3);
@@ -204,10 +213,9 @@ public sealed class SriSigner : ISriSigner
         var ce = d.CreateElement("etsi", "Cert", EtsiNs);
         var cd = d.CreateElement("etsi", "CertDigest", EtsiNs);
         var dm = d.CreateElement("ds", "DigestMethod", DsNs);
-        dm.SetAttribute("Algorithm", Sha1Uri);
+        dm.SetAttribute(AlgorithmAttr, Sha1Uri);
         var dv = d.CreateElement("ds", "DigestValue", DsNs);
-        using (var sha1 = SHA1.Create())
-            dv.InnerText = Convert.ToBase64String(sha1.ComputeHash(cert.RawData));
+        dv.InnerText = Convert.ToBase64String(SHA1.HashData(cert.RawData));
         cd.AppendChild(dm);
         cd.AppendChild(dv);
         ce.AppendChild(cd);
@@ -247,7 +255,7 @@ public sealed class SriSigner : ISriSigner
         r.SetAttribute("URI", uri);
         if (type is not null) r.SetAttribute("Type", type);
         var dm = d.CreateElement("ds", "DigestMethod", DsNs);
-        dm.SetAttribute("Algorithm", Sha1Uri);
+        dm.SetAttribute(AlgorithmAttr, Sha1Uri);
         r.AppendChild(dm);
         var dv = d.CreateElement("ds", "DigestValue", DsNs);
         dv.InnerText = Convert.ToBase64String(digest);
@@ -266,17 +274,11 @@ public sealed class SriSigner : ISriSigner
 
     // ── C14N / digest helpers ────────────────────────────────────────────────
 
-    private static byte[] Sha1C14NDigest(XmlElement el)
-    {
-        using var sha1 = SHA1.Create();
-        return sha1.ComputeHash(C14NBytes(el));
-    }
+    private static byte[] Sha1C14NDigest(XmlElement el) =>
+        SHA1.HashData(C14NBytes(el));
 
-    private static byte[] Sha1C14NDigestDoc(XmlDocument doc)
-    {
-        using var sha1 = SHA1.Create();
-        return sha1.ComputeHash(C14NBytes(doc.DocumentElement!));
-    }
+    private static byte[] Sha1C14NDigestDoc(XmlDocument doc) =>
+        SHA1.HashData(C14NBytes(doc.DocumentElement!));
 
     /// <summary>
     /// Returns the canonical (C14N) byte representation of <paramref name="el"/>.

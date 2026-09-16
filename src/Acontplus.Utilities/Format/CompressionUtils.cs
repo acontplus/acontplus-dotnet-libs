@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Utilities.Format;
+namespace Acontplus.Utilities.Format;
 
 /// <summary>
 /// Provides utility methods for compressing and decompressing data using Deflate and GZip algorithms, and for decompressing DataTable columns.
@@ -35,10 +35,8 @@ public static class CompressionUtils
         using var compressStream = new MemoryStream(data);
         using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
         using var decompressedStream = new MemoryStream();
-        {
-            deflateStream.CopyTo(decompressedStream);
-            return decompressedStream.ToArray();
-        }
+        deflateStream.CopyTo(decompressedStream);
+        return decompressedStream.ToArray();
     }
 
     /// <summary>
@@ -66,18 +64,13 @@ public static class CompressionUtils
     /// <returns>The decompressed byte array.</returns>
     public static byte[] DecompressGZip(byte[] data)
     {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+        ArgumentNullException.ThrowIfNull(data);
 
         using var compressStream = new MemoryStream(data);
         using var gzipStream = new GZipStream(compressStream, CompressionMode.Decompress);
         using var decompressedStream = new MemoryStream();
-        {
-            gzipStream.CopyTo(decompressedStream);
-            return decompressedStream.ToArray();
-        }
+        gzipStream.CopyTo(decompressedStream);
+        return decompressedStream.ToArray();
     }
 
     /// <summary>
@@ -109,10 +102,7 @@ public static class CompressionUtils
     /// <param name="decompressedColumnName">The name of the column to store decompressed strings.</param>
     public static void DecompressColumn(DataTable? table, string compressedColumnName, string decompressedColumnName)
     {
-        if (table == null)
-        {
-            throw new ArgumentNullException(nameof(table));
-        }
+        ArgumentNullException.ThrowIfNull(table);
 
         if (!table.Columns.Contains(compressedColumnName))
         {

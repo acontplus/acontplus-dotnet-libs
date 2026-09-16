@@ -9,22 +9,17 @@ namespace Acontplus.Infrastructure.Messaging;
 /// scalable event-driven architecture. Suitable for horizontal and vertical scaling scenarios.
 /// Thread-safe and optimized for high workload throughput.
 /// </summary>
-public sealed class InMemoryEventBus : IEventBus, IDisposable
+public sealed class InMemoryEventBus(ILogger<InMemoryEventBus> logger) : IEventBus, IDisposable
 {
     private readonly ConcurrentDictionary<Type, Channel<object>> _channels = new();
-    private readonly ILogger<InMemoryEventBus> _logger;
+    private readonly ILogger<InMemoryEventBus> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private bool _disposed;
 
-    /// <summary>
-    /// Initializes a new instance of the InMemoryEventBus.
-    /// </summary>
-    /// <param name="logger">Logger for diagnostic and troubleshooting information.</param>
-    public InMemoryEventBus(ILogger<InMemoryEventBus> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     /// <inheritdoc />
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to notify caller of event publishing failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to notify caller of event publishing failure.")]
     public async Task PublishAsync<T>(T eventData, CancellationToken cancellationToken = default) where T : class
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -35,10 +30,13 @@ public sealed class InMemoryEventBus : IEventBus, IDisposable
             var channel = GetOrCreateChannel<T>();
             await channel.Writer.WriteAsync(eventData, cancellationToken);
 
-            _logger.LogDebug(
-                "Event published: {EventType} at {Timestamp}",
-                typeof(T).Name,
-                DateTime.UtcNow);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "Event published: {EventType} at {Timestamp}",
+                    typeof(T).Name,
+                    DateTime.UtcNow);
+            }
         }
         catch (ChannelClosedException ex)
         {
@@ -61,14 +59,20 @@ public sealed class InMemoryEventBus : IEventBus, IDisposable
         var channel = GetOrCreateChannel<T>();
         var reader = channel.Reader.Cast<T>();
 
-        _logger.LogDebug("Subscriber started for event type: {EventType}", typeof(T).Name);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Subscriber started for event type: {EventType}", typeof(T).Name);
+        }
 
         await foreach (var item in reader.ReadAllAsync(cancellationToken))
         {
             yield return item;
         }
 
-        _logger.LogDebug("Subscriber completed for event type: {EventType}", typeof(T).Name);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Subscriber completed for event type: {EventType}", typeof(T).Name);
+        }
     }
 
     /// <summary>
@@ -88,7 +92,10 @@ public sealed class InMemoryEventBus : IEventBus, IDisposable
                 AllowSynchronousContinuations = false  // Prevent deadlocks
             });
 
-            _logger.LogDebug("Created new channel for event type: {EventType}", typeof(T).Name);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Created new channel for event type: {EventType}", typeof(T).Name);
+            }
             return channel;
         });
     }

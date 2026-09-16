@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace Acontplus.S3Application.Models;
@@ -8,7 +8,6 @@ namespace Acontplus.S3Application.Models;
 /// </summary>
 public sealed class S3ObjectCustom : IDisposable
 {
-    private readonly IConfiguration _configuration;
     private bool _disposed;
 
     /// <summary>
@@ -52,7 +51,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="configuration">The application configuration containing S3 and AWS settings.</param>
     public S3ObjectCustom(IConfiguration configuration)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
 
         // Use unified AWS:S3 configuration with fallback to legacy keys
         BucketName = configuration["AWS:S3:DefaultBucketName"]
@@ -109,18 +108,16 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="contentType">Optional custom MIME type.</param>
     public async Task Initialize(string filePath, IFormFile file, string? s3ObjectKey = null, string? contentType = null)
     {
-        if (file == null) throw new ArgumentNullException(nameof(file));
-        if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
         ThrowIfDisposed();
         var fileExt = Path.GetExtension(file.FileName);
         S3ObjectKey = s3ObjectKey ?? $"{filePath}{Guid.NewGuid()}{fileExt}";
         S3ObjectUrl = $"https://{BucketName}.s3.{Region}.amazonaws.com/{S3ObjectKey}";
         ContentType = contentType ?? file.ContentType;
-        using (var ms = new MemoryStream())
-        {
-            await file.CopyToAsync(ms);
-            Content = ms.ToArray();
-        }
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        Content = ms.ToArray();
     }
 
     /// <summary>
@@ -129,7 +126,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="s3ObjectKey">The S3 object key (path/filename).</param>
     public void Initialize(string s3ObjectKey)
     {
-        if (string.IsNullOrEmpty(s3ObjectKey)) throw new ArgumentNullException(nameof(s3ObjectKey));
+        ArgumentException.ThrowIfNullOrEmpty(s3ObjectKey);
         ThrowIfDisposed();
         S3ObjectKey = s3ObjectKey;
         S3ObjectUrl = $"https://{BucketName}.s3.{Region}.amazonaws.com/{S3ObjectKey}";
@@ -142,7 +139,7 @@ public sealed class S3ObjectCustom : IDisposable
     /// <param name="contentType">Optional MIME type.</param>
     public void SetContent(byte[] content, string? contentType = null)
     {
-        if (content == null) throw new ArgumentNullException(nameof(content));
+        ArgumentNullException.ThrowIfNull(content);
         ThrowIfDisposed();
         Content = content;
         if (contentType != null)
@@ -174,10 +171,8 @@ public sealed class S3ObjectCustom : IDisposable
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        if (_disposed) throw new ObjectDisposedException(nameof(S3ObjectCustom));
-    }
+    private void ThrowIfDisposed() =>
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
     /// <summary>
     /// Finalizer to ensure resources are released.

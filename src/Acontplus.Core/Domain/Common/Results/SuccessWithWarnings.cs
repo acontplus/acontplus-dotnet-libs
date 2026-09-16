@@ -60,8 +60,6 @@ public class SuccessWithWarnings<T>
     /// Converts the result to a string representation
     /// </summary>
     /// <returns>String representation</returns>
-    public override string ToString()
-    {
-        return $"Success: {Value}, Warnings: {Warnings.Warnings.Count}";
-    }
+    public override string ToString() =>
+        $"Success: {Value}, Warnings: {Warnings.Warnings.Count}";
 }

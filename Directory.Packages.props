@@ -15,20 +15,21 @@
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="11.0.2" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
-    <PackageVersion Include="AWSSDK.Core" Version="4.0.102.5" />
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.103.2" />
+    <PackageVersion Include="AWSSDK.Core" Version="4.0.102.6" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.103.3" />
     <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.104.2" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="Dapper" Version="2.1.86" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Elastic.Serilog.Sinks" Version="9.0.0" />
-    <PackageVersion Include="MailKit" Version="4.17.0" />
+    <PackageVersion Include="MailKit" Version="4.18.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
@@ -47,8 +48,8 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.18.0" />
-    <PackageVersion Include="Polly" Version="8.7.0" />
-    <PackageVersion Include="QuestPDF" Version="2026.8.0" />
+    <PackageVersion Include="Polly" Version="8.8.0" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.12" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="5.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.0.0" />

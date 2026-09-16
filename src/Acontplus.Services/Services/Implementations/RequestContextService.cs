@@ -3,61 +3,65 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of request context service using HTTP context accessor.
 /// </summary>
-public class RequestContextService : IRequestContextService
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
+/// <param name="logger">The logger instance.</param>
+public class RequestContextService(
+    IHttpContextAccessor httpContextAccessor,
+    ILogger<RequestContextService> logger) : IRequestContextService
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ILogger<RequestContextService> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    private readonly ILogger<RequestContextService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public RequestContextService(
-        IHttpContextAccessor httpContextAccessor,
-        ILogger<RequestContextService> logger)
-    {
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    /// <inheritdoc />
     public string GetRequestId()
     {
         var context = GetHttpContext();
         return context.GetRequestId() ?? context.TraceIdentifier;
     }
 
+    /// <inheritdoc />
     public string GetCorrelationId()
     {
         var context = GetHttpContext();
         return context.GetCorrelationId() ?? GetRequestId();
     }
 
+    /// <inheritdoc />
     public string? GetTenantId()
     {
         var context = GetHttpContext();
         return context.GetTenantId();
     }
 
+    /// <inheritdoc />
     public string? GetClientId()
     {
         var context = GetHttpContext();
         return context.GetClientId();
     }
 
+    /// <inheritdoc />
     public string? GetIssuer()
     {
         var context = GetHttpContext();
         return context.GetIssuer();
     }
 
+    /// <inheritdoc />
     public DeviceType GetDeviceType()
     {
         var context = GetHttpContext();
         return context.GetDeviceType() ?? DeviceType.Unknown;
     }
 
+    /// <inheritdoc />
     public bool IsMobileRequest()
     {
         var context = GetHttpContext();
         return context.GetIsMobileRequest() ?? false;
     }
 
+    /// <inheritdoc />
     public Dictionary<string, object?> GetRequestContext()
     {
         var context = GetHttpContext();

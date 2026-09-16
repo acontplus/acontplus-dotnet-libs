@@ -7,22 +7,19 @@ namespace Demo.Infrastructure.EventHandlers;
 /// Background service that orchestrates order workflow by listening to multiple event types.
 /// Infrastructure layer - implements workflow automation.
 /// </summary>
-public class OrderWorkflowHandler : BackgroundService
+public class OrderWorkflowHandler(
+    IEventSubscriber eventSubscriber,
+    IEventPublisher eventPublisher,
+    ILogger<OrderWorkflowHandler> logger) : BackgroundService
 {
-    private readonly IEventSubscriber _eventSubscriber;
-    private readonly IEventPublisher _eventPublisher;
-    private readonly ILogger<OrderWorkflowHandler> _logger;
+    private readonly IEventPublisher _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
+    private readonly IEventSubscriber _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
+    private readonly ILogger<OrderWorkflowHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public OrderWorkflowHandler(
-        IEventSubscriber eventSubscriber,
-        IEventPublisher eventPublisher,
-        ILogger<OrderWorkflowHandler> logger)
-    {
-        _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
-        _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to notify host of service failure.")]
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("OrderWorkflowHandler started.");
@@ -38,9 +35,9 @@ public class OrderWorkflowHandler : BackgroundService
         {
             await Task.WhenAll(tasks);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogInformation("OrderWorkflowHandler is stopping.");
+            _logger.LogInformation(ex, "OrderWorkflowHandler is stopping.");
         }
         catch (Exception ex)
         {
@@ -53,9 +50,13 @@ public class OrderWorkflowHandler : BackgroundService
     {
         await foreach (var orderEvent in _eventSubscriber.SubscribeAsync<OrderCreatedEvent>(stoppingToken))
         {
-            _logger.LogInformation(
-                "🔄 Auto-processing Order {OrderId} - triggering processing workflow",
-                orderEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "🔄 Auto-processing Order {OrderId} for {CustomerName} - triggering processing workflow",
+                    orderEvent.OrderId,
+                    orderEvent.CustomerName);
+            }
 
             // Simulate order processing logic
             await Task.Delay(200, stoppingToken);
@@ -66,9 +67,12 @@ public class OrderWorkflowHandler : BackgroundService
                 DateTime.UtcNow,
                 "AutomatedSystem"), stoppingToken);
 
-            _logger.LogInformation(
-                "✅ Order {OrderId} processed and event published",
-                orderEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "✅ Order {OrderId} processed and event published",
+                    orderEvent.OrderId);
+            }
         }
     }
 
@@ -76,9 +80,13 @@ public class OrderWorkflowHandler : BackgroundService
     {
         await foreach (var processedEvent in _eventSubscriber.SubscribeAsync<OrderProcessedEvent>(stoppingToken))
         {
-            _logger.LogInformation(
-                "📦 Preparing shipment for Order {OrderId}",
-                processedEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "📦 Preparing shipment for Order {OrderId} processed by {ProcessedBy}",
+                    processedEvent.OrderId,
+                    processedEvent.ProcessedBy);
+            }
 
             // Simulate shipping preparation
             await Task.Delay(150, stoppingToken);
@@ -89,9 +97,12 @@ public class OrderWorkflowHandler : BackgroundService
                 DateTime.UtcNow,
                 $"TRACK-{processedEvent.OrderId:D10}"), stoppingToken);
 
-            _logger.LogInformation(
-                "🚚 Order {OrderId} shipped successfully",
-                processedEvent.OrderId);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "🚚 Order {OrderId} shipped successfully",
+                    processedEvent.OrderId);
+            }
         }
     }
 }

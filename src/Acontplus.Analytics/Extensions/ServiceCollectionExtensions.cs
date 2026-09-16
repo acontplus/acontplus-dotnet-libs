@@ -21,7 +21,9 @@ public static class ServiceCollectionExtensions
     /// <param name="aggregatedSpName">Aggregated stored procedure name</param>
     /// <param name="trendsSpName">Trends stored procedure name</param>
     /// <returns>Service collection for chaining</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2436",
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2436:Types and methods should not have too many generic parameters",
+        Justification = "Generic statistics registration requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2436",
         Justification = "Generic statistics registration requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
     public static IServiceCollection AddStatisticsService<TDashboard, TRealTime, TAggregated, TTrend>(
         this IServiceCollection services,
@@ -62,7 +64,9 @@ public static class ServiceCollectionExtensions
     /// services.AddStatisticsService&lt;DashboardDto, RealTimeDto, AggregatedDto, TrendDto&gt;("Restaurant.Statistics");
     /// // Creates SPs: Restaurant.StatisticsGetDashboard, Restaurant.StatisticsGetRealTime, etc.
     /// </example>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2436",
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2436:Types and methods should not have too many generic parameters",
+        Justification = "Generic statistics registration requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2436",
         Justification = "Generic statistics registration requires distinct type parameters for dashboard, real-time, aggregated, and trend models.")]
     public static IServiceCollection AddStatisticsService<TDashboard, TRealTime, TAggregated, TTrend>(
         this IServiceCollection services,

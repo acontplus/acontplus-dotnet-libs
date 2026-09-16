@@ -8,7 +8,7 @@ public class ReportService(IAdoRepository adoRepository) : IReportService
         return await adoRepository.GetDataSetAsync("Reporte.Report_Get", parameters);
     }
 
-    public async Task<DataSet> GetDataAsync(string spname, Dictionary<string, object> parameters, bool withTableNames)
+    public async Task<DataSet> GetDataAsync(string spname, Dictionary<string, object> parameters, bool withTableNames = false)
     {
         var options = new CommandOptionsDto
         {

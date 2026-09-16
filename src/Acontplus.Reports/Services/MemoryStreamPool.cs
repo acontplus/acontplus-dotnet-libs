@@ -18,12 +18,15 @@ internal class MemoryStreamPool : IDisposable
     /// <summary>
     /// Gets a pooled MemoryStream
     /// </summary>
-    public PooledMemoryStream GetStream()
-    {
-        return new PooledMemoryStream(_arrayPool);
-    }
+    public PooledMemoryStream GetStream() => new(_arrayPool);
 
     public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
     {
         if (!_disposed)
         {

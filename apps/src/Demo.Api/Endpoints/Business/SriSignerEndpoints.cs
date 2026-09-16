@@ -66,18 +66,24 @@ public static class SriSignerEndpoints
             string xmlUnsigned = Encoding.UTF8.GetString(xmlStream.ToArray());
             byte[] pfxBytes = pfxStream.ToArray();
 
-            logger.LogInformation(
-                "Signing comprobante. ClaveAcceso={ClaveAcceso}, XmlSize={XmlSize}B, PfxSize={PfxSize}B",
-                claveAcceso, xmlStream.Length, pfxStream.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Signing comprobante. ClaveAcceso={ClaveAcceso}, XmlSize={XmlSize}B, PfxSize={PfxSize}B",
+                    claveAcceso, xmlStream.Length, pfxStream.Length);
+            }
 
             string xmlSigned = await signer.SignAsync(xmlUnsigned, pfxPassword, pfxBytes, claveAcceso, ct);
 
             var signedBytes = Encoding.UTF8.GetBytes(xmlSigned);
             var fileName = $"signed_{claveAcceso}.xml";
 
-            logger.LogInformation(
-                "Comprobante signed successfully. ClaveAcceso={ClaveAcceso}, SignedSize={Size}B",
-                claveAcceso, signedBytes.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Comprobante signed successfully. ClaveAcceso={ClaveAcceso}, SignedSize={Size}B",
+                    claveAcceso, signedBytes.Length);
+            }
 
             return Results.File(signedBytes, "text/xml", fileName);
         }

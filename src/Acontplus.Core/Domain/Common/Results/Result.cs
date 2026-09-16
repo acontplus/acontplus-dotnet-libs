@@ -16,7 +16,7 @@ public readonly record struct Result<TValue, TError>
     private readonly bool _initialized;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Result(TValue value, string? successMessage = null)
+    private Result(TValue value, string? successMessage)
     {
         _value = value;
         _error = default;
@@ -35,6 +35,8 @@ public readonly record struct Result<TValue, TError>
         _initialized = true;
     }
 
+    private const string UninitializedResultMessage = "Uninitialized Result (default struct).";
+
     public bool IsSuccess => _isSuccess;
     public bool IsFailure => !_isSuccess;
 
@@ -43,9 +45,17 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _value! : throw new InvalidOperationException("Cannot access Value on a failed result.");
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (!_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Value on a failed result.");
+            }
+
+            return _value!;
         }
     }
 
@@ -54,9 +64,17 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? throw new InvalidOperationException("Cannot access Error on a successful result.") : _error!;
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Error on a successful result.");
+            }
+
+            return _error!;
         }
     }
 
@@ -65,14 +83,17 @@ public readonly record struct Result<TValue, TError>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _successMessage : null;
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            return _isSuccess ? _successMessage : null;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TValue, TError> Success(TValue value) => new(value);
+    public static Result<TValue, TError> Success(TValue value) => new(value, null);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Result<TValue, TError> Success(TValue value, string? successMessage) => new(value, successMessage);
@@ -86,46 +107,31 @@ public readonly record struct Result<TValue, TError>
     /// Maps the value of a successful result to a new type.
     /// </summary>
     public Result<TNewValue, TError> Map<TNewValue>(Func<TValue, TNewValue> mapper)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? Result<TNewValue, TError>.Success(mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? Result<TNewValue, TError>.Success(mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously maps the value of a successful result to a new type.
     /// </summary>
     public async Task<Result<TNewValue, TError>> MapAsync<TNewValue>(Func<TValue, Task<TNewValue>> mapper)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously maps the value using ValueTask to reduce allocations.
     /// </summary>
     public async ValueTask<Result<TNewValue, TError>> MapAsync<TNewValue>(Func<TValue, ValueTask<TNewValue>> mapper)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously maps the value with CancellationToken.
     /// </summary>
     public async Task<Result<TNewValue, TError>> MapAsync<TNewValue>(Func<TValue, CancellationToken, Task<TNewValue>> mapper, CancellationToken cancellationToken)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!, cancellationToken), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? Result<TNewValue, TError>.Success(await mapper(_value!, cancellationToken), _successMessage) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Maps the error of a failed result to a new error type.
     /// </summary>
     public Result<TValue, TNewError> MapError<TNewError>(Func<TError, TNewError> mapper)
-        where TNewError : notnull
-    {
-        return _isSuccess ? Result<TValue, TNewError>.Success(_value!) : Result<TValue, TNewError>.Failure(mapper(_error!));
-    }
+        where TNewError : notnull => _isSuccess ? Result<TValue, TNewError>.Success(_value!) : Result<TValue, TNewError>.Failure(mapper(_error!));
 
     /// <summary>
     /// Maps both success and failure cases to new types.
@@ -146,37 +152,25 @@ public readonly record struct Result<TValue, TError>
     /// This is the core method for chaining operations that can fail.
     /// </summary>
     public Result<TNewValue, TError> Bind<TNewValue>(Func<TValue, Result<TNewValue, TError>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously binds the result with a function that returns another Result.
     /// </summary>
     public async Task<Result<TNewValue, TError>> BindAsync<TNewValue>(Func<TValue, Task<Result<TNewValue, TError>>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously binds using ValueTask to reduce allocations.
     /// </summary>
     public async ValueTask<Result<TNewValue, TError>> BindAsync<TNewValue>(Func<TValue, ValueTask<Result<TNewValue, TError>>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Asynchronously binds with CancellationToken.
     /// </summary>
     public async Task<Result<TNewValue, TError>> BindAsync<TNewValue>(Func<TValue, CancellationToken, Task<Result<TNewValue, TError>>> binder, CancellationToken cancellationToken)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!, cancellationToken) : Result<TNewValue, TError>.Failure(_error!);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!, cancellationToken) : Result<TNewValue, TError>.Failure(_error!);
 
     /// <summary>
     /// Applies a Result-wrapped function to a Result-wrapped value (Applicative pattern).
@@ -184,11 +178,17 @@ public readonly record struct Result<TValue, TError>
     public Result<TNewValue, TError> Apply<TNewValue>(Result<Func<TValue, TNewValue>, TError> functionResult)
         where TNewValue : notnull
     {
-        return functionResult.IsSuccess && _isSuccess
-            ? Result<TNewValue, TError>.Success(functionResult.Value(_value!))
-            : functionResult.IsFailure
-                ? Result<TNewValue, TError>.Failure(functionResult.Error)
-                : Result<TNewValue, TError>.Failure(_error!);
+        if (functionResult.IsFailure)
+        {
+            return Result<TNewValue, TError>.Failure(functionResult.Error);
+        }
+
+        if (IsFailure)
+        {
+            return Result<TNewValue, TError>.Failure(_error!);
+        }
+
+        return Result<TNewValue, TError>.Success(functionResult.Value(_value!));
     }
 
     /// <summary>
@@ -196,11 +196,12 @@ public readonly record struct Result<TValue, TError>
     /// </summary>
     public Result<TValue, TError> Filter(Func<TValue, bool> predicate, TError errorOnFalse)
     {
-        return _isSuccess && predicate(_value!)
-            ? this
-            : _isSuccess
-                ? Result<TValue, TError>.Failure(errorOnFalse)
-                : this;
+        if (_isSuccess && !predicate(_value!))
+        {
+            return Result<TValue, TError>.Failure(errorOnFalse);
+        }
+
+        return this;
     }
 
     /// <summary>
@@ -208,52 +209,38 @@ public readonly record struct Result<TValue, TError>
     /// </summary>
     public Result<TValue, TError> Filter(Func<TValue, bool> predicate, Func<TValue, TError> errorFactory)
     {
-        return _isSuccess && predicate(_value!)
-            ? this
-            : _isSuccess
-                ? Result<TValue, TError>.Failure(errorFactory(_value!))
-                : this;
+        if (_isSuccess && !predicate(_value!))
+        {
+            return Result<TValue, TError>.Failure(errorFactory(_value!));
+        }
+
+        return this;
     }
 
     /// <summary>
     /// Returns the current result if successful, otherwise returns the alternative result.
     /// </summary>
-    public Result<TValue, TError> Or(Result<TValue, TError> alternative)
-    {
-        return _isSuccess ? this : alternative;
-    }
+    public Result<TValue, TError> Or(Result<TValue, TError> alternative) => _isSuccess ? this : alternative;
 
     /// <summary>
     /// Returns the current result if successful, otherwise returns the result from the alternative function.
     /// </summary>
-    public Result<TValue, TError> Or(Func<TError, Result<TValue, TError>> alternativeFactory)
-    {
-        return _isSuccess ? this : alternativeFactory(_error!);
-    }
+    public Result<TValue, TError> Or(Func<TError, Result<TValue, TError>> alternativeFactory) => _isSuccess ? this : alternativeFactory(_error!);
 
     /// <summary>
     /// Recovers from a failure by providing a fallback value.
     /// </summary>
-    public Result<TValue, TError> Recover(TValue fallbackValue)
-    {
-        return _isSuccess ? this : Result<TValue, TError>.Success(fallbackValue);
-    }
+    public Result<TValue, TError> Recover(TValue fallbackValue) => _isSuccess ? this : Result<TValue, TError>.Success(fallbackValue);
 
     /// <summary>
     /// Recovers from a failure by using a function to provide a fallback value.
     /// </summary>
-    public Result<TValue, TError> Recover(Func<TError, TValue> fallbackFactory)
-    {
-        return _isSuccess ? this : Result<TValue, TError>.Success(fallbackFactory(_error!));
-    }
+    public Result<TValue, TError> Recover(Func<TError, TValue> fallbackFactory) => _isSuccess ? this : Result<TValue, TError>.Success(fallbackFactory(_error!));
 
     /// <summary>
     /// Recovers from a failure by using a function that returns a Result.
     /// </summary>
-    public Result<TValue, TError> RecoverWith(Func<TError, Result<TValue, TError>> recoveryFactory)
-    {
-        return _isSuccess ? this : recoveryFactory(_error!);
-    }
+    public Result<TValue, TError> RecoverWith(Func<TError, Result<TValue, TError>> recoveryFactory) => _isSuccess ? this : recoveryFactory(_error!);
 
     /// <summary>
     /// Taps into the success value without changing the result (for side effects).
@@ -319,25 +306,9 @@ public readonly record struct Result<TValue, TError>
 
     #region Pattern Matching Methods
 
-    public TValue Match(Func<TValue, TValue> success, Func<TError, TValue> failure)
-    {
-        return _isSuccess ? success(_value!) : failure(_error!);
-    }
+    public TValue Match(Func<TValue, TValue> success, Func<TError, TValue> failure) => _isSuccess ? success(_value!) : failure(_error!);
 
-    public T Match<T>(Func<TValue, T> success, Func<TError, T> failure)
-    {
-        return _isSuccess ? success(_value!) : failure(_error!);
-    }
-
-    public async Task<T> MatchAsync<T>(Func<TValue, Task<T>> success, Func<TError, Task<T>> failure)
-    {
-        return _isSuccess ? await success(_value!) : await failure(_error!);
-    }
-
-    public async ValueTask<T> MatchAsync<T>(Func<TValue, ValueTask<T>> success, Func<TError, ValueTask<T>> failure)
-    {
-        return _isSuccess ? await success(_value!) : await failure(_error!);
-    }
+    public T Match<T>(Func<TValue, T> success, Func<TError, T> failure) => _isSuccess ? success(_value!) : failure(_error!);
 
     public void Match(Action<TValue> success, Action<TError> failure)
     {
@@ -346,6 +317,10 @@ public readonly record struct Result<TValue, TError>
         else
             failure(_error!);
     }
+
+    public async Task<T> MatchAsync<T>(Func<TValue, Task<T>> success, Func<TError, Task<T>> failure) => _isSuccess ? await success(_value!) : await failure(_error!);
+
+    public async ValueTask<T> MatchAsync<T>(Func<TValue, ValueTask<T>> success, Func<TError, ValueTask<T>> failure) => _isSuccess ? await success(_value!) : await failure(_error!);
 
     public async Task MatchAsync(Func<TValue, Task> success, Func<TError, Task> failure)
     {
@@ -367,47 +342,17 @@ public readonly record struct Result<TValue, TError>
 
     #region Side Effect Methods (Backwards Compatibility)
 
-    public Result<TValue, TError> OnSuccess(Action<TValue> action)
-    {
-        if (_isSuccess)
-            action(_value!);
-        return this;
-    }
+    public Result<TValue, TError> OnSuccess(Action<TValue> action) => Tap(action);
 
-    public Result<TValue, TError> OnFailure(Action<TError> action)
-    {
-        if (!_isSuccess)
-            action(_error!);
-        return this;
-    }
+    public Result<TValue, TError> OnFailure(Action<TError> action) => TapError(action);
 
-    public async Task<Result<TValue, TError>> OnSuccessAsync(Func<TValue, Task> action)
-    {
-        if (_isSuccess)
-            await action(_value!);
-        return this;
-    }
+    public Task<Result<TValue, TError>> OnSuccessAsync(Func<TValue, Task> action) => TapAsync(action);
 
-    public async ValueTask<Result<TValue, TError>> OnSuccessAsync(Func<TValue, ValueTask> action)
-    {
-        if (_isSuccess)
-            await action(_value!);
-        return this;
-    }
+    public ValueTask<Result<TValue, TError>> OnSuccessAsync(Func<TValue, ValueTask> action) => TapAsync(action);
 
-    public async Task<Result<TValue, TError>> OnFailureAsync(Func<TError, Task> action)
-    {
-        if (!_isSuccess)
-            await action(_error!);
-        return this;
-    }
+    public Task<Result<TValue, TError>> OnFailureAsync(Func<TError, Task> action) => TapErrorAsync(action);
 
-    public async ValueTask<Result<TValue, TError>> OnFailureAsync(Func<TError, ValueTask> action)
-    {
-        if (!_isSuccess)
-            await action(_error!);
-        return this;
-    }
+    public ValueTask<Result<TValue, TError>> OnFailureAsync(Func<TError, ValueTask> action) => TapErrorAsync(action);
 
     #endregion
 
@@ -416,18 +361,12 @@ public readonly record struct Result<TValue, TError>
     /// <summary>
     /// Gets the value if successful, otherwise returns the default value.
     /// </summary>
-    public TValue GetValueOrDefault(TValue defaultValue = default!)
-    {
-        return _isSuccess ? _value! : defaultValue;
-    }
+    public TValue GetValueOrDefault(TValue defaultValue = default!) => _isSuccess ? _value! : defaultValue;
 
     /// <summary>
     /// Gets the value if successful, otherwise returns the result of the factory function.
     /// </summary>
-    public TValue GetValueOrDefault(Func<TError, TValue> defaultFactory)
-    {
-        return _isSuccess ? _value! : defaultFactory(_error!);
-    }
+    public TValue GetValueOrDefault(Func<TError, TValue> defaultFactory) => _isSuccess ? _value! : defaultFactory(_error!);
 
     /// <summary>
     /// Tries to get the success value.
@@ -462,11 +401,17 @@ public readonly record struct Result<TValue, TError>
     /// </summary>
     public TValue ThrowOnFailure()
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw new InvalidOperationException($"Result failed with error: {_error}");
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw new InvalidOperationException($"Result failed with error: {_error}");
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -475,11 +420,17 @@ public readonly record struct Result<TValue, TError>
     public TValue ThrowOnFailure<TException>(Func<TError, TException> exceptionFactory)
         where TException : Exception
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw exceptionFactory(_error!);
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw exceptionFactory(_error!);
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -523,6 +474,8 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         _initialized = true;
     }
 
+    private const string UninitializedResultMessage = "Uninitialized Result (default struct).";
+
     public bool IsSuccess => _isSuccess;
     public bool IsFailure => !_isSuccess;
 
@@ -531,9 +484,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : _isSuccess ? _value! : throw new InvalidOperationException("Cannot access Value on a failed result.");
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (!_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Value on a failed result.");
+            }
+
+            return _value!;
         }
     }
 
@@ -542,9 +503,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            return !_initialized
-                ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-                : (DomainError)(_isSuccess ? throw new InvalidOperationException("Cannot access Error on a successful result.") : _error!);
+            if (!_initialized)
+            {
+                throw new InvalidOperationException(UninitializedResultMessage);
+            }
+
+            if (_isSuccess)
+            {
+                throw new InvalidOperationException("Cannot access Error on a successful result.");
+            }
+
+            return _error!.Value;
         }
     }
 
@@ -631,37 +600,25 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// This is the core method for chaining operations that can fail.
     /// </summary>
     public Result<TNewValue> Bind<TNewValue>(Func<TValue, Result<TNewValue>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
-    }
+        where TNewValue : notnull => _isSuccess ? binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
 
     /// <summary>
     /// Asynchronously binds the result with a function that returns another Result.
     /// </summary>
     public async Task<Result<TNewValue>> BindAsync<TNewValue>(Func<TValue, Task<Result<TNewValue>>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
 
     /// <summary>
     /// Asynchronously binds using ValueTask.
     /// </summary>
     public async ValueTask<Result<TNewValue>> BindAsync<TNewValue>(Func<TValue, ValueTask<Result<TNewValue>>> binder)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!) : Result<TNewValue>.Failure(_error!.Value);
 
     /// <summary>
     /// Asynchronously binds with CancellationToken.
     /// </summary>
     public async Task<Result<TNewValue>> BindAsync<TNewValue>(Func<TValue, CancellationToken, Task<Result<TNewValue>>> binder, CancellationToken cancellationToken)
-        where TNewValue : notnull
-    {
-        return _isSuccess ? await binder(_value!, cancellationToken) : Result<TNewValue>.Failure(_error!.Value);
-    }
+        where TNewValue : notnull => _isSuccess ? await binder(_value!, cancellationToken) : Result<TNewValue>.Failure(_error!.Value);
 
     /// <summary>
     /// Applies a Result-wrapped function to a Result-wrapped value (Applicative pattern).
@@ -669,11 +626,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     public Result<TNewValue> Apply<TNewValue>(Result<Func<TValue, TNewValue>> functionResult)
         where TNewValue : notnull
     {
-        return functionResult.IsSuccess && _isSuccess
-            ? Result<TNewValue>.Success(functionResult.Value(_value!))
-            : functionResult.IsFailure
-                ? Result<TNewValue>.Failure(functionResult.Error)
-                : Result<TNewValue>.Failure(_error!.Value);
+        if (functionResult.IsFailure)
+        {
+            return Result<TNewValue>.Failure(functionResult.Error);
+        }
+
+        if (IsFailure)
+        {
+            return Result<TNewValue>.Failure(_error!.Value);
+        }
+
+        return Result<TNewValue>.Success(functionResult.Value(_value!));
     }
 
     /// <summary>
@@ -681,11 +644,12 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// </summary>
     public Result<TValue> Filter(Func<TValue, bool> predicate, DomainError errorOnFalse)
     {
-        return _isSuccess && predicate(_value!)
-            ? this
-            : _isSuccess
-                ? Result<TValue>.Failure(errorOnFalse)
-                : this;
+        if (_isSuccess && !predicate(_value!))
+        {
+            return Result<TValue>.Failure(errorOnFalse);
+        }
+
+        return this;
     }
 
     /// <summary>
@@ -693,52 +657,38 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// </summary>
     public Result<TValue> Filter(Func<TValue, bool> predicate, Func<TValue, DomainError> errorFactory)
     {
-        return _isSuccess && predicate(_value!)
-            ? this
-            : _isSuccess
-                ? Result<TValue>.Failure(errorFactory(_value!))
-                : this;
+        if (_isSuccess && !predicate(_value!))
+        {
+            return Result<TValue>.Failure(errorFactory(_value!));
+        }
+
+        return this;
     }
 
     /// <summary>
     /// Returns the current result if successful, otherwise returns the alternative result.
     /// </summary>
-    public Result<TValue> Or(Result<TValue> alternative)
-    {
-        return _isSuccess ? this : alternative;
-    }
+    public Result<TValue> Or(Result<TValue> alternative) => _isSuccess ? this : alternative;
 
     /// <summary>
     /// Returns the current result if successful, otherwise returns the result from the alternative function.
     /// </summary>
-    public Result<TValue> Or(Func<DomainError, Result<TValue>> alternativeFactory)
-    {
-        return _isSuccess ? this : alternativeFactory(_error!.Value);
-    }
+    public Result<TValue> Or(Func<DomainError, Result<TValue>> alternativeFactory) => _isSuccess ? this : alternativeFactory(_error!.Value);
 
     /// <summary>
     /// Recovers from a failure by providing a fallback value.
     /// </summary>
-    public Result<TValue> Recover(TValue fallbackValue)
-    {
-        return _isSuccess ? this : Result<TValue>.Success(fallbackValue);
-    }
+    public Result<TValue> Recover(TValue fallbackValue) => _isSuccess ? this : Result<TValue>.Success(fallbackValue);
 
     /// <summary>
     /// Recovers from a failure by using a function to provide a fallback value.
     /// </summary>
-    public Result<TValue> Recover(Func<DomainError, TValue> fallbackFactory)
-    {
-        return _isSuccess ? this : Result<TValue>.Success(fallbackFactory(_error!.Value));
-    }
+    public Result<TValue> Recover(Func<DomainError, TValue> fallbackFactory) => _isSuccess ? this : Result<TValue>.Success(fallbackFactory(_error!.Value));
 
     /// <summary>
     /// Recovers from a failure by using a function that returns a Result.
     /// </summary>
-    public Result<TValue> RecoverWith(Func<DomainError, Result<TValue>> recoveryFactory)
-    {
-        return _isSuccess ? this : recoveryFactory(_error!.Value);
-    }
+    public Result<TValue> RecoverWith(Func<DomainError, Result<TValue>> recoveryFactory) => _isSuccess ? this : recoveryFactory(_error!.Value);
 
     /// <summary>
     /// Taps into the success value without changing the result (for side effects).
@@ -804,20 +754,7 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
 
     #region Pattern Matching Methods
 
-    public T Match<T>(Func<TValue, T> success, Func<DomainError, T> failure)
-    {
-        return _isSuccess ? success(_value!) : failure(_error!.Value);
-    }
-
-    public async Task<T> MatchAsync<T>(Func<TValue, Task<T>> success, Func<DomainError, Task<T>> failure)
-    {
-        return _isSuccess ? await success(_value!) : await failure(_error!.Value);
-    }
-
-    public async ValueTask<T> MatchAsync<T>(Func<TValue, ValueTask<T>> success, Func<DomainError, ValueTask<T>> failure)
-    {
-        return _isSuccess ? await success(_value!) : await failure(_error!.Value);
-    }
+    public T Match<T>(Func<TValue, T> success, Func<DomainError, T> failure) => _isSuccess ? success(_value!) : failure(_error!.Value);
 
     public void Match(Action<TValue> success, Action<DomainError> failure)
     {
@@ -826,6 +763,10 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
         else
             failure(_error!.Value);
     }
+
+    public async Task<T> MatchAsync<T>(Func<TValue, Task<T>> success, Func<DomainError, Task<T>> failure) => _isSuccess ? await success(_value!) : await failure(_error!.Value);
+
+    public async ValueTask<T> MatchAsync<T>(Func<TValue, ValueTask<T>> success, Func<DomainError, ValueTask<T>> failure) => _isSuccess ? await success(_value!) : await failure(_error!.Value);
 
     public async Task MatchAsync(Func<TValue, Task> success, Func<DomainError, Task> failure)
     {
@@ -847,47 +788,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
 
     #region Side Effect Methods (Backwards Compatibility)
 
-    public Result<TValue> OnSuccess(Action<TValue> action)
-    {
-        if (_isSuccess)
-            action(_value!);
-        return this;
-    }
+    public Result<TValue> OnSuccess(Action<TValue> action) => Tap(action);
 
-    public Result<TValue> OnFailure(Action<DomainError> action)
-    {
-        if (!_isSuccess)
-            action(_error!.Value);
-        return this;
-    }
+    public Result<TValue> OnFailure(Action<DomainError> action) => TapError(action);
 
-    public async Task<Result<TValue>> OnSuccessAsync(Func<TValue, Task> action)
-    {
-        if (_isSuccess)
-            await action(_value!);
-        return this;
-    }
+    public Task<Result<TValue>> OnSuccessAsync(Func<TValue, Task> action) => TapAsync(action);
 
-    public async ValueTask<Result<TValue>> OnSuccessAsync(Func<TValue, ValueTask> action)
-    {
-        if (_isSuccess)
-            await action(_value!);
-        return this;
-    }
+    public ValueTask<Result<TValue>> OnSuccessAsync(Func<TValue, ValueTask> action) => TapAsync(action);
 
-    public async Task<Result<TValue>> OnFailureAsync(Func<DomainError, Task> action)
-    {
-        if (!_isSuccess)
-            await action(_error!.Value);
-        return this;
-    }
+    public Task<Result<TValue>> OnFailureAsync(Func<DomainError, Task> action) => TapErrorAsync(action);
 
-    public async ValueTask<Result<TValue>> OnFailureAsync(Func<DomainError, ValueTask> action)
-    {
-        if (!_isSuccess)
-            await action(_error!.Value);
-        return this;
-    }
+    public ValueTask<Result<TValue>> OnFailureAsync(Func<DomainError, ValueTask> action) => TapErrorAsync(action);
 
     #endregion
 
@@ -896,18 +807,12 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// <summary>
     /// Gets the value if successful, otherwise returns the default value.
     /// </summary>
-    public TValue GetValueOrDefault(TValue defaultValue = default!)
-    {
-        return _isSuccess ? _value! : defaultValue;
-    }
+    public TValue GetValueOrDefault(TValue defaultValue = default!) => _isSuccess ? _value! : defaultValue;
 
     /// <summary>
     /// Gets the value if successful, otherwise returns the result of the factory function.
     /// </summary>
-    public TValue GetValueOrDefault(Func<DomainError, TValue> defaultFactory)
-    {
-        return _isSuccess ? _value! : defaultFactory(_error!.Value);
-    }
+    public TValue GetValueOrDefault(Func<DomainError, TValue> defaultFactory) => _isSuccess ? _value! : defaultFactory(_error!.Value);
 
     /// <summary>
     /// Tries to get the success value.
@@ -942,11 +847,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     /// </summary>
     public TValue ThrowOnFailure()
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw new InvalidOperationException($"Result failed with error: {_error!.Value.Message}");
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw new InvalidOperationException($"Result failed with error: {_error!.Value.Message}");
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -955,11 +866,17 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
     public TValue ThrowOnFailure<TException>(Func<DomainError, TException> exceptionFactory)
         where TException : Exception
     {
-        return !_initialized
-            ? throw new InvalidOperationException("Uninitialized Result (default struct).")
-            : _isSuccess
-            ? _value!
-            : throw exceptionFactory(_error!.Value);
+        if (!_initialized)
+        {
+            throw new InvalidOperationException(UninitializedResultMessage);
+        }
+
+        if (!_isSuccess)
+        {
+            throw exceptionFactory(_error!.Value);
+        }
+
+        return _value!;
     }
 
     /// <summary>
@@ -981,8 +898,5 @@ public readonly record struct Result<TValue> : IEquatable<Result<TValue>>
                (_error ?? default).Equals(other._error ?? default);
     }
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(_isSuccess, _value, _error);
-    }
+    public override int GetHashCode() => HashCode.Combine(_isSuccess, _value, _error);
 }

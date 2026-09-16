@@ -3,15 +3,12 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents;
 
+/// <summary>
+/// Service that builds and serializes the ATS (Anexo Transaccional Simplificado) XML document.
+/// </summary>
 public class AtsXmlService : IAtsXmlService
 {
-    // You could inject ILogger<AtsXmlService> here for comprehensive logging
-    // private readonly ILogger<AtsXmlService> _logger;
-    // public AtsXmlService(ILogger<AtsXmlService> logger)
-    // {
-    //     _logger = logger;
-    // }
-
+    /// <inheritdoc />
     public async Task<byte[]> CreateAtsXmlAsync(AtsData atsData)
     {
         // Use a MemoryStream to hold the XML content
@@ -63,17 +60,14 @@ public class AtsXmlService : IAtsXmlService
             xtr.WriteEndElement(); // end iva
             xtr.WriteEndDocument();
 
-            // No need for xtr.FlushAsync() here.
-            // The 'using' statement on xtr will call Dispose(), which handles flushing.
-            // If you absolutely needed a flush for some intermediate reason (unlikely here),
-            // you would use xtr.Flush();
+            // The 'using' statement on xtr handles disposing and flushing automatically.
         } // xtr.Dispose() is called here, flushing the StreamWriter, which writes to the MemoryStream
 
         // After the using block, the MemoryStream now contains the complete XML
         return atsMs.ToArray();
     }
 
-    private void WritePurchaseNode(XmlTextWriter xtr, IEnumerable<Purchase> purchases,
+    private static void WritePurchaseNode(XmlTextWriter xtr, IEnumerable<Purchase> purchases,
         IEnumerable<WithholdingTax> withholdingTaxes)
     {
         xtr.WriteStartElement("compras");
@@ -163,7 +157,7 @@ public class AtsXmlService : IAtsXmlService
         xtr.WriteEndElement(); // end compras
     }
 
-    private void WriteWithHoldingTaxesNode(XmlTextWriter xtr, IEnumerable<WithholdingTax> withholdingTaxes)
+    private static void WriteWithHoldingTaxesNode(XmlTextWriter xtr, IEnumerable<WithholdingTax> withholdingTaxes)
     {
         foreach (var tax in withholdingTaxes)
         {
@@ -176,7 +170,7 @@ public class AtsXmlService : IAtsXmlService
         }
     }
 
-    private void WriteSalesNode(XmlTextWriter xtr, IEnumerable<Sale> sales)
+    private static void WriteSalesNode(XmlTextWriter xtr, IEnumerable<Sale> sales)
     {
         xtr.WriteStartElement("ventas");
 
@@ -234,7 +228,7 @@ public class AtsXmlService : IAtsXmlService
         xtr.WriteEndElement(); // end ventas
     }
 
-    private void WriteEstablishmentSalesNode(XmlTextWriter xtr, IEnumerable<EstablishmentSale> establishmentSales)
+    private static void WriteEstablishmentSalesNode(XmlTextWriter xtr, IEnumerable<EstablishmentSale> establishmentSales)
     {
         xtr.WriteStartElement("ventasEstablecimiento");
         foreach (var estSale in establishmentSales)
@@ -249,7 +243,7 @@ public class AtsXmlService : IAtsXmlService
         xtr.WriteEndElement(); // end ventasEstablecimiento
     }
 
-    private void WriteCanceledDocsNode(XmlTextWriter xtr, IEnumerable<CanceledDocument> canceledDocuments)
+    private static void WriteCanceledDocsNode(XmlTextWriter xtr, IEnumerable<CanceledDocument> canceledDocuments)
     {
         xtr.WriteStartElement("anulados");
 

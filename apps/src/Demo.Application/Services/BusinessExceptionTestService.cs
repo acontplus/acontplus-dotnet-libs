@@ -1,11 +1,13 @@
+using System.Security.Cryptography;
+
 namespace Demo.Application.Services;
 
 /// <summary>
 /// Service implementation that returns domain Results instead of throwing.
 /// </summary>
-public class BusinessExceptionTestService : IBusinessExceptionTestService
+public class BusinessExceptionTestService(ILogger<BusinessExceptionTestService> logger) : IBusinessExceptionTestService
 {
-    private readonly ILogger<BusinessExceptionTestService> _logger;
+    private readonly ILogger<BusinessExceptionTestService> _logger = logger;
 
     // Simulated in-memory customer store
     private readonly Dictionary<int, CustomerModel> _customers = new()
@@ -14,14 +16,12 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
         [2] = new CustomerModel { Id = 2, Name = "Jane Smith", Email = "jane@example.com" }
     };
 
-    public BusinessExceptionTestService(ILogger<BusinessExceptionTestService> logger)
-    {
-        _logger = logger;
-    }
-
     public Task<Result<object, DomainErrors>> ValidateEmailAsync(string email)
     {
-        _logger.LogInformation("Validating email: {Email}", email);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Validating email: {Email}", email);
+        }
 
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -50,21 +50,27 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
 
     public Task<Result<CustomerModel, DomainError>> GetCustomerAsync(int id)
     {
-        _logger.LogInformation("Getting customer with ID: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting customer with ID: {Id}", id);
+        }
 
-        if (!_customers.ContainsKey(id))
+        if (!_customers.TryGetValue(id, out var customer))
         {
             _logger.LogWarning("Customer not found: {Id}", id);
             return Task.FromResult(Result<CustomerModel, DomainError>.Failure(
                 DomainError.NotFound("CUSTOMER_NOT_FOUND", $"Customer with ID {id} was not found in the system")));
         }
 
-        return Task.FromResult(Result<CustomerModel, DomainError>.Success(_customers[id]));
+        return Task.FromResult(Result<CustomerModel, DomainError>.Success(customer));
     }
 
     public Task<Result<CustomerModel, DomainError>> CreateCustomerAsync(string email)
     {
-        _logger.LogInformation("Creating customer with email: {Email}", email);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Creating customer with email: {Email}", email);
+        }
 
         if (_customers.Values.Any(c => c.Email?.Equals(email, StringComparison.OrdinalIgnoreCase) ?? false))
         {
@@ -117,7 +123,10 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
 
     public async Task<Result<CustomerModel, DomainError>> GetCustomerWithDeepStackAsync(int id)
     {
-        _logger.LogInformation("Getting customer with deep call stack: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting customer with deep call stack: {Id}", id);
+        }
 
         try
         {
@@ -161,9 +170,12 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
 
     public Task<Result<CustomerModel, DomainError>> GetValidCustomerAsync(int id)
     {
-        _logger.LogInformation("Getting valid customer: {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Getting valid customer: {Id}", id);
+        }
 
-        var customer = _customers.ContainsKey(id) ? _customers[id] : _customers[1];
+        var customer = _customers.TryGetValue(id, out var found) ? found : _customers[1];
         return Task.FromResult(Result<CustomerModel, DomainError>.Success(customer));
     }
 
@@ -174,13 +186,16 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
     /// </summary>
     private async Task<CustomerModel> GetFromRepositoryAsync(int id)
     {
-        _logger.LogDebug("Repository: Fetching customer {Id}", id);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Repository: Fetching customer {Id}", id);
+        }
 
         // Simulate repository calling database layer
         await SimulateDatabaseCallAsync(id);
 
-        return _customers.ContainsKey(id)
-            ? _customers[id]
+        return _customers.TryGetValue(id, out var found)
+            ? found
             : throw new GenericDomainException(
                 ErrorType.NotFound,
                 "CUSTOMER_NOT_FOUND_IN_DB",
@@ -192,21 +207,10 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
     /// </summary>
     private Task SimulateDatabaseCallAsync(int id)
     {
-        _logger.LogDebug("Database: Executing query for customer {Id}", id);
-
-        // Simulate database operation that might fail
-        //if (id > 1000)
-        //{
-        //    var sqlErrorInfo = new SqlErrorInfo(
-        //        ErrorType.Timeout,
-        //        "SQL_TIMEOUT",
-        //        "Database query timed out after 30 seconds",
-        //        new TimeoutException("SQL Server timeout")
-        //    );
-
-        //    throw new SqlDomainException(sqlErrorInfo);
-        //}
-
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Database: Executing query for customer {Id}", id);
+        }
         return Task.CompletedTask;
     }
 
@@ -218,7 +222,7 @@ public class BusinessExceptionTestService : IBusinessExceptionTestService
         _logger.LogDebug("Simulating internal operation");
 
         // Simulate some condition that causes failure
-        var randomFailure = new Random().Next(0, 2);
+        var randomFailure = RandomNumberGenerator.GetInt32(0, 2);
         if (randomFailure == 0)
         {
             throw new InvalidOperationException("Internal operation failed due to invalid state");

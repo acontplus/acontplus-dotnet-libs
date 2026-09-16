@@ -14,39 +14,26 @@ public static class HealthCheckEndpointExtensions
     {
         var appName = app.Environment.ApplicationName;
 
-        // Main health endpoint - shows all checks
-        app.MapHealthChecks(basePath, new HealthCheckOptions
-        {
-            ResponseWriter = (context, report) => WriteHealthCheckResponse(context, report, appName)
-        });
+        MapTaggedHealthCheck(app, basePath, null, appName);
+        MapTaggedHealthCheck(app, $"{basePath}/ready", "ready", appName);
+        MapTaggedHealthCheck(app, $"{basePath}/live", "live", appName);
+        MapTaggedHealthCheck(app, $"{basePath}/cache", "cache", appName);
+        MapTaggedHealthCheck(app, $"{basePath}/resilience", "resilience", appName);
+    }
 
-        // Ready endpoint - shows only ready-tagged checks
-        app.MapHealthChecks($"{basePath}/ready", new HealthCheckOptions
+    private static void MapTaggedHealthCheck(WebApplication app, string path, string? tag, string appName)
+    {
+        var options = new HealthCheckOptions
         {
-            Predicate = check => check.Tags.Contains("ready"),
             ResponseWriter = (context, report) => WriteHealthCheckResponse(context, report, appName)
-        });
+        };
 
-        // Live endpoint - shows only live-tagged checks
-        app.MapHealthChecks($"{basePath}/live", new HealthCheckOptions
+        if (tag != null)
         {
-            Predicate = check => check.Tags.Contains("live"),
-            ResponseWriter = (context, report) => WriteHealthCheckResponse(context, report, appName)
-        });
+            options.Predicate = check => check.Tags.Contains(tag);
+        }
 
-        // Cache endpoint - shows only cache-tagged checks
-        app.MapHealthChecks($"{basePath}/cache", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("cache"),
-            ResponseWriter = (context, report) => WriteHealthCheckResponse(context, report, appName)
-        });
-
-        // Resilience endpoint - shows only resilience-tagged checks
-        app.MapHealthChecks($"{basePath}/resilience", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("resilience"),
-            ResponseWriter = (context, report) => WriteHealthCheckResponse(context, report, appName)
-        });
+        app.MapHealthChecks(path, options);
     }
 
     private static Task WriteHealthCheckResponse(HttpContext context, HealthReport report, string appName)

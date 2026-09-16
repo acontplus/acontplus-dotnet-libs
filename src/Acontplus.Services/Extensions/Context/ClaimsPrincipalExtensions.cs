@@ -1,22 +1,39 @@
 namespace Acontplus.Services.Extensions.Context;
 
+/// <summary>
+/// Extension methods for extracting common claims from a <see cref="ClaimsPrincipal"/>.
+/// </summary>
 public static class ClaimsPrincipalExtensions
 {
-    public static string? GetUsername(this ClaimsPrincipal user)
-    {
-        return user.FindFirst(ClaimTypes.Name)?.Value;
-    }
+    /// <summary>
+    /// Gets the username from the <see cref="ClaimTypes.Name"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The username, or null if not found.</returns>
+    public static string? GetUsername(this ClaimsPrincipal user) =>
+        user.FindFirst(ClaimTypes.Name)?.Value;
 
-    public static string? GetEmail(this ClaimsPrincipal user)
-    {
-        return user.FindFirstValue(ClaimTypes.Email);
-    }
+    /// <summary>
+    /// Gets the email address from the <see cref="ClaimTypes.Email"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The email address, or null if not found.</returns>
+    public static string? GetEmail(this ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.Email);
 
-    public static string? GetRoleName(this ClaimsPrincipal user)
-    {
-        return user.FindFirst(ClaimTypes.Role)?.Value;
-    }
+    /// <summary>
+    /// Gets the role name from the <see cref="ClaimTypes.Role"/> claim.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The role name, or null if not found.</returns>
+    public static string? GetRoleName(this ClaimsPrincipal user) =>
+        user.FindFirst(ClaimTypes.Role)?.Value;
 
+    /// <summary>
+    /// Gets the user ID from the <see cref="ClaimTypes.NameIdentifier"/> claim as an integer.
+    /// </summary>
+    /// <param name="user">The claims principal.</param>
+    /// <returns>The parsed user ID, or 0 if not found or invalid.</returns>
     public static int GetUserId(this ClaimsPrincipal user)
     {
         var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -38,20 +55,33 @@ public static class ClaimsPrincipalExtensions
 
         try
         {
-            // Manejo de tipos comunes
-            return typeof(T) == typeof(string)
-                ? (T)(object)claim
-                : typeof(T) == typeof(int)
-                ? (T)(object)Convert.ToInt32(claim)
-                : typeof(T) == typeof(long)
-                ? (T)(object)Convert.ToInt64(claim)
-                : typeof(T) == typeof(bool)
-                ? (T)(object)Convert.ToBoolean(claim)
-                : typeof(T) == typeof(Guid) ? (T)(object)Guid.Parse(claim) : (T)Convert.ChangeType(claim, typeof(T));
+            return ConvertClaimValue<T>(claim);
         }
         catch
         {
             return default;
         }
+    }
+
+    private static T ConvertClaimValue<T>(string claim)
+    {
+        var targetType = typeof(T);
+
+        if (targetType == typeof(string))
+            return (T)(object)claim;
+
+        if (targetType == typeof(int))
+            return (T)(object)Convert.ToInt32(claim);
+
+        if (targetType == typeof(long))
+            return (T)(object)Convert.ToInt64(claim);
+
+        if (targetType == typeof(bool))
+            return (T)(object)Convert.ToBoolean(claim);
+
+        if (targetType == typeof(Guid))
+            return (T)(object)Guid.Parse(claim);
+
+        return (T)Convert.ChangeType(claim, targetType);
     }
 }

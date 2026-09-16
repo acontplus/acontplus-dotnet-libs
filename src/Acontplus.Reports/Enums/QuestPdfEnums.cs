@@ -5,12 +5,19 @@ namespace Acontplus.Reports.Enums;
 /// </summary>
 public enum QuestPdfPageSize
 {
+    /// <summary>ISO A4 format (210 x 297 mm).</summary>
     A4,
+    /// <summary>ISO A3 format (297 x 420 mm).</summary>
     A3,
+    /// <summary>ISO A5 format (148 x 210 mm).</summary>
     A5,
+    /// <summary>North American Letter format (8.5 x 11 in).</summary>
     Letter,
+    /// <summary>North American Legal format (8.5 x 14 in).</summary>
     Legal,
+    /// <summary>North American Tabloid format (11 x 17 in).</summary>
     Tabloid,
+    /// <summary>Executive format (7.25 x 10.5 in).</summary>
     Executive,
     /// <summary>Thermal/receipt-style narrow format (80mm wide)</summary>
     Thermal80mm
@@ -21,7 +28,9 @@ public enum QuestPdfPageSize
 /// </summary>
 public enum QuestPdfPageOrientation
 {
+    /// <summary>Vertical portrait orientation.</summary>
     Portrait,
+    /// <summary>Horizontal landscape orientation.</summary>
     Landscape
 }
 
@@ -30,8 +39,11 @@ public enum QuestPdfPageOrientation
 /// </summary>
 public enum QuestPdfColumnAlignment
 {
+    /// <summary>Left alignment.</summary>
     Left,
+    /// <summary>Center alignment.</summary>
     Center,
+    /// <summary>Right alignment.</summary>
     Right
 }
 
@@ -54,7 +66,7 @@ public enum QuestPdfSectionType
     Barcode,
     /// <summary>Render a master DataTable with a filtered detail sub-table per row (master-detail)</summary>
     MasterDetail,
-    /// <summary>Render two child sections side by side in two columns</summary>
+    /// <summary>Render two child sections side by subject in two columns</summary>
     TwoColumn,
     /// <summary>Render a first-class SRI Ecuador invoice / voucher header block</summary>
     InvoiceHeader
@@ -65,9 +77,13 @@ public enum QuestPdfSectionType
 /// </summary>
 public enum QuestPdfAggregateType
 {
+    /// <summary>No aggregate calculation.</summary>
     None,
+    /// <summary>Sum of numeric values.</summary>
     Sum,
+    /// <summary>Count of items.</summary>
     Count,
+    /// <summary>Arithmetic average of values.</summary>
     Average
 }
 

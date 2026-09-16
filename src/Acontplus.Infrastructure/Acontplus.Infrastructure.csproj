@@ -24,44 +24,36 @@
     <PackageReleaseNotes>v1.3.16: Bug fixes</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
     <LangVersion>latest</LangVersion>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-
     <!-- SourceLink configuration for enterprise-grade debugging -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
     <!-- Deterministic builds (CI only: GitHub Actions or Azure DevOps) -->
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
-
   <ItemGroup>
     <None Remove="README.md" />
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="Images\icon.png">
       <PackagePath>\</PackagePath>
       <Pack>True</Pack>
     </EmbeddedResource>
   </ItemGroup>
-
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Acontplus.Core" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Polly" />
+    <ProjectReference Include="../Acontplus.Core/Acontplus.Core.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

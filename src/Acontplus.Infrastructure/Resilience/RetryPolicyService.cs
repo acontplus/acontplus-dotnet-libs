@@ -1,20 +1,16 @@
+using Polly.Retry;
+
 namespace Acontplus.Infrastructure.Resilience;
 
 /// <summary>
 ///     Retry policy service providing retry patterns for operations.
 /// </summary>
-public class RetryPolicyService
+public class RetryPolicyService(
+    ILogger<RetryPolicyService> logger,
+    IOptions<ResilienceConfiguration> config)
 {
-    private readonly ResilienceConfiguration _config;
-    private readonly ILogger<RetryPolicyService> _logger;
-
-    public RetryPolicyService(
-        ILogger<RetryPolicyService> _logger,
-        IOptions<ResilienceConfiguration> config)
-    {
-        this._logger = _logger;
-        _config = config.Value;
-    }
+    private readonly ResilienceConfiguration _config = config.Value;
+    private readonly ILogger<RetryPolicyService> _logger = logger;
 
     /// <summary>
     ///     Executes an async action with retry policy.
@@ -24,36 +20,7 @@ public class RetryPolicyService
         int? maxRetries = null,
         TimeSpan? baseDelay = null)
     {
-        var retries = maxRetries ?? _config.RetryPolicy.MaxRetries;
-        var delay = baseDelay ?? TimeSpan.FromSeconds(_config.RetryPolicy.BaseDelaySeconds);
-
-        var retryPolicy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
-                retries,
-                retryAttempt =>
-                {
-                    if (_config.RetryPolicy.ExponentialBackoff)
-                    {
-                        var calculatedDelay = TimeSpan.FromSeconds(
-                            _config.RetryPolicy.BaseDelaySeconds * Math.Pow(2, retryAttempt - 1));
-
-                        return calculatedDelay > TimeSpan.FromSeconds(_config.RetryPolicy.MaxDelaySeconds)
-                            ? TimeSpan.FromSeconds(_config.RetryPolicy.MaxDelaySeconds)
-                            : calculatedDelay;
-                    }
-
-                    return delay;
-                },
-                (exception, timeSpan, retryCount, context) =>
-                {
-                    _logger.LogWarning(
-                        exception,
-                        "Retry {RetryCount} after {Delay}ms",
-                        retryCount,
-                        timeSpan.TotalMilliseconds);
-                });
-
+        var retryPolicy = CreateRetryPolicy(maxRetries, baseDelay);
         return await retryPolicy.ExecuteAsync(action);
     }
 
@@ -65,10 +32,16 @@ public class RetryPolicyService
         int? maxRetries = null,
         TimeSpan? baseDelay = null)
     {
+        var retryPolicy = CreateRetryPolicy(maxRetries, baseDelay);
+        await retryPolicy.ExecuteAsync(action);
+    }
+
+    private AsyncRetryPolicy CreateRetryPolicy(int? maxRetries, TimeSpan? baseDelay)
+    {
         var retries = maxRetries ?? _config.RetryPolicy.MaxRetries;
         var delay = baseDelay ?? TimeSpan.FromSeconds(_config.RetryPolicy.BaseDelaySeconds);
 
-        var retryPolicy = Policy
+        return Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
                 retries,
@@ -86,7 +59,7 @@ public class RetryPolicyService
 
                     return delay;
                 },
-                (exception, timeSpan, retryCount, context) =>
+                (exception, timeSpan, retryCount, _) =>
                 {
                     _logger.LogWarning(
                         exception,
@@ -94,8 +67,6 @@ public class RetryPolicyService
                         retryCount,
                         timeSpan.TotalMilliseconds);
                 });
-
-        await retryPolicy.ExecuteAsync(action);
     }
 
     /// <summary>

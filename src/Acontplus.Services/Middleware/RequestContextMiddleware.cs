@@ -2,6 +2,12 @@ using Microsoft.Extensions.Primitives;
 
 namespace Acontplus.Services.Middleware;
 
+/// <summary>
+/// Middleware that populates and validates ambient request context metadata (request ID, correlation ID, tenant ID, client ID, device type).
+/// </summary>
+/// <param name="next">The next middleware in the pipeline.</param>
+/// <param name="logger">The logger instance.</param>
+/// <param name="options">The request context configuration options.</param>
 public sealed class RequestContextMiddleware(
     RequestDelegate next,
     ILogger<RequestContextMiddleware> logger, // Injected ILogger
@@ -17,6 +23,11 @@ public sealed class RequestContextMiddleware(
 
     // Injected IOptions<T>
 
+    /// <summary>
+    /// Executes the middleware for an incoming HTTP request.
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <returns>A task representing the completion of request processing.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
         // 1. Security Hardening (conditionally applied)
@@ -26,17 +37,18 @@ public sealed class RequestContextMiddleware(
         }
 
         // 2. Request Identification
-        var requestId = SanitizeHeader(context.Request.Headers["Request-Id"]) ??
+        var requestId = SanitizeHeader(context.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.RequestId]) ??
                         Guid.NewGuid().ToString();
-        _logger.LogDebug("Processing request with RequestId: {RequestId}", requestId);
-
         var correlationId = SanitizeHeader(context.Request.Headers["Correlation-Id"]) ??
                             requestId;
-        _logger.LogDebug("Using CorrelationId: {CorrelationId}", correlationId);
-
         var tenantId = SanitizeHeader(context.Request.Headers["Tenant-Id"]) ??
                        requestId;
-        _logger.LogDebug("Using TenantId: {TenantId}", tenantId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "Processing request: RequestId: {RequestId}, CorrelationId: {CorrelationId}, TenantId: {TenantId}",
+                requestId, correlationId, tenantId);
+        }
 
         // 3. Client Context
         var clientId = ValidateClientId(context);
@@ -52,14 +64,19 @@ public sealed class RequestContextMiddleware(
         }
 
         var issuer = SanitizeHeader(context.Request.Headers["Issuer"]);
-        _logger.LogDebug("Client ID: {ClientId}, Issuer: {Issuer}", clientId, issuer);
-
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Client ID: {ClientId}, Issuer: {Issuer}", clientId, issuer);
+        }
 
         // 4. Device Detection
         var deviceType = GetDeviceType(context);
         var isMobileRequest = deviceType is DeviceType.Mobile or DeviceType.Tablet;
-        _logger.LogDebug("Detected device type: {DeviceType}, IsMobileRequest: {IsMobileRequest}", deviceType,
-            isMobileRequest);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Detected device type: {DeviceType}, IsMobileRequest: {IsMobileRequest}", deviceType,
+                isMobileRequest);
+        }
 
         // 5. Context Storage (using HttpContext.Items and extension methods)
         context.SetRequestId(requestId);
@@ -93,7 +110,10 @@ public sealed class RequestContextMiddleware(
             // Referrer-Policy: Controls how much referrer information is sent with requests.
             case false:
                 context.Response.Headers["Referrer-Policy"] = _options.ReferrerPolicy;
-                _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", _options.ReferrerPolicy);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", _options.ReferrerPolicy);
+                }
                 break;
         }
     }

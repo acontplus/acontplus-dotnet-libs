@@ -3,16 +3,18 @@ using Acontplus.Billing.Interfaces.Services;
 namespace Acontplus.Billing.Services.Conversion;
 
 
-// Factory to create document parsers based on document type
-public class DocumentParserFactory
+/// <summary>
+/// Factory that registers and instantiates document-specific XML parsers indexed by document type code.
+/// </summary>
+/// <param name="detailsParser">The line details parser to inject into document parsers.</param>
+public class DocumentParserFactory(IDetailsParser detailsParser)
 {
-    private readonly IDetailsParser _detailsParser;
+    private readonly IDetailsParser _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
 
-    public DocumentParserFactory(IDetailsParser detailsParser)
-    {
-        _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
-    }
-
+    /// <summary>
+    /// Creates and returns a dictionary of document type parsers keyed by SRI document type code.
+    /// </summary>
+    /// <returns>A dictionary of document type parsers.</returns>
     public IDictionary<string, IDocumentTypeParser> CreateDocumentParsers()
     {
         return new Dictionary<string, IDocumentTypeParser>

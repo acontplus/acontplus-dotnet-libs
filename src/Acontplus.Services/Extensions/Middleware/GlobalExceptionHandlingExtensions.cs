@@ -22,6 +22,9 @@ public static class GlobalExceptionHandlingExtensions
     }
 }
 
+/// <summary>
+/// Configuration options for <see cref="ApiExceptionMiddleware"/>.
+/// </summary>
 public class ExceptionHandlingOptions
 {
     /// <summary>

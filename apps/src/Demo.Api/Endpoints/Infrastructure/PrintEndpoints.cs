@@ -7,17 +7,6 @@ public static class PrintEndpoints
         var group = app.MapGroup("/print")
             .WithTags("Print");
 
-        group.MapGet("/", async (IAdoRepository adoRepository, string json) =>
-        {
-            var parameters = new Dictionary<string, object>
-            {
-                { "userRoleId", 27 },
-                { "json", SqlStringParam.Sanitize(json) },
-                { "isMobileUserAgent", "false" }
-            };
-            //var response = await adoRepository.QuerySingleOrDefaultAsync<ApiResponse>("Config.Print_Get", parameters);
-
-            return Results.Ok();
-        });
+        group.MapGet("/", () => Results.Ok());
     }
 }

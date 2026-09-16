@@ -4,6 +4,26 @@
         <name>Acontplus.Billing</name>
     </assembly>
     <members>
+        <member name="T:Acontplus.Billing.Configuration.SriConnectionSettings">
+            <summary>
+            Configuration settings for connecting to SRI web services.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.ReceptionUrl">
+            <summary>
+            Gets or sets the SRI reception web service URL.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.AuthorizationUrl">
+            <summary>
+            Gets or sets the SRI authorization web service URL.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Configuration.SriConnectionSettings.TimeoutSeconds">
+            <summary>
+            Gets or sets the timeout in seconds for SRI service requests.
+            </summary>
+        </member>
         <member name="T:Acontplus.Billing.Constants.DocumentTypes">
             <summary>
             SRI Electronic Document Type Codes (Ecuador)
@@ -55,12 +75,130 @@
             Gets all valid document codes
             </summary>
         </member>
+        <member name="T:Acontplus.Billing.Constants.ValidationRules">
+            <summary>
+            Validation rules and constraint constants for SRI electronic document validation.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.RucLength">
+            <summary>
+            Expected length of an Ecuadorian RUC identifier.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.CedulaLength">
+            <summary>
+            Expected length of an Ecuadorian cédula identifier.
+            </summary>
+        </member>
+        <member name="F:Acontplus.Billing.Constants.ValidationRules.AccessKeyLength">
+            <summary>
+            Expected length of the SRI 49-digit access key (clave de acceso).
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Helpers.ResourceHelper">
+            <summary>
+            Helper utility for accessing embedded XSD schemas and billing resources.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Helpers.ResourceHelper.GetXsdStream(System.String)">
+            <summary>
+            Retrieves a manifest resource stream for an embedded XSD schema file.
+            </summary>
+            <param name="xsdFileName">The path or name of the XSD resource file.</param>
+            <returns>A readable <see cref="T:System.IO.Stream"/> containing the XSD schema.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IAtsXmlService">
+            <summary>
+            Service contract for generating ATS (Anexo Transaccional Simplificado) XML documents.
+            </summary>
+        </member>
         <member name="M:Acontplus.Billing.Interfaces.Services.IAtsXmlService.CreateAtsXmlAsync(Acontplus.Billing.Models.Documents.AtsData)">
             <summary>
             Creates the ATS XML document.
             </summary>
             <param name="atsData">The data required to generate the ATS XML.</param>
             <returns>A byte array representing the generated XML.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IDetailsParser">
+            <summary>
+            Parser contract for extracting line item details from an XML node into a <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IDetailsParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <summary>
+            Parses line item details from the XML node and populates the electronic document.
+            </summary>
+            <param name="nodeDetails">The XML node containing details.</param>
+            <param name="comprobante">The electronic document to populate.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IDocumentConverter">
+            <summary>
+            Service contract for converting an electronic billing document into visual representations such as HTML.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IDocumentConverter.CreateHtml(Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <summary>
+            Converts a <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/> into an HTML representation.
+            </summary>
+            <param name="comprobanteElectronico">The electronic receipt to convert.</param>
+            <returns>HTML string representing the document.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IDocumentTypeParser">
+            <summary>
+            Parser contract for specific electronic document types (e.g. invoice, credit note).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IDocumentTypeParser.Parse(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico,System.String@)">
+            <summary>
+            Parses the XML document into a specific document structure on the <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+            <param name="xmlDocument">The raw XML document.</param>
+            <param name="comprobante">The electronic document to populate.</param>
+            <param name="errorMessage">Output error message if parsing fails.</param>
+            <returns><c>true</c> if parsed successfully; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IDocumentValidator">
+            <summary>
+            Contract for electronic document validation against SRI requirements.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IElectronicDocumentService">
+            <summary>
+            Service contract for parsing electronic billing documents from SRI XML.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IElectronicDocumentService.TryParseDocument(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico@,System.String@)">
+            <summary>
+            Attempts to parse an SRI XML document into a strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+            <param name="xmlSri">The SRI XML document.</param>
+            <param name="comprobante">The parsed electronic document if successful.</param>
+            <param name="errorMessage">Output error message if parsing fails.</param>
+            <returns><c>true</c> if parsing succeeded; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IInfoAdicionalParser">
+            <summary>
+            Parser contract for extracting additional fields (infoAdicional) from XML into <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IInfoAdicionalParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <summary>
+            Parses additional information key-value pairs from the XML node.
+            </summary>
+            <param name="nodeInfoAdicional">The XML node containing infoAdicional elements.</param>
+            <param name="comprobante">The electronic document to populate.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IInfoTributariaParser">
+            <summary>
+            Parser contract for extracting tributary header metadata (infoTributaria) from XML into <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IInfoTributariaParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <summary>
+            Parses tributary header fields from the XML node.
+            </summary>
+            <param name="nodeInfoTrib">The XML node containing infoTributaria elements.</param>
+            <param name="comprobante">The electronic document to populate.</param>
         </member>
         <member name="T:Acontplus.Billing.Interfaces.Services.ISriSigner">
             <summary>Signs XML comprobantes with XAdES-BES format for SRI Ecuador.</summary>
@@ -89,6 +227,1589 @@
             <exception cref="T:System.Security.Cryptography.CryptographicException">
             Thrown when the PFX password is incorrect or the certificate is corrupt.
             </exception>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IWebServiceSri">
+            <summary>
+            Service contract for interacting with Ecuadorian SRI SOAP web services (reception and authorization).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IWebServiceSri.AuthorizationAsync(System.String,System.String)">
+            <summary>
+            Queries the authorization status of an electronic receipt using its access key.
+            </summary>
+            <param name="claveAcceso">The 49-digit access key.</param>
+            <param name="url">The SRI authorization web service URL.</param>
+            <returns>The SRI authorization response.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IWebServiceSri.AuthorizationLoteAsync(System.String,System.String)">
+            <summary>
+            Queries batch authorization status using a batch access key.
+            </summary>
+            <param name="claveAcceso">The batch access key.</param>
+            <param name="url">The SRI authorization web service URL.</param>
+            <returns>The SRI authorization response.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IWebServiceSri.CheckExistenceAsync(System.String,System.String)">
+            <summary>
+            Checks the existence of an authorized receipt in the SRI system.
+            </summary>
+            <param name="claveAcceso">The 49-digit access key.</param>
+            <param name="url">The SRI authorization web service URL.</param>
+            <returns>The SRI existence response.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IWebServiceSri.GetXmlAsync(System.String,System.String)">
+            <summary>
+            Retrieves the authorized XML string of a receipt from SRI.
+            </summary>
+            <param name="claveAcceso">The 49-digit access key.</param>
+            <param name="url">The SRI authorization web service URL.</param>
+            <returns>The raw authorized XML string.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IWebServiceSri.ReceptionAsync(System.String,System.String)">
+            <summary>
+            Submits a signed electronic document XML to the SRI reception web service.
+            </summary>
+            <param name="xmlSigned">The signed XML string or base64 data.</param>
+            <param name="url">The SRI reception web service URL.</param>
+            <returns>The SRI reception response.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IXmlDocumentParser`1">
+            <summary>
+            Generic contract for parsing an XML document into a strongly-typed model.
+            </summary>
+            <typeparam name="T">The parsed document model type.</typeparam>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IXmlDocumentParser`1.TryParse(System.Xml.XmlDocument,`0@,System.String@)">
+            <summary>
+            Attempts to parse an XML document into the target model type.
+            </summary>
+            <param name="xmlDocument">The source XML document.</param>
+            <param name="result">The parsed result object if successful.</param>
+            <param name="errorMessage">Output error message if parsing fails.</param>
+            <returns><c>true</c> if successfully parsed; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Interfaces.Services.IXmlSriFileService">
+            <summary>
+            Service contract for extracting and parsing SRI XML files from uploads or strings.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IXmlSriFileService.GetAsync(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Parses an uploaded SRI XML file into an <see cref="T:Acontplus.Billing.Models.Documents.XmlSriFileModel"/>.
+            </summary>
+            <param name="file">The uploaded form file.</param>
+            <returns>The parsed model, or null if invalid.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Interfaces.Services.IXmlSriFileService.GetAsync(System.String)">
+            <summary>
+            Parses an SRI XML string into an <see cref="T:Acontplus.Billing.Models.Documents.XmlSriFileModel"/>.
+            </summary>
+            <param name="xmlSri">The raw XML string.</param>
+            <returns>The parsed model, or null if invalid.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.AtsHeader">
+            <summary>
+            Represents the header information of an ATS (Anexo Transaccional Simplificado) report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.TipoIdInformante">
+            <summary>Gets or sets the informant identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.IdInformante">
+            <summary>Gets or sets the informant identification number (RUC).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.RazonSocial">
+            <summary>Gets or sets the informant business or legal name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.Anio">
+            <summary>Gets or sets the reporting fiscal year.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.Mes">
+            <summary>Gets or sets the reporting fiscal month.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.NumEstabRuc">
+            <summary>Gets or sets the establishment number registered with RUC.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.TotalVentas">
+            <summary>Gets or sets the total sales amount reported.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsHeader.CodigoOperativo">
+            <summary>Gets or sets the operational code.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Purchase">
+            <summary>
+            Represents a purchase transaction in the ATS report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.CodSustento">
+            <summary>Gets or sets the tax credit support code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.TpIdProv">
+            <summary>Gets or sets the supplier identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.IdProv">
+            <summary>Gets or sets the supplier identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.TipoComprobante">
+            <summary>Gets or sets the voucher type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ParteRel">
+            <summary>Gets or sets whether the supplier is a related party.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.FechaRegistro">
+            <summary>Gets or sets the accounting registration date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.Establecimiento">
+            <summary>Gets or sets the establishment code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PuntoEmision">
+            <summary>Gets or sets the emission point code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.Secuencial">
+            <summary>Gets or sets the sequential document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.FechaEmision">
+            <summary>Gets or sets the document issue date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.Autorizacion">
+            <summary>Gets or sets the authorization number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.BaseNoGraIva">
+            <summary>Gets or sets the non-subject to VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.BaseImponible">
+            <summary>Gets or sets the 0% VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.BaseImpGrav">
+            <summary>Gets or sets the taxed VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.BaseImpExe">
+            <summary>Gets or sets the exempt VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.MontoIce">
+            <summary>Gets or sets the ICE tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.MontoIva">
+            <summary>Gets or sets the VAT tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValRetBien10">
+            <summary>Gets or sets the 10% goods withholding amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValRetServ20">
+            <summary>Gets or sets the 20% services withholding amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValorRetBienes">
+            <summary>Gets or sets the goods withholding amount (30% or 70%).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValRetServ50">
+            <summary>Gets or sets the 50% services withholding amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValorRetServicios">
+            <summary>Gets or sets the 100% services withholding amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.ValRetServ100">
+            <summary>Gets or sets the 100% withholding amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.TotbasesImpReemb">
+            <summary>Gets or sets the total reimbursement tax bases.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PagoLocExt">
+            <summary>Gets or sets local or foreign payment indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.TipoRegi">
+            <summary>Gets or sets the tax regime type for foreign payments.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.DenopagoRegFis">
+            <summary>Gets or sets the fiscal regime description.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PaisEfecPago">
+            <summary>Gets or sets the country code where payment was made.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.AplicConvDobTrib">
+            <summary>Gets or sets whether double taxation treaty applies.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PagExtSujRetNorLeg">
+            <summary>Gets or sets whether foreign payment is subject to legal withholding.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.FormaPago">
+            <summary>Gets or sets the payment method code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.DocModificado">
+            <summary>Gets or sets the modified document type code, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.EstabModificado">
+            <summary>Gets or sets the modified document establishment, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PtoEmiModificado">
+            <summary>Gets or sets the modified document emission point, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.SecModificado">
+            <summary>Gets or sets the modified document sequential number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.AutModificado">
+            <summary>Gets or sets the modified document authorization number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.EstabRetencion1">
+            <summary>Gets or sets the withholding establishment code, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.PtoEmiRetencion1">
+            <summary>Gets or sets the withholding emission point, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.SecRetencion1">
+            <summary>Gets or sets the withholding sequential number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.AutRetencion1">
+            <summary>Gets or sets the withholding authorization number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.FechaEmiRet1">
+            <summary>Gets or sets the withholding issue date, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Purchase.NroDocumento">
+            <summary>Gets or sets the document number used for linking with withholding taxes.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.WithholdingTax">
+            <summary>
+            Represents income tax withholding concept details in the ATS report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.CodRetAir">
+            <summary>Gets or sets the income tax withholding concept code (AIR).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.BaseImpAir">
+            <summary>Gets or sets the taxable base for income tax withholding.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.PorcentajeAir">
+            <summary>Gets or sets the withholding percentage applied.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.ValRetAir">
+            <summary>Gets or sets the withheld tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.NroDocumento">
+            <summary>Gets or sets the linked purchase document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.WithholdingTax.ClaveAcceso">
+            <summary>Gets or sets the linked purchase authorization or access key.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Sale">
+            <summary>
+            Represents a sales transaction in the ATS report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.TpIdCliente">
+            <summary>Gets or sets the customer identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.IdCliente">
+            <summary>Gets or sets the customer identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.ParteRelVtas">
+            <summary>Gets or sets whether the customer is a related party.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.TipoCliente">
+            <summary>Gets or sets the customer classification type.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.DenoCli">
+            <summary>Gets or sets the customer legal or trade name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.TipoComprobante">
+            <summary>Gets or sets the sales voucher type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.TipoEmision">
+            <summary>Gets or sets the emission type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.NumeroComprobantes">
+            <summary>Gets or sets the number of vouchers issued.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.BaseNoGraIva">
+            <summary>Gets or sets the non-subject to VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.BaseImponible">
+            <summary>Gets or sets the 0% VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.BaseImpGrav">
+            <summary>Gets or sets the taxed VAT tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.MontoIva">
+            <summary>Gets or sets the VAT tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.TipoCompe">
+            <summary>Gets or sets the compensation type code, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.MontoCompensacion">
+            <summary>Gets or sets the compensation amount, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.MontoIce">
+            <summary>Gets or sets the ICE tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.ValorRetIva">
+            <summary>Gets or sets the VAT withheld by customer.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.ValorRetRenta">
+            <summary>Gets or sets the income tax withheld by customer.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Sale.FormaPago">
+            <summary>Gets or sets the main payment method code.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.EstablishmentSale">
+            <summary>
+            Represents establishment sales totals in the ATS report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.EstablishmentSale.CodEstab">
+            <summary>Gets or sets the establishment code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.EstablishmentSale.VentasEstab">
+            <summary>Gets or sets total sales reported by establishment.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.EstablishmentSale.IvaComp">
+            <summary>Gets or sets compensation VAT amount for the establishment.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.CanceledDocument">
+            <summary>
+            Represents a canceled document in the ATS report.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.TipoComprobante">
+            <summary>Gets or sets the canceled document voucher type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.Establecimiento">
+            <summary>Gets or sets the establishment code of the canceled document.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.PuntoEmision">
+            <summary>Gets or sets the emission point of the canceled document.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.SecuencialInicio">
+            <summary>Gets or sets the starting sequential number of the canceled series.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.SecuencialFin">
+            <summary>Gets or sets the ending sequential number of the canceled series.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CanceledDocument.Autorizacion">
+            <summary>Gets or sets the authorization number of the canceled document.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.AtsData">
+            <summary>
+            Aggregates all sections of an ATS (Anexo Transaccional Simplificado) document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.Header">
+            <summary>Gets or sets the ATS report header data.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.Purchases">
+            <summary>Gets or sets the collection of reported purchases.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.Sales">
+            <summary>Gets or sets the collection of reported sales.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.WithholdingTaxes">
+            <summary>Gets or sets the collection of reported withholding taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.EstablishmentSales">
+            <summary>Gets or sets the collection of sales grouped by establishment.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.AtsData.CanceledDocuments">
+            <summary>Gets or sets the collection of canceled documents.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico">
+            <summary>
+            Represents a normalized electronic document processed through the SRI system.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.VersionComp">
+            <summary>Gets or sets the document schema version.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CodDoc">
+            <summary>Gets or sets the document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.FechaAutorizacion">
+            <summary>Gets or sets the SRI authorization date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.NumeroAutorizacion">
+            <summary>Gets or sets the SRI authorization number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoTributaria">
+            <summary>Gets or sets the tax information section.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoFactura">
+            <summary>Gets or sets the invoice information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoLiquidacionCompra">
+            <summary>Gets or sets the purchase settlement information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoNotaCredito">
+            <summary>Gets or sets the credit note information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoNotaDebito">
+            <summary>Gets or sets the debit note information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoGuiaRemision">
+            <summary>Gets or sets the consignment note information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoCompRetencion">
+            <summary>Gets or sets the withholding voucher information section, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.Detalles">
+            <summary>Gets or sets the collection of line items.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.Impuestos">
+            <summary>Gets or sets the collection of taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.ImpuestosRetencion">
+            <summary>Gets or sets the collection of withholding taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.DocSustentos">
+            <summary>Gets or sets the collection of supporting documents.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.Destinatarios">
+            <summary>Gets or sets the collection of recipients for consignment notes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ComprobanteElectronico.InfoAdicional">
+            <summary>Gets or sets the collection of additional informational fields.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateInfoComp(System.String,System.Object)">
+            <summary>
+            Assigns the specific document info section based on the document type code.
+            </summary>
+            <param name="codDoc">The SRI document type code.</param>
+            <param name="obj">The document information instance.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateDetails(System.Object)">
+            <summary>Sets the line items list.</summary>
+            <param name="obj">The line items list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateTaxes(System.Object)">
+            <summary>Sets the taxes list.</summary>
+            <param name="obj">The taxes list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateRetencionTaxes(System.Object)">
+            <summary>Sets the withholding taxes list.</summary>
+            <param name="obj">The withholding taxes list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateDocSustentos(System.Object)">
+            <summary>Sets the supporting documents list.</summary>
+            <param name="obj">The supporting documents list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateAdditionalInfo(System.Object)">
+            <summary>Sets the additional info fields list.</summary>
+            <param name="obj">The additional info fields list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ComprobanteElectronico.CreateDestinatarios(System.Object)">
+            <summary>Sets the recipients list.</summary>
+            <param name="obj">The recipients list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoTributaria">
+            <summary>
+            Represents tax identification and general authorization data in an SRI document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.Ambiente">
+            <summary>Gets or sets the SRI environment code (1: Test, 2: Production).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.TipoEmision">
+            <summary>Gets or sets the emission type code (1: Normal).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.RazonSocial">
+            <summary>Gets or sets the issuer legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.NombreComercial">
+            <summary>Gets or sets the issuer commercial or trade name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.Ruc">
+            <summary>Gets or sets the issuer tax ID (RUC).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.ClaveAcceso">
+            <summary>Gets or sets the 49-digit authorization access key.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.CodDoc">
+            <summary>Gets or sets the electronic document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.Estab">
+            <summary>Gets or sets the establishment code (3 digits).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.PtoEmi">
+            <summary>Gets or sets the emission point code (3 digits).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.Secuencial">
+            <summary>Gets or sets the sequential document number (9 digits).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoTributaria.DirMatriz">
+            <summary>Gets or sets the head office address.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoFactura">
+            <summary>
+            Represents invoice header information in an SRI electronic invoice.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.FechaEmision">
+            <summary>Gets or sets the document issuance date (dd/MM/yyyy).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.DirEstablecimiento">
+            <summary>Gets or sets the branch establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.ObligadoContabilidad">
+            <summary>Gets or sets whether the issuer is required to keep accounting records (SI/NO).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.TipoIdentificacionComprador">
+            <summary>Gets or sets the buyer identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.RazonSocialComprador">
+            <summary>Gets or sets the buyer legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.IdentificacionComprador">
+            <summary>Gets or sets the buyer identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.DireccionComprador">
+            <summary>Gets or sets the buyer address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.GuiaRemision">
+            <summary>Gets or sets the associated consignment note number, if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.TotalSinImpuestos">
+            <summary>Gets or sets the total amount before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.TotalDescuento">
+            <summary>Gets or sets the total discount amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.Propina">
+            <summary>Gets or sets the tip amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.ImporteTotal">
+            <summary>Gets or sets the total payable amount including taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.Moneda">
+            <summary>Gets or sets the currency code (e.g. DOLAR).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.TotalImpuestos">
+            <summary>Gets or sets the list of tax totals.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoFactura.Pagos">
+            <summary>Gets or sets the list of payment methods.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoFactura.CreateTotalTaxes(System.Object)">
+            <summary>Sets the tax totals list.</summary>
+            <param name="obj">The tax totals list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoFactura.CreatePayments(System.Object)">
+            <summary>Sets the payment methods list.</summary>
+            <param name="obj">The payment methods list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.TotalImpuesto">
+            <summary>
+            Represents aggregated tax total by tax type and rate code.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.TotalImpuesto.Codigo">
+            <summary>Gets or sets the tax code (e.g., 2 for VAT, 3 for ICE).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.TotalImpuesto.CodigoPorcentaje">
+            <summary>Gets or sets the tax percentage rate code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.TotalImpuesto.DescuentoAdicional">
+            <summary>Gets or sets additional discount applied to the tax base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.TotalImpuesto.BaseImponible">
+            <summary>Gets or sets the taxable base amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.TotalImpuesto.Valor">
+            <summary>Gets or sets the calculated tax amount.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Pago">
+            <summary>
+            Represents a payment method and term applied to the document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Pago.FormaPago">
+            <summary>Gets or sets the SRI payment method code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Pago.Total">
+            <summary>Gets or sets the total payment amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Pago.Plazo">
+            <summary>Gets or sets the payment term duration.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Pago.UnidadTiempo">
+            <summary>Gets or sets the time unit for the payment term (e.g., dias, meses).</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Detalle">
+            <summary>
+            Represents a line item detail in an electronic document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.IdDetalle">
+            <summary>Gets or sets the line item identifier.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.CodigoPrincipal">
+            <summary>Gets or sets the principal product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.CodigoAuxiliar">
+            <summary>Gets or sets the auxiliary product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.Descripcion">
+            <summary>Gets or sets the line item description.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.Cantidad">
+            <summary>Gets or sets the item quantity.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.PrecioUnitario">
+            <summary>Gets or sets the unit price before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.Descuento">
+            <summary>Gets or sets the line item discount amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.PrecioTotalSinImpuesto">
+            <summary>Gets or sets the total line price before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.DetAdicionalNombre">
+            <summary>Gets or sets the additional detail attribute name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.DetAdicionalValor">
+            <summary>Gets or sets the additional detail attribute value.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.DetallesAdicionales">
+            <summary>Gets or sets serialized additional details.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Detalle.Impuestos">
+            <summary>Gets or sets serialized taxes for the line item.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DetalleFactura">
+            <summary>
+            Represents database-mapped invoice detail line information.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.IdProveedor">
+            <summary>Gets or sets the supplier identifier.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.IdArticulo">
+            <summary>Gets or sets the product or article identifier.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.IdMedida">
+            <summary>Gets or sets the unit of measure identifier.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.CodigoPrincipal">
+            <summary>Gets or sets the principal product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.CodigoAuxiliar">
+            <summary>Gets or sets the auxiliary product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.Descripcion">
+            <summary>Gets or sets the product description.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.Cantidad">
+            <summary>Gets or sets the product quantity.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.PrecioUnitario">
+            <summary>Gets or sets the unit price.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.Descuento">
+            <summary>Gets or sets the item discount amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.PrecioTotalSinImpuesto">
+            <summary>Gets or sets the line item total before tax.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.DetAdicionalNombre">
+            <summary>Gets or sets the additional detail attribute name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleFactura.DetAdicionalValor">
+            <summary>Gets or sets the additional detail attribute value.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Impuesto">
+            <summary>
+            Represents a tax line item associated with a product detail.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.IdDetalle">
+            <summary>Gets or sets the associated detail line identifier.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.CodArticulo">
+            <summary>Gets or sets the associated product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.Codigo">
+            <summary>Gets or sets the tax type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.CodigoPorcentaje">
+            <summary>Gets or sets the tax rate percentage code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.Tarifa">
+            <summary>Gets or sets the tax percentage rate.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.BaseImponible">
+            <summary>Gets or sets the taxable base amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Impuesto.Valor">
+            <summary>Gets or sets the calculated tax amount.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria">
+            <summary>
+            Provides shared header information for SRI electronic modification notes (credit and debit notes).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.FechaEmision">
+            <summary>Gets or sets the issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.DirEstablecimiento">
+            <summary>Gets or sets the branch establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TipoIdentificacionComprador">
+            <summary>Gets or sets the buyer identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.RazonSocialComprador">
+            <summary>Gets or sets the buyer legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.IdentificacionComprador">
+            <summary>Gets or sets the buyer identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.ObligadoContabilidad">
+            <summary>Gets or sets whether required to keep accounting records.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.Rise">
+            <summary>Gets or sets RISE regime indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.CodDocModificado">
+            <summary>Gets or sets modified document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.NumDocModificado">
+            <summary>Gets or sets modified document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.FechaEmisionDocSustento">
+            <summary>Gets or sets modified document issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TotalSinImpuestos">
+            <summary>Gets or sets the total amount before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.Moneda">
+            <summary>Gets or sets the currency code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.TotalImpuestos">
+            <summary>Gets or sets the list of tax totals.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.BaseInfoNotaModificatoria.CreateTotalTaxes(System.Object)">
+            <summary>Sets the total taxes list.</summary>
+            <param name="obj">The total taxes list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoNotaCredito">
+            <summary>
+            Represents credit note header information in an SRI electronic credit note.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.ValorModificacion">
+            <summary>Gets or sets the total modification amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaCredito.Motivo">
+            <summary>Gets or sets the reason for the credit note.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoCompRetencion">
+            <summary>
+            Represents withholding voucher header information in an SRI electronic withholding receipt.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.FechaEmision">
+            <summary>Gets or sets the issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.DirEstablecimiento">
+            <summary>Gets or sets the branch establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.ObligadoContabilidad">
+            <summary>Gets or sets whether required to keep accounting records.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.TipoIdentificacionSujetoRetenido">
+            <summary>Gets or sets the withheld subject identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.RazonSocialSujetoRetenido">
+            <summary>Gets or sets the withheld subject legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.IdentificacionSujetoRetenido">
+            <summary>Gets or sets the withheld subject identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.PeriodoFiscal">
+            <summary>Gets or sets the fiscal period (MM/yyyy).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.TipoSujetoRetenido">
+            <summary>Gets or sets the ATS withheld subject type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoCompRetencion.ParteRel">
+            <summary>Gets or sets whether the withheld subject is a related party.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.ImpuestoRetencion">
+            <summary>
+            Represents a withholding tax entry applied to a transaction.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.Codigo">
+            <summary>Gets or sets the tax code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.CodigoRetencion">
+            <summary>Gets or sets the withholding tax code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.BaseImponible">
+            <summary>Gets or sets the taxable base amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.PorcentajeRetener">
+            <summary>Gets or sets the withholding percentage rate.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.ValorRetenido">
+            <summary>Gets or sets the withheld tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.CodDocSustento">
+            <summary>Gets or sets the supporting document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.NumDocSustento">
+            <summary>Gets or sets the supporting document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoRetencion.FechaEmisionDocSustento">
+            <summary>Gets or sets the supporting document issuance date.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DocSustento">
+            <summary>
+            Represents supporting document information and associated taxes/reimbursements.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.CodSustento">
+            <summary>Gets or sets the tax credit support code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.CodDocSustento">
+            <summary>Gets or sets the supporting document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.NumDocSustento">
+            <summary>Gets or sets the supporting document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.FechaEmisionDocSustento">
+            <summary>Gets or sets the supporting document issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.FechaRegistroContable">
+            <summary>Gets or sets the accounting registration date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.NumAutDocSustento">
+            <summary>Gets or sets the supporting document authorization number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.PagoLocExt">
+            <summary>Gets or sets local or foreign payment indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.TipoRegi">
+            <summary>Gets or sets the tax regime type.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.PaisEfecPago">
+            <summary>Gets or sets the country code of payment.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.AplicConvDobTrib">
+            <summary>Gets or sets double taxation treaty application.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.PagExtSujRetNorLeg">
+            <summary>Gets or sets foreign payment withholding applicability.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.PagoRegFis">
+            <summary>Gets or sets payment fiscal regime indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.TotalComprobantesReembolso">
+            <summary>Gets or sets total count of reimbursement documents.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.TotalBaseImponibleReembolso">
+            <summary>Gets or sets total taxable base for reimbursement.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.TotalImpuestoReembolso">
+            <summary>Gets or sets total tax amount for reimbursement.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.TotalSinImpuestos">
+            <summary>Gets or sets total amount before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.ImporteTotal">
+            <summary>Gets or sets total amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.Impuestos">
+            <summary>Gets or sets supporting document taxes list.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.Retenciones">
+            <summary>Gets or sets supporting document withholdings list.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.Reembolsos">
+            <summary>Gets or sets supporting document reimbursements list.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocSustento.Pagos">
+            <summary>Gets or sets supporting document payments list.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.DocSustento.CreateTax(System.Object)">
+            <summary>Sets the taxes list.</summary>
+            <param name="obj">The taxes list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.DocSustento.CreateRetencion(System.Object)">
+            <summary>Sets the withholdings list.</summary>
+            <param name="obj">The withholdings list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.DocSustento.CreateReembolsos(System.Object)">
+            <summary>Sets the reimbursements list.</summary>
+            <param name="obj">The reimbursements list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.DocSustento.CreatePayments(System.Object)">
+            <summary>Sets the payments list.</summary>
+            <param name="obj">The payments list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.ImpuestoDocSustento">
+            <summary>
+            Represents tax detail on a supporting document in a withholding receipt.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoDocSustento.CodImpuestoDocSustento">
+            <summary>Gets or sets the tax code of the supporting document.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoDocSustento.CodigoPorcentaje">
+            <summary>Gets or sets the tax percentage code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoDocSustento.BaseImponible">
+            <summary>Gets or sets the taxable base amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoDocSustento.Tarifa">
+            <summary>Gets or sets the tax percentage rate.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ImpuestoDocSustento.ValorImpuesto">
+            <summary>Gets or sets the calculated tax amount.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Retencion">
+            <summary>
+            Represents a withholding line item with optional dividend or banana box details.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.Codigo">
+            <summary>Gets or sets the tax code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.CodigoRetencion">
+            <summary>Gets or sets the withholding concept code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.BaseImponible">
+            <summary>Gets or sets the taxable base amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.PorcentajeRetener">
+            <summary>Gets or sets the withholding percentage rate.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.ValorRetenido">
+            <summary>Gets or sets the withheld tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.Dividendos">
+            <summary>Gets or sets the list of dividend details.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Retencion.BananasBox">
+            <summary>Gets or sets the list of banana box purchase details.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.Retencion.CreateDividendo(System.Object)">
+            <summary>Sets the dividends list.</summary>
+            <param name="obj">The dividends list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.Retencion.CreateBananaBox(System.Object)">
+            <summary>Sets the banana box purchases list.</summary>
+            <param name="obj">The banana box purchases list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Dividendo">
+            <summary>
+            Represents dividend distribution details in a withholding receipt.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Dividendo.FechaPagoDiv">
+            <summary>Gets or sets the dividend payment date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Dividendo.ImRentaSoc">
+            <summary>Gets or sets the corporate income tax paid on dividend.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Dividendo.EjerFisUtDiv">
+            <summary>Gets or sets the fiscal year of dividend profits.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.CompraCajBanano">
+            <summary>
+            Represents banana box purchase details in a withholding receipt.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CompraCajBanano.NumCajBan">
+            <summary>Gets or sets the number of banana boxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.CompraCajBanano.PrecCajBan">
+            <summary>Gets or sets the price per banana box.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.ReembolsoDetalle">
+            <summary>
+            Represents reimbursement detail in a purchase settlement or invoice.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.TipoIdentificacionProveedorReembolso">
+            <summary>Gets or sets the reimbursement supplier identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.IdentificacionProveedorReembolso">
+            <summary>Gets or sets the reimbursement supplier identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.CodPaisPagoProveedorReembolso">
+            <summary>Gets or sets the reimbursement payment country code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.TipoProveedorReembolso">
+            <summary>Gets or sets the reimbursement supplier type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.CodDocReembolso">
+            <summary>Gets or sets the reimbursement document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.EstabDocReembolso">
+            <summary>Gets or sets the reimbursement document establishment code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.PtoEmiDocReembolso">
+            <summary>Gets or sets the reimbursement document emission point.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.SecuencialDocReembolso">
+            <summary>Gets or sets the reimbursement document sequential number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.FechaEmisionDocReembolso">
+            <summary>Gets or sets the reimbursement document issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.NumeroAutorizacionDocReemb">
+            <summary>Gets or sets the reimbursement document authorization number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.ReembolsoDetalle.ImpuestosReembolso">
+            <summary>Gets or sets the list of reimbursement taxes.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.ReembolsoDetalle.CreateTax(System.Object)">
+            <summary>Sets the reimbursement taxes list.</summary>
+            <param name="obj">The reimbursement taxes list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DetalleImpuesto">
+            <summary>
+            Represents tax detail on a reimbursement document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleImpuesto.Codigo">
+            <summary>Gets or sets the tax code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleImpuesto.CodigoPorcentaje">
+            <summary>Gets or sets the tax rate percentage code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleImpuesto.Tarifa">
+            <summary>Gets or sets the tax rate percentage.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleImpuesto.BaseImponibleReembolso">
+            <summary>Gets or sets the reimbursement taxable base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleImpuesto.ImpuestoReembolso">
+            <summary>Gets or sets the calculated reimbursement tax amount.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoAdicional">
+            <summary>
+            Represents an additional information key-value pair on an electronic document.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoAdicional.Nombre">
+            <summary>Gets or sets the additional information attribute name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoAdicional.Valor">
+            <summary>Gets or sets the additional information attribute value.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra">
+            <summary>
+            Represents purchase settlement header information in an SRI electronic purchase settlement.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.FechaEmision">
+            <summary>Gets or sets the issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.DirEstablecimiento">
+            <summary>Gets or sets the establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.ObligadoContabilidad">
+            <summary>Gets or sets whether required to keep accounting records.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TipoIdentificacionProveedor">
+            <summary>Gets or sets the supplier identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.RazonSocialProveedor">
+            <summary>Gets or sets the supplier legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.IdentificacionProveedor">
+            <summary>Gets or sets the supplier identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.DireccionProveedor">
+            <summary>Gets or sets the supplier address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalSinImpuestos">
+            <summary>Gets or sets total amount before taxes.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalDescuento">
+            <summary>Gets or sets total discount amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.CodDocReembolso">
+            <summary>Gets or sets reimbursement document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalComprobantesReembolso">
+            <summary>Gets or sets total count of reimbursement documents.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalBaseImponibleReembolso">
+            <summary>Gets or sets total reimbursement taxable base.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalImpuestoReembolso">
+            <summary>Gets or sets total reimbursement tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.ImporteTotal">
+            <summary>Gets or sets total payable amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.Moneda">
+            <summary>Gets or sets currency code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.TotalImpuestos">
+            <summary>Gets or sets list of tax totals.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.Pagos">
+            <summary>Gets or sets list of payments.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.Reembolsos">
+            <summary>Gets or sets list of reimbursements.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.CreateTotalTaxes(System.Object)">
+            <summary>Sets the total taxes list.</summary>
+            <param name="obj">The total taxes list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.CreatePayments(System.Object)">
+            <summary>Sets the payments list.</summary>
+            <param name="obj">The payments list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoLiquidacionCompra.CreateReembolsos(System.Object)">
+            <summary>Sets the reimbursements list.</summary>
+            <param name="obj">The reimbursements list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoNotaDebito">
+            <summary>
+            Represents debit note header information in an SRI electronic debit note.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.ImpuestoTotal">
+            <summary>Gets or sets total tax amount.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Motivos">
+            <summary>Gets or sets list of debit reasons.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoNotaDebito.Pagos">
+            <summary>Gets or sets list of payments.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoNotaDebito.CreateMotivos(System.Object)">
+            <summary>Sets the debit reasons list.</summary>
+            <param name="obj">The debit reasons list.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.InfoNotaDebito.CreatePayments(System.Object)">
+            <summary>Sets the payments list.</summary>
+            <param name="obj">The payments list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.MotivoNotaDebito">
+            <summary>
+            Represents a debit reason item on an electronic debit note.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.MotivoNotaDebito.Razon">
+            <summary>Gets or sets the reason description for the debit note.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.MotivoNotaDebito.Valor">
+            <summary>Gets or sets the monetary value associated with the reason.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.InfoGuiaRemision">
+            <summary>
+            Represents consignment note header information in an SRI electronic consignment note.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.DirEstablecimiento">
+            <summary>Gets or sets the establishment address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.DirPartida">
+            <summary>Gets or sets the departure address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.RazonSocialTransportista">
+            <summary>Gets or sets the carrier legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.TipoIdentificacionTransportista">
+            <summary>Gets or sets the carrier identification type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.RucTransportista">
+            <summary>Gets or sets the carrier tax ID (RUC).</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.Rise">
+            <summary>Gets or sets RISE regime indicator.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.ObligadoContabilidad">
+            <summary>Gets or sets whether required to keep accounting records.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.ContribuyenteEspecial">
+            <summary>Gets or sets the special taxpayer resolution number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.FechaIniTransporte">
+            <summary>Gets or sets transport start date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.FechaFinTransporte">
+            <summary>Gets or sets transport end date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.InfoGuiaRemision.Placa">
+            <summary>Gets or sets vehicle license plate.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.Destinatario">
+            <summary>
+            Represents a consignment note recipient and transfer destination.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.IdentificacionDestinatario">
+            <summary>Gets or sets recipient identification number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.RazonSocialDestinatario">
+            <summary>Gets or sets recipient legal or business name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.DirDestinatario">
+            <summary>Gets or sets recipient destination address.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.MotivoTraslado">
+            <summary>Gets or sets transport reason.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.DocAduaneroUnico">
+            <summary>Gets or sets single customs document (DAU), if applicable.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.CodEstabDestino">
+            <summary>Gets or sets destination establishment code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.Ruta">
+            <summary>Gets or sets transit route description.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.CodDocSustento">
+            <summary>Gets or sets supporting document type code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.NumDocSustento">
+            <summary>Gets or sets supporting document number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.NumAutDocSustento">
+            <summary>Gets or sets supporting document authorization number.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.FechaEmisionDocSustento">
+            <summary>Gets or sets supporting document issuance date.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.Destinatario.Detalles">
+            <summary>Gets or sets list of recipient details.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.Destinatario.CreateDetalles(System.Object)">
+            <summary>Sets the recipient details list.</summary>
+            <param name="obj">The recipient details list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DetalleDestinatario">
+            <summary>
+            Represents a transferred product item detail for a recipient in a consignment note.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleDestinatario.CodigoInterno">
+            <summary>Gets or sets internal product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleDestinatario.CodigoAdicional">
+            <summary>Gets or sets additional product code.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleDestinatario.Descripcion">
+            <summary>Gets or sets product description.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleDestinatario.Cantidad">
+            <summary>Gets or sets product quantity.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleDestinatario.DetallesAdicionales">
+            <summary>Gets or sets list of additional details.</summary>
+        </member>
+        <member name="M:Acontplus.Billing.Models.Documents.DetalleDestinatario.CreateDetallesAdicionales(System.Object)">
+            <summary>Sets additional details list.</summary>
+            <param name="obj">The additional details list.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DetalleAdicional">
+            <summary>
+            Represents an additional attribute key-value pair for a consignment recipient detail.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleAdicional.Nombre">
+            <summary>Gets or sets additional detail attribute name.</summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DetalleAdicional.Valor">
+            <summary>Gets or sets additional detail attribute value.</summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.DocumentBase">
+            <summary>
+            Base class for electronic billing document models.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.DocumentBase.ClaveAcceso">
+            <summary>
+            Gets or sets the electronic document access key (clave de acceso).
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Documents.XmlSriFileModel">
+            <summary>
+            Model representing an extracted SRI XML electronic document file and its parsed metadata.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.CodDoc">
+            <summary>
+            Gets or sets the document type code (e.g. "01" for invoice).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.ClaveAcceso">
+            <summary>
+            Gets or sets the 49-digit SRI access key (clave de acceso).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.FechaEmision">
+            <summary>
+            Gets or sets the document emission date string.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.VersionComp">
+            <summary>
+            Gets or sets the electronic document schema version.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.XmlSri">
+            <summary>
+            Gets or sets the outer authorization XML document from SRI.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Documents.XmlSriFileModel.XmlComprobante">
+            <summary>
+            Gets or sets the inner signed electronic receipt XML document.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Responses.ResponseBase">
+            <summary>
+            Base class for SRI web service response models.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseBase.Estado">
+            <summary>
+            Gets or sets the response status code or state from the SRI service.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseBase.Mensaje">
+            <summary>
+            Gets or sets the descriptive response message.
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Models.Responses.ResponseSri">
+            <summary>
+            Model representing the response received from SRI web services.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.Estado">
+            <summary>
+            Gets or sets the authorization state (e.g. AUTORIZADO, NO AUTORIZADO).
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.Identificador">
+            <summary>
+            Gets or sets the message identifier.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.Message">
+            <summary>
+            Gets or sets the SRI response message or description.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.XmlSri">
+            <summary>
+            Gets or sets the raw XML response from SRI.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.CodigoAutorizacion">
+            <summary>
+            Gets or sets the authorization code or access key returned by SRI.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.FechaAutorizacion">
+            <summary>
+            Gets or sets the authorization timestamp string.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.InformacionAdicional">
+            <summary>
+            Gets or sets additional informational messages from SRI.
+            </summary>
+        </member>
+        <member name="P:Acontplus.Billing.Models.Responses.ResponseSri.Tipo">
+            <summary>
+            Gets or sets the response message type (e.g. ERROR, INFORMATIVO).
+            </summary>
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.ComprobanteElectronicoParser">
+            <summary>
+            Parser for converting raw SRI XML documents into strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/> objects.
+            </summary>
+            <param name="documentTypeParsers">Dictionary mapping document type codes to their corresponding parsers.</param>
+            <param name="infoTributariaParser">Parser for tributary information.</param>
+            <param name="infoAdicionalParser">Parser for additional metadata fields.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.ComprobanteElectronicoParser.#ctor(System.Collections.Generic.IDictionary{System.String,Acontplus.Billing.Interfaces.Services.IDocumentTypeParser},Acontplus.Billing.Interfaces.Services.IInfoTributariaParser,Acontplus.Billing.Interfaces.Services.IInfoAdicionalParser)">
+            <summary>
+            Parser for converting raw SRI XML documents into strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/> objects.
+            </summary>
+            <param name="documentTypeParsers">Dictionary mapping document type codes to their corresponding parsers.</param>
+            <param name="infoTributariaParser">Parser for tributary information.</param>
+            <param name="infoAdicionalParser">Parser for additional metadata fields.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.ComprobanteElectronicoParser.TryParse(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico@,System.String@)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.DetailsParser">
+            <summary>
+            Parser for extracting line item details from electronic invoice and receipt XML nodes.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.DetailsParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.DocumentConverter">
+            <summary>
+            Service that converts electronic documents (<see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>) into HTML representations (RIDE visual format).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.DocumentConverter.CreateHtml(Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.DocumentParserFactory">
+            <summary>
+            Factory that registers and instantiates document-specific XML parsers indexed by document type code.
+            </summary>
+            <param name="detailsParser">The line details parser to inject into document parsers.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.DocumentParserFactory.#ctor(Acontplus.Billing.Interfaces.Services.IDetailsParser)">
+            <summary>
+            Factory that registers and instantiates document-specific XML parsers indexed by document type code.
+            </summary>
+            <param name="detailsParser">The line details parser to inject into document parsers.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.DocumentParserFactory.CreateDocumentParsers">
+            <summary>
+            Creates and returns a dictionary of document type parsers keyed by SRI document type code.
+            </summary>
+            <returns>A dictionary of document type parsers.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.FacturaDocumentParser">
+            <summary>
+            Parser for electronic invoices (factura - codDoc 01).
+            </summary>
+            <param name="detailsParser">The item details parser.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.FacturaDocumentParser.#ctor(Acontplus.Billing.Interfaces.Services.IDetailsParser)">
+            <summary>
+            Parser for electronic invoices (factura - codDoc 01).
+            </summary>
+            <param name="detailsParser">The item details parser.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.FacturaDocumentParser.Parse(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico,System.String@)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.InfoAdicionalParser">
+            <summary>
+            Parser for extracting additional info key-value fields from XML into a <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.InfoAdicionalParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Conversion.InfoTributariaParser">
+            <summary>
+            Parser for extracting tributary header metadata (infoTributaria) from XML into a <see cref="T:Acontplus.Billing.Models.Documents.ComprobanteElectronico"/>.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Conversion.InfoTributariaParser.Parse(System.Xml.XmlNode,Acontplus.Billing.Models.Documents.ComprobanteElectronico)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Documents.AtsXmlService">
+            <summary>
+            Service that builds and serializes the ATS (Anexo Transaccional Simplificado) XML document.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.AtsXmlService.CreateAtsXmlAsync(Acontplus.Billing.Models.Documents.AtsData)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Documents.DataXmlComprobante">
+            <summary>
+            Legacy XML document parser for SRI electronic receipts.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.DataXmlComprobante.GetData(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico@,System.String@)">
+            <summary>
+            Extracts electronic receipt metadata and nodes from an SRI XML document.
+            </summary>
+            <param name="xmlSri">The SRI XML document.</param>
+            <param name="comp">The electronic receipt reference to populate.</param>
+            <param name="message">The output error message if parsing fails.</param>
+            <returns><c>true</c> if successfully extracted; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.DataXmlComprobante.GetInfoNotaCredito(System.String,Acontplus.Billing.Models.Documents.ComprobanteElectronico,System.Xml.XmlNode)">
+            <summary>
+            Extracts credit note information from the XML node.
+            </summary>
+            <param name="codDoc">The document type code.</param>
+            <param name="ce">The electronic receipt being populated.</param>
+            <param name="nodeInfoNotaCredito">The XML node containing credit note info.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.DataXmlComprobante.GetInfoAdicional(Acontplus.Billing.Models.Documents.ComprobanteElectronico,System.Xml.XmlNode)">
+            <summary>
+            Extracts additional information (infoAdicional) name-value pairs into the electronic receipt.
+            </summary>
+            <param name="comp">The electronic receipt to populate.</param>
+            <param name="infoAdi">The XML node containing infoAdicional elements.</param>
+        </member>
+        <member name="T:Acontplus.Billing.Services.Documents.ElectronicDocumentService">
+            <summary>
+            Service that delegates electronic document parsing to an <see cref="T:Acontplus.Billing.Interfaces.Services.IXmlDocumentParser`1"/>.
+            </summary>
+            <param name="parser">The generic XML document parser.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.ElectronicDocumentService.#ctor(Acontplus.Billing.Interfaces.Services.IXmlDocumentParser{Acontplus.Billing.Models.Documents.ComprobanteElectronico})">
+            <summary>
+            Service that delegates electronic document parsing to an <see cref="T:Acontplus.Billing.Interfaces.Services.IXmlDocumentParser`1"/>.
+            </summary>
+            <param name="parser">The generic XML document parser.</param>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.ElectronicDocumentService.TryParseDocument(System.Xml.XmlDocument,Acontplus.Billing.Models.Documents.ComprobanteElectronico@,System.String@)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.Documents.Mapping.AtsDataSetMapper">
+            <summary>
+            Mapper that transforms ADO.NET <see cref="T:System.Data.DataSet"/> tables into strongly-typed <see cref="T:Acontplus.Billing.Models.Documents.AtsData"/> structures.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.Mapping.AtsDataSetMapper.MapDataSetToAtsData(System.Data.DataSet)">
+            <summary>
+            Maps a <see cref="T:System.Data.DataSet"/> containing ATS tables (header, purchases, sales, etc.) into an <see cref="T:Acontplus.Billing.Models.Documents.AtsData"/> model.
+            </summary>
+            <param name="ds">The source data set.</param>
+            <returns>The mapped <see cref="T:Acontplus.Billing.Models.Documents.AtsData"/> model.</returns>
+        </member>
+        <member name="T:Acontplus.Billing.Services.Documents.XmlSriFileService">
+            <summary>
+            Service for parsing and validating electronic document XML files from SRI.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.XmlSriFileService.GetAsync(Microsoft.AspNetCore.Http.IFormFile)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Billing.Services.Documents.XmlSriFileService.GetAsync(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Acontplus.Billing.Services.External.WebServiceSri">
+            <summary>
+            Web service client for SRI SOAP communication (reception and authorization).
+            </summary>
+        </member>
+        <member name="M:Acontplus.Billing.Services.External.WebServiceSri.AuthorizationAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Billing.Services.External.WebServiceSri.AuthorizationLoteAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Billing.Services.External.WebServiceSri.CheckExistenceAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Billing.Services.External.WebServiceSri.GetXmlAsync(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Billing.Services.External.WebServiceSri.ReceptionAsync(System.String,System.String)">
+            <inheritdoc />
         </member>
         <member name="T:Acontplus.Billing.Services.Signing.SriSigner">
             <summary>

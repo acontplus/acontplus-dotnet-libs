@@ -45,7 +45,7 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
                 "At least one worksheet must be provided.",
                 request.FileDownloadName, "XLSX");
 
-        await AcquireSlotAsync(cancellationToken, request.FileDownloadName);
+        await AcquireSlotAsync(request.FileDownloadName, cancellationToken);
 
         var sw = Stopwatch.StartNew();
 
@@ -79,10 +79,12 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
                 return stream.ToArray();
             }, cts.Token).ConfigureAwait(false);
 
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation(
                     "ClosedXML workbook generated. Sheets: {Sheets}, Size: {Size:N0} bytes, Elapsed: {Ms}ms",
                     request.Worksheets.Count, bytes.Length, sw.ElapsedMilliseconds);
+            }
 
             return new ReportResponse
             {
@@ -303,28 +305,44 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
 
             for (int col = 0; col < visible.Count; col++)
             {
-                var colDef = visible[col];
-                var cell = ws.Cell(rowIndex, col + 1);
-                var raw = dataRow.IsNull(colDef.ColumnName) ? null : dataRow[colDef.ColumnName];
-
-                SetCellValue(cell, raw);
-
-                if (!string.IsNullOrEmpty(colDef.NumberFormat))
-                    cell.Style.NumberFormat.Format = colDef.NumberFormat;
-
-                cell.Style.Alignment.Horizontal = MapHorizontalAlignment(colDef.Alignment);
-
-                if (colDef.IsBold)
-                    cell.Style.Font.Bold = true;
-
-                if (wsDef.WrapText)
-                    cell.Style.Alignment.WrapText = true;
+                WriteDataRowCell(ws, dataRow, visible[col], wsDef, rowIndex, col);
             }
 
             rowIndex++;
         }
 
         return rowIndex;
+    }
+
+    private static void WriteDataRowCell(
+        IXLWorksheet ws,
+        DataRow dataRow,
+        AdvancedExcelColumnDefinition colDef,
+        AdvancedExcelWorksheetDefinition wsDef,
+        int rowIndex,
+        int col)
+    {
+        var cell = ws.Cell(rowIndex, col + 1);
+        var raw = dataRow.IsNull(colDef.ColumnName) ? null : dataRow[colDef.ColumnName];
+
+        SetCellValue(cell, raw);
+
+        if (!string.IsNullOrEmpty(colDef.NumberFormat))
+        {
+            cell.Style.NumberFormat.Format = colDef.NumberFormat;
+        }
+
+        cell.Style.Alignment.Horizontal = MapHorizontalAlignment(colDef.Alignment);
+
+        if (colDef.IsBold)
+        {
+            cell.Style.Font.Bold = true;
+        }
+
+        if (wsDef.WrapText)
+        {
+            cell.Style.Alignment.WrapText = true;
+        }
     }
 
     private static void WriteAggregateRow(
@@ -433,7 +451,7 @@ public sealed class ClosedXmlReportService : IClosedXmlReportService, IDisposabl
             _ => XLAlignmentHorizontalValues.General
         };
 
-    private async Task AcquireSlotAsync(CancellationToken cancellationToken, string reportName)
+    private async Task AcquireSlotAsync(string reportName, CancellationToken cancellationToken)
     {
         try
         {

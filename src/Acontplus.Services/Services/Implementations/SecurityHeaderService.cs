@@ -3,15 +3,12 @@ namespace Acontplus.Services.Services.Implementations;
 /// <summary>
 /// Implementation of security header service for managing HTTP security headers.
 /// </summary>
-public class SecurityHeaderService : ISecurityHeaderService
+/// <param name="logger">The logger instance.</param>
+public class SecurityHeaderService(ILogger<SecurityHeaderService> logger) : ISecurityHeaderService
 {
-    private readonly ILogger<SecurityHeaderService> _logger;
+    private readonly ILogger<SecurityHeaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public SecurityHeaderService(ILogger<SecurityHeaderService> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    /// <inheritdoc />
     public void ApplySecurityHeaders(HttpContext context, RequestContextConfiguration configuration)
     {
         if (!configuration.EnableSecurityHeaders)
@@ -34,11 +31,14 @@ public class SecurityHeaderService : ISecurityHeaderService
         if (!string.IsNullOrEmpty(configuration.ReferrerPolicy))
         {
             context.Response.Headers["Referrer-Policy"] = configuration.ReferrerPolicy;
-            _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", configuration.ReferrerPolicy);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Applied Referrer-Policy: {ReferrerPolicy}", configuration.ReferrerPolicy);
+            }
         }
 
         // X-XSS-Protection: Enable XSS filtering
-        context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+        context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.XXSSProtection] = "1; mode=block";
 
         // Permissions-Policy: Control browser features
         context.Response.Headers["Permissions-Policy"] =
@@ -47,6 +47,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         _logger.LogDebug("Applied security headers to response");
     }
 
+    /// <inheritdoc />
     public string GenerateCspNonce()
     {
         using var rng = RandomNumberGenerator.Create();
@@ -58,6 +59,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         return nonce;
     }
 
+    /// <inheritdoc />
     public bool ValidateSecurityHeaders(HttpContext context)
     {
         var requiredHeaders = new[]
@@ -71,7 +73,7 @@ public class SecurityHeaderService : ISecurityHeaderService
             .Where(header => !context.Response.Headers.ContainsKey(header))
             .ToList();
 
-        if (missingHeaders.Any())
+        if (missingHeaders.Count > 0)
         {
             _logger.LogWarning("Missing security headers: {MissingHeaders}",
                 string.Join(", ", missingHeaders));
@@ -82,6 +84,7 @@ public class SecurityHeaderService : ISecurityHeaderService
         return true;
     }
 
+    /// <inheritdoc />
     public Dictionary<string, string> GetRecommendedHeaders(bool isDevelopment)
     {
         var headers = new Dictionary<string, string>
@@ -105,8 +108,11 @@ public class SecurityHeaderService : ISecurityHeaderService
             headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com";
         }
 
-        _logger.LogDebug("Generated {Count} recommended security headers for {Environment}",
-            headers.Count, isDevelopment ? "development" : "production");
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Generated {Count} recommended security headers for {Environment}",
+                headers.Count, isDevelopment ? "development" : "production");
+        }
 
         return headers;
     }

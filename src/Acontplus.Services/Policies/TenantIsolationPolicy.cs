@@ -3,30 +3,30 @@ namespace Acontplus.Services.Policies;
 /// <summary>
 /// Authorization requirement for tenant isolation and validation.
 /// </summary>
-public class TenantIsolationRequirement : IAuthorizationRequirement
+/// <param name="requireTenantHeader">Whether the Tenant-Id header is required.</param>
+/// <param name="validateUserTenantAccess">Whether the user's tenant claim should be validated.</param>
+public class TenantIsolationRequirement(bool requireTenantHeader = true, bool validateUserTenantAccess = true) : IAuthorizationRequirement
 {
-    public bool RequireTenantHeader { get; }
-    public bool ValidateUserTenantAccess { get; }
+    /// <summary>
+    /// Gets a value indicating whether the Tenant-Id header is strictly required.
+    /// </summary>
+    public bool RequireTenantHeader { get; } = requireTenantHeader;
 
-    public TenantIsolationRequirement(bool requireTenantHeader = true, bool validateUserTenantAccess = true)
-    {
-        RequireTenantHeader = requireTenantHeader;
-        ValidateUserTenantAccess = validateUserTenantAccess;
-    }
+    /// <summary>
+    /// Gets a value indicating whether the user's tenant claim must match the header tenant ID.
+    /// </summary>
+    public bool ValidateUserTenantAccess { get; } = validateUserTenantAccess;
 }
 
 /// <summary>
 /// Authorization handler for tenant isolation validation.
 /// </summary>
-public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequirement>
+/// <param name="logger">The logger instance.</param>
+public class TenantIsolationHandler(ILogger<TenantIsolationHandler> logger) : AuthorizationHandler<TenantIsolationRequirement>
 {
-    private readonly ILogger<TenantIsolationHandler> _logger;
+    private readonly ILogger<TenantIsolationHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public TenantIsolationHandler(ILogger<TenantIsolationHandler> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    /// <inheritdoc />
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         TenantIsolationRequirement requirement)
@@ -76,7 +76,10 @@ public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequir
             }
         }
 
-        _logger.LogDebug("Tenant isolation validation successful for tenant '{TenantId}'", tenantId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Tenant isolation validation successful for tenant '{TenantId}'", tenantId);
+        }
         context.Succeed(requirement);
         return Task.CompletedTask;
     }
@@ -87,12 +90,22 @@ public class TenantIsolationHandler : AuthorizationHandler<TenantIsolationRequir
 /// </summary>
 public static class TenantIsolationPolicyExtensions
 {
+    /// <summary>
+    /// Registers the tenant isolation authorization handler into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddTenantIsolationAuthorization(this IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, TenantIsolationHandler>();
         return services;
     }
 
+    /// <summary>
+    /// Adds preconfigured tenant isolation authorization policies to the authorization options.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <returns>The authorization options for chaining.</returns>
     public static AuthorizationOptions AddTenantIsolationPolicies(this AuthorizationOptions options)
     {
         options.AddPolicy("RequireTenant", policy =>

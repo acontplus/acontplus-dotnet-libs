@@ -1,9 +1,19 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace Acontplus.Notifications.Helpers;
 
-public class AwsSesSmtpCredentialConverter
+/// <summary>
+/// Helper to convert AWS IAM credentials into Amazon SES SMTP credentials using SigV4 algorithm.
+/// </summary>
+public static class AwsSesSmtpCredentialConverter
 {
+    /// <summary>
+    /// Converts an AWS IAM access key and secret key into Amazon SES SMTP credentials.
+    /// </summary>
+    /// <param name="iamAccessKey">The AWS IAM access key ID.</param>
+    /// <param name="iamSecretKey">The AWS IAM secret access key.</param>
+    /// <param name="region">The AWS region (defaults to "us-east-1").</param>
+    /// <returns>A tuple containing the SMTP username and generated SMTP password.</returns>
     public static (string smtpUsername, string smtpPassword) ConvertIamToSmtpCredentials(
         string iamAccessKey,
         string iamSecretKey,

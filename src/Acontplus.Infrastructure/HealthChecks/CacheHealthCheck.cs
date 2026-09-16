@@ -5,15 +5,12 @@ namespace Acontplus.Infrastructure.HealthChecks;
 /// <summary>
 ///     Health check for cache service.
 /// </summary>
-public class CacheHealthCheck : IHealthCheck
+/// <param name="cacheService">The cache service to evaluate.</param>
+public class CacheHealthCheck(ICacheService cacheService) : IHealthCheck
 {
-    private readonly ICacheService _cacheService;
+    private readonly ICacheService _cacheService = cacheService;
 
-    public CacheHealthCheck(ICacheService cacheService)
-    {
-        _cacheService = cacheService;
-    }
-
+    /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

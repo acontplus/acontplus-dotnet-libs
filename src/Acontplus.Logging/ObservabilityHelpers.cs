@@ -8,18 +8,10 @@ namespace Acontplus.Logging;
 /// Example helper class demonstrating how to use ActivitySource for distributed tracing.
 /// This class can be injected via DI and used throughout your application.
 /// </summary>
-public class TracingHelper
+/// <param name="activitySource">The activity source for creating traces.</param>
+public class TracingHelper(ActivitySource activitySource)
 {
-    private readonly ActivitySource _activitySource;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TracingHelper"/> class.
-    /// </summary>
-    /// <param name="activitySource">The activity source for creating traces.</param>
-    public TracingHelper(ActivitySource activitySource)
-    {
-        _activitySource = activitySource;
-    }
+    private readonly ActivitySource _activitySource = activitySource;
 
     /// <summary>
     /// Creates a new activity (span) for tracing.
@@ -45,20 +37,16 @@ public class TracingHelper
     /// }
     /// </code>
     /// </example>
-    public Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal)
-    {
-        return _activitySource.StartActivity(name, kind);
-    }
+    public Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal) =>
+        _activitySource.StartActivity(name, kind);
 
     /// <summary>
     /// Adds a tag to the current activity if one is active.
     /// </summary>
     /// <param name="key">The tag key.</param>
     /// <param name="value">The tag value.</param>
-    public static void AddTag(string key, object? value)
-    {
+    public static void AddTag(string key, object? value) =>
         Activity.Current?.SetTag(key, value);
-    }
 
     /// <summary>
     /// Records an exception in the current activity.
@@ -77,28 +65,18 @@ public class TracingHelper
     /// Adds an event to the current activity.
     /// </summary>
     /// <param name="name">The event name.</param>
-    public static void AddEvent(string name)
-    {
+    public static void AddEvent(string name) =>
         Activity.Current?.AddEvent(new ActivityEvent(name));
-    }
 }
 
 /// <summary>
 /// Example helper class demonstrating how to use Meter for custom metrics.
 /// This class can be injected via DI and used throughout your application.
 /// </summary>
-public class MetricsHelper
+/// <param name="meter">The meter for creating metrics.</param>
+public class MetricsHelper(Meter meter)
 {
-    private readonly Meter _meter;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MetricsHelper"/> class.
-    /// </summary>
-    /// <param name="meter">The meter for creating metrics.</param>
-    public MetricsHelper(Meter meter)
-    {
-        _meter = meter;
-    }
+    private readonly Meter _meter = meter;
 
     /// <summary>
     /// Creates a counter metric for tracking counts.
@@ -125,10 +103,8 @@ public class MetricsHelper
     /// </code>
     /// </example>
     public Counter<T> CreateCounter<T>(string name, string? unit = null, string? description = null)
-        where T : struct
-    {
-        return _meter.CreateCounter<T>(name, unit, description);
-    }
+        where T : struct =>
+        _meter.CreateCounter<T>(name, unit, description);
 
     /// <summary>
     /// Creates a histogram metric for tracking value distributions.
@@ -157,10 +133,8 @@ public class MetricsHelper
     /// </code>
     /// </example>
     public Histogram<T> CreateHistogram<T>(string name, string? unit = null, string? description = null)
-        where T : struct
-    {
-        return _meter.CreateHistogram<T>(name, unit, description);
-    }
+        where T : struct =>
+        _meter.CreateHistogram<T>(name, unit, description);
 
     /// <summary>
     /// Creates an observable gauge for tracking current values.
@@ -186,10 +160,8 @@ public class MetricsHelper
         Func<T> observeValue,
         string? unit = null,
         string? description = null)
-        where T : struct
-    {
-        return _meter.CreateObservableGauge(name, observeValue, unit, description);
-    }
+        where T : struct =>
+        _meter.CreateObservableGauge(name, observeValue, unit, description);
 
     /// <summary>
     /// Creates an up-down counter for values that can increase or decrease.
@@ -223,8 +195,6 @@ public class MetricsHelper
     /// </code>
     /// </example>
     public UpDownCounter<T> CreateUpDownCounter<T>(string name, string? unit = null, string? description = null)
-        where T : struct
-    {
-        return _meter.CreateUpDownCounter<T>(name, unit, description);
-    }
+        where T : struct =>
+        _meter.CreateUpDownCounter<T>(name, unit, description);
 }

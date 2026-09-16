@@ -13,27 +13,29 @@ namespace Demo.Infrastructure.EventHandlers;
 /// This solves the problem: "I need two inserts where second depends on first's ID"
 /// Uses IUnitOfWork to get repositories - no need for explicit DI registration.
 /// </summary>
-public class OrderLineItemsCreationHandler : IDomainEventHandler<EntityCreatedEvent>
+public class OrderLineItemsCreationHandler(
+    IUnitOfWork unitOfWork,
+    ILogger<OrderLineItemsCreationHandler> logger) : IDomainEventHandler<EntityCreatedEvent>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<OrderLineItemsCreationHandler> _logger;
+    private readonly ILogger<OrderLineItemsCreationHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
 
-    public OrderLineItemsCreationHandler(
-        IUnitOfWork unitOfWork,
-        ILogger<OrderLineItemsCreationHandler> logger)
-    {
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
+        Justification = "Exception is logged before rethrowing to trigger transaction rollback.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S2139",
+        Justification = "Exception is logged before rethrowing to trigger transaction rollback.")]
     public async Task HandleAsync(EntityCreatedEvent domainEvent, CancellationToken cancellationToken = default)
     {
         // Only handle Order creation events
         if (domainEvent.EntityType != nameof(Order))
             return;
 
-        _logger.LogInformation(
-            "DOMAIN EVENT: Creating line items for Order {OrderId}",
-            domainEvent.EntityId);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation(
+                "DOMAIN EVENT: Creating line items for Order {OrderId}",
+                domainEvent.EntityId);
+        }
 
         try
         {
@@ -69,21 +71,27 @@ public class OrderLineItemsCreationHandler : IDomainEventHandler<EntityCreatedEv
             foreach (var lineItem in lineItems)
             {
                 await lineItemRepository.AddAsync(lineItem, cancellationToken);
-                _logger.LogDebug(
-                    "Line item created for Order {OrderId}: {ProductName} x {Quantity}",
-                    order.Id,
-                    lineItem.ProductName,
-                    lineItem.Quantity);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "Line item created for Order {OrderId}: {ProductName} x {Quantity}",
+                        order.Id,
+                        lineItem.ProductName,
+                        lineItem.Quantity);
+                }
             }
 
             // NOTE: Don't call SaveChangesAsync here!
             // The UnitOfWork/DbContext will commit both inserts together
             // If this handler throws an exception, BOTH inserts will be rolled back
 
-            _logger.LogInformation(
-                "Successfully created {Count} line item(s) for Order {OrderId}",
-                lineItems.Count,
-                order.Id);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation(
+                    "Successfully created {Count} line item(s) for Order {OrderId}",
+                    lineItems.Count,
+                    order.Id);
+            }
         }
         catch (Exception ex)
         {

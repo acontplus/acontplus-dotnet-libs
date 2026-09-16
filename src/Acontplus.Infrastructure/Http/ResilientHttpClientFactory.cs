@@ -3,33 +3,32 @@ namespace Acontplus.Infrastructure.Http;
 /// <summary>
 ///     Factory for creating HTTP clients with resilience patterns (circuit breaker, retry, timeout).
 /// </summary>
-public class ResilientHttpClientFactory
+public class ResilientHttpClientFactory(
+    IHttpClientFactory httpClientFactory,
+    ILogger<ResilientHttpClientFactory> logger,
+    IOptions<ResilienceConfiguration> config)
 {
-    private readonly ResilienceConfiguration _config;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<ResilientHttpClientFactory> _logger;
-
-    public ResilientHttpClientFactory(
-        IHttpClientFactory httpClientFactory,
-        ILogger<ResilientHttpClientFactory> logger,
-        IOptions<ResilienceConfiguration> config)
-    {
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-        _config = config.Value;
-    }
+    private readonly ResilienceConfiguration _config = config.Value;
 
     /// <summary>
     ///     Creates an HTTP client with standard resilience policies.
     /// </summary>
-    public HttpClient CreateClient(string name = "default") => _httpClientFactory.CreateClient(name);
+    public HttpClient CreateClient(string name = "default")
+    {
+        if (logger.IsEnabled(LogLevel.Debug))
+        {
+            logger.LogDebug("Creating resilient HTTP client '{ClientName}'", name);
+        }
+
+        return httpClientFactory.CreateClient(name);
+    }
 
     /// <summary>
     ///     Creates an HTTP client with custom timeout.
     /// </summary>
     public HttpClient CreateClientWithTimeout(string name, TimeSpan timeout)
     {
-        var client = _httpClientFactory.CreateClient(name);
+        var client = httpClientFactory.CreateClient(name);
         client.Timeout = timeout;
         return client;
     }

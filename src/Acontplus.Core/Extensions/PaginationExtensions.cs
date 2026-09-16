@@ -42,7 +42,7 @@ public static class PaginationExtensions
     /// <returns>A new PaginationRequest with the additional filter</returns>
     public static PaginationRequest WithFilter(this PaginationRequest pagination, string key, object value)
     {
-        var existingFilters = pagination.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, object>();
+        var existingFilters = pagination.Filters?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? [];
         existingFilters[key] = value;
         return pagination with { Filters = existingFilters };
     }

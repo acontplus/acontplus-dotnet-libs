@@ -1,4 +1,4 @@
-﻿using Acontplus.S3Application.Configuration;
+using Acontplus.S3Application.Configuration;
 using Acontplus.S3Application.Interfaces;
 using Acontplus.S3Application.Models;
 using Amazon;
@@ -20,6 +20,7 @@ namespace Acontplus.S3Application.Services;
 /// </summary>
 public class S3StorageService : IS3StorageService, IDisposable
 {
+    private const string DefaultAwsRegion = "us-east-1";
     private readonly ILogger<S3StorageService> _logger;
     private readonly S3StorageOptions _options;
     private readonly ConcurrentDictionary<string, IAmazonS3> _clientPool;
@@ -46,8 +47,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
         _retryPolicy = CreateRetryPolicy();
 
-        _logger.LogInformation("S3StorageService initialized with MaxRequestsPerSecond: {MaxRequestsPerSecond}, Timeout: {Timeout}s",
-            _options.MaxRequestsPerSecond, _options.TimeoutSeconds);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("S3StorageService initialized with MaxRequestsPerSecond: {MaxRequestsPerSecond}, Timeout: {Timeout}s",
+                _options.MaxRequestsPerSecond, _options.TimeoutSeconds);
+        }
     }
 
     /// <summary>
@@ -72,7 +76,10 @@ public class S3StorageService : IS3StorageService, IDisposable
                 ? new AmazonS3Client(new BasicAWSCredentials(credentials.Key, credentials.Secret), config)
                 : new AmazonS3Client(config); // Uses default credential chain (IAM roles, etc.)
 
-            _logger.LogDebug("Created new S3 client for region: {Region}", region);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Created new S3 client for region: {Region}", region);
+            }
             return client;
         });
     }
@@ -120,19 +127,19 @@ public class S3StorageService : IS3StorageService, IDisposable
         {
             CleanupOldTimestamps();
 
-            if (_requestTimestamps.Count >= _options.MaxRequestsPerSecond)
+            if (_requestTimestamps.Count >= _options.MaxRequestsPerSecond && _requestTimestamps.TryPeek(out var oldestTimestamp))
             {
-                if (_requestTimestamps.TryPeek(out var oldestTimestamp))
+                var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
+                if (timeToWait > TimeSpan.Zero)
                 {
-                    var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
-                    if (timeToWait > TimeSpan.Zero)
+                    if (_logger.IsEnabled(LogLevel.Debug))
                     {
                         _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}ms",
                             _requestTimestamps.Count, _options.MaxRequestsPerSecond, timeToWait.TotalMilliseconds);
-
-                        await Task.Delay(timeToWait, ct);
-                        CleanupOldTimestamps();
                     }
+
+                    await Task.Delay(timeToWait, ct);
+                    CleanupOldTimestamps();
                 }
             }
 
@@ -165,60 +172,36 @@ public class S3StorageService : IS3StorageService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(s3ObjectCustom);
 
-        var response = new S3Response();
-
-        try
+        return await ExecuteStorageOperationAsync(s3ObjectCustom, "uploading", async client =>
         {
-            return await _retryPolicy.ExecuteAsync(async () =>
+            if (s3ObjectCustom.Content == null)
+                throw new InvalidOperationException("S3 object content cannot be null for upload");
+
+            using var ms = new MemoryStream(s3ObjectCustom.Content);
+            var uploadRequest = new TransferUtilityUploadRequest
             {
-                await EnforceRateLimitAsync();
+                InputStream = ms,
+                Key = s3ObjectCustom.S3ObjectKey,
+                BucketName = s3ObjectCustom.BucketName,
+                CannedACL = S3CannedACL.NoACL,
+                ContentType = s3ObjectCustom.ContentType
+            };
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+            using var transferUtility = new TransferUtility(client);
+            await transferUtility.UploadAsync(uploadRequest);
 
-                if (s3ObjectCustom.Content == null)
-                    throw new InvalidOperationException("S3 object content cannot be null for upload");
-
-                using var ms = new MemoryStream(s3ObjectCustom.Content);
-                var uploadRequest = new TransferUtilityUploadRequest
-                {
-                    InputStream = ms,
-                    Key = s3ObjectCustom.S3ObjectKey,
-                    BucketName = s3ObjectCustom.BucketName,
-                    CannedACL = S3CannedACL.NoACL,
-                    ContentType = s3ObjectCustom.ContentType
-                };
-
-                using var transferUtility = new TransferUtility(client);
-                await transferUtility.UploadAsync(uploadRequest);
-
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation("Successfully uploaded {Key} to bucket {Bucket}",
                     s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
 
-                return new S3Response
-                {
-                    StatusCode = 201,
-                    Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se subió correctamente en Amazon S3"
-                };
-            });
-        }
-        catch (AmazonS3Exception s3Ex)
-        {
-            _logger.LogError(s3Ex, "S3 error uploading {Key}: {ErrorCode} - {Message}",
-                s3ObjectCustom.S3ObjectKey, s3Ex.ErrorCode, s3Ex.Message);
-
-            response.StatusCode = (int)s3Ex.StatusCode;
-            response.Message = s3Ex.Message;
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error uploading {Key}",
-                s3ObjectCustom.S3ObjectKey);
-
-            response.StatusCode = 500;
-            response.Message = ex.Message;
-            return response;
-        }
+            return new S3Response
+            {
+                StatusCode = 201,
+                Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se subió correctamente en Amazon S3"
+            };
+        });
     }
 
     /// <summary>
@@ -230,59 +213,35 @@ public class S3StorageService : IS3StorageService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(s3ObjectCustom);
 
-        var response = new S3Response();
-
-        try
+        return await ExecuteStorageOperationAsync(s3ObjectCustom, "updating", async client =>
         {
-            return await _retryPolicy.ExecuteAsync(async () =>
+            if (s3ObjectCustom.Content == null)
+                throw new InvalidOperationException("S3 object content cannot be null for update");
+
+            using var ms = new MemoryStream(s3ObjectCustom.Content);
+            var request = new PutObjectRequest
             {
-                await EnforceRateLimitAsync();
+                BucketName = s3ObjectCustom.BucketName,
+                Key = s3ObjectCustom.S3ObjectKey,
+                InputStream = ms,
+                CannedACL = S3CannedACL.NoACL,
+                ContentType = s3ObjectCustom.ContentType
+            };
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+            await client.PutObjectAsync(request);
 
-                if (s3ObjectCustom.Content == null)
-                    throw new InvalidOperationException("S3 object content cannot be null for update");
-
-                using var ms = new MemoryStream(s3ObjectCustom.Content);
-                var request = new PutObjectRequest
-                {
-                    BucketName = s3ObjectCustom.BucketName,
-                    Key = s3ObjectCustom.S3ObjectKey,
-                    InputStream = ms,
-                    CannedACL = S3CannedACL.NoACL,
-                    ContentType = s3ObjectCustom.ContentType
-                };
-
-                await client.PutObjectAsync(request);
-
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
                 _logger.LogInformation("Successfully updated {Key} in bucket {Bucket}",
                     s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
 
-                return new S3Response
-                {
-                    StatusCode = 200,
-                    Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se actualizó correctamente en Amazon S3"
-                };
-            });
-        }
-        catch (AmazonS3Exception s3Ex)
-        {
-            _logger.LogError(s3Ex, "S3 error updating {Key}: {ErrorCode} - {Message}",
-                s3ObjectCustom.S3ObjectKey, s3Ex.ErrorCode, s3Ex.Message);
-
-            response.StatusCode = (int)s3Ex.StatusCode;
-            response.Message = s3Ex.Message;
-            return response;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error updating {Key}",
-                s3ObjectCustom.S3ObjectKey);
-
-            response.StatusCode = 500;
-            response.Message = ex.Message;
-            return response;
-        }
+            return new S3Response
+            {
+                StatusCode = 200,
+                Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se actualizó correctamente en Amazon S3"
+            };
+        });
     }
 
     /// <summary>
@@ -294,6 +253,35 @@ public class S3StorageService : IS3StorageService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(s3ObjectCustom);
 
+        return await ExecuteStorageOperationAsync(s3ObjectCustom, "deleting", async client =>
+        {
+            var request = new DeleteObjectRequest
+            {
+                BucketName = s3ObjectCustom.BucketName,
+                Key = s3ObjectCustom.S3ObjectKey
+            };
+
+            await client.DeleteObjectAsync(request);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Successfully deleted {Key} from bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
+
+            return new S3Response
+            {
+                StatusCode = 200,
+                Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se eliminó correctamente de Amazon S3"
+            };
+        });
+    }
+
+    private async Task<S3Response> ExecuteStorageOperationAsync(
+        S3ObjectCustom s3ObjectCustom,
+        string operation,
+        Func<IAmazonS3, Task<S3Response>> operationFunc)
+    {
         var response = new S3Response();
 
         try
@@ -302,30 +290,14 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
-
-                var request = new DeleteObjectRequest
-                {
-                    BucketName = s3ObjectCustom.BucketName,
-                    Key = s3ObjectCustom.S3ObjectKey
-                };
-
-                await client.DeleteObjectAsync(request);
-
-                _logger.LogInformation("Successfully deleted {Key} from bucket {Bucket}",
-                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
-
-                return new S3Response
-                {
-                    StatusCode = 200,
-                    Message = $"El archivo {s3ObjectCustom.S3ObjectKey} se eliminó correctamente de Amazon S3"
-                };
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
+                return await operationFunc(client);
             });
         }
         catch (AmazonS3Exception s3Ex)
         {
-            _logger.LogError(s3Ex, "S3 error deleting {Key}: {ErrorCode} - {Message}",
-                s3ObjectCustom.S3ObjectKey, s3Ex.ErrorCode, s3Ex.Message);
+            _logger.LogError(s3Ex, "S3 error {Operation} {Key}: {ErrorCode} - {Message}",
+                operation, s3ObjectCustom.S3ObjectKey, s3Ex.ErrorCode, s3Ex.Message);
 
             response.StatusCode = (int)s3Ex.StatusCode;
             response.Message = s3Ex.Message;
@@ -333,8 +305,8 @@ public class S3StorageService : IS3StorageService, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error deleting {Key}",
-                s3ObjectCustom.S3ObjectKey);
+            _logger.LogError(ex, "Unexpected error {Operation} {Key}",
+                operation, s3ObjectCustom.S3ObjectKey);
 
             response.StatusCode = 500;
             response.Message = ex.Message;
@@ -359,7 +331,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetObjectRequest
                 {
@@ -369,10 +341,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 using var s3Response = await client.GetObjectAsync(request);
                 using var memoryStream = new MemoryStream();
-                await s3Response.ResponseStream.CopyToAsync(memoryStream);
-
-                _logger.LogInformation("Successfully retrieved {Key} from bucket {Bucket} ({Size} bytes)",
-                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName, memoryStream.Length);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Successfully retrieved {Key} from bucket {Bucket} ({Size} bytes)",
+                        s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName, memoryStream.Length);
+                }
 
                 return new S3Response
                 {
@@ -419,7 +392,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetObjectMetadataRequest
                 {
@@ -429,16 +402,22 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 await client.GetObjectMetadataAsync(request);
 
-                _logger.LogDebug("Object exists: {Key} in bucket {Bucket}",
-                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Object exists: {Key} in bucket {Bucket}",
+                        s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+                }
 
                 return true;
             });
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogDebug("Object not found: {Key} in bucket {Bucket}",
-                s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(ex, "Object not found: {Key} in bucket {Bucket}",
+                    s3ObjectCustom.S3ObjectKey, s3ObjectCustom.BucketName);
+            }
             return false;
         }
         catch (Exception ex)
@@ -467,7 +446,7 @@ public class S3StorageService : IS3StorageService, IDisposable
             {
                 await EnforceRateLimitAsync();
 
-                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? "us-east-1");
+                var client = GetOrCreateClient(s3ObjectCustom.AwsCredentials, s3ObjectCustom.Region ?? _options.Region ?? DefaultAwsRegion);
 
                 var request = new GetPreSignedUrlRequest
                 {
@@ -478,8 +457,11 @@ public class S3StorageService : IS3StorageService, IDisposable
 
                 var presignedUrl = await Task.Run(() => client.GetPreSignedURL(request));
 
-                _logger.LogInformation("Generated presigned URL for {Key} valid for {Minutes} minutes",
-                    s3ObjectCustom.S3ObjectKey, expirationInMinutes);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Generated presigned URL for {Key} valid for {Minutes} minutes",
+                        s3ObjectCustom.S3ObjectKey, expirationInMinutes);
+                }
 
                 return new S3Response
                 {
@@ -514,26 +496,41 @@ public class S3StorageService : IS3StorageService, IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases unmanaged and optionally managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed) return;
 
-        _logger.LogInformation("Disposing S3StorageService and {ClientCount} pooled clients", _clientPool.Count);
-
-        foreach (var client in _clientPool.Values)
+        if (disposing)
         {
-            try
+            if (_logger.IsEnabled(LogLevel.Information))
             {
-                client.Dispose();
+                _logger.LogInformation("Disposing S3StorageService and {ClientCount} pooled clients", _clientPool.Count);
             }
-            catch (Exception ex)
+
+            foreach (var client in _clientPool.Values)
             {
-                _logger.LogWarning(ex, "Error disposing S3 client");
+                try
+                {
+                    client.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error disposing S3 client");
+                }
             }
+
+            _clientPool.Clear();
+            _rateLimitSemaphore?.Dispose();
         }
 
-        _clientPool.Clear();
-        _rateLimitSemaphore?.Dispose();
         _disposed = true;
-
-        GC.SuppressFinalize(this);
     }
 }

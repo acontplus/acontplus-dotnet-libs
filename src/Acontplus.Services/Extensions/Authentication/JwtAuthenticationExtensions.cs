@@ -1,7 +1,16 @@
 namespace Acontplus.Services.Extensions.Authentication;
 
+/// <summary>
+/// Extension methods for configuring JWT Bearer authentication.
+/// </summary>
 public static class JwtAuthenticationExtensions
 {
+    /// <summary>
+    /// Configures JWT Bearer authentication using settings from the provided configuration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="config">The application configuration containing JwtSettings.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
         // Extract and validate configuration values

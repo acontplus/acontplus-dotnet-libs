@@ -11,31 +11,6 @@ public static class DataTableNameMapper
     /// <param name="cmd">The SQL command containing the <c>@tableNames</c> parameter.</param>
     /// <param name="ds">The data set whose tables will be renamed.</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-    public static async Task ProcessTableNames(SqlCommand cmd, DataSet ds, CancellationToken cancellationToken = default)
-    {
-        var tableNames = cmd.Parameters["@tableNames"].Value?.ToString()?.Split(',');
-        if (tableNames == null)
-        {
-            return;
-        }
-
-        // Parallel.ForEach is okay here as it's a CPU-bound operation on in-memory data
-        await Task.Run(() =>
-        {
-            var parallelOptions = new ParallelOptions { CancellationToken = cancellationToken };
-            Parallel.ForEach(tableNames, parallelOptions, (tableName, _, index) =>
-            {
-                if (string.IsNullOrEmpty(tableName))
-                {
-                    return;
-                }
-
-                // Ensure index is within bounds to prevent ArgumentOutOfRangeException
-                if (index >= 0 && index < ds.Tables.Count)
-                {
-                    ds.Tables[(int)index].TableName = tableName;
-                }
-            });
-        }, cancellationToken);
-    }
+    public static Task ProcessTableNames(SqlCommand cmd, DataSet ds, CancellationToken cancellationToken = default) =>
+        Common.Mapping.DataTableNameMapper.ProcessTableNames(cmd, ds, cancellationToken);
 }

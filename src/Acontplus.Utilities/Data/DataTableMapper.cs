@@ -2,8 +2,18 @@ using System.Reflection;
 
 namespace Acontplus.Utilities.Data;
 
+/// <summary>
+/// Provides reflection-based mapping utilities between ADO.NET DataTables / DataRows and strongly typed models.
+/// </summary>
 public static class DataTableMapper
 {
+    /// <summary>
+    /// Maps a single <see cref="DataRow"/> to a new instance of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target model type.</typeparam>
+    /// <param name="row">The source data row to map.</param>
+    /// <returns>A mapped instance of <typeparamref name="T"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="row"/> is null.</exception>
     public static T MapDataRowToModel<T>(DataRow row)
     {
         if (row == null)
@@ -86,36 +96,26 @@ public static class DataTableMapper
             }
         }
 
-        if (requiredPropertiesNotSet.Any())
+        if (requiredPropertiesNotSet.Count > 0)
         {
             throw new InvalidOperationException(
                 $"Required properties not set: {string.Join(", ", requiredPropertiesNotSet)}");
         }
     }
 
-    private static bool IsRequiredProperty(PropertyInfo property)
-    {
-        // Check if property has the 'required' modifier by checking its backing field
-        var backingField = property.DeclaringType?.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-            .FirstOrDefault(f => f.Name.StartsWith($"<{property.Name}>"));
-
-        return backingField != null && backingField.CustomAttributes.Any(attr =>
+    private static bool IsRequiredProperty(PropertyInfo property) =>
+        property.CustomAttributes.Any(attr =>
             attr.AttributeType.FullName == "System.Runtime.CompilerServices.RequiredMemberAttribute");
-    }
 
-    private static bool IsDefaultValue(PropertyInfo property, object instance)
-    {
-        var value = property.GetValue(instance);
-        return value == null || (property.PropertyType == typeof(string)
-            ? string.IsNullOrEmpty((string)value)
-            : value.Equals(GetDefaultValue(property.PropertyType)));
-    }
+    private static object? GetDefaultValue(Type type) =>
+        type.IsValueType ? Activator.CreateInstance(type) : null;
 
-    private static object? GetDefaultValue(Type type)
-    {
-        return type.IsValueType ? Activator.CreateInstance(type) : null;
-    }
-
+    /// <summary>
+    /// Maps all rows in a <see cref="DataTable"/> to a strongly typed list of <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target model type, requiring a parameterless constructor.</typeparam>
+    /// <param name="dt">The source data table.</param>
+    /// <returns>A list of mapped model instances.</returns>
     public static List<T> MapDataTableToList<T>(DataTable dt) where T : new()
     {
         if (dt == null || dt.Rows.Count == 0)
@@ -143,20 +143,7 @@ public static class DataTableMapper
             // Handle special cases first
             if (underlyingType == typeof(bool))
             {
-                if (value is string strValue)
-                {
-                    if (bool.TryParse(strValue, out var boolResult))
-                        return boolResult;
-                    // Handle common boolean string representations
-                    return strValue.ToLowerInvariant() switch
-                    {
-                        "1" or "yes" or "y" => true,
-                        "0" or "no" or "n" => false,
-                        _ => false
-                    };
-                }
-                if (value is int intValue)
-                    return intValue != 0;
+                return ConvertBooleanValue(value);
             }
 
             if (underlyingType == typeof(int) && value is string intStr)
@@ -164,33 +151,15 @@ public static class DataTableMapper
                 return int.TryParse(intStr, out var intResult) ? intResult : 0;
             }
 
-            if (underlyingType == typeof(byte[]) && value is string base64Str)
+            if (underlyingType == typeof(byte[]))
             {
-                try
-                {
-                    return Convert.FromBase64String(base64Str);
-                }
-                catch
-                {
-                    return null;
-                }
+                return ConvertByteArrayValue(value);
             }
 
             // Handle List<T> types
             if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
             {
-                if (value is string jsonStr)
-                {
-                    try
-                    {
-                        return JsonSerializer.Deserialize(jsonStr, targetType, JsonExtensions.DefaultOptions);
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
-                return null;
+                return ConvertListValue(value, targetType);
             }
 
             // Handle string to string conversion explicitly to avoid unnecessary Convert.ChangeType
@@ -210,6 +179,59 @@ public static class DataTableMapper
             // Return default value for value types, null for reference types
             return underlyingType.IsValueType ? Activator.CreateInstance(underlyingType) : null;
         }
+    }
+
+    private static bool ConvertBooleanValue(object value)
+    {
+        if (value is string strValue)
+        {
+            if (bool.TryParse(strValue, out var boolResult))
+                return boolResult;
+
+            return strValue.ToLowerInvariant() switch
+            {
+                "1" or "yes" or "y" => true,
+                "0" or "no" or "n" => false,
+                _ => false
+            };
+        }
+
+        if (value is int intValue)
+            return intValue != 0;
+
+        return false;
+    }
+
+    private static byte[]? ConvertByteArrayValue(object value)
+    {
+        if (value is string base64Str)
+        {
+            try
+            {
+                return Convert.FromBase64String(base64Str);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static object? ConvertListValue(object value, Type targetType)
+    {
+        if (value is string jsonStr)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize(jsonStr, targetType, JsonExtensions.DefaultOptions);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        return null;
     }
 
     private static bool IsNullableType(Type type)

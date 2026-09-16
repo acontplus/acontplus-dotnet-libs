@@ -108,7 +108,7 @@ public static class FilterPredicateExtensions
         return Expression.Lambda<Func<T, bool>>(rangeExpression, parameter);
     }
 
-    private static Expression? GetPropertyExpression<T>(ParameterExpression parameter, string propertyName)
+    private static MemberExpression? GetPropertyExpression<T>(ParameterExpression parameter, string propertyName)
     {
         try
         {
@@ -121,7 +121,7 @@ public static class FilterPredicateExtensions
         }
     }
 
-    private static Expression CreateComparisonExpression(Expression propertyExpression, Expression valueExpression, object value)
+    private static BinaryExpression CreateComparisonExpression(Expression propertyExpression, Expression valueExpression, object value)
     {
         // Handle null values
         if (value == null)
@@ -139,21 +139,17 @@ public static class FilterPredicateExtensions
         }
 
         // Handle enum comparisons
-        if (propertyExpression.Type.IsEnum && value is string enumString)
+        if (propertyExpression.Type.IsEnum && value is string enumString &&
+            Enum.TryParse(propertyExpression.Type, enumString, true, out var enumValue))
         {
-            if (Enum.TryParse(propertyExpression.Type, enumString, true, out var enumValue))
-            {
-                return Expression.Equal(propertyExpression, Expression.Constant(enumValue, propertyExpression.Type));
-            }
+            return Expression.Equal(propertyExpression, Expression.Constant(enumValue, propertyExpression.Type));
         }
 
         // Handle boolean comparisons
-        if (propertyExpression.Type == typeof(bool) && value is string boolString)
+        if (propertyExpression.Type == typeof(bool) && value is string boolString &&
+            bool.TryParse(boolString, out var boolValue))
         {
-            if (bool.TryParse(boolString, out var boolValue))
-            {
-                return Expression.Equal(propertyExpression, Expression.Constant(boolValue, typeof(bool)));
-            }
+            return Expression.Equal(propertyExpression, Expression.Constant(boolValue, typeof(bool)));
         }
 
         // Default equality comparison

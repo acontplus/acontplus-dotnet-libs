@@ -1,7 +1,16 @@
 namespace Acontplus.Services.Extensions.Security;
 
+/// <summary>
+/// Extension methods for configuring security header policies and Content Security Policy (CSP).
+/// </summary>
 public static class SecurityHeaderPolicyExtensions
 {
+    /// <summary>
+    /// Configures security headers and Content Security Policy (CSP) based on the application environment.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <param name="environment">The web host environment.</param>
+    /// <returns>The application builder for chaining.</returns>
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app, IWebHostEnvironment environment)
     {
         var policyCollection = new HeaderPolicyCollection()
@@ -26,17 +35,17 @@ public static class SecurityHeaderPolicyExtensions
 
         if (useStrictCsp)
         {
-            ConfigureStrictCSP(policyCollection, environment, cspConfig);
+            ConfigureStrictCSP(policyCollection, cspConfig);
         }
         else
         {
-            ConfigurePermissiveCSP(policyCollection, environment, cspConfig);
+            ConfigurePermissiveCSP(policyCollection, cspConfig);
         }
 
         return app.UseSecurityHeaders(policyCollection);
     }
 
-    private static void ConfigurePermissiveCSP(HeaderPolicyCollection policyCollection, IWebHostEnvironment environment, CspConfiguration cspConfig)
+    private static void ConfigurePermissiveCSP(HeaderPolicyCollection policyCollection, CspConfiguration cspConfig)
     {
         policyCollection.AddContentSecurityPolicy(builder =>
         {
@@ -51,37 +60,11 @@ public static class SecurityHeaderPolicyExtensions
             var styleSrc = builder.AddStyleSrc().Self().UnsafeInline();
             AddConfiguredSources(styleSrc, cspConfig.AllowedStyleSources);
 
-            // Configure image sources with data URLs
-            var imgSrc = builder.AddImgSrc().Self().Data();
-            AddConfiguredSources(imgSrc, cspConfig.AllowedImageSources);
-
-            // Configure font sources with data URLs
-            var fontSrc = builder.AddFontSrc().Self().Data();
-            AddConfiguredSources(fontSrc, cspConfig.AllowedFontSources);
-
-            // Configure connect sources
-            var connectSrc = builder.AddConnectSrc().Self();
-            AddConfiguredSources(connectSrc, cspConfig.AllowedConnectSources);
-
-            // Configure media sources
-            var mediaSrc = builder.AddMediaSrc().Self();
-            AddConfiguredSources(mediaSrc, cspConfig.AllowedMediaSources);
-
-            // Configure frame sources
-            var frameSrc = builder.AddFrameSrc().Self();
-            AddConfiguredSources(frameSrc, cspConfig.AllowedFrameSources);
-
-            // Configure base URI sources
-            var baseUri = builder.AddBaseUri().Self();
-            AddConfiguredSources(baseUri, cspConfig.AllowedBaseUriSources);
-
-            // Configure form action sources
-            var formAction = builder.AddFormAction().Self();
-            AddConfiguredSources(formAction, cspConfig.AllowedFormActionSources);
+            ConfigureSharedCspSources(builder, cspConfig);
         });
     }
 
-    private static void ConfigureStrictCSP(HeaderPolicyCollection policyCollection, IWebHostEnvironment environment, CspConfiguration cspConfig)
+    private static void ConfigureStrictCSP(HeaderPolicyCollection policyCollection, CspConfiguration cspConfig)
     {
         policyCollection.AddContentSecurityPolicy(builder =>
         {
@@ -96,34 +79,39 @@ public static class SecurityHeaderPolicyExtensions
             var styleSrc = builder.AddStyleSrc().Self().WithNonce();
             AddConfiguredSources(styleSrc, cspConfig.AllowedStyleSources);
 
-            // Configure image sources with data URLs
-            var imgSrc = builder.AddImgSrc().Self().Data();
-            AddConfiguredSources(imgSrc, cspConfig.AllowedImageSources);
-
-            // Configure font sources with data URLs
-            var fontSrc = builder.AddFontSrc().Self().Data();
-            AddConfiguredSources(fontSrc, cspConfig.AllowedFontSources);
-
-            // Configure connect sources
-            var connectSrc = builder.AddConnectSrc().Self();
-            AddConfiguredSources(connectSrc, cspConfig.AllowedConnectSources);
-
-            // Configure media sources
-            var mediaSrc = builder.AddMediaSrc().Self();
-            AddConfiguredSources(mediaSrc, cspConfig.AllowedMediaSources);
-
-            // Configure frame sources
-            var frameSrc = builder.AddFrameSrc().Self();
-            AddConfiguredSources(frameSrc, cspConfig.AllowedFrameSources);
-
-            // Configure base URI sources
-            var baseUri = builder.AddBaseUri().Self();
-            AddConfiguredSources(baseUri, cspConfig.AllowedBaseUriSources);
-
-            // Configure form action sources
-            var formAction = builder.AddFormAction().Self();
-            AddConfiguredSources(formAction, cspConfig.AllowedFormActionSources);
+            ConfigureSharedCspSources(builder, cspConfig);
         });
+    }
+
+    private static void ConfigureSharedCspSources(CspBuilder builder, CspConfiguration cspConfig)
+    {
+        // Configure image sources with data URLs
+        var imgSrc = builder.AddImgSrc().Self().Data();
+        AddConfiguredSources(imgSrc, cspConfig.AllowedImageSources);
+
+        // Configure font sources with data URLs
+        var fontSrc = builder.AddFontSrc().Self().Data();
+        AddConfiguredSources(fontSrc, cspConfig.AllowedFontSources);
+
+        // Configure connect sources
+        var connectSrc = builder.AddConnectSrc().Self();
+        AddConfiguredSources(connectSrc, cspConfig.AllowedConnectSources);
+
+        // Configure media sources
+        var mediaSrc = builder.AddMediaSrc().Self();
+        AddConfiguredSources(mediaSrc, cspConfig.AllowedMediaSources);
+
+        // Configure frame sources
+        var frameSrc = builder.AddFrameSrc().Self();
+        AddConfiguredSources(frameSrc, cspConfig.AllowedFrameSources);
+
+        // Configure base URI sources
+        var baseUri = builder.AddBaseUri().Self();
+        AddConfiguredSources(baseUri, cspConfig.AllowedBaseUriSources);
+
+        // Configure form action sources
+        var formAction = builder.AddFormAction().Self();
+        AddConfiguredSources(formAction, cspConfig.AllowedFormActionSources);
     }
 
     private static void AddConfiguredSources<T>(T builder, IEnumerable<string> sources) where T : class

@@ -3,10 +3,15 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
+/// <summary>
+/// Parser for electronic invoices (factura - codDoc 01).
+/// </summary>
+/// <param name="detailsParser">The item details parser.</param>
 public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentTypeParser
 {
     private readonly IDetailsParser _detailsParser = detailsParser ?? throw new ArgumentNullException(nameof(detailsParser));
 
+    /// <inheritdoc />
     public bool Parse(XmlDocument xmlDocument, ComprobanteElectronico comprobante, out string errorMessage)
     {
         errorMessage = string.Empty;
@@ -42,7 +47,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
         }
     }
 
-    private void ParseInfoFactura(XmlNode nodeInfoFactura, ComprobanteElectronico comprobante)
+    private static void ParseInfoFactura(XmlNode nodeInfoFactura, ComprobanteElectronico comprobante)
     {
         var infoFac = new InfoFactura
         {
@@ -62,7 +67,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
             Moneda = nodeInfoFactura.SelectSingleNode("moneda")?.InnerText ?? string.Empty
         };
 
-        ParseTotalTaxes(comprobante.CodDoc, infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
+        ParseTotalTaxes(infoFac, nodeInfoFactura.SelectSingleNode("totalConImpuestos"));
 
         var pagosNode = nodeInfoFactura.SelectSingleNode("pagos");
         if (pagosNode != null)
@@ -73,7 +78,7 @@ public class FacturaDocumentParser(IDetailsParser detailsParser) : IDocumentType
         comprobante.CreateInfoComp(comprobante.CodDoc, infoFac);
     }
 
-    private void ParseTotalTaxes(string codDoc, InfoFactura infoFac, XmlNode? impuestos)
+    private static void ParseTotalTaxes(InfoFactura infoFac, XmlNode? impuestos)
     {
         if (impuestos == null) return;
 

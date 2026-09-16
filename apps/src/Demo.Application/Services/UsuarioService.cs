@@ -575,7 +575,7 @@ namespace Demo.Application.Services
         {
             try
             {
-                var t = 4 / (id - 3); // Will throw DivideByZeroException if id == 3
+                _ = 4 / (id - 3); // Will throw DivideByZeroException if id == 3
                 return new Usuario
                 {
                     Id = id,

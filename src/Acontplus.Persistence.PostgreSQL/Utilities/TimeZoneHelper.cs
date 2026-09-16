@@ -26,10 +26,8 @@ public static class TimeZoneHelper
     /// </summary>
     /// <param name="utcDateTime">The nullable UTC date and time.</param>
     /// <returns>The Ecuador local date and time, or <c>null</c>.</returns>
-    public static DateTime? ToEcuadorTime(this DateTime? utcDateTime)
-    {
-        return utcDateTime?.ToEcuadorTime();
-    }
+    public static DateTime? ToEcuadorTime(this DateTime? utcDateTime) =>
+        utcDateTime?.ToEcuadorTime();
 
     /// <summary>
     /// Converts a UTC <see cref="DateTime"/> to the server's local time zone.
@@ -46,10 +44,8 @@ public static class TimeZoneHelper
     /// <summary>
     /// Convertir de zona horaria local a UTC (para guardar en BD)
     /// </summary>
-    public static DateTime FromEcuadorTimeToUtc(DateTime ecuadorDateTime)
-    {
-        return TimeZoneInfo.ConvertTimeToUtc(ecuadorDateTime, EcuadorTimeZone);
-    }
+    public static DateTime FromEcuadorTimeToUtc(DateTime ecuadorDateTime) =>
+        TimeZoneInfo.ConvertTimeToUtc(ecuadorDateTime, EcuadorTimeZone);
 
     /// <summary>
     /// Obtener la hora actual en Ecuador

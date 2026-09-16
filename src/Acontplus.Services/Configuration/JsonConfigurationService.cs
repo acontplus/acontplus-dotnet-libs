@@ -1,4 +1,4 @@
-﻿// AcontPlus.Services/Configuration/JsonConfigurationService.cs
+// AcontPlus.Services/Configuration/JsonConfigurationService.cs
 
 namespace Acontplus.Services.Configuration;
 
@@ -60,8 +60,12 @@ public static class JsonConfigurationService
     /// <param name="useStrictMode">Whether to use strict JSON validation</param>
     public static void ConfigureAspNetCore(IServiceCollection services, bool isDevelopment, bool useStrictMode = false)
     {
-        var jsonOptions = useStrictMode ? GetOptions(strictMode: true) :
-                         isDevelopment ? GetOptions(prettyFormat: true) : GetOptions();
+        var jsonOptions = (useStrictMode, isDevelopment) switch
+        {
+            (true, _) => GetOptions(strictMode: true),
+            (false, true) => GetOptions(prettyFormat: true),
+            _ => GetOptions()
+        };
 
         services.ConfigureHttpJsonOptions(options =>
         {
@@ -113,6 +117,12 @@ public static class JsonConfigurationService
 /// </summary>
 public interface IJsonConfigurationProvider
 {
+    /// <summary>
+    /// Gets JSON serializer options with configurable settings.
+    /// </summary>
+    /// <param name="prettyFormat">Whether to format the JSON output with indentation.</param>
+    /// <param name="strictMode">Whether to enforce strict JSON reading and validation rules.</param>
+    /// <returns>Configured <see cref="JsonSerializerOptions"/>.</returns>
     JsonSerializerOptions GetOptions(bool prettyFormat = false, bool strictMode = false);
 }
 
@@ -121,6 +131,7 @@ public interface IJsonConfigurationProvider
 /// </summary>
 public class JsonConfigurationProvider : IJsonConfigurationProvider
 {
+    /// <inheritdoc />
     public JsonSerializerOptions GetOptions(bool prettyFormat = false, bool strictMode = false) =>
         JsonConfigurationService.GetOptions(prettyFormat, strictMode);
 }

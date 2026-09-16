@@ -1,4 +1,4 @@
-﻿namespace Acontplus.Utilities.IO;
+namespace Acontplus.Utilities.IO;
 
 /// <summary>
 /// Provides helper methods for retrieving the current application environment.
@@ -15,6 +15,6 @@ public static class EnvironmentHelper
         var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         ArgumentNullException.ThrowIfNull(environmentName);
 
-        return (EnvironmentEnums)Enum.Parse(typeof(EnvironmentEnums), environmentName);
+        return Enum.Parse<EnvironmentEnums>(environmentName);
     }
 }

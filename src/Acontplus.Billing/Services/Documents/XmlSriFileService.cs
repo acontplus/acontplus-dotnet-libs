@@ -3,26 +3,31 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents
 {
-    public class XmlSriFileService : IXmlSriFileService
+/// <summary>
+/// Service for parsing and validating electronic document XML files from SRI.
+/// </summary>
+public class XmlSriFileService : IXmlSriFileService
+{
+    private const string TagFechaEmision = "fechaEmision";
+    private const string TagVersionComp = "version";
+
+    /// <inheritdoc />
+    public async Task<XmlSriFileModel?> GetAsync(IFormFile file)
     {
-        private const string TagFechaEmision = "fechaEmision";
-        private const string TagVersionComp = "version";
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("File is null or empty", nameof(file));
 
-        public async Task<XmlSriFileModel?> GetAsync(IFormFile file)
+        string rawXml;
+        using (var reader = new StreamReader(file.OpenReadStream()))
         {
-            if (file == null || file.Length == 0)
-                throw new ArgumentException("File is null or empty", nameof(file));
-
-            string rawXml;
-            using (var reader = new StreamReader(file.OpenReadStream()))
-            {
-                rawXml = await reader.ReadToEndAsync();
-            }
-
-            return await GetAsync(rawXml);
+            rawXml = await reader.ReadToEndAsync();
         }
 
-        public async Task<XmlSriFileModel?> GetAsync(string xmlSri)
+        return await GetAsync(rawXml);
+    }
+
+    /// <inheritdoc />
+    public async Task<XmlSriFileModel?> GetAsync(string xmlSri)
         {
             if (string.IsNullOrWhiteSpace(xmlSri))
                 throw new ArgumentException("XML string is null or empty", nameof(xmlSri));
@@ -89,7 +94,7 @@ namespace Acontplus.Billing.Services.Documents
             });
         }
 
-        private void SetVersionAndFechaEmision(XmlDocument xmlComprobante, string codDoc, out string versionComp,
+        private static void SetVersionAndFechaEmision(XmlDocument xmlComprobante, string codDoc, out string versionComp,
             out string fechaEmision)
         {
             switch (codDoc)
@@ -123,13 +128,13 @@ namespace Acontplus.Billing.Services.Documents
             }
         }
 
-        private string GetAttributeValue(XmlDocument xmlDocument, string tagName, string attributeName)
+        private static string GetAttributeValue(XmlDocument xmlDocument, string tagName, string attributeName)
         {
             return xmlDocument.GetElementsByTagName(tagName)[0]?.Attributes?[attributeName]?.Value ??
                    throw new InvalidOperationException($"Attribute '{attributeName}' not found in tag '{tagName}'");
         }
 
-        private string GetInnerText(XmlDocument xmlDocument, string parentTagName, string childTagName)
+        private static string GetInnerText(XmlDocument xmlDocument, string parentTagName, string childTagName)
         {
             return xmlDocument.GetElementsByTagName(parentTagName)[0]?.SelectSingleNode(childTagName)?.InnerText ??
                    throw new InvalidOperationException($"Tag '{childTagName}' not found in '{parentTagName}'");

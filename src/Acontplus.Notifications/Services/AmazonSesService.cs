@@ -11,6 +11,9 @@ using Template = Scriban.Template;
 
 namespace Acontplus.Notifications.Services;
 
+/// <summary>
+/// Email delivery service implementing <see cref="IMailKitService"/> using the Amazon Simple Email Service (SES) v2 API.
+/// </summary>
 public sealed class AmazonSesService : IMailKitService, IDisposable
 {
     private const int MaxSesBulkRecipients = 50;
@@ -24,7 +27,6 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         RegexOptions.Compiled | RegexOptions.IgnoreCase,
         TimeSpan.FromMilliseconds(100));
 
-    private readonly IConfiguration _configuration;
     private readonly ILogger<AmazonSesService> _logger;
     private readonly IMemoryCache _templateCache;
     private readonly AmazonSimpleEmailServiceV2Client _sesClient;
@@ -42,24 +44,28 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
     private readonly int _batchSize;
     private readonly TimeSpan _batchDelay;
     private readonly string? _defaultFromEmail;
-    private readonly string? _mediaImagesPath;
     private readonly string? _templatesPath;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AmazonSesService"/> class.
+    /// </summary>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="memoryCache">The memory cache instance for template caching.</param>
     public AmazonSesService(
         IConfiguration configuration,
         ILogger<AmazonSesService> logger,
         IMemoryCache? memoryCache = null)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        ArgumentNullException.ThrowIfNull(configuration);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _templateCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache), "IMemoryCache must be registered in DI container");
         _serviceStopwatch = Stopwatch.StartNew();
 
         // Initialize SES v2 client with configuration
-        var sesRegion = _configuration.GetValue("AWS:SES:Region", "us-east-1");
-        _defaultFromEmail = _configuration.GetValue<string>("AWS:SES:DefaultFromEmail");
-        _mediaImagesPath = _configuration.GetValue<string>("Media:ImagesPath");
-        _templatesPath = _configuration.GetValue<string>("Templates:Path") ??
+        var sesRegion = configuration.GetValue("AWS:SES:Region", "us-east-1");
+        _defaultFromEmail = configuration.GetValue<string>("AWS:SES:DefaultFromEmail");
+        _templatesPath = configuration.GetValue<string>("Templates:Path") ??
                          Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates");
 
         var sesConfig = new AmazonSimpleEmailServiceV2Config
@@ -71,28 +77,29 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         };
 
         // Use IAM roles or AWS SDK default credential chain
-        var accessKey = _configuration.GetValue<string>("AWS:SES:AccessKey");
-        var secretKey = _configuration.GetValue<string>("AWS:SES:SecretKey");
+        var accessKey = configuration.GetValue<string>("AWS:SES:AccessKey");
+        var secretKey = configuration.GetValue<string>("AWS:SES:SecretKey");
 
         _sesClient = !string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey)
             ? new AmazonSimpleEmailServiceV2Client(accessKey, secretKey, sesConfig)
             : new AmazonSimpleEmailServiceV2Client(sesConfig);
 
         // Configure rate limiting
-        _maxSendRate = _configuration.GetValue("AWS:SES:MaxSendRate", DefaultMaxSendRate);
+        _maxSendRate = configuration.GetValue("AWS:SES:MaxSendRate", DefaultMaxSendRate);
         _rateLimitWindow = TimeSpan.FromSeconds(1);
         _rateLimitSemaphore = new SemaphoreSlim(_maxSendRate, _maxSendRate);
         _sendTimestamps = new ConcurrentQueue<DateTime>();
 
         // Bulk sending configuration
-        _batchSize = Math.Min(_configuration.GetValue("AWS:SES:BatchSize", DefaultBatchSize), MaxSesBulkRecipients);
-        _batchDelay = TimeSpan.FromMilliseconds(_configuration.GetValue("AWS:SES:BatchDelayMs", DefaultBatchDelayMs));
+        _batchSize = Math.Min(configuration.GetValue("AWS:SES:BatchSize", DefaultBatchSize), MaxSesBulkRecipients);
+        _batchDelay = TimeSpan.FromMilliseconds(configuration.GetValue("AWS:SES:BatchDelayMs", DefaultBatchDelayMs));
 
         // Configure retry policies with circuit breaker pattern
         _retryPolicy = CreateRetryPolicy();
         _bulkRetryPolicy = CreateBulkRetryPolicy();
     }
 
+    /// <inheritdoc />
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(email);
@@ -109,9 +116,12 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
                 var sendRequest = await BuildSendEmailRequestAsync(email, ct).ConfigureAwait(false);
 
-                _logger.LogDebug("Sending email via SES v2 to {RecipientEmail}", email.RecipientEmail);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Sending email via SES v2 to {RecipientEmail}", email.RecipientEmail);
+                }
 
-                var response = await _sesClient.SendEmailAsync(sendRequest, ct).ConfigureAwait(false);
+                await _sesClient.SendEmailAsync(sendRequest, ct).ConfigureAwait(false);
 
                 RecordSendTimestamp();
                 return true;
@@ -119,12 +129,17 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Failed to send email to {RecipientEmail}", email.RecipientEmail);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            throw;
+            throw new InvalidOperationException($"Failed to send email to {email.RecipientEmail}", ex);
         }
     }
 
+    /// <summary>
+    /// Sends a collection of individual emails in batches asynchronously.
+    /// </summary>
+    /// <param name="emails">The collection of emails to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns><c>true</c> if all emails were sent successfully; otherwise, <c>false</c>.</returns>
     public async Task<bool> SendBulkAsync(IEnumerable<EmailModel> emails, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(emails);
@@ -139,8 +154,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         var successCount = 0;
         var totalCount = emailList.Count;
 
-        _logger.LogInformation("Starting bulk send of {TotalCount} emails in {BatchCount} batches",
-            totalCount, batches.Count);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Starting bulk send of {TotalCount} emails in {BatchCount} batches",
+                totalCount, batches.Count);
+        }
 
         foreach (var batch in batches)
         {
@@ -178,6 +196,13 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         return success;
     }
 
+    /// <summary>
+    /// Sends templated emails to multiple destinations using an SES template in batches.
+    /// </summary>
+    /// <param name="templateName">The name of the SES email template.</param>
+    /// <param name="destinations">The collection of destinations and replacement template data.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns><c>true</c> if all destinations were sent successfully; otherwise, <c>false</c>.</returns>
     public async Task<bool> SendTemplatedBulkAsync(
         string templateName,
         IEnumerable<BulkEmailDestination> destinations,
@@ -202,8 +227,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         var batches = BatchDestinations(destinationList, MaxSesBulkRecipients);
         var successCount = 0;
 
-        _logger.LogInformation("Starting templated bulk send to {TotalCount} recipients in {BatchCount} batches",
-            destinationList.Count, batches.Count);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Starting templated bulk send to {TotalCount} recipients in {BatchCount} batches",
+                destinationList.Count, batches.Count);
+        }
 
         foreach (var batch in batches)
         {
@@ -260,8 +288,11 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
                     await Task.Delay(_batchDelay, ct).ConfigureAwait(false);
                 }
 
-                _logger.LogDebug("Batch completed with {SuccessCount}/{BatchSize} successes",
-                    successfulMessages, batch.Count);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Batch completed with {SuccessCount}/{BatchSize} successes",
+                        successfulMessages, batch.Count);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -279,8 +310,8 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
     private async Task<SendEmailRequest> BuildSendEmailRequestAsync(EmailModel email, CancellationToken ct)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
-        ArgumentException.ThrowIfNullOrEmpty(email.RecipientEmail, nameof(email.RecipientEmail));
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail);
+        ArgumentException.ThrowIfNullOrEmpty(email.RecipientEmail);
 
         var request = new SendEmailRequest
         {
@@ -489,19 +520,19 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         {
             CleanupOldTimestamps();
 
-            if (_sendTimestamps.Count >= _maxSendRate)
+            if (_sendTimestamps.Count >= _maxSendRate && _sendTimestamps.TryPeek(out var oldestTimestamp))
             {
-                if (_sendTimestamps.TryPeek(out var oldestTimestamp))
+                var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
+                if (timeToWait > TimeSpan.Zero)
                 {
-                    var timeToWait = oldestTimestamp + _rateLimitWindow - DateTime.UtcNow;
-                    if (timeToWait > TimeSpan.Zero)
+                    if (_logger.IsEnabled(LogLevel.Debug))
                     {
                         _logger.LogDebug("Rate limit reached ({CurrentCount}/{MaxRate}), waiting {WaitTime}",
                             _sendTimestamps.Count, _maxSendRate, timeToWait);
-
-                        await Task.Delay(timeToWait, ct).ConfigureAwait(false);
-                        CleanupOldTimestamps();
                     }
+
+                    await Task.Delay(timeToWait, ct).ConfigureAwait(false);
+                    CleanupOldTimestamps();
                 }
             }
         }
@@ -585,10 +616,8 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
                ex.Message.Contains("concurrent", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string FormatEmailAddress(string? name, string email)
-    {
-        return string.IsNullOrEmpty(name) ? email : $"{name} <{email}>";
-    }
+    private static string FormatEmailAddress(string? name, string email) =>
+        string.IsNullOrEmpty(name) ? email : $"{name} <{email}>";
 
     private static List<string> ParseAndValidateRecipients(string recipients, string type = "Recipient")
     {
@@ -664,9 +693,12 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
 
     private static string LowerFirstCharacter(string value)
     {
-        return string.IsNullOrEmpty(value)
-            ? value
-            : value.Length > 1
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return value.Length > 1
             ? char.ToLowerInvariant(value[0]) + value[1..]
             : char.ToLowerInvariant(value[0]).ToString();
     }
@@ -743,7 +775,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         }
     }
 
-    private Activity? StartActivity([CallerMemberName] string operationName = "")
+    private Activity? StartActivity(string operationName)
     {
         var activity = new Activity(operationName);
         activity.SetTag("service", "AmazonSES");
@@ -752,6 +784,7 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         return activity.Start();
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         _sesClient?.Dispose();
@@ -759,9 +792,19 @@ public sealed class AmazonSesService : IMailKitService, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Represents a destination recipient and optional replacement data for SES bulk templated sending.
+    /// </summary>
     public sealed class BulkEmailDestination
     {
+        /// <summary>
+        /// Gets or sets the SES destination containing recipient email addresses.
+        /// </summary>
         public Destination Destination { get; set; } = new();
+
+        /// <summary>
+        /// Gets or sets JSON-serialized template replacement data specific to this destination.
+        /// </summary>
         public string? ReplacementTemplateData { get; set; }
     }
 }

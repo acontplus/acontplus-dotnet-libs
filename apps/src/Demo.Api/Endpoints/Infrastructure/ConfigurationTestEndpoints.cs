@@ -128,7 +128,6 @@ public static class ConfigurationTestEndpoints
         {
             try
             {
-                var context = requestContext.GetRequestContext();
                 var correlationId = requestContext.GetCorrelationId();
                 var clientId = requestContext.GetClientId();
                 var tenantId = requestContext.GetTenantId();

@@ -36,13 +36,14 @@ public static partial class UtilitiesServiceExtensions
 
         services.AddSingleton<IObjectMapper>(_ =>
         {
-            var configuration = new MapperConfiguration();
-
-            configuration.CompileDelegate = (pair, config, registry) =>
+            var configuration = new MapperConfiguration
             {
-                var expression = ExpressionBuilder.BuildMappingExpression(
-                    pair, config, registry, new HashSet<TypePair>());
-                return DelegateCompiler.Compile(expression);
+                CompileDelegate = (pair, config, registry) =>
+                {
+                    var expression = ExpressionBuilder.BuildMappingExpression(
+                        pair, config, registry, []);
+                    return DelegateCompiler.Compile(expression);
+                }
             };
 
             foreach (var profile in profiles)

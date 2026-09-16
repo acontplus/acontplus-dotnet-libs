@@ -12,6 +12,9 @@ using Scriban;
 
 namespace Acontplus.Notifications.Services;
 
+/// <summary>
+/// Email delivery service implementing <see cref="IMailKitService"/> using MailKit/MimeKit with connection pooling and retry policies.
+/// </summary>
 public class MailKitService : IMailKitService, IDisposable
 {
     private readonly IConfiguration _configuration;
@@ -28,8 +31,20 @@ public class MailKitService : IMailKitService, IDisposable
     private readonly ConcurrentDictionary<string, int> _authAttemptCount = new();
     private readonly TimeSpan _minAuthInterval;
     private readonly int _maxAuthAttemptsPerHour;
+    private const string TooManyLoginAttempts = "too many login attempts";
     private static readonly char[] EmailSeparators = [',', ';', '|'];
+    private static readonly JsonSerializerOptions TemplateJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MailKitService"/> class.
+    /// </summary>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="logger">The logger instance.</param>
     public MailKitService(IConfiguration configuration, ILogger<MailKitService> logger)
     {
         _configuration = configuration;
@@ -39,19 +54,25 @@ public class MailKitService : IMailKitService, IDisposable
         _retryPolicy = Policy
             .Handle<SmtpProtocolException>(ex =>
             {
-                _logger.LogDebug(ex, "Caught SmtpProtocolException: {Message}", ex.Message);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(ex, "Caught SmtpProtocolException: {Message}", ex.Message);
+                }
                 // Don't retry auth-related errors here - handle them separately
-                return !ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) &&
+                return !ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) &&
                        !ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase) &&
                        (ex.Message.Contains("Service not available", StringComparison.OrdinalIgnoreCase) ||
                         ex.Message.Contains("temporarily unavailable", StringComparison.OrdinalIgnoreCase));
             })
             .Or<SmtpCommandException>(ex =>
             {
-                _logger.LogDebug(ex, "Caught SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(ex, "Caught SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
+                }
                 // Only retry 4xx errors that are not authentication related
                 return (int)ex.StatusCode >= 400 && (int)ex.StatusCode < 500 &&
-                       !ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) &&
+                       !ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) &&
                        !ex.Message.Contains("authentication", StringComparison.OrdinalIgnoreCase);
             })
             .Or<System.Net.Sockets.SocketException>()
@@ -65,14 +86,20 @@ public class MailKitService : IMailKitService, IDisposable
         _authRetryPolicy = Policy
             .Handle<SmtpProtocolException>(ex =>
             {
-                _logger.LogDebug(ex, "Caught authentication-related SmtpProtocolException: {Message}", ex.Message);
-                return ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) ||
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(ex, "Caught authentication-related SmtpProtocolException: {Message}", ex.Message);
+                }
+                return ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) ||
                        ex.Message.Contains("authentication failed", StringComparison.OrdinalIgnoreCase);
             })
             .Or<SmtpCommandException>(ex =>
             {
-                _logger.LogDebug(ex, "Caught authentication-related SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
-                return ex.Message.Contains("too many login attempts", StringComparison.OrdinalIgnoreCase) ||
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(ex, "Caught authentication-related SmtpCommandException with StatusCode {StatusCode}: {Message}", ex.StatusCode, ex.Message);
+                }
+                return ex.Message.Contains(TooManyLoginAttempts, StringComparison.OrdinalIgnoreCase) ||
                        ex.Message.Contains("authentication failed", StringComparison.OrdinalIgnoreCase) ||
                        (int)ex.StatusCode == 535; // Authentication failed status code
             })
@@ -87,7 +114,7 @@ public class MailKitService : IMailKitService, IDisposable
                 });
 
         _maxPoolSize = _configuration.GetValue("MailKit:MaxPoolSize", 3); // Reduced default pool size
-        _smtpClientPool = new ConcurrentBag<SmtpClient>();
+        _smtpClientPool = [];
 
         // Initialize rate limiting configuration
         _minAuthInterval = TimeSpan.FromSeconds(_configuration.GetValue("MailKit:MinAuthIntervalSeconds", 30));
@@ -98,69 +125,96 @@ public class MailKitService : IMailKitService, IDisposable
     {
         var serverKey = $"{email.SmtpServer}:{email.SmtpPort}:{email.SenderEmail}";
 
-        // Check rate limiting before attempting authentication
-        if (!CanAttemptAuthentication(serverKey))
-        {
-            var waitTime = GetAuthenticationWaitTime(serverKey);
-            _logger.LogWarning("Rate limiting authentication attempts for {ServerKey}. Next attempt allowed in {WaitTime}",
-                serverKey, waitTime);
+        await ApplyRateLimitingAsync(serverKey, ct);
 
-            if (waitTime > TimeSpan.Zero)
-            {
-                await Task.Delay(waitTime, ct);
-            }
-        }
-
-        // Try to reuse existing connection first
-        if (_smtpClientPool.TryTake(out var client))
+        if (TryGetPooledClient(serverKey, out var client))
         {
-            if (client.IsConnected && client.IsAuthenticated)
-            {
-                _logger.LogDebug("Reusing existing SMTP client from pool for {ServerKey}.", serverKey);
-                return client;
-            }
-            else
-            {
-                _logger.LogDebug("SMTP client from pool was disconnected or unauthenticated. Disposing and creating new.");
-                client.Dispose();
-            }
+            return client;
         }
 
         // Create and authenticate new client with rate limiting
-        return await _authRetryPolicy.ExecuteAsync(async () =>
-        {
-            var newClient = new SmtpClient();
-            try
-            {
-                newClient.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-                newClient.CheckCertificateRevocation = email.CheckCertificateRevocation;
-
-                // Add timeout configurations
-                newClient.Timeout = 30000; // 30 seconds timeout
-
-                _logger.LogInformation("Connecting to SMTP server {SmtpServer}:{SmtpPort}...", email.SmtpServer, email.SmtpPort);
-                await newClient.ConnectAsync(email.SmtpServer, email.SmtpPort, MailKit.Security.SecureSocketOptions.Auto, ct);
-
-                // Record authentication attempt
-                RecordAuthenticationAttempt(serverKey);
-
-                _logger.LogInformation("Authenticating with SMTP server for {SenderEmail}...", email.SenderEmail);
-                await newClient.AuthenticateAsync(email.SenderEmail!, email.Password, ct);
-
-                _logger.LogInformation("Successfully connected and authenticated to SMTP server.");
-
-                // Reset auth attempt count on successful authentication
-                _authAttemptCount.TryRemove(serverKey, out _);
-
-                return newClient;
-            }
-            catch
-            {
-                newClient?.Dispose();
-                throw;
-            }
-        });
+        return await _authRetryPolicy.ExecuteAsync(() => CreateAndAuthenticateClientAsync(email, serverKey, ct));
     }
+
+    private async Task ApplyRateLimitingAsync(string serverKey, CancellationToken ct)
+    {
+        if (CanAttemptAuthentication(serverKey))
+        {
+            return;
+        }
+
+        var waitTime = GetAuthenticationWaitTime(serverKey);
+        _logger.LogWarning("Rate limiting authentication attempts for {ServerKey}. Next attempt allowed in {WaitTime}",
+            serverKey, waitTime);
+
+        if (waitTime > TimeSpan.Zero)
+        {
+            await Task.Delay(waitTime, ct);
+        }
+    }
+
+    private bool TryGetPooledClient(string serverKey, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out SmtpClient? client)
+    {
+        if (_smtpClientPool.TryTake(out var pooledClient))
+        {
+            if (pooledClient.IsConnected && pooledClient.IsAuthenticated)
+            {
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Reusing existing SMTP client from pool for {ServerKey}.", serverKey);
+                }
+                client = pooledClient;
+                return true;
+            }
+
+            _logger.LogDebug("SMTP client from pool was disconnected or unauthenticated. Disposing and creating new.");
+            pooledClient.Dispose();
+        }
+
+        client = null;
+        return false;
+    }
+
+    private async Task<SmtpClient> CreateAndAuthenticateClientAsync(EmailModel email, string serverKey, CancellationToken ct)
+    {
+        var newClient = new SmtpClient();
+        try
+        {
+            newClient.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+            newClient.CheckCertificateRevocation = email.CheckCertificateRevocation;
+
+            // Add timeout configurations
+            newClient.Timeout = 30000; // 30 seconds timeout
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Connecting and authenticating to SMTP server {SmtpServer}:{SmtpPort} for {SenderEmail}...", email.SmtpServer, email.SmtpPort, email.SenderEmail);
+            }
+
+            await newClient.ConnectAsync(email.SmtpServer, email.SmtpPort, MailKit.Security.SecureSocketOptions.Auto, ct);
+
+            // Record authentication attempt
+            RecordAuthenticationAttempt(serverKey);
+
+            await newClient.AuthenticateAsync(email.SenderEmail!, email.Password, ct);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Successfully connected and authenticated to SMTP server {SmtpServer}:{SmtpPort}.", email.SmtpServer, email.SmtpPort);
+            }
+
+            // Reset auth attempt count on successful authentication
+            _authAttemptCount.TryRemove(serverKey, out _);
+
+            return newClient;
+        }
+        catch
+        {
+            newClient?.Dispose();
+            throw;
+        }
+    }
+
 
     private bool CanAttemptAuthentication(string serverKey)
     {
@@ -206,7 +260,10 @@ public class MailKitService : IMailKitService, IDisposable
         if (_smtpClientPool.Count < _maxPoolSize && client.IsConnected && client.IsAuthenticated)
         {
             _smtpClientPool.Add(client);
-            _logger.LogDebug("Returned SMTP client to pool. Current pool size: {PoolSize}", _smtpClientPool.Count);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Returned SMTP client to pool. Current pool size: {PoolSize}", _smtpClientPool.Count);
+            }
         }
         else
         {
@@ -227,11 +284,12 @@ public class MailKitService : IMailKitService, IDisposable
         }
     }
 
+    /// <inheritdoc />
     [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S2139",
         Justification = "Exception is logged with contextual recipient information before rethrowing to caller.")]
     public async Task<bool> SendAsync(EmailModel email, CancellationToken ct = default)
     {
-        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail, nameof(email.SenderEmail));
+        ArgumentException.ThrowIfNullOrEmpty(email.SenderEmail);
         SmtpClient? smtpClient = null;
 
         try
@@ -401,13 +459,7 @@ public class MailKitService : IMailKitService, IDisposable
 
     private static string ProcessTemplate(string template, IDictionary<string, object> data)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        };
-        var reportData = JsonExtensions.DeserializeOptimized<ExpandoObject>(JsonSerializer.Serialize(data, options));
+        var reportData = JsonExtensions.DeserializeOptimized<ExpandoObject>(JsonSerializer.Serialize(data, TemplateJsonOptions));
 
         var scriptObject = new ScriptObject();
         foreach (var prop in reportData)
@@ -419,17 +471,20 @@ public class MailKitService : IMailKitService, IDisposable
         return templateTo.Render(scriptObject, member => LowerFirstCharacter(member.Name));
     }
 
-    private static string LowerFirstCharacter(string value)
-    {
-        return value.Length > 1 ? char.ToLower(value[0]) + value.Substring(1) : value;
-    }
+    private static string LowerFirstCharacter(string value) =>
+        value.Length > 1 ? char.ToLowerInvariant(value[0]) + value[1..] : value;
 
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Releases the unmanaged and optionally managed resources used by the service.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release managed resources; otherwise, <c>false</c>.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

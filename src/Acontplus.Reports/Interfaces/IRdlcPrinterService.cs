@@ -1,5 +1,8 @@
 namespace Acontplus.Reports.Interfaces;
 
+/// <summary>
+/// Service contract for printing RDLC reports directly to physical or network printers.
+/// </summary>
 public interface IRdlcPrinterService
 {
     /// <summary>

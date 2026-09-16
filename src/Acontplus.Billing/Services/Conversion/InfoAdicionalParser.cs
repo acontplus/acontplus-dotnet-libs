@@ -3,9 +3,12 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
-// Implementation of additional info parser
+/// <summary>
+/// Parser for extracting additional info key-value fields from XML into a <see cref="ComprobanteElectronico"/>.
+/// </summary>
 public class InfoAdicionalParser : IInfoAdicionalParser
 {
+    /// <inheritdoc />
     public void Parse(XmlNode nodeInfoAdicional, ComprobanteElectronico comprobante)
     {
         var infoAdicionals = (from XmlNode item in nodeInfoAdicional

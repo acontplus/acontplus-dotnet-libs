@@ -660,25 +660,25 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>An async enumerable of matching entities</returns>
         </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean)">
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Gets a paged result of all entities.
             </summary>
             <param name="pagination">Pagination parameters</param>
-            <param name="cancellationToken">Cancellation token</param>
             <param name="orderBy">Optional ordering expression</param>
             <param name="orderByDescending">Whether to order descending</param>
+            <param name="cancellationToken">Cancellation token</param>
             <returns>Paged result</returns>
         </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.GetPagedAsync(Acontplus.Core.Dtos.Requests.PaginationRequest,System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,System.Object}},System.Boolean,System.Threading.CancellationToken,System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])">
             <summary>
             Gets a paged result of entities matching the predicate.
             </summary>
             <param name="pagination">Pagination parameters</param>
             <param name="predicate">The filter predicate</param>
-            <param name="cancellationToken">Cancellation token</param>
             <param name="orderBy">Optional ordering expression</param>
             <param name="orderByDescending">Whether to order descending</param>
+            <param name="cancellationToken">Cancellation token</param>
             <param name="includeProperties">Navigation properties to include</param>
             <returns>Paged result</returns>
         </member>
@@ -813,6 +813,14 @@
             <param name="entity">The entity to delete</param>
             <param name="cancellationToken">Cancellation token</param>
         </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            Deletes entities matching the predicate.
+            </summary>
+            <param name="predicate">The filter predicate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities deleted</returns>
+        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteByIdAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Deletes an entity by its ID.
@@ -828,14 +836,6 @@
             <param name="entities">The entities to delete</param>
             <param name="cancellationToken">Cancellation token</param>
         </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.DeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
-            <summary>
-            Deletes entities matching the predicate.
-            </summary>
-            <param name="predicate">The filter predicate</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>The number of entities deleted</returns>
-        </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkDeleteAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Threading.CancellationToken)">
             <summary>
             Bulk deletes entities matching the predicate.
@@ -843,6 +843,14 @@
             <param name="predicate">The filter predicate</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>The number of entities deleted</returns>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
+            <summary>
+            Bulk inserts multiple entities.
+            </summary>
+            <param name="entities">The entities to insert</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The number of entities inserted</returns>
         </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync``1(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,``0}},``0,System.Threading.CancellationToken)">
             <summary>
@@ -854,14 +862,6 @@
             <param name="newValue">The new value</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>The number of entities updated</returns>
-        </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkInsertAsync(System.Collections.Generic.IEnumerable{`0},System.Threading.CancellationToken)">
-            <summary>
-            Bulk inserts multiple entities.
-            </summary>
-            <param name="entities">The entities to insert</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>The number of entities inserted</returns>
         </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.IRepository`1.BulkUpdateAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Linq.Expressions.Expression{System.Func{`0,`0}},System.Threading.CancellationToken)">
             <summary>
@@ -1067,6 +1067,14 @@
             Base implementation of the specification pattern for building queries with criteria, includes, ordering, and pagination.
             </summary>
             <typeparam name="T">The type of entity to query.</typeparam>
+            <param name="criteria">Optional filter criteria expression. If null, all entities will match.</param>
+        </member>
+        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.#ctor(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
+            <summary>
+            Base implementation of the specification pattern for building queries with criteria, includes, ordering, and pagination.
+            </summary>
+            <typeparam name="T">The type of entity to query.</typeparam>
+            <param name="criteria">Optional filter criteria expression. If null, all entities will match.</param>
         </member>
         <member name="P:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.Criteria">
             <summary>
@@ -1102,12 +1110,6 @@
             <summary>
             Gets a value indicating whether change tracking is enabled for this specification.
             </summary>
-        </member>
-        <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.#ctor(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1"/> class.
-            </summary>
-            <param name="criteria">Optional filter criteria expression. If null, all entities will match.</param>
         </member>
         <member name="M:Acontplus.Core.Abstractions.Persistence.BaseSpecification`1.AddInclude(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
             <summary>
@@ -2077,6 +2079,13 @@
             </summary>
             <typeparam name="TDomainEvent">The type of domain event to handle</typeparam>
         </member>
+        <member name="M:Acontplus.Core.Domain.Common.Events.BaseDomainEventHandler`1.CanHandle(`0)">
+            <summary>
+            Determines whether this handler can handle the specified domain event.
+            </summary>
+            <param name="domainEvent">The domain event to evaluate.</param>
+            <returns><c>true</c> if the event can be handled; otherwise, <c>false</c>.</returns>
+        </member>
         <member name="M:Acontplus.Core.Domain.Common.Events.BaseDomainEventHandler`1.HandleAsync(`0,System.Threading.CancellationToken)">
             <summary>
             Handles the domain event asynchronously
@@ -2909,6 +2918,19 @@
             Carry an HTTP status code and an application-level error code so that
             middleware can translate them into consistent API error responses.
             </summary>
+            <param name="statusCode">The HTTP status code.</param>
+            <param name="errorCode">Application-level error code.</param>
+            <param name="message">The exception message.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ApiException.#ctor(System.Net.HttpStatusCode,System.String,System.String)">
+            <summary>
+            Base exception for HTTP-aware domain errors.
+            Carry an HTTP status code and an application-level error code so that
+            middleware can translate them into consistent API error responses.
+            </summary>
+            <param name="statusCode">The HTTP status code.</param>
+            <param name="errorCode">Application-level error code.</param>
+            <param name="message">The exception message.</param>
         </member>
         <member name="P:Acontplus.Core.Domain.Exceptions.ApiException.StatusCode">
             <summary>The HTTP status code that should be returned to the client.</summary>
@@ -2916,52 +2938,86 @@
         <member name="P:Acontplus.Core.Domain.Exceptions.ApiException.ErrorCode">
             <summary>Application-level error code (e.g., <c>"NOT_FOUND"</c>).</summary>
         </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.ApiException.#ctor(System.Net.HttpStatusCode,System.String,System.String)">
-            <summary>Initialises a new <see cref="T:Acontplus.Core.Domain.Exceptions.ApiException"/>.</summary>
-        </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.NotFoundException">
             <summary>
             Thrown when a requested resource cannot be found.
             Maps to HTTP 404 Not Found.
             </summary>
+            <param name="resourceName">The resource name.</param>
+            <param name="key">The resource key.</param>
         </member>
         <member name="M:Acontplus.Core.Domain.Exceptions.NotFoundException.#ctor(System.String,System.Object)">
-            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.NotFoundException"/> for a named resource and its key.</summary>
+            <summary>
+            Thrown when a requested resource cannot be found.
+            Maps to HTTP 404 Not Found.
+            </summary>
+            <param name="resourceName">The resource name.</param>
+            <param name="key">The resource key.</param>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.ConflictException">
             <summary>
             Thrown when an operation would produce a state conflict.
             Maps to HTTP 409 Conflict.
             </summary>
+            <param name="resourceName">The resource name.</param>
+            <param name="conflictDetail">Details of the conflict.</param>
         </member>
         <member name="M:Acontplus.Core.Domain.Exceptions.ConflictException.#ctor(System.String,System.String)">
-            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.ConflictException"/> for a named resource.</summary>
+            <summary>
+            Thrown when an operation would produce a state conflict.
+            Maps to HTTP 409 Conflict.
+            </summary>
+            <param name="resourceName">The resource name.</param>
+            <param name="conflictDetail">Details of the conflict.</param>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.ValidationException">
             <summary>
             Thrown when one or more input values fail validation rules.
             Maps to HTTP 400 Bad Request.
             </summary>
+            <param name="errors">Field-level validation errors keyed by property name.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.ValidationException.#ctor(System.Collections.Generic.IDictionary{System.String,System.String[]})">
+            <summary>
+            Thrown when one or more input values fail validation rules.
+            Maps to HTTP 400 Bad Request.
+            </summary>
+            <param name="errors">Field-level validation errors keyed by property name.</param>
         </member>
         <member name="P:Acontplus.Core.Domain.Exceptions.ValidationException.Errors">
             <summary>Field-level validation errors keyed by property name.</summary>
-        </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.ValidationException.#ctor(System.Collections.Generic.IDictionary{System.String,System.String[]})">
-            <summary>Creates a <see cref="T:Acontplus.Core.Domain.Exceptions.ValidationException"/> with a dictionary of field errors.</summary>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.UnauthorizedException">
             <summary>
             Thrown when the caller is not authenticated.
             Maps to HTTP 401 Unauthorized.
             </summary>
+            <param name="message">Human-readable message.</param>
         </member>
         <member name="M:Acontplus.Core.Domain.Exceptions.UnauthorizedException.#ctor(System.String)">
-            <summary>Creates an <see cref="T:Acontplus.Core.Domain.Exceptions.UnauthorizedException"/> with a human-readable message.</summary>
+            <summary>
+            Thrown when the caller is not authenticated.
+            Maps to HTTP 401 Unauthorized.
+            </summary>
+            <param name="message">Human-readable message.</param>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.DomainException">
             <summary>
             Base class for all domain-specific exceptions in the application.
             </summary>
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
+        </member>
+        <member name="M:Acontplus.Core.Domain.Exceptions.DomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+            <summary>
+            Base class for all domain-specific exceptions in the application.
+            </summary>
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
         <member name="P:Acontplus.Core.Domain.Exceptions.DomainException.ErrorType">
             <summary>
@@ -2973,23 +3029,25 @@
             Gets the specific error code associated with this exception.
             </summary>
         </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.DomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
+        <member name="T:Acontplus.Core.Domain.Exceptions.GenericDomainException">
             <summary>
-            Initializes a new instance of the <see cref="T:Acontplus.Core.Domain.Exceptions.DomainException"/> class.
+            General-purpose domain exception for cases that don't warrant a dedicated exception subclass.
+            Prefer creating a named subclass when the error has semantic meaning in the domain.
             </summary>
             <param name="type">The type of error.</param>
             <param name="code">The specific error code.</param>
             <param name="message">The error message that explains the reason for the exception.</param>
             <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
-        <member name="T:Acontplus.Core.Domain.Exceptions.GenericDomainException">
+        <member name="M:Acontplus.Core.Domain.Exceptions.GenericDomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
             <summary>
             General-purpose domain exception for cases that don't warrant a dedicated exception subclass.
             Prefer creating a named subclass when the error has semantic meaning in the domain.
             </summary>
-        </member>
-        <member name="M:Acontplus.Core.Domain.Exceptions.GenericDomainException.#ctor(Acontplus.Core.Domain.Enums.ErrorType,System.String,System.String,System.Exception)">
-            <inheritdoc />
+            <param name="type">The type of error.</param>
+            <param name="code">The specific error code.</param>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="inner">The exception that is the cause of the current exception, or null if no inner exception is specified.</param>
         </member>
         <member name="T:Acontplus.Core.Domain.Exceptions.ISqlExceptionTranslator">
             <summary>
@@ -4775,9 +4833,9 @@
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.WithFilter(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,System.Object)">
             <summary>Returns a copy of <paramref name="filter"/> with a single additional filter entry.</summary>
         </member>
-        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0)">
             <summary>
-            Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+            Retrieves a filter value from the dictionary by key and converts it to <typeparamref name="T"/>.
             <para>
             Conversion priority:
             <list type="number">
@@ -4791,16 +4849,33 @@
             </para>
             </summary>
             <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filters">The filters dictionary.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
+            <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
+        </member>
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.GetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0)">
+            <summary>
+            Retrieves a filter value by key and converts it to <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
             <param name="filter">The filter request.</param>
             <param name="key">The filter key to retrieve.</param>
             <param name="defaultValue">Returned when the key is absent, null, or conversion fails.</param>
             <returns>The converted value, or <paramref name="defaultValue"/>.</returns>
         </member>
+        <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String,``0@)">
+            <summary>
+            Tries to retrieve and convert a filter value from the dictionary by key.
+            </summary>
+            <typeparam name="T">Target type, including nullable value types.</typeparam>
+            <param name="filters">The filters dictionary.</param>
+            <param name="key">The filter key to retrieve.</param>
+            <param name="value">The converted value when this method returns <c>true</c>; otherwise <c>default</c>.</param>
+        </member>
         <member name="M:Acontplus.Core.Extensions.FilterRequestExtensions.TryGetFilterValue``1(Acontplus.Core.Dtos.Requests.FilterRequest,System.String,``0@)">
             <summary>
             Tries to retrieve and convert a filter value by key.
-            Returns <c>true</c> when the key exists <em>and</em> the value converts successfully to
-            <typeparamref name="T"/>; <c>false</c> when the key is absent or conversion fails.
             </summary>
             <typeparam name="T">Target type, including nullable value types.</typeparam>
             <param name="filter">The filter request.</param>
@@ -5157,11 +5232,6 @@
         <member name="M:Acontplus.Core.Validation.XmlValidator.RemoveXmlDeclaration(System.String)">
             <summary>
             Método original para eliminar declaración XML
-            </summary>
-        </member>
-        <member name="M:Acontplus.Core.Validation.XmlValidator.AggressiveHtmlClean(System.String)">
-            <summary>
-            Método alternativo más agresivo para casos extremos donde hay mucho HTML mezclado
             </summary>
         </member>
         <member name="M:Acontplus.Core.Validation.XmlValidator.SafeEscapeXmlContent(System.String)">

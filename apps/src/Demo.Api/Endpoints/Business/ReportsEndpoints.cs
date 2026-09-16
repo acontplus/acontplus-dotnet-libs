@@ -1,7 +1,11 @@
 namespace Demo.Api.Endpoints.Business;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S1192:String literals should not be duplicated", Justification = "Demo report endpoints construct sample schema DataTables and mock rows with repeated column names and display labels.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S1192", Justification = "Demo report endpoints construct sample schema DataTables and mock rows with repeated column names and display labels.")]
 public static class ReportsEndpoints
 {
+    private static readonly string[] SupportedReportFormats = ["PDF", "EXCEL", "EXCELOPENXML", "WORDOPENXML", "HTML5", "IMAGE"];
+
     private const string CustomerAbc = "ABC Corporation";
     private const string CustomerXyz = "XYZ Industries";
     private const string CustomerTechSolutions = "Tech Solutions LLC";
@@ -13,6 +17,8 @@ public static class ReportsEndpoints
     private const string StatusActive = "Active";
     private const string StatusPremium = "Premium";
     private const string StatusDelivered = "Delivered";
+    private const string ColumnCustomer = "Customer";
+    private const string OrderId001 = "ORD-001";
 
     public static void MapReportsEndpoints(this IEndpointRouteBuilder app)
     {
@@ -119,7 +125,7 @@ public static class ReportsEndpoints
             var reportService = httpContext.RequestServices.GetRequiredService<IRdlcReportService>();
             try
             {
-                logger.LogInformation("Generating sample customer list report in {Format} format", format);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Generating sample customer list report in {Format} format", format); }
 
                 // Create parameters DataSet
                 var parameters = new DataSet();
@@ -187,7 +193,7 @@ public static class ReportsEndpoints
             {
                 message = "Report service is configured and ready",
                 timestamp = DateTime.UtcNow,
-                supportedFormats = new[] { "PDF", "EXCEL", "EXCELOPENXML", "WORDOPENXML", "HTML5", "IMAGE" }
+                supportedFormats = SupportedReportFormats
             });
         });
     }
@@ -257,7 +263,7 @@ public static class ReportsEndpoints
                                 ["Invoice No."]    = "INV-2026-0042",
                                 ["Issue Date"]     = "2026-03-01",
                                 ["Due Date"]       = "2026-03-31",
-                                ["Customer"]       = CustomerAbc,
+                                [ColumnCustomer]   = CustomerAbc,
                                 ["Tax ID"]         = "1234567890001",
                                 ["Address"]        = "123 Business St, Suite 100, New York, USA",
                                 ["Payment Terms"]  = "Net 30"
@@ -397,7 +403,7 @@ public static class ReportsEndpoints
                             Columns       =
                             [
                                 new QuestPdfTableColumn { ColumnName = "Id",           Header = "#",            RelativeWidth = 0.5f },
-                                new QuestPdfTableColumn { ColumnName = "CustomerName", Header = "Customer",     RelativeWidth = 3f   },
+                                new QuestPdfTableColumn { ColumnName = "CustomerName", Header = ColumnCustomer, RelativeWidth = 3f   },
                                 new QuestPdfTableColumn { ColumnName = "City",         Header = "City",         RelativeWidth = 1.5f },
                                 new QuestPdfTableColumn { ColumnName = "Segment",      Header = "Segment",      RelativeWidth = 1.2f },
                                 new QuestPdfTableColumn { ColumnName = "Revenue",      Header = "Revenue (USD)",RelativeWidth = 1.5f,
@@ -471,7 +477,7 @@ public static class ReportsEndpoints
                     },
                     cancellationToken);
 
-                logger.LogInformation("QuestPDF quick-table generated — {Bytes} bytes", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("QuestPDF quick-table generated — {Bytes} bytes", response.FileContents.Length); }
 
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
@@ -572,7 +578,7 @@ public static class ReportsEndpoints
 
                 if (success)
                 {
-                    logger.LogInformation("Print test completed successfully to printer: {PrinterName}", rdlcPrinter.PrinterName);
+                    if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Print test completed successfully to printer: {PrinterName}", rdlcPrinter.PrinterName); }
                     return Results.Ok(new
                     {
                         message = "Print job sent successfully",
@@ -582,7 +588,7 @@ public static class ReportsEndpoints
                 }
                 else
                 {
-                    logger.LogWarning("Print test failed for printer: {PrinterName}", rdlcPrinter.PrinterName);
+                    if (logger.IsEnabled(LogLevel.Warning)) { logger.LogWarning("Print test failed for printer: {PrinterName}", rdlcPrinter.PrinterName); }
                     return Results.Problem("Print job failed", statusCode: 500);
                 }
             }
@@ -620,7 +626,7 @@ public static class ReportsEndpoints
                     columns:
                     [
                         new ExcelColumnDefinition { ColumnName = "CustomerId",     Header = "ID" },
-                        new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = "Customer" },
+                        new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = ColumnCustomer },
                         new ExcelColumnDefinition { ColumnName = "Email",          Header = "E-mail" },
                         new ExcelColumnDefinition { ColumnName = "Phone",          Header = "Phone" },
                         new ExcelColumnDefinition { ColumnName = "City",           Header = "City" },
@@ -631,7 +637,7 @@ public static class ReportsEndpoints
                     worksheetName: "Customers",
                     cancellationToken: cancellationToken);
 
-                logger.LogInformation("MiniExcel customer export generated ({Size:N0} bytes)", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("MiniExcel customer export generated ({Size:N0} bytes)", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -668,7 +674,7 @@ public static class ReportsEndpoints
                             Columns =
                             [
                                 new ExcelColumnDefinition { ColumnName = "CustomerId",     Header = "ID" },
-                                new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = "Customer" },
+                                new ExcelColumnDefinition { ColumnName = "CustomerName",   Header = ColumnCustomer },
                                 new ExcelColumnDefinition { ColumnName = "City",           Header = "City" },
                                 new ExcelColumnDefinition { ColumnName = "TotalPurchases", Header = "Purchases", Format = "N2" },
                                 new ExcelColumnDefinition { ColumnName = "Status",         Header = "Status" }
@@ -681,7 +687,7 @@ public static class ReportsEndpoints
                             Columns =
                             [
                                 new ExcelColumnDefinition { ColumnName = "OrderId",    Header = "Order #" },
-                                new ExcelColumnDefinition { ColumnName = "Customer",   Header = "Customer" },
+                                new ExcelColumnDefinition { ColumnName = ColumnCustomer,   Header = ColumnCustomer },
                                 new ExcelColumnDefinition { ColumnName = "OrderDate",  Header = "Date",   Format = "yyyy-MM-dd" },
                                 new ExcelColumnDefinition { ColumnName = "Amount",     Header = "Amount", Format = "N2" },
                                 new ExcelColumnDefinition { ColumnName = "Status",     Header = "Status" }
@@ -692,7 +698,7 @@ public static class ReportsEndpoints
 
                 var response = await excel.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("MiniExcel multi-sheet workbook generated ({Size:N0} bytes)", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("MiniExcel multi-sheet workbook generated ({Size:N0} bytes)", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -731,7 +737,7 @@ public static class ReportsEndpoints
                         Columns =
                         [
                             new AdvancedExcelColumnDefinition { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
-                            new AdvancedExcelColumnDefinition { ColumnName = "Customer",  Header = "Customer", Width = 28 },
+                            new AdvancedExcelColumnDefinition { ColumnName = ColumnCustomer,  Header = ColumnCustomer, Width = 28 },
                             new AdvancedExcelColumnDefinition { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd", Alignment = ExcelHorizontalAlignment.Center },
                             new AdvancedExcelColumnDefinition { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",  Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
                             new AdvancedExcelColumnDefinition { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
@@ -742,7 +748,7 @@ public static class ReportsEndpoints
                     },
                     cancellationToken: cancellationToken);
 
-                logger.LogInformation("ClosedXML sales report generated ({Size:N0} bytes)", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("ClosedXML sales report generated ({Size:N0} bytes)", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -790,7 +796,7 @@ public static class ReportsEndpoints
                             Columns              =
                             [
                                 new() { ColumnName = "OrderId",   Header = "Order #",  Width = 12,  Alignment = ExcelHorizontalAlignment.Center },
-                                new() { ColumnName = "Customer",  Header = "Customer", Width = 28 },
+                                new() { ColumnName = ColumnCustomer,  Header = ColumnCustomer, Width = 28 },
                                 new() { ColumnName = "OrderDate", Header = "Date",     Width = 14,  NumberFormat = "yyyy-MM-dd",  Alignment = ExcelHorizontalAlignment.Center },
                                 new() { ColumnName = "Amount",    Header = "Amount",   Width = 14,  NumberFormat = "$#,##0.00",   Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
                                 new() { ColumnName = "Status",    Header = "Status",   Width = 12,  Alignment = ExcelHorizontalAlignment.Center }
@@ -809,7 +815,7 @@ public static class ReportsEndpoints
                             Columns              =
                             [
                                 new() { ColumnName = "CustomerId",     Header = "ID",         Width = 8,   Alignment = ExcelHorizontalAlignment.Center },
-                                new() { ColumnName = "CustomerName",   Header = "Customer",   Width = 28 },
+                                new() { ColumnName = "CustomerName",   Header = ColumnCustomer,   Width = 28 },
                                 new() { ColumnName = "Email",          Header = "E-mail",     Width = 30 },
                                 new() { ColumnName = "City",           Header = "City",       Width = 16 },
                                 new() { ColumnName = "TotalPurchases", Header = "Purchases",  Width = 14,  NumberFormat = "$#,##0.00", Alignment = ExcelHorizontalAlignment.Right, AggregateType = ExcelAggregateType.Sum },
@@ -822,7 +828,7 @@ public static class ReportsEndpoints
 
                 var response = await excel.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("ClosedXML annual report generated ({Size:N0} bytes)", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("ClosedXML annual report generated ({Size:N0} bytes)", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -993,7 +999,7 @@ public static class ReportsEndpoints
 
                 var response = await pdf.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("SRI electronic invoice PDF generated — {Bytes} bytes", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("SRI electronic invoice PDF generated — {Bytes} bytes", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -1070,7 +1076,7 @@ public static class ReportsEndpoints
 
                 var response = await pdf.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("Barcode/QR PDF generated — {Bytes} bytes", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Barcode/QR PDF generated — {Bytes} bytes", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -1098,11 +1104,11 @@ public static class ReportsEndpoints
             // Master: orders
             var orders = new DataTable("Orders");
             orders.Columns.Add("OrderId", typeof(string));
-            orders.Columns.Add("Customer", typeof(string));
+            orders.Columns.Add(ColumnCustomer, typeof(string));
             orders.Columns.Add("OrderDate", typeof(string));
             orders.Columns.Add("Total", typeof(decimal));
 
-            orders.Rows.Add("ORD-001", CustomerAbc, "2026-01-05", 2180.00m);
+            orders.Rows.Add(OrderId001, CustomerAbc, "2026-01-05", 2180.00m);
             orders.Rows.Add("ORD-002", CustomerXyz, "2026-01-12", 3200.50m);
             orders.Rows.Add("ORD-003", CustomerTechSolutions, "2026-01-20", 850.00m);
 
@@ -1115,10 +1121,10 @@ public static class ReportsEndpoints
             lines.Columns.Add("Price", typeof(decimal));
             lines.Columns.Add("Amount", typeof(decimal));
 
-            lines.Rows.Add("ORD-001", 1, "Web Development", 20, 85m, 1700.00m);
-            lines.Rows.Add("ORD-001", 2, "Domain Registration", 1, 30m, 30.00m);
-            lines.Rows.Add("ORD-001", 3, "SSL Certificate", 1, 50m, 50.00m);
-            lines.Rows.Add("ORD-001", 4, "Hosting – 12 months", 1, 400m, 400.00m);
+            lines.Rows.Add(OrderId001, 1, "Web Development", 20, 85m, 1700.00m);
+            lines.Rows.Add(OrderId001, 2, "Domain Registration", 1, 30m, 30.00m);
+            lines.Rows.Add(OrderId001, 3, "SSL Certificate", 1, 50m, 50.00m);
+            lines.Rows.Add(OrderId001, 4, "Hosting – 12 months", 1, 400m, 400.00m);
             lines.Rows.Add("ORD-002", 1, "ERP Licence – Enterprise", 1, 2500m, 2500.00m);
             lines.Rows.Add("ORD-002", 2, "Setup & Migration", 1, 700m, 700.00m);
             lines.Rows.Add("ORD-003", 1, "Technical Support – 10 hrs", 10, 85m, 850.00m);
@@ -1149,7 +1155,7 @@ public static class ReportsEndpoints
                         Columns            =
                         [
                             new QuestPdfTableColumn { ColumnName = "OrderId",   Header = "Order #",  RelativeWidth = 1.2f },
-                            new QuestPdfTableColumn { ColumnName = "Customer",  Header = "Customer", RelativeWidth = 3f   },
+                            new QuestPdfTableColumn { ColumnName = ColumnCustomer,  Header = ColumnCustomer, RelativeWidth = 3f   },
                             new QuestPdfTableColumn { ColumnName = "OrderDate", Header = "Date",     RelativeWidth = 1.5f },
                             new QuestPdfTableColumn { ColumnName = "Total",     Header = "Total",    RelativeWidth = 1.2f,
                                 Alignment = QuestPdfColumnAlignment.Right, Format = "C2" }
@@ -1340,7 +1346,7 @@ public static class ReportsEndpoints
 
                 var response = await pdf.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("Two-column PDF generated — {Bytes} bytes", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("Two-column PDF generated — {Bytes} bytes", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -1429,7 +1435,7 @@ public static class ReportsEndpoints
 
                 var response = await excel.GenerateAsync(request, cancellationToken);
 
-                logger.LogInformation("ClosedXML grouped-header Kardex generated ({Size:N0} bytes)", response.FileContents.Length);
+                if (logger.IsEnabled(LogLevel.Information)) { logger.LogInformation("ClosedXML grouped-header Kardex generated ({Size:N0} bytes)", response.FileContents.Length); }
                 return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
             }
             catch (Exception ex)
@@ -1472,7 +1478,7 @@ public static class ReportsEndpoints
     {
         var t = new DataTable("Orders");
         t.Columns.Add("OrderId", typeof(string));
-        t.Columns.Add("Customer", typeof(string));
+        t.Columns.Add(ColumnCustomer, typeof(string));
         t.Columns.Add("OrderDate", typeof(DateTime));
         t.Columns.Add("Amount", typeof(decimal));
         t.Columns.Add("Status", typeof(string));
@@ -1524,7 +1530,8 @@ public static class ReportsEndpoints
         try
         {
             var response = await pdf.GenerateAsync(request, cancellationToken);
-            logger.LogInformation("{ReportName} generated — {Bytes} bytes", reportName, response.FileContents.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("{ReportName} generated — {Bytes} bytes", reportName, response.FileContents.Length);
             return Results.File(response.FileContents, response.ContentType, response.FileDownloadName);
         }
         catch (Exception ex)

@@ -3,34 +3,34 @@ namespace Acontplus.Services.Policies;
 /// <summary>
 /// Authorization requirement for device type validation and restrictions.
 /// </summary>
-public class DeviceTypeRequirement : IAuthorizationRequirement
+/// <param name="allowedDeviceTypes">The list of allowed device types.</param>
+/// <param name="requireDeviceValidation">Whether device header validation is required.</param>
+public class DeviceTypeRequirement(List<DeviceType> allowedDeviceTypes, bool requireDeviceValidation = true) : IAuthorizationRequirement
 {
-    public List<DeviceType> AllowedDeviceTypes { get; }
-    public bool RequireDeviceValidation { get; }
+    /// <summary>
+    /// Gets the list of allowed device types.
+    /// </summary>
+    public List<DeviceType> AllowedDeviceTypes { get; } = allowedDeviceTypes ?? throw new ArgumentNullException(nameof(allowedDeviceTypes));
 
-    public DeviceTypeRequirement(List<DeviceType> allowedDeviceTypes, bool requireDeviceValidation = true)
-    {
-        AllowedDeviceTypes = allowedDeviceTypes ?? throw new ArgumentNullException(nameof(allowedDeviceTypes));
-        RequireDeviceValidation = requireDeviceValidation;
-    }
+    /// <summary>
+    /// Gets a value indicating whether device headers must be validated.
+    /// </summary>
+    public bool RequireDeviceValidation { get; } = requireDeviceValidation;
 }
 
 /// <summary>
 /// Authorization handler for device type validation.
 /// </summary>
-public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
+/// <param name="deviceDetectionService">The device detection service.</param>
+/// <param name="logger">The logger instance.</param>
+public class DeviceTypeHandler(
+    IDeviceDetectionService deviceDetectionService,
+    ILogger<DeviceTypeHandler> logger) : AuthorizationHandler<DeviceTypeRequirement>
 {
-    private readonly IDeviceDetectionService _deviceDetectionService;
-    private readonly ILogger<DeviceTypeHandler> _logger;
+    private readonly IDeviceDetectionService _deviceDetectionService = deviceDetectionService ?? throw new ArgumentNullException(nameof(deviceDetectionService));
+    private readonly ILogger<DeviceTypeHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public DeviceTypeHandler(
-        IDeviceDetectionService deviceDetectionService,
-        ILogger<DeviceTypeHandler> logger)
-    {
-        _deviceDetectionService = deviceDetectionService ?? throw new ArgumentNullException(nameof(deviceDetectionService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+    /// <inheritdoc />
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         DeviceTypeRequirement requirement)
@@ -45,14 +45,11 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
         try
         {
             // Validate device headers if required
-            if (requirement.RequireDeviceValidation)
+            if (requirement.RequireDeviceValidation && !_deviceDetectionService.ValidateDeviceHeaders(httpContext))
             {
-                if (!_deviceDetectionService.ValidateDeviceHeaders(httpContext))
-                {
-                    _logger.LogWarning("Device header validation failed");
-                    context.Fail();
-                    return Task.CompletedTask;
-                }
+                _logger.LogWarning("Device header validation failed");
+                context.Fail();
+                return Task.CompletedTask;
             }
 
             // Detect device type
@@ -68,7 +65,10 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
                 return Task.CompletedTask;
             }
 
-            _logger.LogDebug("Device type '{DeviceType}' validation successful", deviceType);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Device type '{DeviceType}' validation successful", deviceType);
+            }
             context.Succeed(requirement);
             return Task.CompletedTask;
         }
@@ -86,31 +86,41 @@ public class DeviceTypeHandler : AuthorizationHandler<DeviceTypeRequirement>
 /// </summary>
 public static class DeviceTypePolicyExtensions
 {
+    /// <summary>
+    /// Registers the device type authorization handler into the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddDeviceTypeAuthorization(this IServiceCollection services)
     {
         services.AddScoped<IAuthorizationHandler, DeviceTypeHandler>();
         return services;
     }
 
+    /// <summary>
+    /// Adds preconfigured device type authorization policies to the authorization options.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <returns>The authorization options for chaining.</returns>
     public static AuthorizationOptions AddDeviceTypePolicies(this AuthorizationOptions options)
     {
         // Policy for mobile-only access
         options.AddPolicy("MobileOnly", policy =>
-            policy.Requirements.Add(new DeviceTypeRequirement(new List<DeviceType> { DeviceType.Mobile })));
+            policy.Requirements.Add(new DeviceTypeRequirement([DeviceType.Mobile])));
 
         // Policy for mobile and tablet access
         options.AddPolicy("MobileAndTablet", policy =>
-            policy.Requirements.Add(new DeviceTypeRequirement(new List<DeviceType>
-                { DeviceType.Mobile, DeviceType.Tablet })));
+            policy.Requirements.Add(new DeviceTypeRequirement(
+                [DeviceType.Mobile, DeviceType.Tablet])));
 
         // Policy for desktop-only access
         options.AddPolicy("DesktopOnly", policy =>
-            policy.Requirements.Add(new DeviceTypeRequirement(new List<DeviceType> { DeviceType.Desktop })));
+            policy.Requirements.Add(new DeviceTypeRequirement([DeviceType.Desktop])));
 
         // Policy for all known device types (excludes Unknown)
         options.AddPolicy("KnownDevicesOnly", policy =>
-            policy.Requirements.Add(new DeviceTypeRequirement(new List<DeviceType>
-                { DeviceType.Mobile, DeviceType.Tablet, DeviceType.Desktop, DeviceType.Web })));
+            policy.Requirements.Add(new DeviceTypeRequirement(
+                [DeviceType.Mobile, DeviceType.Tablet, DeviceType.Desktop, DeviceType.Web])));
 
         return options;
     }

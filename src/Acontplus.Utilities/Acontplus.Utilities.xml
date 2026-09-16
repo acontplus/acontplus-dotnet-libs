@@ -47,8 +47,15 @@
         </member>
         <member name="M:Acontplus.Utilities.Data.DataConverters.JsonToDataTable(System.String)">
             <summary>
-            Converts a JSON string to DataTable
+            Converts a JSON string to DataTable.
             </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Data.DataConverters.SerializeDictionary(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Serializes a dictionary to an optimized JSON string.
+            </summary>
+            <param name="data">The dictionary data to serialize.</param>
+            <returns>A JSON string representation of the dictionary.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Data.DataConverters.SanitizeValueForSerialization(System.Object)">
             <summary>
@@ -65,10 +72,50 @@
             Convert dictionary to string representation
             </summary>
         </member>
-        <member name="M:Acontplus.Utilities.Data.DataConverters.SerializeObjectCustom``1(System.Object)">
+        <member name="M:Acontplus.Utilities.Data.DataConverters.SerializeObjectCustom``1(``0)">
             <summary>
-            Generic method to serialize any object to JSON
+            Generic method to serialize any object to JSON.
             </summary>
+            <typeparam name="T">The type of the object to serialize.</typeparam>
+            <param name="data">The object to serialize.</param>
+            <returns>The serialized JSON string.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Data.DataConverters.SerializeWithOptions(System.Object,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            Serializes an object to JSON with optional formatting configurations.
+            </summary>
+            <param name="data">The object to serialize.</param>
+            <param name="options">Optional JSON serializer options.</param>
+            <returns>The serialized JSON string.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Data.DataConverters.SerializeSanitizedData(System.Object)">
+            <summary>
+            Serializes an object after sanitizing complex or database values.
+            </summary>
+            <param name="data">The object to sanitize and serialize.</param>
+            <returns>The sanitized JSON string.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.Data.DataTableMapper">
+            <summary>
+            Provides reflection-based mapping utilities between ADO.NET DataTables / DataRows and strongly typed models.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Data.DataTableMapper.MapDataRowToModel``1(System.Data.DataRow)">
+            <summary>
+            Maps a single <see cref="T:System.Data.DataRow"/> to a new instance of <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The target model type.</typeparam>
+            <param name="row">The source data row to map.</param>
+            <returns>A mapped instance of <typeparamref name="T"/>.</returns>
+            <exception cref="T:System.ArgumentException">Thrown when <paramref name="row"/> is null.</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Data.DataTableMapper.MapDataTableToList``1(System.Data.DataTable)">
+            <summary>
+            Maps all rows in a <see cref="T:System.Data.DataTable"/> to a strongly typed list of <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The target model type, requiring a parameterless constructor.</typeparam>
+            <param name="dt">The source data table.</param>
+            <returns>A list of mapped model instances.</returns>
         </member>
         <member name="T:Acontplus.Utilities.Dtos.FilterQuery">
             <summary>
@@ -189,6 +236,11 @@
             <param name="query">The source pagination query.</param>
             <returns>A new <see cref="T:Acontplus.Core.Dtos.Requests.PaginationRequest"/> with the same pagination and filter values.</returns>
         </member>
+        <member name="T:Acontplus.Utilities.Extensions.ResultApiExtensions">
+            <summary>
+            Converts the result to an API response.
+            </summary>
+        </member>
         <member name="P:Acontplus.Utilities.Extensions.ResultApiExtensions.ConfigureResponse">
             <summary>
             Allows configuring the ApiResponse before it's returned in success cases.
@@ -201,19 +253,85 @@
             </summary>
             <param name="configureAction">The action to apply to each ApiResponse.</param>
         </member>
-        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToBaseResponse``1(Acontplus.Core.Dtos.Responses.ApiResponse{``0})">
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
             <summary>
-            Converts generic ApiResponse&lt;T&gt; to base ApiResponse
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
             </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String,System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="successWithWarnings">The success object containing value and warnings.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},System.String,System.String)">
+            <summary>
+            Converts a result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="successWithWarnings">The success object containing value and warnings.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult``1(Acontplus.Core.Dtos.Responses.ApiResponse{``0})">
             <summary>
             Converts ApiResponse&lt;T&gt; to IActionResult
-            </summary>
-        </member>
-        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Dtos.Responses.ApiResponse{``0})">
-            <summary>
-            Converts ApiResponse&lt;T&gt; to IResult (for Minimal APIs)
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResult(Acontplus.Core.Dtos.Responses.ApiResponse)">
@@ -221,9 +339,648 @@
             Converts base ApiResponse to IActionResult with full status code support
             </summary>
         </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String,System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="successWithWarnings">The success object containing value and warnings.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},System.String,System.String)">
+            <summary>
+            Converts a result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="successWithWarnings">The success object containing value and warnings.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult``1(Acontplus.Core.Dtos.Responses.ApiResponse{``0})">
+            <summary>
+            Converts ApiResponse&lt;T&gt; to IResult (for Minimal APIs)
+            </summary>
+        </member>
         <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResult(Acontplus.Core.Dtos.Responses.ApiResponse)">
             <summary>
             Converts ApiResponse to IResult for Minimal APIs
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},Acontplus.Core.Domain.Common.Results.DomainError}},System.String,System.String)">
+            <summary>
+            Asynchronously converts a result task to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Converts a GET operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or error response).
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors})">
+            <summary>
+            Converts a GET operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or error response).
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Executes the ToCreatedActionResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Executes the ToCreatedActionResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Executes the ToPutActionResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutActionResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors})">
+            <summary>
+            Executes the ToPutActionResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteActionResult(Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Converts a DELETE operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or 204 No Content).
+            </summary>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteActionResult(Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainErrors})">
+            <summary>
+            Converts a DELETE operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or 204 No Content).
+            </summary>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts a GET operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Converts a GET operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Executes the ToCreatedMinimalApiResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String,System.String)">
+            <summary>
+            Executes the ToCreatedMinimalApiResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Executes the ToPutMinimalApiResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutMinimalApiResult``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Executes the ToPutMinimalApiResult operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteMinimalApiResult(Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts a DELETE operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteMinimalApiResult(Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Converts a DELETE operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}})">
+            <summary>
+            Converts a GET operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or error response).
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}})">
+            <summary>
+            Converts a GET operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or error response).
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Executes the ToCreatedActionResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Executes the ToCreatedActionResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}})">
+            <summary>
+            Executes the ToPutActionResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutActionResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}})">
+            <summary>
+            Executes the ToPutActionResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteActionResultAsync(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainError}})">
+            <summary>
+            Converts a DELETE operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or 204 No Content).
+            </summary>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteActionResultAsync(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainErrors}})">
+            <summary>
+            Converts a DELETE operation result to an <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> (200 OK or 204 No Content).
+            </summary>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Mvc.IActionResult"/> representing the HTTP response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Converts a GET operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToGetMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Converts a GET operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String,System.String)">
+            <summary>
+            Executes the ToCreatedMinimalApiResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToCreatedMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String,System.String)">
+            <summary>
+            Executes the ToCreatedMinimalApiResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="locationUri">The locationUri parameter.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Executes the ToPutMinimalApiResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPutMinimalApiResultAsync``1(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Executes the ToPutMinimalApiResultAsync operation.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteMinimalApiResultAsync(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainError}},System.String)">
+            <summary>
+            Converts a DELETE operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToDeleteMinimalApiResultAsync(System.Threading.Tasks.Task{Acontplus.Core.Domain.Common.Results.Result{System.Boolean,Acontplus.Core.Domain.Common.Results.DomainErrors}},System.String)">
+            <summary>
+            Converts a DELETE operation result to a Minimal API <see cref="T:Microsoft.AspNetCore.Http.IResult"/>.
+            </summary>
+            <param name="resultTask">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Microsoft.AspNetCore.Http.IResult"/> representing the Minimal API response.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.DomainError,System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="error">The domain error(s) to convert.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.DomainError,System.String,System.Nullable{Acontplus.Core.Domain.Common.Results.DomainWarnings})">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="error">The domain error(s) to convert.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <param name="warnings">The domain warnings to include.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.DomainErrors,System.String,System.Nullable{Acontplus.Core.Domain.Common.Results.DomainWarnings})">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="errors">The domain error(s) to convert.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <param name="warnings">The domain warnings to include.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.Nullable{Acontplus.Core.Domain.Common.Results.DomainWarnings})">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="errors">The domain error(s) to convert.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <param name="warnings">The domain warnings to include.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0},System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0},System.String,System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.Result{``0,Acontplus.Core.Domain.Common.Results.DomainErrors},System.String,System.String)">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="TValue">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="successMessage">Optional custom success message.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiResponse``1(Acontplus.Core.Domain.Common.Results.SuccessWithWarnings{``0},System.String,System.Nullable{Acontplus.Core.Domain.Common.Results.DomainWarnings})">
+            <summary>
+            Converts the result or error to an <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> envelope.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="correlationId">Optional correlation ID for request tracing.</param>
+            <param name="warnings">The domain warnings to include.</param>
+            <returns>An <see cref="T:Acontplus.Core.Dtos.Responses.ApiResponse"/> instance containing the result status and payload.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiErrors(System.Collections.Generic.IReadOnlyList{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Converts domain errors into API error representations.
+            </summary>
+            <param name="errors))">The errors) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiErrors(Acontplus.Core.Domain.Common.Results.DomainErrors)">
+            <summary>
+            Converts domain errors into API error representations.
+            </summary>
+            <param name="errors))">The errors) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiErrors(Acontplus.Core.Domain.Common.Results.DomainWarnings)">
+            <summary>
+            Converts domain errors into API error representations.
+            </summary>
+            <param name="warnings))">The warnings) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiErrorArray(Acontplus.Core.Domain.Common.Results.DomainErrors)">
+            <summary>
+            Converts domain errors into API error representations.
+            </summary>
+            <param name="errors))">The errors) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToApiErrorArray(Acontplus.Core.Domain.Common.Results.DomainWarnings)">
+            <summary>
+            Converts domain errors into API error representations.
+            </summary>
+            <param name="warnings))">The warnings) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.GetMostSevereError(System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Resolves the most severe error from the given domain errors.
+            </summary>
+            <param name="errors">The domain error(s) to convert.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.GetMostSevereErrorType(Acontplus.Core.Domain.Common.Results.DomainErrors)">
+            <summary>
+            Resolves the most severe error from the given domain errors.
+            </summary>
+            <param name="errors))">The errors) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.GetAggregateErrorMessage(Acontplus.Core.Domain.Common.Results.DomainErrors)">
+            <summary>
+            Combines multiple domain errors into an aggregate message.
+            </summary>
+            <param name="errors))">The errors) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToErrorDetails(Acontplus.Core.Domain.Common.Results.DomainErrors)">
+            <summary>
+            Converts the result to an API response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToBaseResponse``1(Acontplus.Core.Dtos.Responses.ApiResponse{``0})">
+            <summary>
+            Converts generic ApiResponse&lt;T&gt; to base ApiResponse
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.WithPagination(System.Collections.Generic.Dictionary{System.String,System.Object},System.Int32,System.Int32,System.Int64,System.Func{System.Int32,System.String})">
@@ -240,6 +997,16 @@
             <summary>
             Adds correlation ID to metadata if not already present
             </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.BuildPaginationLinks``1(Acontplus.Core.Dtos.Responses.PagedResult{``0},System.String,System.Int32)">
+            <summary>
+            Builds pagination navigation metadata and links.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="result">The source domain result or asynchronous result task.</param>
+            <param name="baseRoute">The baseRoute parameter.</param>
+            <param name="pageSize">The page size limit.</param>
+            <returns>The operation result.</returns>
         </member>
         <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToPagedActionResult``1(Acontplus.Core.Domain.Common.Results.Result{Acontplus.Core.Dtos.Responses.PagedResult{``0},Acontplus.Core.Domain.Common.Results.DomainError},System.String,System.String)">
             <summary>
@@ -280,6 +1047,45 @@
             <summary>
             Async version for Result&lt;PagedResult&lt;T&gt;&gt; to IResult (Minimal API, DomainErrors)
             </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.ToWarningDetails(Acontplus.Core.Domain.Common.Results.DomainWarnings)">
+            <summary>
+            Converts the result to an API response.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.AddToCopy(System.Collections.Generic.IReadOnlyList{Acontplus.Core.Domain.Common.Results.DomainError},Acontplus.Core.Domain.Common.Results.DomainError)">
+            <summary>
+            Creates a new read-only list containing the item(s) appended.
+            </summary>
+            <param name="warnings">The domain warnings to include.</param>
+            <param name="warning">The warning parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.AddRangeToCopy(System.Collections.Generic.IReadOnlyList{Acontplus.Core.Domain.Common.Results.DomainError},System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Creates a new read-only list containing the item(s) appended.
+            </summary>
+            <param name="warnings">The domain warnings to include.</param>
+            <param name="additionalWarnings">The additionalWarnings parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.WithWarning``1(``0,Acontplus.Core.Domain.Common.Results.DomainError)">
+            <summary>
+            Wraps the value and associated warnings into a <see cref="T:Acontplus.Core.Domain.Common.Results.SuccessWithWarnings`1"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="value">The payload value.</param>
+            <param name="warning))">The warning) parameter.</param>
+            <returns>The operation result.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Extensions.ResultApiExtensions.WithWarnings``1(``0,System.Collections.Generic.IEnumerable{Acontplus.Core.Domain.Common.Results.DomainError})">
+            <summary>
+            Wraps the value and associated warnings into a <see cref="T:Acontplus.Core.Domain.Common.Results.SuccessWithWarnings`1"/>.
+            </summary>
+            <typeparam name="T">The underlying entity or payload type.</typeparam>
+            <param name="value">The payload value.</param>
+            <param name="warnings))">The warnings) parameter.</param>
+            <returns>The operation result.</returns>
         </member>
         <member name="T:Acontplus.Utilities.Extensions.UtilitiesServiceExtensions">
             <summary>
@@ -395,6 +1201,16 @@
             Provides extension methods for file name sanitization and file data conversion.
             </summary>
         </member>
+        <member name="M:Acontplus.Utilities.IO.FileExtensions.InvalidFileNameCharactersRegex">
+            <remarks>
+            Pattern:<br/>
+            <code>[^A-Za-z0-9_. ]+</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ Match a character in the set [^ .0-9A-Z_a-z] atomically at least once.<br/>
+            </code>
+            </remarks>
+        </member>
         <member name="M:Acontplus.Utilities.IO.FileExtensions.SanitizeFileName(System.String)">
             <summary>
             Removes invalid characters from a file name and trims whitespace.
@@ -415,6 +1231,40 @@
             </summary>
             <param name="file">The uploaded file to read.</param>
             <returns>A byte array containing the file's contents.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.IO.Images.PictureHelper">
+            <summary>
+            Provides utility methods for detecting image formats from byte arrays.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.IO.Images.PictureHelper.TryGetExtension(System.Byte[])">
+            <summary>
+            Attempts to determine the file extension of an image from its binary header (magic bytes).
+            </summary>
+            <param name="array">The byte array containing the image data.</param>
+            <returns>The file extension without a leading dot (e.g. "jpg", "png"), or <see langword="null"/> if not recognized.</returns>
+        </member>
+        <member name="T:Acontplus.Utilities.IO.MimeTypeMap">
+            <summary>
+            Provides bidirectional mapping between file extensions and MIME content types.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.IO.MimeTypeMap.GetMimeType(System.String)">
+            <summary>
+            Gets the MIME content type associated with the specified file extension.
+            </summary>
+            <param name="extension">The file extension with or without a leading period (e.g. ".pdf" or "pdf").</param>
+            <returns>The corresponding MIME type, or "application/octet-stream" if not recognized.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="extension"/> is null.</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.IO.MimeTypeMap.GetExtension(System.String)">
+            <summary>
+            Gets the registered file extension associated with the specified MIME content type.
+            </summary>
+            <param name="mimeType">The MIME content type string (e.g. "application/pdf").</param>
+            <returns>The registered file extension including the leading dot (e.g. ".pdf").</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="mimeType"/> is null.</exception>
+            <exception cref="T:System.ArgumentException">Thrown when <paramref name="mimeType"/> is invalid or not registered.</exception>
         </member>
         <member name="T:Acontplus.Utilities.Json.JsonHelper">
             <summary>
@@ -484,13 +1334,11 @@
             </summary>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.#ctor(Acontplus.Utilities.Mapping.MapperRegistry)">
-            <summary>Initialises the mapper with a fully built <see cref="T:Acontplus.Utilities.Mapping.MapperRegistry"/>.</summary>
-            <param name="registry">
-            A fully initialised registry containing compiled delegates for all registered type pairs.
-            </param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown when <paramref name="registry"/> is <c>null</c>.
-            </exception>
+            <summary>
+            Default implementation of <see cref="T:Acontplus.Utilities.Mapping.IObjectMapper"/> backed by pre-compiled
+            <c>Expression</c>-tree delegates. Register as a singleton via
+            <c>services.AddObjectMapper(...)</c>.
+            </summary>
         </member>
         <member name="M:Acontplus.Utilities.Mapping.CompiledObjectMapper.Map``2(``0)">
             <inheritdoc />
@@ -1321,6 +2169,28 @@
         <member name="M:Acontplus.Utilities.Mapping.TypePair.op_Inequality(Acontplus.Utilities.Mapping.TypePair,Acontplus.Utilities.Mapping.TypePair)">
             <summary>Determines whether two <see cref="T:Acontplus.Utilities.Mapping.TypePair"/> instances are not equal.</summary>
         </member>
+        <member name="T:Acontplus.Utilities.Security.Helpers.CryptographyHelper">
+            <summary>
+            Provides cryptographic helper methods for key derivation and HMAC computation.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Helpers.CryptographyHelper.DeriveKey(System.String,System.Int32,System.Byte[])">
+            <summary>
+            Derives a cryptographic key from a passphrase and salt using PBKDF2 with HMAC-SHA256.
+            </summary>
+            <param name="passphrase">The secret passphrase.</param>
+            <param name="keySize">The desired key size in bits (e.g., 256).</param>
+            <param name="salt">Cryptographic salt bytes.</param>
+            <returns>The derived key bytes.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Helpers.CryptographyHelper.ComputeHmac(System.String,System.Byte[])">
+            <summary>
+            Computes an HMAC-SHA256 hash for the given data using the specified passphrase.
+            </summary>
+            <param name="passphrase">The secret passphrase.</param>
+            <param name="data">The data bytes to hash.</param>
+            <returns>The computed HMAC hash bytes.</returns>
+        </member>
         <member name="T:Acontplus.Utilities.Security.Helpers.PathSecurityValidator">
             <summary>
             Provides secure path validation to prevent directory traversal attacks and other path-based security vulnerabilities.
@@ -1410,6 +2280,25 @@
             <returns>The validated combined path</returns>
             <exception cref="T:System.Security.SecurityException">Thrown if path traversal is detected in any segment</exception>
         </member>
+        <member name="T:Acontplus.Utilities.Security.Interfaces.IDataEncryptionService">
+            <summary>
+            Defines contracts for encrypting and decrypting sensitive data to and from byte arrays.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IDataEncryptionService.EncryptToBytes(System.String)">
+            <summary>
+            Encrypts a plain text string into an encrypted byte array.
+            </summary>
+            <param name="plainText">The plain text string to encrypt.</param>
+            <returns>The encrypted byte array.</returns>
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Interfaces.IDataEncryptionService.DecryptFromBytes(System.Byte[])">
+            <summary>
+            Decrypts an encrypted byte array back into its original plain text string.
+            </summary>
+            <param name="encryptedData">The encrypted byte array.</param>
+            <returns>The decrypted plain text string.</returns>
+        </member>
         <member name="T:Acontplus.Utilities.Security.Interfaces.IPasswordSecurityService">
             <summary>
             Provides secure password hashing and verification services.
@@ -1479,6 +2368,12 @@
             <param name="provider">The data protection provider.</param>
             <param name="configuration">Configuration containing 'DataProtection:ProtectorKey'.</param>
         </member>
+        <member name="M:Acontplus.Utilities.Security.Services.DataEncryptionService.EncryptToBytes(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Security.Services.DataEncryptionService.DecryptFromBytes(System.Byte[])">
+            <inheritdoc />
+        </member>
         <member name="T:Acontplus.Utilities.Security.Services.PasswordSecurityService">
             <summary>
             Implements password security services using BCrypt hashing.
@@ -1526,6 +2421,40 @@
             <param name="encryptedData">The byte array containing Salt (16) + Nonce (12) + Tag (16) + Ciphertext.</param>
             <returns>The decrypted plaintext string.</returns>
         </member>
+        <member name="T:Acontplus.Utilities.Services.FileModelBuilder">
+            <summary>
+            Provides factory methods for creating and constructing <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> instances.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Services.FileModelBuilder.Create(System.Byte[],System.String,System.String)">
+            <summary>
+            Creates a <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> from raw byte content.
+            </summary>
+            <param name="content">The raw binary content of the file.</param>
+            <param name="contentType">The MIME content type of the file.</param>
+            <param name="fileName">Optional original file name.</param>
+            <returns>A populated <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> instance.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="content"/> is null.</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Services.FileModelBuilder.CreateBase64(System.Byte[],System.String,System.String)">
+            <summary>
+            Creates a <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> containing both raw bytes and its base64 string representation.
+            </summary>
+            <param name="content">The raw binary content of the file.</param>
+            <param name="contentType">The MIME content type of the file.</param>
+            <param name="fileName">Optional original file name.</param>
+            <returns>A populated <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> instance with Base64 encoded data.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="content"/> is null.</exception>
+        </member>
+        <member name="M:Acontplus.Utilities.Services.FileModelBuilder.CreateCompressedAsync(Microsoft.AspNetCore.Http.IFormFile,System.Func{System.Byte[],System.Byte[]})">
+            <summary>
+            Asynchronously creates a compressed <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/> from an uploaded <see cref="T:Microsoft.AspNetCore.Http.IFormFile"/>.
+            </summary>
+            <param name="file">The uploaded form file.</param>
+            <param name="compressor">A delegate that receives the raw file bytes and returns compressed bytes.</param>
+            <returns>A task representing the asynchronous operation, returning a compressed <see cref="T:Acontplus.Core.Dtos.Common.FileModel"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="file"/> is null.</exception>
+        </member>
         <member name="T:Acontplus.Utilities.Text.TextHandlers">
             <summary>
             Provides text manipulation utilities for string formatting and splitting.
@@ -1539,10 +2468,72 @@
             <param name="length">The maximum length of each line segment.</param>
             <returns>The formatted string with line breaks.</returns>
         </member>
+        <member name="T:Acontplus.Utilities.Time.DateUtils">
+            <summary>
+            Provides date and time utility functions localized to Ecuador.
+            </summary>
+        </member>
+        <member name="M:Acontplus.Utilities.Time.DateUtils.GetEcuadorDate">
+            <summary>
+            Gets the current date and time converted to the Ecuador standard time zone (SA Pacific Standard Time).
+            </summary>
+            <returns>A <see cref="T:System.DateTime"/> representing the current time in Ecuador.</returns>
+        </member>
         <member name="T:Acontplus.Utilities.Time.NullableDateTimeConverter">
             <summary>
             Converter for nullable DateTime values
             </summary>
+            <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
+        </member>
+        <member name="M:Acontplus.Utilities.Time.NullableDateTimeConverter.#ctor(System.String)">
+            <summary>
+            Converter for nullable DateTime values
+            </summary>
+            <param name="dateFormat">The date format string used for serialization. Defaults to "yyyy-MM-dd".</param>
+        </member>
+        <member name="M:Acontplus.Utilities.Time.NullableDateTimeConverter.Read(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc />
+        </member>
+        <member name="M:Acontplus.Utilities.Time.NullableDateTimeConverter.Write(System.Text.Json.Utf8JsonWriter,System.Nullable{System.DateTime},System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc />
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the InvalidFileNameCharactersRegex method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.InvalidFileNameCharactersRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_ascii_140FF03FEFFFF87FEFFFF07">
+            <summary>Supports searching for characters in or not in " .0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".</summary>
         </member>
     </members>
 </doc>

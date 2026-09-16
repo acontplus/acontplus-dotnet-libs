@@ -5,30 +5,29 @@ namespace Acontplus.Reports.Services;
 /// <summary>
 /// Cache entry for report definitions with expiration
 /// </summary>
-internal class CachedReportDefinition : IDisposable
+internal sealed class CachedReportDefinition(MemoryStream stream) : IDisposable
 {
-    public MemoryStream Stream { get; }
-    public DateTime CreatedAt { get; }
-    public DateTime LastAccessedAt { get; set; }
+    public MemoryStream Stream { get; } = stream;
+    public DateTime CreatedAt { get; } = DateTime.UtcNow;
+    public DateTime LastAccessedAt { get; set; } = DateTime.UtcNow;
     private bool _disposed;
 
-    public CachedReportDefinition(MemoryStream stream)
-    {
-        Stream = stream;
-        CreatedAt = DateTime.UtcNow;
-        LastAccessedAt = DateTime.UtcNow;
-    }
-
-    public bool IsExpired(TimeSpan ttl)
-    {
-        return DateTime.UtcNow - CreatedAt > ttl;
-    }
+    public bool IsExpired(TimeSpan ttl) => DateTime.UtcNow - CreatedAt > ttl;
 
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
         if (!_disposed)
         {
-            Stream?.Dispose();
+            if (disposing)
+            {
+                Stream.Dispose();
+            }
             _disposed = true;
         }
     }
@@ -37,20 +36,22 @@ internal class CachedReportDefinition : IDisposable
 /// <summary>
 /// Thread-safe cache for report definitions with size limits and TTL
 /// </summary>
-public class ReportDefinitionCache : IDisposable
+/// <param name="maxSize">The maximum number of entries to retain in cache.</param>
+/// <param name="ttl">The time-to-live expiration for cached entries.</param>
+public class ReportDefinitionCache(int maxSize, TimeSpan ttl) : IDisposable
 {
     private readonly ConcurrentDictionary<string, CachedReportDefinition> _cache = new();
-    private readonly int _maxSize;
-    private readonly TimeSpan _ttl;
+    private readonly int _maxSize = maxSize;
+    private readonly TimeSpan _ttl = ttl;
     private readonly SemaphoreSlim _cleanupLock = new(1, 1);
     private bool _disposed;
 
-    public ReportDefinitionCache(int maxSize, TimeSpan ttl)
-    {
-        _maxSize = maxSize;
-        _ttl = ttl;
-    }
-
+    /// <summary>
+    /// Gets a cached report definition stream, or creates and caches it using the specified factory.
+    /// </summary>
+    /// <param name="key">The cache key (report path).</param>
+    /// <param name="factory">The asynchronous factory delegate producing the report stream.</param>
+    /// <returns>A seekable memory stream containing the report definition.</returns>
     public async Task<MemoryStream> GetOrAddAsync(string key, Func<string, Task<MemoryStream>> factory)
     {
         // Try to get existing non-expired entry
@@ -136,6 +137,9 @@ public class ReportDefinitionCache : IDisposable
         }
     }
 
+    /// <summary>
+    /// Removes and disposes all cached report definitions.
+    /// </summary>
     public void Clear()
     {
         foreach (var entry in _cache.Values)
@@ -145,12 +149,26 @@ public class ReportDefinitionCache : IDisposable
         _cache.Clear();
     }
 
+    /// <inheritdoc />
     public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="ReportDefinitionCache"/> and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
     {
         if (!_disposed)
         {
-            Clear();
-            _cleanupLock.Dispose();
+            if (disposing)
+            {
+                Clear();
+                _cleanupLock.Dispose();
+            }
             _disposed = true;
         }
     }

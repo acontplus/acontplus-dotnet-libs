@@ -14,12 +14,18 @@ namespace Acontplus.Reports.Services
     /// </summary>
     public class RdlcReportService : IRdlcReportService, IDisposable
     {
+        private const string UnknownValue = "Unknown";
         private readonly ILogger<RdlcReportService> _logger;
         private readonly ReportOptions _options;
         private readonly ConcurrentDictionary<string, Lazy<MemoryStream>> _reportCache = new();
         private readonly SemaphoreSlim _concurrencyLimiter;
         private bool _disposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RdlcReportService"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="options">The report configuration options.</param>
         public RdlcReportService(ILogger<RdlcReportService> logger, IOptions<ReportOptions> options)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -44,7 +50,7 @@ namespace Acontplus.Reports.Services
                         parameters.Tables["ReportProps"]?.Rows[0]
                         ?? throw new ArgumentException("ReportProps table is required in parameters DataSet"));
 
-                    if (_options.EnableDetailedLogging)
+                    if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
                     {
                         _logger.LogInformation("Starting report: {Path}, Format: {Format}",
                             reportProps.ReportPath, reportProps.ReportFormat);
@@ -88,8 +94,11 @@ namespace Acontplus.Reports.Services
                     var response = BuildReportResponse(reportProps, fileReport);
 
                     stopwatch.Stop();
-                    _logger.LogInformation("Report generated: {Path}, {Size} bytes, {Duration}ms",
-                        reportProps.ReportPath, fileReport.Length, stopwatch.ElapsedMilliseconds);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("Report generated: {Path}, {Size} bytes, {Duration}ms",
+                            reportProps.ReportPath, fileReport.Length, stopwatch.ElapsedMilliseconds);
+                    }
 
                     return response;
                 }
@@ -100,7 +109,6 @@ namespace Acontplus.Reports.Services
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Report cancelled: {Path}", reportProps?.ReportPath ?? "Unknown");
                 throw;
             }
             catch (ReportGenerationException)
@@ -109,19 +117,16 @@ namespace Acontplus.Reports.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating report: {Path}", reportProps?.ReportPath ?? "Unknown");
+                _logger.LogError(ex, "Error generating report: {Path}", reportProps?.ReportPath ?? UnknownValue);
                 throw new ReportGenerationException("Report generation failed",
-                    reportProps?.ReportPath ?? "Unknown",
-                    reportProps?.ReportFormat ?? "Unknown", ex);
+                    reportProps?.ReportPath ?? UnknownValue,
+                    reportProps?.ReportFormat ?? UnknownValue, ex);
             }
         }
 
         /// <inheritdoc />
-        [Obsolete("Use GetReportAsync for better performance and scalability")]
-        public ReportResponse GetReport(DataSet parameters, DataSet data, bool externalDirectory = false)
-        {
-            return GetReportAsync(parameters, data, externalDirectory).GetAwaiter().GetResult();
-        }
+        public ReportResponse GetReport(DataSet parameters, DataSet data, bool externalDirectory = false) =>
+            GetReportAsync(parameters, data, externalDirectory).GetAwaiter().GetResult();
 
         private string GetReportPath(ReportPropsDto reportProps, bool offline)
         {
@@ -172,7 +177,7 @@ namespace Acontplus.Reports.Services
             }
 
             // Log the resolved path for security auditing
-            if (_options.EnableDetailedLogging)
+            if (_options.EnableDetailedLogging && _logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Resolved report path: {ResolvedPath} (requested: {RequestedPath})",
                     resolvedPath, reportProps.ReportPath);
@@ -181,7 +186,7 @@ namespace Acontplus.Reports.Services
             return resolvedPath;
         }
 
-        private void AddDataSources(LocalReport lr, DataSet parameters, DataSet data)
+        private static void AddDataSources(LocalReport lr, DataSet parameters, DataSet data)
         {
             if (parameters.Tables.Contains("DataSources"))
             {
@@ -205,9 +210,21 @@ namespace Acontplus.Reports.Services
             }
         }
 
-        private void AddReportParameters(LocalReport lr, DataSet parameters, DataSet data)
+        private static void AddReportParameters(LocalReport lr, DataSet parameters, DataSet data)
         {
-            var firstDataSource = data.Tables[0];
+            AddBarcodeParameter(lr, data.Tables[0]);
+
+            if (parameters.Tables.Contains("ReportParams") && parameters.Tables["ReportParams"]!.Rows.Count > 0)
+            {
+                foreach (DataRow item in parameters.Tables["ReportParams"]!.Rows)
+                {
+                    AddReportParamRow(lr, item);
+                }
+            }
+        }
+
+        private static void AddBarcodeParameter(LocalReport lr, DataTable firstDataSource)
+        {
             if (firstDataSource.Columns.Contains("codigoAutorizacion"))
             {
                 var barcodeConfig = new BarcodeConfig
@@ -221,38 +238,35 @@ namespace Acontplus.Reports.Services
                     byteBarcode.Length)));
                 lr.SetParameters(new ReportParameter("mimeTypeBarcode", "image/png"));
             }
-
-            if (parameters.Tables.Contains("ReportParams") && parameters.Tables["ReportParams"]!.Rows.Count > 0)
-            {
-                foreach (DataRow item in parameters.Tables["ReportParams"]!.Rows)
-                {
-                    var paramValue = "";
-                    if (Convert.ToBoolean(item["isPicture"]))
-                    {
-                        paramValue = item.Field<bool>("isCompressed")
-                            ? FileExtensions.GetBase64FromByte(
-                                CompressionUtils.DecompressGZip((byte[])item["paramValue"]))
-                            : FileExtensions.GetBase64FromByte((byte[])item["paramValue"]);
-                        lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
-                    }
-                    else
-                    {
-                        var paramBytes = item.Field<byte[]>("paramValue");
-                        if (paramBytes != null)
-                        {
-                            paramValue = Encoding.UTF8.GetString(paramBytes);
-                        }
-                    }
-
-                    lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
-                }
-            }
         }
 
-        private ReportResponse BuildReportResponse(ReportPropsDto reportProps, byte[] fileReport)
+        private static void AddReportParamRow(LocalReport lr, DataRow item)
         {
-            TryParse(reportProps.ReportFormat.ToUpper(), out FileFormats.FileContentType fc);
-            TryParse(reportProps.ReportFormat.ToUpper(), out FileFormats.FileExtension fe);
+            var paramValue = "";
+            if (Convert.ToBoolean(item["isPicture"]))
+            {
+                paramValue = item.Field<bool>("isCompressed")
+                    ? FileExtensions.GetBase64FromByte(
+                        CompressionUtils.DecompressGZip((byte[])item["paramValue"]))
+                    : FileExtensions.GetBase64FromByte((byte[])item["paramValue"]);
+            }
+            else
+            {
+                var paramBytes = item.Field<byte[]>("paramValue");
+                if (paramBytes != null)
+                {
+                    paramValue = Encoding.UTF8.GetString(paramBytes);
+                }
+            }
+
+            lr.SetParameters(new ReportParameter(item["paramName"].ToString(), paramValue));
+        }
+
+        private static ReportResponse BuildReportResponse(ReportPropsDto reportProps, byte[] fileReport)
+        {
+            var format = reportProps.ReportFormat.ToUpperInvariant();
+            _ = Enum.TryParse<FileFormats.FileContentType>(format, ignoreCase: true, out var fc);
+            _ = Enum.TryParse<FileFormats.FileExtension>(format, ignoreCase: true, out var fe);
 
             var response = new ReportResponse
             {
@@ -263,6 +277,7 @@ namespace Acontplus.Reports.Services
             return response;
         }
 
+        /// <inheritdoc />
         public async Task<ReportResponse> GetErrorAsync()
         {
             var baseDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Resources");
@@ -305,12 +320,17 @@ namespace Acontplus.Reports.Services
         }
 
 
+        /// <inheritdoc />
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases unmanaged and optionally managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed)
@@ -325,6 +345,9 @@ namespace Acontplus.Reports.Services
             _disposed = true;
         }
 
+        /// <summary>
+        /// Finalizes an instance of the <see cref="RdlcReportService"/> class.
+        /// </summary>
         ~RdlcReportService()
         {
             Dispose(false);

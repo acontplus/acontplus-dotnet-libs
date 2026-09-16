@@ -128,6 +128,8 @@ internal static class ExpressionBuilder
     /// Thrown when no public constructor is fully satisfiable or when a <c>ForCtorParam</c>
     /// rule references a non-existent parameter.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters", Justification = "Internal expression tree builder requires type mapping metadata and configuration context.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S107", Justification = "Internal expression tree builder requires type mapping metadata and configuration context.")]
     private static LambdaExpression BuildConstructorMappingExpression(
         TypePair pair,
         ParameterExpression sourceParam,
@@ -148,31 +150,11 @@ internal static class ExpressionBuilder
         var (selectedCtor, argExpressions) = SelectBestConstructor(
             targetType, sourceParam, sourceProperties, ctorParamRules);
 
-        // Build the NewExpression with constructor arguments
-        var newExpr = Expression.New(selectedCtor, argExpressions);
-
-        // Determine which property names are already covered by constructor parameters
-        var ctorParamNames = new HashSet<string>(
-            selectedCtor.GetParameters().Select(p => p.Name!),
-            StringComparer.OrdinalIgnoreCase);
-
-        // Build member bindings for remaining settable properties NOT covered by constructor
+        var (newExpr, ctorParamNames) = CreateNewExpressionWithCoveredParams(selectedCtor, argExpressions);
         var bindings = new List<MemberBinding>();
 
-        foreach (var destProp in targetProperties)
+        foreach (var destProp in GetSettableCandidateProperties(targetProperties, ctorParamNames))
         {
-            // Skip properties already set via constructor parameter
-            if (ctorParamNames.Contains(destProp.Name))
-                continue;
-
-            // Skip init-only properties — these can only be set via constructor
-            if (IsInitOnlySetter(destProp))
-                continue;
-
-            // Skip non-writable properties
-            if (!HasWritableSetter(destProp))
-                continue;
-
             var binding = BuildMemberBinding(
                 destProp, sourceParam, sourceProperties, config, registry, inProgress);
 
@@ -212,20 +194,17 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            foreach (var param in ctor.GetParameters())
+            foreach (var param in ctor.GetParameters().Where(p => p.Name is not null))
             {
-                if (param.Name is not null)
-                    allParamNames.Add(param.Name);
+                allParamNames.Add(param.Name!);
             }
         }
 
-        foreach (var ruleName in ctorParamRules.Keys)
+        var invalidRule = ctorParamRules.Keys.FirstOrDefault(ruleName => !allParamNames.Contains(ruleName));
+        if (invalidRule != null)
         {
-            if (!allParamNames.Contains(ruleName))
-            {
-                throw new InvalidOperationException(
-                    $"{pair}: ForCtorParam rule names parameter '{ruleName}' which does not exist on any constructor of '{targetType.Name}'");
-            }
+            throw new InvalidOperationException(
+                $"{pair}: ForCtorParam rule names parameter '{invalidRule}' which does not exist on any constructor of '{targetType.Name}'");
         }
     }
 
@@ -245,66 +224,41 @@ internal static class ExpressionBuilder
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        FindBestConstructor(
+            targetType,
+            ctor => TryResolveConstructorArguments(ctor, sourceParam, sourceProperties, ctorParamRules),
+            string.Empty);
+
+    private static (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied) TryResolveConstructorArguments(
+        ConstructorInfo ctor,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
         Dictionary<string, LambdaExpression> ctorParamRules)
     {
-        var constructors = targetType.GetConstructors();
+        var parameters = ctor.GetParameters();
+        var args = new Expression[parameters.Length];
+        var allSatisfied = true;
+        var currentUnsatisfied = new List<string>();
 
-        ConstructorInfo? bestCtor = null;
-        Expression[]? bestArgs = null;
-        var bestParamCount = -1;
-
-        // Track unsatisfied parameters for error reporting
-        List<string>? unsatisfiedParams = null;
-
-        foreach (var ctor in constructors)
+        for (var i = 0; i < parameters.Length; i++)
         {
-            var parameters = ctor.GetParameters();
-            var args = new Expression[parameters.Length];
-            var allSatisfied = true;
-            var currentUnsatisfied = new List<string>();
+            var param = parameters[i];
+            var argExpr = ResolveConstructorParameter(
+                param, sourceParam, sourceProperties, ctorParamRules);
 
-            for (var i = 0; i < parameters.Length; i++)
+            if (argExpr is not null)
             {
-                var param = parameters[i];
-                var argExpr = ResolveConstructorParameter(
-                    param, sourceParam, sourceProperties, ctorParamRules);
-
-                if (argExpr is not null)
-                {
-                    args[i] = argExpr;
-                }
-                else
-                {
-                    allSatisfied = false;
-                    currentUnsatisfied.Add(param.Name ?? $"arg{i}");
-                }
+                args[i] = argExpr;
             }
-
-            if (allSatisfied && parameters.Length > bestParamCount)
+            else
             {
-                bestCtor = ctor;
-                bestArgs = args;
-                bestParamCount = parameters.Length;
-            }
-
-            // Track the constructor with most parameters for error message
-            if (!allSatisfied && (unsatisfiedParams is null || parameters.Length > (unsatisfiedParams.Count + bestParamCount)))
-            {
-                unsatisfiedParams = currentUnsatisfied;
+                allSatisfied = false;
+                currentUnsatisfied.Add(param.Name ?? $"arg{i}");
             }
         }
 
-        if (bestCtor is null || bestArgs is null)
-        {
-            var paramList = unsatisfiedParams is not null
-                ? string.Join(", ", unsatisfiedParams)
-                : "unknown";
-
-            throw new InvalidOperationException(
-                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable. Unsatisfied parameters: {paramList}");
-        }
-
-        return (bestCtor, bestArgs);
+        return (allSatisfied, args, currentUnsatisfied);
     }
 
     /// <summary>
@@ -316,7 +270,22 @@ internal static class ExpressionBuilder
         ParameterInfo param,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        ResolveConstructorParameterCore(
+            param,
+            sourceParam,
+            sourceProperties,
+            ctorParamRules,
+            IsAssignableForCtorParam,
+            BuildCtorParamValueExpression);
+
+    private static Expression? ResolveConstructorParameterCore(
+        ParameterInfo param,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules,
+        Func<Type, Type, bool> isAssignable,
+        Func<MemberExpression, Type, Type, Expression> buildValueExpr)
     {
         var paramName = param.Name ?? string.Empty;
         var paramType = param.ParameterType;
@@ -338,10 +307,10 @@ internal static class ExpressionBuilder
             var sourceProp = matchingSourceProps[0];
 
             // Check type assignability
-            if (IsAssignableForCtorParam(sourceProp.PropertyType, paramType))
+            if (isAssignable(sourceProp.PropertyType, paramType))
             {
                 var sourceAccess = Expression.Property(sourceParam, sourceProp);
-                return BuildCtorParamValueExpression(sourceAccess, sourceProp.PropertyType, paramType);
+                return buildValueExpr(sourceAccess, sourceProp.PropertyType, paramType);
             }
         }
 
@@ -508,7 +477,7 @@ internal static class ExpressionBuilder
             // Factory compiles element delegates on demand via ExpressionBuilder
             Func<TypePair, Delegate> factory = elementPair =>
             {
-                var elementLambda = BuildMappingExpression(elementPair, config: null, registry, new HashSet<TypePair>());
+                var elementLambda = BuildMappingExpression(elementPair, config: null, registry, []);
                 return elementLambda.Compile();
             };
 
@@ -611,7 +580,7 @@ internal static class ExpressionBuilder
     /// Builds a <c>Convert.ChangeType</c> expression wrapped in a try/catch that returns
     /// <c>default(TDest)</c> on failure.
     /// </summary>
-    private static Expression BuildChangeTypeExpression(
+    private static TryExpression BuildChangeTypeExpression(
         Expression sourceAccess,
         Type sourceType,
         Type destType)
@@ -649,7 +618,7 @@ internal static class ExpressionBuilder
     /// Wraps a value expression with a null guard. When the source is null, produces
     /// <c>null</c> for nullable reference types or <c>default(T)</c> for non-nullable value types.
     /// </summary>
-    private static Expression BuildNullGuardedExpression(
+    private static ConditionalExpression BuildNullGuardedExpression(
         Expression sourceAccess,
         Expression valueExpression,
         Type sourceType,
@@ -661,7 +630,7 @@ internal static class ExpressionBuilder
         {
             // For Nullable<T>, check .HasValue
             nullCheck = Expression.Not(
-                Expression.Property(sourceAccess, nameof(Nullable<int>.HasValue)));
+                Expression.Property(sourceAccess, nameof(Nullable<>.HasValue)));
         }
         else
         {
@@ -682,7 +651,7 @@ internal static class ExpressionBuilder
     /// Builds an expression that invokes a boxed <c>Func&lt;object, object?&gt;</c> delegate
     /// resolver, casting the result to the destination property type.
     /// </summary>
-    private static Expression BuildDelegateResolverExpression(
+    private static UnaryExpression BuildDelegateResolverExpression(
         ParameterExpression sourceParam,
         Func<object, object?> resolver,
         Type destType)
@@ -722,10 +691,8 @@ internal static class ExpressionBuilder
     private static Expression ReplaceParameter(
         Expression body,
         ParameterExpression oldParam,
-        ParameterExpression newParam)
-    {
-        return new ParameterReplacer(oldParam, newParam).Visit(body);
-    }
+        ParameterExpression newParam) =>
+        new ParameterReplacer(oldParam, newParam).Visit(body);
 
     /// <summary>
     /// Replaces occurrences of <paramref name="oldParam"/> in <paramref name="body"/>
@@ -736,10 +703,8 @@ internal static class ExpressionBuilder
     private static Expression ReplaceParameter(
         Expression body,
         ParameterExpression oldParam,
-        Expression replacement)
-    {
-        return new ParameterExpressionReplacer(oldParam, replacement).Visit(body);
-    }
+        Expression replacement) =>
+        new ParameterExpressionReplacer(oldParam, replacement).Visit(body);
 
     /// <summary>
     /// Ensures that the expression is of the specified type, adding a conversion if necessary.
@@ -925,7 +890,7 @@ internal static class ExpressionBuilder
     /// Builds a <c>Enumerable.Select(source, elementMapper)</c> expression that projects
     /// each element through the element mapping delegate.
     /// </summary>
-    private static Expression BuildSelectExpression(
+    private static MethodCallExpression BuildSelectExpression(
         Expression sourceCollection,
         Delegate elementDelegate,
         Type srcElementType,
@@ -995,7 +960,7 @@ internal static class ExpressionBuilder
     /// Wraps the materialised collection expression with a null guard:
     /// if source is null → <c>null</c> (nullable dest) or <c>new List&lt;T&gt;()</c> / <c>new T[0]</c> (non-nullable dest).
     /// </summary>
-    private static Expression BuildCollectionNullGuard(
+    private static ConditionalExpression BuildCollectionNullGuard(
         Expression sourceAccess,
         Expression materialisedExpression,
         Type destCollectionType,
@@ -1082,7 +1047,7 @@ internal static class ExpressionBuilder
 
         Expression mappingBody;
 
-        if (inProgress.Contains(nestedPair))
+        if (!inProgress.Add(nestedPair))
         {
             // Cycle detected: create a deferred Lazy<Func<TNestedSource, TNestedTarget>>
             mappingBody = BuildDeferredCyclicMapping(sourceAccess, nestedSourceType, nestedTargetType, registry);
@@ -1090,7 +1055,6 @@ internal static class ExpressionBuilder
         else
         {
             // No cycle: recurse to build nested mapping expression
-            inProgress.Add(nestedPair);
             try
             {
                 var nestedLambda = BuildMappingExpression(nestedPair, config: null, registry, inProgress);
@@ -1115,7 +1079,7 @@ internal static class ExpressionBuilder
     /// delegate from the registry after all compilation completes. The expression tree captures
     /// <c>Expression.Invoke(Expression.Property(lazyConst, "Value"), sourceExpr)</c>.
     /// </summary>
-    private static Expression BuildDeferredCyclicMapping(
+    private static InvocationExpression BuildDeferredCyclicMapping(
         Expression sourceAccess,
         Type nestedSourceType,
         Type nestedTargetType,
@@ -1152,6 +1116,8 @@ internal static class ExpressionBuilder
     /// resolves the compiled mapping delegate from the registry. The <c>Lazy</c> ensures the delegate
     /// is fetched exactly once, on first invocation (which occurs after <c>Build()</c> completes).
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields", Justification = "Accesses internal MapperRegistry.GetOrAdd within same assembly for runtime expression compilation.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S3011", Justification = "Accesses internal MapperRegistry.GetOrAdd within same assembly for runtime expression compilation.")]
     private static object CreateLazyRegistryResolver(
         MapperRegistry registry,
         TypePair pair,
@@ -1211,7 +1177,7 @@ internal static class ExpressionBuilder
         {
             // Nullable<T>: check .HasValue
             nullCheck = Expression.Not(
-                Expression.Property(sourceAccess, nameof(Nullable<int>.HasValue)));
+                Expression.Property(sourceAccess, nameof(Nullable<>.HasValue)));
         }
         else
         {
@@ -1261,10 +1227,8 @@ internal static class ExpressionBuilder
     /// </exception>
     internal static LambdaExpression BuildProjectionExpression(
         TypePair pair,
-        MappingExpressionBase? config)
-    {
-        return BuildProjectionExpressionInternal(pair, config, new HashSet<TypePair>());
-    }
+        MappingExpressionBase? config) =>
+        BuildProjectionExpressionInternal(pair, config, []);
 
     /// <summary>
     /// Internal recursive implementation of <see cref="BuildProjectionExpression"/> with
@@ -1375,28 +1339,11 @@ internal static class ExpressionBuilder
         var (selectedCtor, argExpressions) = SelectBestProjectionConstructor(
             targetType, sourceParam, sourceProperties, ctorParamRules);
 
-        // Build the NewExpression with constructor arguments
-        var newExpr = Expression.New(selectedCtor, argExpressions);
-
-        // Determine which property names are already covered by constructor parameters
-        var ctorParamNames = new HashSet<string>(
-            selectedCtor.GetParameters().Select(p => p.Name!),
-            StringComparer.OrdinalIgnoreCase);
-
-        // Build member bindings for remaining settable properties NOT covered by constructor
+        var (newExpr, ctorParamNames) = CreateNewExpressionWithCoveredParams(selectedCtor, argExpressions);
         var bindings = new List<MemberBinding>();
 
-        foreach (var destProp in targetProperties)
+        foreach (var destProp in GetSettableCandidateProperties(targetProperties, ctorParamNames))
         {
-            if (ctorParamNames.Contains(destProp.Name))
-                continue;
-
-            if (IsInitOnlySetter(destProp))
-                continue;
-
-            if (!HasWritableSetter(destProp))
-                continue;
-
             var binding = BuildProjectionMemberBinding(
                 destProp, sourceParam, sourceProperties, config, inProgress);
 
@@ -1425,10 +1372,37 @@ internal static class ExpressionBuilder
         Type targetType,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        FindBestConstructor(
+            targetType,
+            ctor => TryResolveProjectionConstructorArguments(ctor, sourceParam, sourceProperties, ctorParamRules),
+            string.Empty);
+
+    private static (NewExpression NewExpr, HashSet<string> CtorParamNames) CreateNewExpressionWithCoveredParams(
+        ConstructorInfo ctor,
+        Expression[] argExpressions)
+    {
+        var newExpr = Expression.New(ctor, argExpressions);
+        var ctorParamNames = new HashSet<string>(
+            ctor.GetParameters().Select(p => p.Name!),
+            StringComparer.OrdinalIgnoreCase);
+        return (newExpr, ctorParamNames);
+    }
+
+    private static IEnumerable<PropertyInfo> GetSettableCandidateProperties(
+        PropertyInfo[] targetProperties,
+        HashSet<string> coveredCtorParamNames) =>
+        targetProperties.Where(p =>
+            !coveredCtorParamNames.Contains(p.Name) &&
+            !IsInitOnlySetter(p) &&
+            HasWritableSetter(p));
+
+    private static (ConstructorInfo Constructor, Expression[] Arguments) FindBestConstructor(
+        Type targetType,
+        Func<ConstructorInfo, (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied)> tryResolveArguments,
+        string errorSuffix)
     {
         var constructors = targetType.GetConstructors();
-
         ConstructorInfo? bestCtor = null;
         Expression[]? bestArgs = null;
         var bestParamCount = -1;
@@ -1436,36 +1410,17 @@ internal static class ExpressionBuilder
 
         foreach (var ctor in constructors)
         {
-            var parameters = ctor.GetParameters();
-            var args = new Expression[parameters.Length];
-            var allSatisfied = true;
-            var currentUnsatisfied = new List<string>();
+            var (allSatisfied, args, currentUnsatisfied) = tryResolveArguments(ctor);
+            var paramCount = ctor.GetParameters().Length;
 
-            for (var i = 0; i < parameters.Length; i++)
-            {
-                var param = parameters[i];
-                var argExpr = ResolveProjectionConstructorParameter(
-                    param, sourceParam, sourceProperties, ctorParamRules);
-
-                if (argExpr is not null)
-                {
-                    args[i] = argExpr;
-                }
-                else
-                {
-                    allSatisfied = false;
-                    currentUnsatisfied.Add(param.Name ?? $"arg{i}");
-                }
-            }
-
-            if (allSatisfied && parameters.Length > bestParamCount)
+            if (allSatisfied && paramCount > bestParamCount)
             {
                 bestCtor = ctor;
                 bestArgs = args;
-                bestParamCount = parameters.Length;
+                bestParamCount = paramCount;
             }
 
-            if (!allSatisfied && (unsatisfiedParams is null || parameters.Length > (unsatisfiedParams.Count + bestParamCount)))
+            if (!allSatisfied && (unsatisfiedParams is null || paramCount > (unsatisfiedParams.Count + bestParamCount)))
             {
                 unsatisfiedParams = currentUnsatisfied;
             }
@@ -1478,10 +1433,41 @@ internal static class ExpressionBuilder
                 : "unknown";
 
             throw new InvalidOperationException(
-                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable. Unsatisfied parameters: {paramList}");
+                $"Cannot create an instance of '{targetType.Name}'. No public constructor is fully satisfiable{errorSuffix}. Unsatisfied parameters: {paramList}");
         }
 
         return (bestCtor, bestArgs);
+    }
+
+    private static (bool AllSatisfied, Expression[] Args, List<string> Unsatisfied) TryResolveProjectionConstructorArguments(
+        ConstructorInfo ctor,
+        ParameterExpression sourceParam,
+        PropertyInfo[] sourceProperties,
+        Dictionary<string, LambdaExpression> ctorParamRules)
+    {
+        var parameters = ctor.GetParameters();
+        var args = new Expression[parameters.Length];
+        var allSatisfied = true;
+        var currentUnsatisfied = new List<string>();
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var param = parameters[i];
+            var argExpr = ResolveProjectionConstructorParameter(
+                param, sourceParam, sourceProperties, ctorParamRules);
+
+            if (argExpr is not null)
+            {
+                args[i] = argExpr;
+            }
+            else
+            {
+                allSatisfied = false;
+                currentUnsatisfied.Add(param.Name ?? $"arg{i}");
+            }
+        }
+
+        return (allSatisfied, args, currentUnsatisfied);
     }
 
     /// <summary>
@@ -1493,49 +1479,21 @@ internal static class ExpressionBuilder
         ParameterInfo param,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
-        Dictionary<string, LambdaExpression> ctorParamRules)
-    {
-        var paramName = param.Name ?? string.Empty;
-        var paramType = param.ParameterType;
-
-        // Priority 1: ForCtorParam rule (expression-based)
-        if (ctorParamRules.TryGetValue(paramName, out var ctorRule))
-        {
-            var ruleBody = ReplaceParameter(ctorRule.Body, ctorRule.Parameters[0], sourceParam);
-            return EnsureType(ruleBody, paramType);
-        }
-
-        // Priority 2: Convention name match
-        var matchingSourceProps = sourceProperties
-            .Where(sp => string.Equals(sp.Name, paramName, StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-
-        if (matchingSourceProps.Length == 1)
-        {
-            var sourceProp = matchingSourceProps[0];
-
-            if (IsProjectionAssignable(sourceProp.PropertyType, paramType))
-            {
-                var sourceAccess = Expression.Property(sourceParam, sourceProp);
-                return BuildProjectionTypeConversion(sourceAccess, sourceProp.PropertyType, paramType);
-            }
-        }
-
-        // Priority 3: Declared default value
-        if (param.HasDefaultValue)
-        {
-            return Expression.Constant(param.DefaultValue, paramType);
-        }
-
-        return null;
-    }
+        Dictionary<string, LambdaExpression> ctorParamRules) =>
+        ResolveConstructorParameterCore(
+            param,
+            sourceParam,
+            sourceProperties,
+            ctorParamRules,
+            IsProjectionAssignable,
+            BuildProjectionTypeConversion);
 
     /// <summary>
     /// Builds a member binding for a single destination property in projection mode.
     /// Applies the member resolution priority: Ignore → ForMember expression → convention match.
     /// Throws <see cref="NotSupportedException"/> for delegate resolvers or <c>Convert.ChangeType</c>.
     /// </summary>
-    private static MemberBinding? BuildProjectionMemberBinding(
+    private static MemberAssignment? BuildProjectionMemberBinding(
         PropertyInfo destProp,
         ParameterExpression sourceParam,
         PropertyInfo[] sourceProperties,
@@ -1704,10 +1662,8 @@ internal static class ExpressionBuilder
             _newParam = newParam;
         }
 
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            return node == _oldParam ? _newParam : base.VisitParameter(node);
-        }
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == _oldParam ? _newParam : base.VisitParameter(node);
     }
 
     /// <summary>
@@ -1726,9 +1682,7 @@ internal static class ExpressionBuilder
             _replacement = replacement;
         }
 
-        protected override Expression VisitParameter(ParameterExpression node)
-        {
-            return node == _oldParam ? _replacement : base.VisitParameter(node);
-        }
+        protected override Expression VisitParameter(ParameterExpression node) =>
+            node == _oldParam ? _replacement : base.VisitParameter(node);
     }
 }

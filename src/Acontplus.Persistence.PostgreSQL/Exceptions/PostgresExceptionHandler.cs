@@ -23,7 +23,7 @@ public static class PostgresExceptionHandler
     /// <returns>A <see cref="SqlErrorInfo"/> describing the domain error.</returns>
     public static SqlErrorInfo MapSqlException(NpgsqlException ex)
     {
-        if (ex.SqlState == "23505" && ex.Message.Contains("duplicate key"))
+        if (ex.SqlState == "23505" && ex.Message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase))
         {
             return new SqlErrorInfo(
                 ErrorType.Conflict,
@@ -31,47 +31,45 @@ public static class PostgresExceptionHandler
                 "Duplicate key violation",
                 ex);
         }
-        return ex.SqlState == "23503"
-            ? new SqlErrorInfo(
+
+        return ex.SqlState switch
+        {
+            "23503" => new SqlErrorInfo(
                 ErrorType.Conflict,
                 "PG_FOREIGN_KEY_VIOLATION",
                 "Foreign key constraint violation",
-                ex)
-            : ex.SqlState == "23502"
-            ? new SqlErrorInfo(
+                ex),
+            "23502" => new SqlErrorInfo(
                 ErrorType.Validation,
                 "PG_NOT_NULL_VIOLATION",
                 "Null value in column violates not-null constraint",
-                ex)
-            : ex.SqlState == "22001"
-            ? new SqlErrorInfo(
+                ex),
+            "22001" => new SqlErrorInfo(
                 ErrorType.Validation,
                 "PG_STRING_TOO_LONG",
                 "String data, right truncated",
-                ex)
-            : ex.SqlState == "40001"
-            ? new SqlErrorInfo(
+                ex),
+            "40001" => new SqlErrorInfo(
                 ErrorType.Conflict,
                 "PG_SERIALIZATION_FAILURE",
                 "Serialization failure (deadlock or concurrency conflict)",
-                ex)
-            : ex.SqlState == "40P01"
-            ? new SqlErrorInfo(
+                ex),
+            "40P01" => new SqlErrorInfo(
                 ErrorType.Conflict,
                 "PG_DEADLOCK_DETECTED",
                 "Deadlock detected",
-                ex)
-            : ex.SqlState == "28P01"
-            ? new SqlErrorInfo(
+                ex),
+            "28P01" => new SqlErrorInfo(
                 ErrorType.Unauthorized,
                 "PG_AUTH_FAILED",
                 "Authentication failed",
+                ex),
+            _ => new SqlErrorInfo(
+                ErrorType.Internal,
+                $"PG_ERROR_{ex.SqlState}",
+                ex.Message,
                 ex)
-            : new SqlErrorInfo(
-            ErrorType.Internal,
-            $"PG_ERROR_{ex.SqlState}",
-            ex.Message,
-            ex);
+        };
     }
 
     /// <summary>

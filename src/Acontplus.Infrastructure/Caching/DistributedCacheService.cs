@@ -3,17 +3,14 @@ namespace Acontplus.Infrastructure.Caching;
 /// <summary>
 ///     Distributed cache service implementation using Redis or other distributed cache.
 /// </summary>
-public class DistributedCacheService : ICacheService
+/// <param name="cache">The distributed cache instance.</param>
+/// <param name="logger">The logger instance.</param>
+public class DistributedCacheService(IDistributedCache cache, ILogger<DistributedCacheService> logger) : ICacheService
 {
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<DistributedCacheService> _logger;
+    private readonly IDistributedCache _cache = cache;
+    private readonly ILogger<DistributedCacheService> _logger = logger;
 
-    public DistributedCacheService(IDistributedCache cache, ILogger<DistributedCacheService> logger)
-    {
-        _cache = cache;
-        _logger = logger;
-    }
-
+    /// <inheritdoc />
     public T? Get<T>(string key)
     {
         try
@@ -28,11 +25,12 @@ public class DistributedCacheService : ICacheService
         }
     }
 
-    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
     {
         try
         {
-            var value = await _cache.GetStringAsync(key, cancellationToken);
+            var value = await _cache.GetStringAsync(key, ct);
             return string.IsNullOrEmpty(value) ? default : JsonSerializer.Deserialize<T>(value);
         }
         catch (Exception ex)
@@ -42,6 +40,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public void Set<T>(string key, T value, TimeSpan? expiration = null)
     {
         try
@@ -62,6 +61,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null,
         CancellationToken ct = default)
     {
@@ -83,6 +83,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public void Remove(string key)
     {
         try
@@ -95,11 +96,12 @@ public class DistributedCacheService : ICacheService
         }
     }
 
-    public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task RemoveAsync(string key, CancellationToken ct = default)
     {
         try
         {
-            await _cache.RemoveAsync(key, cancellationToken);
+            await _cache.RemoveAsync(key, ct);
         }
         catch (Exception ex)
         {
@@ -107,6 +109,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public bool TryGetValue<T>(string key, out T? value)
     {
         try
@@ -129,12 +132,13 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public T GetOrCreate<T>(string key, Func<T> factory, TimeSpan? expiration = null)
     {
         var value = Get<T>(key);
-        if (value != null)
+        if (!EqualityComparer<T>.Default.Equals(value, default))
         {
-            return value;
+            return value!;
         }
 
         value = factory();
@@ -142,13 +146,14 @@ public class DistributedCacheService : ICacheService
         return value;
     }
 
+    /// <inheritdoc />
     public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null,
         CancellationToken ct = default)
     {
         var value = await GetAsync<T>(key, ct);
-        if (value != null)
+        if (!EqualityComparer<T>.Default.Equals(value, default))
         {
-            return value;
+            return value!;
         }
 
         value = await factory();
@@ -156,13 +161,13 @@ public class DistributedCacheService : ICacheService
         return value;
     }
 
-    public void Clear()
-    {
+    /// <inheritdoc />
+    public void Clear() =>
         // Note: Distributed cache doesn't support clearing all entries by design
         // This is a limitation of Redis and other distributed cache providers
         _logger.LogWarning("Clear operation not supported for distributed cache - this is a platform limitation");
-    }
 
+    /// <inheritdoc />
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
         // Note: Distributed cache doesn't support clearing all entries by design
@@ -171,6 +176,7 @@ public class DistributedCacheService : ICacheService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public bool Exists(string key)
     {
         try
@@ -185,6 +191,7 @@ public class DistributedCacheService : ICacheService
         }
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
     {
         try
@@ -199,19 +206,19 @@ public class DistributedCacheService : ICacheService
         }
     }
 
-    public void RemoveByPrefix(string prefix)
-    {
-        _logger.LogWarning(
-            "RemoveByPrefix is not supported for distributed cache. Use Redis-specific clients for pattern-based removal.");
-    }
+    /// <inheritdoc />
+    public void RemoveByPrefix(string prefix) =>
+        _logger.LogWarning("RemoveByPrefix operation not natively supported for distributed cache - consider using tags or specific key tracking");
 
+    /// <inheritdoc />
     public Task RemoveByPrefixAsync(string prefix, CancellationToken ct = default)
     {
         RemoveByPrefix(prefix);
         return Task.CompletedTask;
     }
 
-    public CacheStatistics GetStatistics()
+    /// <inheritdoc />
+    public static CacheStatistics GetStatistics()
     {
         // Note: Distributed cache providers (Redis, etc.) don't expose detailed statistics
         // through the IDistributedCache interface. For detailed Redis stats, use Redis-specific clients.
@@ -226,6 +233,7 @@ public class DistributedCacheService : ICacheService
         };
     }
 
+    /// <inheritdoc />
     public Task<CacheStatistics?> GetStatisticsAsync(CancellationToken ct = default) =>
         Task.FromResult<CacheStatistics?>(GetStatistics());
 }

@@ -27,10 +27,8 @@ public static class AtsEndpoints
                 { "userRoleId", 428 },
                 { "json", SqlStringParam.Sanitize(json) }
             };
-            var mapper = new AtsDataSetMapper();
-
             var ds = await atsService.GetAsync(parameters);
-            var atsData = mapper.MapDataSetToAtsData(ds);
+            var atsData = AtsDataSetMapper.MapDataSetToAtsData(ds);
             var xmlBytes = await atsXmlService.CreateAtsXmlAsync(atsData);
             var fileName = "ATS" + "_" + atsData.Header.IdInformante
                            + "_" + atsData.Header.NumEstabRuc

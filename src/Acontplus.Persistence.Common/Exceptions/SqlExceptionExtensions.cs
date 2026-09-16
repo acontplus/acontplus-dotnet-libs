@@ -1,5 +1,8 @@
 namespace Acontplus.Persistence.Common.Exceptions;
 
+/// <summary>
+/// Provides extension methods for converting SQL domain exceptions to domain error structures.
+/// </summary>
 public static class SqlExceptionExtensions
 {
     private static readonly
@@ -31,6 +34,13 @@ public static class SqlExceptionExtensions
                     new DomainError(ErrorType.RequestTimeout, code, msg, target, details)
             }.ToImmutableDictionary();
 
+    /// <summary>
+    /// Converts a <see cref="SqlDomainException"/> into a strongly typed <see cref="DomainError"/>.
+    /// </summary>
+    /// <param name="sqlDomainException">The SQL domain exception to convert.</param>
+    /// <param name="target">Optional target property or field associated with the error.</param>
+    /// <param name="details">Optional additional error metadata dictionary.</param>
+    /// <returns>A mapped <see cref="DomainError"/> instance.</returns>
     public static DomainError ToDomainError(
         this SqlDomainException sqlDomainException,
         string? target = null,

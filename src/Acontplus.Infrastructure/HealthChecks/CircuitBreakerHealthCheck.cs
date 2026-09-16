@@ -5,15 +5,12 @@ namespace Acontplus.Infrastructure.HealthChecks;
 /// <summary>
 ///     Health check for circuit breaker service.
 /// </summary>
-public class CircuitBreakerHealthCheck : IHealthCheck
+/// <param name="circuitBreakerService">The circuit breaker service to evaluate.</param>
+public class CircuitBreakerHealthCheck(ICircuitBreakerService circuitBreakerService) : IHealthCheck
 {
-    private readonly ICircuitBreakerService _circuitBreakerService;
+    private readonly ICircuitBreakerService _circuitBreakerService = circuitBreakerService;
 
-    public CircuitBreakerHealthCheck(ICircuitBreakerService circuitBreakerService)
-    {
-        _circuitBreakerService = circuitBreakerService;
-    }
-
+    /// <inheritdoc />
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

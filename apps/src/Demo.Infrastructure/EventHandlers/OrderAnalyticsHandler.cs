@@ -7,18 +7,12 @@ namespace Demo.Infrastructure.EventHandlers;
 /// Background service that listens to OrderCreatedEvent and updates analytics/reporting.
 /// Infrastructure layer - implements cross-cutting concerns.
 /// </summary>
-public class OrderAnalyticsHandler : BackgroundService
+public class OrderAnalyticsHandler(
+    IEventSubscriber eventSubscriber,
+    ILogger<OrderAnalyticsHandler> logger) : BackgroundService
 {
-    private readonly IEventSubscriber _eventSubscriber;
-    private readonly ILogger<OrderAnalyticsHandler> _logger;
-
-    public OrderAnalyticsHandler(
-        IEventSubscriber eventSubscriber,
-        ILogger<OrderAnalyticsHandler> logger)
-    {
-        _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IEventSubscriber _eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
+    private readonly ILogger<OrderAnalyticsHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -28,23 +22,29 @@ public class OrderAnalyticsHandler : BackgroundService
         {
             await foreach (var orderEvent in _eventSubscriber.SubscribeAsync<OrderCreatedEvent>(stoppingToken))
             {
-                _logger.LogInformation(
-                    "📊 Recording analytics for Order {OrderId} - Product: {ProductName}, Amount: ${TotalAmount}",
-                    orderEvent.OrderId,
-                    orderEvent.ProductName,
-                    orderEvent.TotalAmount);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "📊 Recording analytics for Order {OrderId} - Product: {ProductName}, Amount: ${TotalAmount}",
+                        orderEvent.OrderId,
+                        orderEvent.ProductName,
+                        orderEvent.TotalAmount);
+                }
 
                 // Simulate analytics processing (replace with actual analytics service)
                 await Task.Delay(50, stoppingToken);
 
-                _logger.LogInformation(
-                    "✅ Analytics recorded for Order {OrderId}",
-                    orderEvent.OrderId);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(
+                        "✅ Analytics recorded for Order {OrderId}",
+                        orderEvent.OrderId);
+                }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogInformation("OrderAnalyticsHandler is stopping.");
+            _logger.LogInformation(ex, "OrderAnalyticsHandler is stopping.");
         }
         catch (Exception ex)
         {

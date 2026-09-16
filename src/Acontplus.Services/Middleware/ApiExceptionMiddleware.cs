@@ -5,11 +5,21 @@ namespace Acontplus.Services.Middleware;
 /// </summary>
 public class ApiExceptionMiddleware
 {
+    private const string CategoryValidation = "validation";
+    private const string SeverityWarning = "warning";
+    private const string SeverityError = "error";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ApiExceptionMiddleware> _logger;
     private readonly ExceptionHandlingOptions _options;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiExceptionMiddleware"/> class.
+    /// </summary>
+    /// <param name="next">The next request delegate in the pipeline.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="options">Exception handling options.</param>
     public ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMiddleware> logger, ExceptionHandlingOptions options)
     {
         _next = next;
@@ -52,9 +62,9 @@ public class ApiExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex, string correlationId, string tenantId)
     {
-        context.Response.ContentType = "application/json";
-
         await LogException(ex, correlationId, tenantId, context);
+
+        context.Response.ContentType = "application/json";
 
         var response = ex switch
         {
@@ -65,7 +75,7 @@ public class ApiExceptionMiddleware
         };
 
         context.Response.StatusCode = int.Parse(response.Code);
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions), context.RequestAborted);
     }
 
     private static ApiResponse HandleValidationException(ValidationException ex, string correlationId, string tenantId)
@@ -76,8 +86,8 @@ public class ApiExceptionMiddleware
                     Code: ex.ErrorCode,
                     Message: message,
                     Target: e.Key,
-                    Category: "validation",
-                    Severity: "warning")))
+                    Category: CategoryValidation,
+                    Severity: SeverityWarning)))
             .ToList();
 
         return ApiResponse.Failure(
@@ -225,7 +235,7 @@ public class ApiExceptionMiddleware
             });
 
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, _jsonOptions), context.RequestAborted);
     }
 
     private async Task LogException(Exception ex, string correlationId, string tenantId, HttpContext context)
@@ -257,7 +267,10 @@ public class ApiExceptionMiddleware
         }
 
         var logLevel = GetLogLevel(ex);
-        _logger.Log(logLevel, ex, logMessage.ToString());
+        if (_logger.IsEnabled(logLevel))
+        {
+            _logger.Log(logLevel, ex, "{LogDetails}", logMessage.ToString());
+        }
     }
 
     private static LogLevel GetLogLevel(Exception ex)
@@ -332,13 +345,13 @@ public class ApiExceptionMiddleware
 
     private static string GetErrorCategory(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.BadRequest => "validation",
-        HttpStatusCode.UnprocessableEntity => "validation",
+        HttpStatusCode.BadRequest => CategoryValidation,
+        HttpStatusCode.UnprocessableEntity => CategoryValidation,
         HttpStatusCode.Unauthorized => "authentication",
         HttpStatusCode.Forbidden => "authorization",
         HttpStatusCode.NotFound => "not_found",
         HttpStatusCode.Conflict => "conflict",
-        HttpStatusCode.MethodNotAllowed => "validation",
+        HttpStatusCode.MethodNotAllowed => CategoryValidation,
         HttpStatusCode.TooManyRequests => "performance",
         HttpStatusCode.RequestTimeout => "performance",
         HttpStatusCode.GatewayTimeout => "performance",
@@ -347,32 +360,37 @@ public class ApiExceptionMiddleware
 
     private static string GetErrorSeverity(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.BadRequest => "warning",
-        HttpStatusCode.UnprocessableEntity => "warning",
-        HttpStatusCode.NotFound => "warning",
-        HttpStatusCode.Conflict => "warning",
-        HttpStatusCode.MethodNotAllowed => "warning",
-        _ => (int)statusCode >= 500 ? "error" : "warning"
+        HttpStatusCode.BadRequest => SeverityWarning,
+        HttpStatusCode.UnprocessableEntity => SeverityWarning,
+        HttpStatusCode.NotFound => SeverityWarning,
+        HttpStatusCode.Conflict => SeverityWarning,
+        HttpStatusCode.MethodNotAllowed => SeverityWarning,
+        _ => (int)statusCode >= 500 ? SeverityError : SeverityWarning
     };
 
     private static Dictionary<string, object>? GetSafeDebugInfo(Exception ex)
     {
-        return !ShouldIncludeDebugInfo()
-            ? null
-            : new Dictionary<string, object>
+        if (!ShouldIncludeDebugInfo())
+        {
+            return null;
+        }
+
+        object? innerExceptionInfo = ex.InnerException != null
+            ? new
             {
-                [DebugMetadataKeys.ExceptionType] = ex.GetType().Name,
-                [DebugMetadataKeys.Message] = ex.Message,
-                [DebugMetadataKeys.StackTrace] = ex.StackTrace?.Split(Environment.NewLine) ?? Array.Empty<string>(),
-                [DebugMetadataKeys.InnerException] = ex.InnerException != null
-                ? new
-                {
-                    type = ex.InnerException.GetType().Name,
-                    message = ex.InnerException.Message
-                }
-                : null!,
-                [DebugMetadataKeys.ActivityId] = Activity.Current?.Id ?? "none"
-            };
+                type = ex.InnerException.GetType().Name,
+                message = ex.InnerException.Message
+            }
+            : null;
+
+        return new Dictionary<string, object>
+        {
+            [DebugMetadataKeys.ExceptionType] = ex.GetType().Name,
+            [DebugMetadataKeys.Message] = ex.Message,
+            [DebugMetadataKeys.StackTrace] = ex.StackTrace?.Split(Environment.NewLine) ?? Array.Empty<string>(),
+            [DebugMetadataKeys.InnerException] = innerExceptionInfo!,
+            [DebugMetadataKeys.ActivityId] = Activity.Current?.Id ?? "none"
+        };
     }
 
     private static bool ShouldIncludeDebugInfo()

@@ -1,10 +1,17 @@
 namespace Acontplus.Utilities.IO;
 
+/// <summary>
+/// Provides bidirectional mapping between file extensions and MIME content types.
+/// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "csharpsquid:S1192",
+    Justification = "MIME type registry dictionary contains intentional standard MIME type literals")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S1192",
+    Justification = "MIME type registry dictionary contains intentional standard MIME type literals")]
 public static class MimeTypeMap
 {
-    private static readonly Lazy<IDictionary<string, string>> Mappings = new(BuildMappings);
+    private static readonly Lazy<Dictionary<string, string>> Mappings = new(BuildMappings);
 
-    private static IDictionary<string, string> BuildMappings()
+    private static Dictionary<string, string> BuildMappings()
     {
         var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -687,14 +694,17 @@ public static class MimeTypeMap
         return mappings;
     }
 
+    /// <summary>
+    /// Gets the MIME content type associated with the specified file extension.
+    /// </summary>
+    /// <param name="extension">The file extension with or without a leading period (e.g. ".pdf" or "pdf").</param>
+    /// <returns>The corresponding MIME type, or "application/octet-stream" if not recognized.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="extension"/> is null.</exception>
     public static string GetMimeType(string extension)
     {
-        if (extension == null)
-        {
-            throw new ArgumentNullException("extension");
-        }
+        ArgumentNullException.ThrowIfNull(extension);
 
-        if (!extension.StartsWith("."))
+        if (!extension.StartsWith('.'))
         {
             extension = "." + extension;
         }
@@ -703,14 +713,27 @@ public static class MimeTypeMap
         return Mappings.Value.TryGetValue(extension, out string? mime) ? mime : "application/octet-stream";
     }
 
+    /// <summary>
+    /// Gets the registered file extension associated with the specified MIME content type.
+    /// </summary>
+    /// <param name="mimeType">The MIME content type string (e.g. "application/pdf").</param>
+    /// <returns>The registered file extension including the leading dot (e.g. ".pdf").</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="mimeType"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="mimeType"/> is invalid or not registered.</exception>
     public static string GetExtension(string mimeType)
     {
-        return mimeType == null
-            ? throw new ArgumentNullException("mimeType")
-            : mimeType.StartsWith(".")
-            ? throw new ArgumentException("Requested mime type is not valid: " + mimeType)
-            : Mappings.Value.TryGetValue(mimeType, out string? extension)
-            ? extension
-            : throw new ArgumentException("Requested mime type is not registered: " + mimeType);
+        ArgumentNullException.ThrowIfNull(mimeType);
+
+        if (mimeType.StartsWith('.'))
+        {
+            throw new ArgumentException("Requested mime type is not valid: " + mimeType);
+        }
+
+        if (Mappings.Value.TryGetValue(mimeType, out string? extension))
+        {
+            return extension;
+        }
+
+        throw new ArgumentException("Requested mime type is not registered: " + mimeType);
     }
 }

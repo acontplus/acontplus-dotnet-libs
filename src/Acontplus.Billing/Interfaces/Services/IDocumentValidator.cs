@@ -1,5 +1,8 @@
 namespace Acontplus.Billing.Interfaces.Services;
 
-public class IDocumentValidator
+/// <summary>
+/// Contract for electronic document validation against SRI requirements.
+/// </summary>
+public interface IDocumentValidator
 {
 }

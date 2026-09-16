@@ -1,4 +1,5 @@
 using Acontplus.Persistence.Common.Configuration;
+using Acontplus.Persistence.Common.DependencyInjection;
 using Acontplus.Persistence.PostgreSQL.Interceptors;
 using Acontplus.Persistence.PostgreSQL.Repositories;
 
@@ -47,19 +48,7 @@ public static class PostgresServiceCollectionExtensions
 
     EnsureResilienceOptionsRegistered(services);
 
-    // Register IAdoRepository which is required by UnitOfWork
-    if (serviceKey is not null)
-    {
-      services.TryAddKeyedScoped<IAdoRepository, AdoRepository>(serviceKey);
-      services.TryAddKeyedScoped<IUnitOfWork, UnitOfWork<TContext>>(serviceKey);
-      services.TryAddKeyedScoped<DbContext>(serviceKey, (sp, key) => sp.GetRequiredKeyedService<TContext>(key));
-    }
-    else
-    {
-      services.TryAddScoped<IAdoRepository, AdoRepository>();
-      services.TryAddScoped<IUnitOfWork, UnitOfWork<TContext>>();
-      services.TryAddScoped<DbContext>(sp => sp.GetRequiredService<TContext>());
-    }
+    services.RegisterPersistenceCore<TContext, AdoRepository>(serviceKey);
 
     return services;
   }

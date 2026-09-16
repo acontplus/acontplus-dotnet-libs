@@ -2,9 +2,17 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Documents.Mapping;
 
-public class AtsDataSetMapper
+/// <summary>
+/// Mapper that transforms ADO.NET <see cref="DataSet"/> tables into strongly-typed <see cref="AtsData"/> structures.
+/// </summary>
+public static class AtsDataSetMapper
 {
-    public AtsData MapDataSetToAtsData(DataSet ds)
+    /// <summary>
+    /// Maps a <see cref="DataSet"/> containing ATS tables (header, purchases, sales, etc.) into an <see cref="AtsData"/> model.
+    /// </summary>
+    /// <param name="ds">The source data set.</param>
+    /// <returns>The mapped <see cref="AtsData"/> model.</returns>
+    public static AtsData MapDataSetToAtsData(DataSet ds)
     {
         if (ds == null)
         {
@@ -179,8 +187,6 @@ public class AtsDataSetMapper
 
     // Helper method to safely get a string value from a DataRow column
     // Handles cases where the column might not exist or the value is DBNull
-    private static string? GetColumnValueOrDefault(DataRow dr, string columnName)
-    {
-        return dr.Table.Columns.Contains(columnName) && dr[columnName] != DBNull.Value ? dr[columnName].ToString() : null;
-    }
+    private static string? GetColumnValueOrDefault(DataRow dr, string columnName) =>
+        dr.Table.Columns.Contains(columnName) && dr[columnName] != DBNull.Value ? dr[columnName].ToString() : null;
 }

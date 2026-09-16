@@ -3,9 +3,12 @@ using Acontplus.Billing.Models.Documents;
 
 namespace Acontplus.Billing.Services.Conversion;
 
-// Implementation of info tributaria parser
+/// <summary>
+/// Parser for extracting tributary header metadata (infoTributaria) from XML into a <see cref="ComprobanteElectronico"/>.
+/// </summary>
 public class InfoTributariaParser : IInfoTributariaParser
 {
+    /// <inheritdoc />
     public void Parse(XmlNode nodeInfoTrib, ComprobanteElectronico comprobante)
     {
         comprobante.InfoTributaria = new InfoTributaria
