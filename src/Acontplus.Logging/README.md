@@ -4,8 +4,9 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Description
 `Acontplus.Logging` is a comprehensive **observability library** for .NET applications, combining **Serilog** for structured logging with **OpenTelemetry** for distributed tracing and metrics. It provides enterprise-grade observability capabilities with support for multiple backends including Jaeger, Dynatrace, Prometheus, Elasticsearch, and more. Perfect for cloud-native, microservices, and distributed architectures.
+
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
 ## Features
 

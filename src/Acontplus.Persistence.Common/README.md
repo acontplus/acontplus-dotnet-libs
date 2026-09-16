@@ -4,19 +4,21 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Advanced persistence abstractions and infrastructure. Includes generic repository patterns, context factory, connection
-string providers, and multi-provider support for SQL Server, PostgreSQL, and other databases with business-ready
-abstractions.
+Advanced persistence abstractions and infrastructure. Includes generic repository patterns, base ADO.NET and Dapper repositories, context factory, entity configuration dispatchers, unit of work, and multi-provider support for SQL Server, PostgreSQL, and other databases with business-ready abstractions.
+
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
 ## 🚀 Features
 
 ### 🏗️ Core Abstractions
 
 - **Generic Repository Pattern** - Type-safe data access with C# features
+- **Base ADO.NET & Dapper Repositories** - High-performance data access primitives shared across database providers
 - **Context Factory** - Flexible database context creation and management
 - **Connection String Provider** - Hierarchical and environment-based connection management
+- **Entity Registration Dispatcher** - Centralized EF Core model and entity configuration discovery
 - **Multi-Provider Support** - SQL Server, PostgreSQL, and extensible for other databases
-- **Business Patterns** - Unit of work, specification pattern, and audit trail support
+- **Business Patterns** - Unit of work, specification pattern, and audit trail support via `AuditSaveChangesInterceptor`
 
 ### 🔧 Contemporary Architecture
 

@@ -6,7 +6,7 @@
 
 **Production-ready AWS S3 storage library** with enterprise-grade scalability, resilience, and performance optimizations. Built for high-throughput cloud-native applications.
 
-> Full version history: [CHANGELOG.md](../../CHANGELOG.md)
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
 
 ---
 
@@ -67,7 +67,7 @@ dotnet add package Acontplus.S3Application
 
 ## 🎯 Quick Start
 
-### 1. Register the Service (Required in v2.0+)
+### 1. Register the Service
 ```csharp
 using Acontplus.S3Application.Extensions;
 

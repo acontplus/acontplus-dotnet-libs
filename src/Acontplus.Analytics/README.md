@@ -6,6 +6,8 @@
 
 A comprehensive analytics and statistics library for .NET applications, providing domain-agnostic metrics, trends, and business intelligence capabilities. Built with modern .NET 10 features and designed for cross-domain reusability.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ## 🚀 Features
 
 ### 📊 Comprehensive Analytics DTOs

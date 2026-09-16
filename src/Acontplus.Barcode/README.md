@@ -6,6 +6,8 @@
 
 Advanced barcode generation library with ZXing.Net integration. Supports QR codes, 1D/2D barcodes, custom styling, and high-performance image generation using SkiaSharp for cross-platform applications.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 ## 🚀 Features
 
 ### 📱 Barcode Formats

@@ -6,6 +6,8 @@
 
 Enterprise-grade infrastructure library providing caching, resilience patterns, HTTP client factory, rate limiting, health checks, response compression, and event bus for .NET applications. Built with modern .NET 10 features and industry best practices.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 > **💡 Application Services**: For authentication, authorization policies, security headers, device detection, and request context, use **[Acontplus.Services](https://www.nuget.org/packages/Acontplus.Services)**
 
 ## 🚀 Features

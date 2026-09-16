@@ -6,6 +6,8 @@
 
 A comprehensive .NET service library providing business-grade patterns, security, device detection, request management, audit context, and **intelligent exception handling** for ASP.NET Core applications. Built with modern .NET 10 features and best practices.
 
+> Version history: [CHANGELOG.md](../../CHANGELOG.md)
+
 > **💡 Infrastructure Services**: For caching, circuit breakers, resilience patterns, and HTTP client factory, use **[Acontplus.Infrastructure](https://www.nuget.org/packages/Acontplus.Infrastructure)**
 
 ## 🚀 Features
