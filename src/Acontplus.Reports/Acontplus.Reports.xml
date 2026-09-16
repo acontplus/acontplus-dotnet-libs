@@ -621,7 +621,7 @@
             <summary>Right margin in points (default: 25)</summary>
         </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.FontFamily">
-            <summary>Default content font family (default: "Helvetica")</summary>
+            <summary>Default content font family (default: "Lato")</summary>
         </member>
         <member name="P:Acontplus.Reports.Dtos.QuestPdfDocumentSettings.FontSize">
             <summary>Default body font size in points (default: 9)</summary>

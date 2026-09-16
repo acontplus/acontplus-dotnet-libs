@@ -23,8 +23,8 @@ public class QuestPdfDocumentSettings
     /// <summary>Right margin in points (default: 25)</summary>
     public float MarginRight { get; set; } = 25f;
 
-    /// <summary>Default content font family (default: "Helvetica")</summary>
-    public string FontFamily { get; set; } = "Helvetica";
+    /// <summary>Default content font family (default: "Lato")</summary>
+    public string FontFamily { get; set; } = "Lato";
 
     /// <summary>Default body font size in points (default: 9)</summary>
     public float FontSize { get; set; } = 9f;
